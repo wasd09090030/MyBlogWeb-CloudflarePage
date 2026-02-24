@@ -38,6 +38,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/icon',
     '@nuxt/fonts',
+    '@bg-dev/nuxt-naiveui',
     '@nuxtjs/mdc',
     '@nuxtjs/seo',
     'nuxt-vitalizer'
@@ -118,19 +119,27 @@ export default defineNuxtConfig({
     serverBundle: {
       collections: ['heroicons', 'mdi']
     },
-    provider: 'server',
-    serverKnownCssClasses: ['nuxt-icon']
+    provider: 'iconify',
+    clientBundle: {
+      scan: true
+    }
+  },
+
+  naiveui: {
+    colorModePreference: 'system',
+    iconSize: 18,
+    themeConfig: {}
   },
 
   build: {
-    transpile: ['@vueuse/core']
+    transpile: ['@vueuse/core', 'naive-ui']
   },
 
   vite: {
     worker: { format: 'es' },
     optimizeDeps: {
       include: [
-        'vue', 'keen-slider', 'katex', '@vueuse/core', 'mermaid',
+        'vue', 'keen-slider', 'naive-ui', 'katex', '@vueuse/core', 'mermaid',
         'remark-math', 'rehype-katex'
       ],
       exclude: ['vue-demi']

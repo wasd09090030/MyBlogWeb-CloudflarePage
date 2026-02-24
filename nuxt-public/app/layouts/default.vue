@@ -1,5 +1,7 @@
 
 <template>
+  <n-config-provider :theme="isDarkMode ? darkTheme : null" :theme-overrides="themeOverrides">
+  <n-message-provider>
   <div id="app" :class="['min-vh-100', isDarkMode ? 'dark-theme' : 'light-theme']">
     <!-- 根据主题切换动画效果 -->
     <Teleport to="body">
@@ -170,10 +172,13 @@
       </ClientOnly>
     </Teleport>
   </div>
+  </n-message-provider>
+  </n-config-provider>
 </template>
 
 <script setup>
 import { defineAsyncComponent } from 'vue'
+import { darkTheme } from 'naive-ui'
 
 const HomeWelcomeSection = defineAsyncComponent(() => import('~/features/home/components/HomeWelcomeSection.vue'))
 
@@ -190,6 +195,19 @@ const hasScrolled = ref(false)
 const lastScrollY = ref(0)
 const scrollThreshold = 60
 const showBackgroundAnimation = ref(true)
+
+const themeOverrides = computed(() => ({
+  common: {
+    primaryColor: '#0d6efd',
+    primaryColorHover: '#0b5ed7',
+    primaryColorPressed: '#0a58ca'
+  },
+  Dropdown: {
+    borderRadius: '12px',
+    padding: '6px',
+    optionBorderRadius: '8px'
+  }
+}))
 
 const handleScroll = () => {
   const currentScrollY = window.scrollY

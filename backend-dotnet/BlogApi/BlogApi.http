@@ -1,0 +1,180 @@
+@BlogApi_HostAddress = http://localhost:5000/api
+# @BlogApi_HostAddress =http://115.190.164.243:3000/api
+
+### Auth - Login
+POST {{BlogApi_HostAddress}}/auth/login
+Content-Type: application/json
+
+{
+	"username": "admin",
+	"password": "admin123"
+}
+
+### Auth - Change Password
+POST {{BlogApi_HostAddress}}/auth/change-password
+Content-Type: application/json
+
+{
+	"currentPassword": "admin123",
+	"newPassword": "StrongPass!234"
+}
+
+### Articles - Create
+POST {{BlogApi_HostAddress}}/articles
+Content-Type: application/json
+
+{
+	"title": "使用 .NET 8 构建新博客",
+	"content": "<p>欢迎使用全新的 .NET 8 后端。</p>",
+	"contentMarkdown": "# 欢迎\n这是 Markdown 版本的内容。",
+	"coverImage": "https://example.com/images/dotnet8.jpg",
+	"category": "Study"
+}
+
+### Articles - List All
+GET {{BlogApi_HostAddress}}/articles
+Accept: application/json
+
+### Articles - Summary List
+GET {{BlogApi_HostAddress}}/articles?summary=true
+Accept: application/json
+
+### Articles - Paginated List
+GET {{BlogApi_HostAddress}}/articles?page=1&limit=5
+Accept: application/json
+
+### Articles - Featured
+GET {{BlogApi_HostAddress}}/articles/featured?limit=3
+Accept: application/json
+
+### Articles - Get By Id
+@articleId = 11
+GET {{BlogApi_HostAddress}}/articles/{{articleId}}
+Accept: application/json
+
+### Articles - Update
+PUT {{BlogApi_HostAddress}}/articles/{{articleId}}
+Content-Type: application/json
+
+{
+	"title": "更新后的 .NET 8 博客",
+	"category": "Work"
+}
+
+### Articles - Delete
+DELETE {{BlogApi_HostAddress}}/articles/{{articleId}}
+
+### Comments - Create
+POST {{BlogApi_HostAddress}}/comments
+Content-Type: application/json
+
+{
+	"content": "这是一条测试评论",
+	"author": "测试用户",
+	"email": "tester@example.com",
+	"website": "https://example.com",
+	"articleId": 1
+}
+
+### Comments - List By Article
+GET {{BlogApi_HostAddress}}/comments/article/1
+Accept: application/json
+
+### Comments - Admin All
+GET {{BlogApi_HostAddress}}/comments/admin/all
+Accept: application/json
+
+### Comments - Pending
+GET {{BlogApi_HostAddress}}/comments/admin/pending
+Accept: application/json
+
+### Comments - Update Status
+@commentId = 1
+PATCH {{BlogApi_HostAddress}}/comments/admin/{{commentId}}/status
+Content-Type: application/json
+
+{
+	"status": "approved"
+}
+
+### Comments - Like
+POST {{BlogApi_HostAddress}}/comments/{{commentId}}/like
+
+### Comments - Delete
+DELETE {{BlogApi_HostAddress}}/comments/admin/{{commentId}}
+
+### Gallery - Create
+POST {{BlogApi_HostAddress}}/gallery
+Content-Type: application/json
+
+{
+	"title": "夏日风光",
+	"description": "这是一个夏日风光的图片",
+	"imageUrl": "https://example.com/images/summer.jpg",
+	"sortOrder": 1,
+	"isActive": true
+}
+
+### Gallery - Public List
+GET {{BlogApi_HostAddress}}/gallery
+Accept: application/json
+
+### Gallery - Admin List
+GET {{BlogApi_HostAddress}}/gallery/admin
+Accept: application/json
+
+### Gallery - Update
+@galleryId = 1
+PATCH {{BlogApi_HostAddress}}/gallery/{{galleryId}}
+Content-Type: application/json
+
+{
+	"title": "更新后的夏日风光",
+	"sortOrder": 2
+}
+
+### Gallery - Get Dimensions
+GET {{BlogApi_HostAddress}}/gallery/{{galleryId}}/dimensions
+
+### Gallery - Refresh Dimensions
+POST {{BlogApi_HostAddress}}/gallery/refresh-dimensions
+
+### Gallery - Toggle Active
+PATCH {{BlogApi_HostAddress}}/gallery/{{galleryId}}/toggle-active
+
+### Gallery - Batch Update Sort Order
+PATCH {{BlogApi_HostAddress}}/gallery/batch/sort-order
+Content-Type: application/json
+
+[
+	{ "id": 1, "sortOrder": 3 },
+	{ "id": 2, "sortOrder": 1 }
+]
+
+### Gallery - Delete
+DELETE {{BlogApi_HostAddress}}/gallery/{{galleryId}}
+
+### CF Image Config - Get
+GET {{BlogApi_HostAddress}}/cf-image-config
+Accept: application/json
+
+### CF Image Config - Save
+POST {{BlogApi_HostAddress}}/cf-image-config
+Content-Type: application/json
+
+{
+	"isEnabled": true,
+	"zoneDomain": "imgbed.test.test",
+	"useHttps": true,
+	"fit": "scale-down",
+	"width": 300,
+	"quality": 50,
+	"format": "webp",
+	"signatureParam": "sig",
+	"useWorker": true,
+	"workerBaseUrl": "https://imgworker.wasd09090030.top",
+	"tokenTtlSeconds": 3600,
+	"signatureToken": "",
+	"signatureSecret": "your-secret"
+}
+

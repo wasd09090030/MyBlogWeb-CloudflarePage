@@ -1,0 +1,21 @@
+{
+  "extends": "./.nuxt/tsconfig.app.json",
+  "files": [
+    "./.nuxt/types/imports.d.ts",
+    "./.nuxt/types/app.config.d.ts",
+    "./.nuxt/types/runtime-config.d.ts"
+  ],
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "allowJs": false,
+    "checkJs": false,
+    "useUnknownInCatchVariables": true,
+    "types": ["node"]
+  },
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.vue",
+    "server/**/*.ts"
+  ]
+}

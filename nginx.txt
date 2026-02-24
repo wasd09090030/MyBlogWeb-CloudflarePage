@@ -1,0 +1,120 @@
+server
+{
+		listen 5174;
+    server_name 47.239.206.115;
+    index index.php index.html index.htm default.php default.htm default.html;
+    root /www/wwwroot/dist;
+
+    location / {
+        try_files $uri /index.html;
+    }
+
+    #CERT-APPLY-CHECK--START
+    # 用于SSL证书申请时的文件验证相关配置 -- 请勿删除
+    include /www/server/panel/vhost/nginx/well-known/47.239.206.115.conf;
+    #CERT-APPLY-CHECK--END
+
+    #SSL-START SSL相关配置，请勿删除或修改下一行带注释的404规则
+    #error_page 404/404.html;
+    #SSL-END
+
+    #ERROR-PAGE-START  错误页配置，可以注释、删除或修改
+    error_page 404 /404.html;
+    #error_page 502 /502.html;
+    #ERROR-PAGE-END
+
+    #PHP-INFO-START  PHP引用配置，可以注释或修改
+    include enable-php-80.conf;
+    #PHP-INFO-END
+
+    #REWRITE-START URL重写规则引用,修改后将导致面板设置的伪静态规则失效
+    include /www/server/panel/vhost/rewrite/47.239.206.115.conf;
+    #REWRITE-END
+    
+    
+    
+    # 统一的 API 反向代理（前端请求 /api/...）
+    location /api/ {
+        proxy_pass              http://127.0.0.1:5000;
+        proxy_set_header        Host                $host;
+        proxy_set_header        X-Real-IP           $remote_addr;
+        proxy_set_header        X-Forwarded-For     $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto   $scheme;
+        proxy_connect_timeout   60s;
+        proxy_send_timeout      60s;
+        proxy_read_timeout      60s;
+    }
+
+    # 图床代理（含防盗链）
+    location /images/ {
+        valid_referers none blocked wasd09090030.top *.wasd09090030.top;
+        if ($invalid_referer) { return 403; }
+
+        add_header 'Access-Control-Allow-Origin' 'https://wasd09090030.top';
+        add_header 'Access-Control-Allow-Methods' 'GET, HEAD, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+        add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range';
+
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Max-Age' 1728000;
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+            add_header 'Content-Length' 0;
+            return 204;
+        }
+
+        proxy_pass              http://127.0.0.1:8080/;
+        proxy_set_header        Host                $host;
+        proxy_set_header        X-Real-IP           $remote_addr;
+        proxy_set_header        X-Forwarded-For     $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Proto   $scheme;
+        proxy_connect_timeout   60s;
+        proxy_send_timeout      60s;
+        proxy_read_timeout      60s;
+    }
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+    gzip_min_length 1024;
+    gzip_comp_level 6;
+    gzip_buffers 16 8k;
+    gzip_http_version 1.1;
+    gzip_proxied any;
+    gzip_vary on;
+
+    #禁止访问的文件或目录
+    location ~ ^/(\.user.ini|\.htaccess|\.git|\.env|\.svn|\.project|LICENSE|README.md)
+    {
+        return 404;
+    }
+
+    #一键申请SSL证书验证目录相关设置
+    location ~ \.well-known{
+        allow all;
+    }
+
+    #禁止在证书验证目录放入敏感文件
+    if ( $uri ~ "^/\.well-known/.*\.(php|jsp|py|js|css|lua|ts|go|zip|tar\.gz|rar|7z|sql|bak)$" ) {
+        return 403;
+    }
+
+    location ~ .*\.(gif|jpg|jpeg|png|bmp|swf)$
+    {
+        expires      30d;
+        error_log /dev/null;
+        access_log /dev/null;
+    }
+
+    location ~ .*\.(js|css)?$
+    {
+        expires      12h;
+        error_log /dev/null;
+        access_log /dev/null;
+    }
+    
+    location @fallback {
+        rewrite ^.*$ /index.html last;
+    }
+    
+    access_log  /www/wwwlogs/47.239.206.115.log;
+    error_log  /www/wwwlogs/47.239.206.115.error.log;
+}

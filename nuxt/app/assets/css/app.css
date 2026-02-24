@@ -1,0 +1,831 @@
+/* 自定义鼠标指针样式 */
+body {
+  cursor: url('/pointer/default.cur'), auto;
+  min-height: 100vh;
+  background-color: var(--bg-secondary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 可点击元素使用指针样式 */
+a,
+button,
+.btn,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.nav-link,
+.dropdown-item,
+.navbar-brand,
+.contact-icon,
+.avatar-container,
+.quote-container,
+.toggle-button,
+.skill-item,
+[onclick],
+.cursor-pointer {
+  cursor: url('/pointer/pointer.cur'), pointer;
+}
+
+/* 移除暗色主题的渐变背景覆盖 - 使用主题变量 */
+:root.dark body,
+:root.dark-theme body,
+:root[data-theme="dark"] body {
+  background-color: var(--bg-tertiary);
+}
+
+/* 全局样式 */
+#app {
+  font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: var(--theme-transition);
+  position: relative;
+  min-height: 100vh;
+}
+
+/* 主题样式（兼容期） */
+.light-theme {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.dark,
+.dark-theme {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* ==================== 导航栏基础样式 ==================== */
+/* 已移除，避免与 default.vue 冲突 */
+
+/* 导航栏 Logo 样式 */
+.navbar-logo {
+  height: 42px;
+  width: auto;
+  display: block;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+
+
+/* 移动端 Logo 尺寸调整 */
+@media (max-width: 991.98px) {
+  .navbar-logo {
+    height: 28px;
+  }
+}
+
+/* 导航图标样式 */
+.nav-icon {
+  vertical-align: baseline;
+}
+
+/* 右侧按钮组样式 */
+.navbar-right-buttons {
+  margin-left: auto;
+  margin-right: 10%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 移动端搜索包装器 */
+.mobile-search-wrapper {
+  padding: 0.5rem 0;
+}
+
+/* 主题切换按钮特殊样式 */
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50% !important;
+  transition: var(--theme-transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--bg-hover) !important;
+  transform: scale(1.1) rotate(10deg);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle-btn i {
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+/* 主题切换动画效果 */
+.theme-toggle-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, var(--focus-ring-color), transparent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.4s ease;
+  z-index: -1;
+}
+
+.theme-toggle-btn:hover::before {
+  width: 60px;
+  height: 60px;
+}
+
+/* 下拉菜单样式 */
+.dropdown-menu {
+  border: none;
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-md);
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+  transition: var(--theme-transition);
+  animation: dropdownSlideIn 0.3s ease-out forwards;
+}
+
+.dropdown-menu.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  transition: var(--theme-transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.dropdown-item::before {
+  content: '';
+  position: absolute;
+  left: -100%;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--focus-ring-color), transparent);
+  transition: left 0.3s ease;
+}
+
+.dropdown-item:hover {
+  background-color: var(--bg-hover);
+  transform: translateX(5px);
+  padding-left: 1.2rem;
+}
+
+.dropdown-item:hover::before {
+  left: 100%;
+}
+
+.welcome-section-container {
+  padding-top: 20px;
+}
+
+.main-container {
+  width: 100%;
+  margin: 0 auto;
+}
+/* 主要内容区域 */
+.main-content {
+  position: relative;
+  z-index: 10;
+  background-color: transparent;
+  min-height: 100vh;
+  padding: 1.5rem 0 0 0;
+  margin-top: 10px;
+  border-radius: var(--radius-lg);
+  max-width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+  border: none;
+}
+
+/* Floating action buttons */
+.floating-action-buttons {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 1200;
+}
+
+.fab-btn {
+  background: var(--fab-bg);
+  color: var(--fab-text);
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.fab-btn:hover {
+  transform: translateY(-1px);
+}
+
+.fab-btn:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 3px;
+}
+
+.fab-btn.is-muted {
+  background: var(--fab-muted-bg);
+  color: var(--fab-muted-text);
+}
+
+/* 移除主内容区域内的列的左右padding */
+.main-content .col-12,
+.main-content .col-lg-8,
+.main-content .col-lg-9,
+.main-content .col-xl-9 {
+  padding-left: 0 !important;
+}
+
+.main-content .col-lg-4,
+.main-content .col-lg-3,
+.main-content .col-xl-3 {
+  padding-right: 0 !important;
+}
+
+/* Admin页面全宽度样式 */
+.main-content.admin-full-width {
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  border-radius: 0;
+  margin-top: 0;
+  box-shadow: none;
+  padding: 0;
+  background-color: transparent;
+}
+
+main {
+  padding: 0 0 20px;
+  max-width: 100%;
+  margin: 0;
+}
+
+
+/* 侧边栏样式 */
+.sidebar-content {
+  padding: 0;
+  position: sticky;
+  top: 80px; /* 调整为导航栏高度+间距 */
+  height: fit-content;
+}
+
+/* Footer 样式 */
+.blog-footer {
+  background: var(--footer-bg);
+  font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 1rem 0;
+  margin-top: 0.3rem;
+  border-top: 1px solid var(--border-color);
+  transition: var(--theme-transition);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.footer-copyright {
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.5rem;
+  text-align: center;
+}
+
+.copyright-text {
+  margin: 0;
+  color: var(--footer-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.slogan-text {
+  margin: 0.5rem 0 0 0;
+  color: var(--footer-text-muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+/* 暗色主题下的 Footer 样式 */
+.dark-theme .blog-footer {
+  background: var(--footer-bg);
+  border-top: 1px solid var(--border-color);
+}
+
+.dark-theme .footer-copyright {
+  border-top: 1px solid var(--border-color);
+}
+
+.dark-theme .copyright-text {
+  color: var(--footer-text);
+}
+
+.dark-theme .slogan-text {
+  color: var(--footer-text-muted);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .navbar-center-nav {
+    position: static;
+    transform: none;
+    display: none; /* 移动端隐藏中间导航，使用折叠菜单 */
+  }
+
+  .navbar-right-buttons {
+    margin-right: 5%;
+    gap: 0.3rem;
+  }
+
+  .navbar {
+    padding: 0.25rem 0.75rem; /* 移动端进一步减少内边距 */
+    min-height: 45px; /* 移动端更小的最小高度 */
+  }
+
+  .navbar-brand {
+    font-size: 1rem; /* 移动端更小的字体 */
+  }
+
+  .navbar-nav .nav-link {
+    padding: 0.4rem 0.6rem; /* 移动端更小的内边距 */
+    font-size: 1rem; /* 移动端稍微增大字体 */
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* 移动端导航项交互效果 */
+  .navbar-nav .nav-link:hover {
+    transform: translateX(5px);
+    background: var(--bg-hover);
+    padding-left: 1rem;
+  }
+
+  .navbar-nav .nav-link.active {
+    background: var(--bg-active);
+    color: var(--accent-primary);
+    font-weight: 600;
+    border-left: 3px solid var(--accent-primary);
+    padding-left: 1rem;
+  }
+
+  /* 移动端暗色主题导航项 */
+  :global(.dark-theme) .navbar-nav .nav-link:hover {
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+  }
+
+  :global(.dark-theme) .navbar-nav .nav-link.active {
+    background: var(--bg-active);
+    color: var(--accent-primary);
+    border-left: 3px solid var(--accent-primary);
+  }
+
+  .theme-toggle-btn {
+    width: 35px;
+    height: 35px;
+  }
+
+  .theme-toggle-btn i {
+    font-size: 1rem;
+  }
+
+  /* 移动端dropdown样式调整 */
+  .dropdown-menu {
+    margin-right: 5%;
+    transform: translateY(-5px) scale(0.98);
+  }
+
+  .main-container {
+    padding-top: 55px; /* 移动端调整顶部间距 */
+  }
+
+  .main-content {
+    padding: 1rem 12px 20px;
+    margin-top: 0;
+    max-width: 100%;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .main-content .col-12 {
+    padding-right: 0 !important;
+  }
+
+  .floating-action-buttons {
+    right: 16px;
+    bottom: 16px;
+    gap: 0.5rem;
+  }
+
+  .fab-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 6px;
+  }
+
+
+  .sidebar-content {
+    display: none;
+  }
+
+  .mobile-personal-info {
+    display: none !important;
+  }
+
+  /* 移动端 Footer 样式调整 */
+  .blog-footer {
+    padding: 1.5rem 0;
+    margin-top: 2rem;
+  }
+
+  .footer-content {
+    padding: 0 10px;
+  }
+
+  .copyright-text {
+    font-size: 0.8rem;
+  }
+
+  .slogan-text {
+    font-size: 0.75rem;
+  }
+
+  .mobile-personal-info {
+    right: 15px;
+    bottom: 20px;
+  }
+}
+
+/* 小屏幕进一步优化 */
+@media (max-width: 576px) {
+  .mobile-personal-info {
+    right: 15px;
+    bottom: 20px;
+  }
+
+  .main-content {
+    padding-bottom: 20px;
+  }
+
+  /* 小屏幕 Footer 调整 */
+  .blog-footer {
+    padding: 1rem 0;
+  }
+
+  .copyright-text {
+    font-size: 0.75rem;
+  }
+
+  .slogan-text {
+    font-size: 0.7rem;
+  }
+}
+
+/* 极小屏幕或横屏手机优化 */
+@media (max-width: 480px), (max-height: 600px) {
+  .mobile-personal-info {
+    right: 10px;
+    bottom: 20px;
+  }
+
+  .main-content {
+    padding-bottom: 20px;
+  }
+
+  /* 极小屏幕 Footer 调整 */
+  .blog-footer {
+    padding: 0.8rem 0;
+  }
+
+  .footer-content {
+    padding: 0 8px;
+  }
+
+  .copyright-text {
+    font-size: 0.7rem;
+  }
+
+  .slogan-text {
+    font-size: 0.65rem;
+  }
+}
+
+/* 中等屏幕调整 */
+@media (min-width: 769px) and (max-width: 1199px) {
+  .sidebar-content {
+    padding: 1.5rem 0.5rem;
+  }
+
+  .main-content {
+    /* 中等屏幕使用85%宽度 */
+    max-width: 85%;
+  }
+}
+
+/* 亮色主题导航栏文字颜色 - 适配白色背景 */
+.light-theme .nav-link {
+  color: var(--navbar-text);
+}
+
+.light-theme .nav-link:hover {
+  color: var(--navbar-text-hover);
+}
+
+/* 暗色主题导航栏文字颜色 */
+.dark-theme .nav-link {
+  color: var(--text-primary);
+}
+
+.dark-theme .nav-link:hover {
+  color: var(--accent-primary);
+}
+
+.dark-theme .navbar-brand {
+  color: var(--accent-primary) !important;
+}
+
+.dark-theme .navbar-center-nav .nav-link {
+  color: var(--text-primary);
+}
+
+.dark-theme .dropdown-toggle {
+  color: var(--text-primary);
+}
+
+.dark-theme .theme-toggle-btn {
+  color: var(--text-primary);
+}
+
+/* 暗色主题下的特殊样式 */
+:global(.dark-theme) .main-content {
+  background-color: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+:global(.dark-theme) .dropdown-menu {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-xl);
+}
+
+:global(.dark-theme) .dropdown-item {
+  color: var(--text-primary);
+}
+
+:global(.dark-theme) .dropdown-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* 暗色主题下的中间导航项样式 */
+:global(.dark-theme) .navbar-center-nav .nav-link:hover {
+  background: var(--bg-hover);
+  box-shadow: var(--shadow-lg);
+  color: var(--accent-primary);
+}
+
+:global(.dark-theme) .navbar-center-nav .nav-link.active {
+  background: var(--bg-active);
+  color: var(--accent-primary);
+  box-shadow: var(--shadow-md);
+}
+
+:global(.dark-theme) .navbar-center-nav .nav-link::after {
+  background: var(--gradient-primary);
+}
+
+/* 暗色主题下的代码块样式 - 全局样式确保覆盖 highlight.js */
+:global(.dark) .markdown-body pre,
+:global(.dark) pre.hljs,
+:global(.dark-theme) .markdown-body pre,
+:global(.dark-theme) pre.hljs {
+  background-color: var(--code-block-bg) !important;
+  color: var(--code-block-text) !important;
+}
+
+:global(.dark-theme) .markdown-body pre code,
+:global(.dark-theme) pre code.hljs,
+:global(.dark-theme) .markdown-body pre code,
+:global(.dark-theme) pre code.hljs {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+:global(.dark) .markdown-body code,
+:global(.dark-theme) .markdown-body code {
+  background-color: var(--code-inline-bg) !important;
+  color: var(--code-block-text) !important;
+}
+
+/* 确保 highlight.js 的语法高亮在暗色主题下可见 */
+:global(.dark) .hljs-keyword,
+:global(.dark) .hljs-selector-tag,
+:global(.dark) .hljs-literal,
+:global(.dark-theme) .hljs-keyword,
+:global(.dark-theme) .hljs-selector-tag,
+:global(.dark-theme) .hljs-literal {
+  color: var(--hljs-keyword) !important;
+}
+
+:global(.dark) .hljs-string,
+:global(.dark) .hljs-title,
+:global(.dark) .hljs-name,
+:global(.dark-theme) .hljs-string,
+:global(.dark-theme) .hljs-title,
+:global(.dark-theme) .hljs-name {
+  color: var(--hljs-string) !important;
+}
+
+:global(.dark) .hljs-comment,
+:global(.dark) .hljs-quote,
+:global(.dark-theme) .hljs-comment,
+:global(.dark-theme) .hljs-quote {
+  color: var(--hljs-comment) !important;
+}
+
+:global(.dark) .hljs-number,
+:global(.dark) .hljs-tag,
+:global(.dark-theme) .hljs-number,
+:global(.dark-theme) .hljs-tag {
+  color: var(--hljs-number) !important;
+}
+
+:global(.dark) .hljs-variable,
+:global(.dark) .hljs-attr,
+:global(.dark-theme) .hljs-variable,
+:global(.dark-theme) .hljs-attr {
+  color: var(--hljs-variable) !important;
+}
+
+:global(.dark-theme) .navbar-center-nav .dropdown:hover .nav-link {
+  background: var(--bg-hover);
+  box-shadow: var(--shadow-lg);
+  color: var(--accent-primary);
+}
+
+/* 暗色主题下的 nav-link 样式 */
+:global(.dark-theme) .navbar-nav .nav-link:hover {
+  background-color: var(--bg-hover);
+  box-shadow: var(--shadow-md);
+}
+
+:global(.dark-theme) .navbar-nav .nav-link::after {
+  background: var(--gradient-primary);
+}
+
+:global(.dark-theme) .navbar-nav .nav-link.active {
+  background-color: var(--bg-active);
+  color: var(--accent-primary) !important;
+}
+
+:global(.dark-theme) .navbar-nav .nav-link.active::after {
+  background: var(--gradient-primary);
+}
+
+/* 暗色主题下的主题切换按钮 */
+:global(.dark-theme) .theme-toggle-btn:hover {
+  background-color: var(--bg-hover) !important;
+  box-shadow: var(--shadow-md);
+}
+
+:global(.dark-theme) .theme-toggle-btn::before {
+  background: radial-gradient(circle, var(--focus-ring-color), transparent);
+}
+
+/* 自定义动画类替换animate.css */
+.navbar-slide-in {
+  animation: slideInDown 0.3s ease-out forwards;
+}
+
+.navbar-slide-out {
+  animation: slideOutUp 0.3s ease-in forwards;
+}
+
+.sidebar-animate {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutUp {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Dropdown 动画 */
+@keyframes dropdownSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Nav-link 脉冲效果 */
+@keyframes navPulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--nav-pulse-ring);
+  }
+  70% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}

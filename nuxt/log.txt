@@ -1,0 +1,195 @@
+FileTree.vue:70 Uncaught (in promise) TypeError: treeText.trim is not a function
+    at ComputedRefImpl.fn (FileTree.vue:70:26)
+    at refreshComputed (reactivity.esm-bundl…s?v=df4ab882:361:29)
+    at get value (reactivity.esm-bundl…s?v=df4ab882:1636:5)
+    at unref (reactivity.esm-bundl…?v=df4ab882:1489:45)
+    at Object.get (reactivity.esm-bundl…?v=df4ab882:1495:64)
+    at Proxy._sfc_render (FileTree.vue:13:17)
+    at renderComponentRoot (runtime-core.esm-bun…?v=df4ab882:4508:16)
+    at ReactiveEffect.componentUpdateFn [as fn] (runtime-core.esm-bun…?v=df4ab882:6063:46)
+    at ReactiveEffect.run (reactivity.esm-bundl…s?v=df4ab882:207:19)
+    at setupRenderEffect (runtime-core.esm-bun…s?v=df4ab882:6198:5)
+（匿名）	@	FileTree.vue:70
+refreshComputed	@	reactivity.esm-bundler.js?v=df4ab882:361
+get value	@	reactivity.esm-bundl….js?v=df4ab882:1636
+unref	@	reactivity.esm-bundl….js?v=df4ab882:1489
+get	@	reactivity.esm-bundl….js?v=df4ab882:1495
+_sfc_render	@	FileTree.vue:13
+renderComponentRoot	@	runtime-core.esm-bun….js?v=df4ab882:4508
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6063
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+processComponent	@	runtime-core.esm-bun….js?v=df4ab882:5924
+patch	@	runtime-core.esm-bun….js?v=df4ab882:5420
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6070
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+processComponent	@	runtime-core.esm-bun….js?v=df4ab882:5924
+patch	@	runtime-core.esm-bun….js?v=df4ab882:5420
+mountChildren	@	runtime-core.esm-bun….js?v=df4ab882:5672
+mountElement	@	runtime-core.esm-bun….js?v=df4ab882:5595
+processElement	@	runtime-core.esm-bun….js?v=df4ab882:5550
+patch	@	runtime-core.esm-bun….js?v=df4ab882:5408
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6070
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+（匿名）	@	runtime-core.esm-bun….js?v=df4ab882:7351
+Promise.then		
+registerDep	@	runtime-core.esm-bun….js?v=df4ab882:7337
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5965
+processComponent	@	runtime-core.esm-bun….js?v=df4ab882:5924
+patch	@	runtime-core.esm-bun….js?v=df4ab882:5420
+mountChildren	@	runtime-core.esm-bun….js?v=df4ab882:5672
+mountElement	@	runtime-core.esm-bun….js?v=df4ab882:5595
+processElement	@	runtime-core.esm-bun….js?v=df4ab882:5550
+patch	@	runtime-core.esm-bun….js?v=df4ab882:5408
+mountChildren	@	runtime-core.esm-bun….js?v=df4ab882:5672
+processFragment	@	runtime-core.esm-bun….js?v=df4ab882:5854
+patch	@	runtime-core.esm-bun….js?v=df4ab882:5394
+patchBlockChildren	@	runtime-core.esm-bun….js?v=df4ab882:5794
+patchElement	@	runtime-core.esm-bun….js?v=df4ab882:5712
+processElement	@	runtime-core.esm-bun….js?v=df4ab882:5566
+patch	@	runtime-core.esm-bun….js?v=df4ab882:5408
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6150
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+runIfDirty	@	reactivity.esm-bundler.js?v=df4ab882:245
+callWithErrorHandling	@	runtime-core.esm-bun…r.js?v=df4ab882:197
+flushJobs	@	runtime-core.esm-bun…r.js?v=df4ab882:405
+flushJobs	@	runtime-core.esm-bun…r.js?v=df4ab882:427
+Promise.then		
+queueFlush	@	runtime-core.esm-bun…r.js?v=df4ab882:319
+queuePostFlushCb	@	runtime-core.esm-bun…r.js?v=df4ab882:333
+resolve	@	runtime-core.esm-bun….js?v=df4ab882:7267
+resolve	@	runtime-core.esm-bun….js?v=df4ab882:7274
+（匿名）	@	runtime-core.esm-bun….js?v=df4ab882:7374
+Promise.then		
+registerDep	@	runtime-core.esm-bun….js?v=df4ab882:7337
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5965
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrateChildren	@	runtime-core.esm-bun….js?v=df4ab882:2213
+hydrateElement	@	runtime-core.esm-bun….js?v=df4ab882:2092
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:1991
+hydrateChildren	@	runtime-core.esm-bun….js?v=df4ab882:2213
+hydrateElement	@	runtime-core.esm-bun….js?v=df4ab882:2092
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:1991
+hydrateChildren	@	runtime-core.esm-bun….js?v=df4ab882:2213
+hydrateElement	@	runtime-core.esm-bun….js?v=df4ab882:2092
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:1991
+hydrateChildren	@	runtime-core.esm-bun….js?v=df4ab882:2213
+hydrateElement	@	runtime-core.esm-bun….js?v=df4ab882:2092
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:1991
+hydrateChildren	@	runtime-core.esm-bun….js?v=df4ab882:2213
+hydrateFragment	@	runtime-core.esm-bun….js?v=df4ab882:2260
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:1976
+hydrateChildren	@	runtime-core.esm-bun….js?v=df4ab882:2213
+hydrateFragment	@	runtime-core.esm-bun….js?v=df4ab882:2260
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:1976
+hydrateSubTree	@	runtime-core.esm-bun….js?v=df4ab882:6035
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6053
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrateChildren	@	runtime-core.esm-bun….js?v=df4ab882:2213
+hydrateElement	@	runtime-core.esm-bun….js?v=df4ab882:2092
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:1991
+hydrateSubTree	@	runtime-core.esm-bun….js?v=df4ab882:6035
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6053
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrateSubTree	@	runtime-core.esm-bun….js?v=df4ab882:6035
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6053
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrateSubTree	@	runtime-core.esm-bun….js?v=df4ab882:6035
+performHydrate	@	runtime-core.esm-bun….js?v=df4ab882:2687
+__asyncHydrate	@	runtime-core.esm-bun….js?v=df4ab882:2699
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6047
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+（匿名）	@	runtime-core.esm-bun….js?v=df4ab882:7351
+Promise.then		
+registerDep	@	runtime-core.esm-bun….js?v=df4ab882:7337
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5965
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrateSubTree	@	runtime-core.esm-bun….js?v=df4ab882:6035
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6053
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrateSubTree	@	runtime-core.esm-bun….js?v=df4ab882:6035
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6053
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrateSuspense	@	runtime-core.esm-bun….js?v=df4ab882:7415
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2046
+hydrateSubTree	@	runtime-core.esm-bun….js?v=df4ab882:6035
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6053
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrateSubTree	@	runtime-core.esm-bun….js?v=df4ab882:6035
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6053
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrateSubTree	@	runtime-core.esm-bun….js?v=df4ab882:6035
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6053
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrateSubTree	@	runtime-core.esm-bun….js?v=df4ab882:6035
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6053
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrateSuspense	@	runtime-core.esm-bun….js?v=df4ab882:7415
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2046
+hydrateSubTree	@	runtime-core.esm-bun….js?v=df4ab882:6035
+componentUpdateFn	@	runtime-core.esm-bun….js?v=df4ab882:6053
+run	@	reactivity.esm-bundler.js?v=df4ab882:207
+setupRenderEffect	@	runtime-core.esm-bun….js?v=df4ab882:6198
+mountComponent	@	runtime-core.esm-bun….js?v=df4ab882:5972
+hydrateNode	@	runtime-core.esm-bun….js?v=df4ab882:2010
+hydrate	@	runtime-core.esm-bun….js?v=df4ab882:1884
+mount	@	runtime-core.esm-bun….js?v=df4ab882:4191
+app.mount	@	runtime-dom.esm-bund….js?v=df4ab882:1820
+initApp	@	entry.js?t=1770437019878&v=df4ab882:65
+
+runtime-core.esm-bundler.js?v=df4ab882:50 [Vue warn]: Unhandled error during execution of render function 
+  at <FileTree title="项目结构" key="0" > 
+  at <AsyncComponentWrapper title="项目结构" key="0" > 
+  at <MDCRenderer body= {type: 'root', children: Array(11)} data= {title: '', description: ''} > 
+  at <MarkdownRenderer markdown="\n\n\n\n::file-tree{title=\"项目结构\"}\nsrc/\n  components/\n    Button.vue\n    Input.vue\n  pages/\n    index.vue\n  App.vue\npackage.json\nREADME.md\n::\n\n\n\n::github-card{repo=\"vuejs/core\"}\n::\n\n\n\n::github-card{repo=\"MarSeventh/CloudFlare-ImgBed \"}\n::\n\n\n\n\n::image-enhanced{src=https://cfimg.wasd09090030.top/file/gallery/1766460133459_20251218_204223.webp caption=\"图片说明文字\" zoomable shadow rounded}\n::\n\n\n\n\n\n::steps{current=\"2\" status=\"process\"}\n---\nsteps:\n  - title: \"第一步\"\n    description: \"注册账号\"\n  - title: \"第二步\"\n    description: \"完善信息\"\n  - title: \"第三步\"\n    description: \"开始使用\"\n---\n::\n\n\n\n::image-comparison{before=\"/img/before.jpg\" after=\"/img/after.jpg\" aspectRatio=\"16/9\"}\n::\n\n\n\n::web-embed{url=\"[https://www.bilibili.com/video/BV1xx411c7mD](https://www.bilibili.com/video/BV1kQFizWEai/?spm_id_from=333.1007.tianma.1-3-3.click&vd_source=87bdcc9e3ddc02b58d05dcaa72325524)\" aspectRatio=\"16/9\"}\n::\n\n\n\n::star-rating{rating=\"4\" maxStars=\"5\" label=\"推荐指数\" showScore}\n::\n\n::alert{type=\"info\"}\n#title\n提示标题\n#default\n这是提示内容，支持 **Markdown** 格式\n::\n\n::tabs\n---\nlabels: [\"选项卡 1\", \"选项卡 2\", \"选项卡 3\"]\n---\n#tab-0\n第一个标签页的内容\n\n#tab-1\n第二个标签页的内容\n\n#tab-2\n第三个标签页的内容\n::\n\n\n\n::star-rating{rating=\"4.5\" maxStars=\"5\" label=\"推荐指数\" showScore}\n::\n\n\n" html="<p data-line=\"4\">::file-tree{title=&quot;项目结构&quot;}<br>\nsrc/<br>\ncomponents/<br>\nButton.vue<br>\nInput.vue<br>\npages/<br>\nindex.vue<br>\nApp.vue<br>\npackage.json<br>\n<a href=\"http://README.md\">README.md</a><br>\n::</p>\n<p data-line=\"18\">::github-card{repo=&quot;vuejs/core&quot;}<br>\n::</p>\n<p data-line=\"23\">::github-card{repo=&quot;MarSeventh/CloudFlare-ImgBed &quot;}<br>\n::</p>\n<p data-line=\"29\">::image-enhanced{src=<a href=\"https://cfimg.wasd09090030.top/file/gallery/1766460133459_20251218_204223.webp\">https://cfimg.wasd09090030.top/file/gallery/1766460133459_20251218_204223.webp</a> caption=&quot;图片说明文字&quot; zoomable shadow rounded}<br>\n::</p>\n<h2 data-line=\"36\" id=\"::steps{current=&quot;2&quot; status=&quot;process&quot;}\">::steps{current=&quot;2&quot; status=&quot;process&quot;}</h2>\n<p data-line=\"38\">steps:</p>\n<ul data-line=\"39\">\n<li data-line=\"39\">title: &quot;第一步&quot;<br>\ndescription: &quot;注册账号&quot;</li>\n<li data-line=\"41\">title: &quot;第二步&quot;<br>\ndescription: &quot;完善信息&quot;</li>\n<li data-line=\"43\">title: &quot;第三步&quot;<br>\ndescription: &quot;开始使用&quot;</li>\n</ul>\n<hr data-line=\"45\">\n<p data-line=\"46\">::</p>\n<p data-line=\"50\">::image-comparison{before=&quot;/img/before.jpg&quot; after=&quot;/img/after.jpg&quot; aspectRatio=&quot;16/9&quot;}<br>\n::</p>\n<p data-line=\"55\">::web-embed{url=&quot;<a href=\"https://www.bilibili.com/video/BV1kQFizWEai/?spm_id_from=333.1007.tianma.1-3-3.click&amp;vd_source=87bdcc9e3ddc02b58d05dcaa72325524\">https://www.bilibili.com/video/BV1xx411c7mD</a>&quot; aspectRatio=&quot;16/9&quot;}<br>\n::</p>\n<p data-line=\"60\">::star-rating{rating=&quot;4&quot; maxStars=&quot;5&quot; label=&quot;推荐指数&quot; showScore}<br>\n::</p>\n<p data-line=\"63\">::alert{type=&quot;info&quot;}<br>\n#title<br>\n提示标题<br>\n#default<br>\n这是提示内容，支持 <strong>Markdown</strong> 格式<br>\n::</p>\n<h2 data-line=\"70\" id=\"::tabs\">::tabs</h2>\n<h2 data-line=\"72\" id=\"labels: [&quot;选项卡 1&quot;, &quot;选项卡 2&quot;, &quot;选项卡 3&quot;]\">labels: [&quot;选项卡 1&quot;, &quot;选项卡 2&quot;, &quot;选项卡 3&quot;]</h2>\n<p data-line=\"74\">#tab-0<br>\n第一个标签页的内容</p>\n<p data-line=\"77\">#tab-1<br>\n第二个标签页的内容</p>\n<p data-line=\"80\">#tab-2<br>\n第三个标签页的内容<br>\n::</p>\n<p data-line=\"86\">::star-rating{rating=&quot;4.5&quot; maxStars=&quot;5&quot; label=&quot;推荐指数&quot; showScore}<br>\n::</p>\n" precomputed-ast= {data: {…}, body: {…}, toc: {…}}  ... > 
+  at <ArticleDetailContent article= {id: 78, title: '1', slug: '1', content: '<p data-line="4">::file-tree{title=&quot;项目结构&quot…ot; label=&quot;推荐指数&quot; showScore}<br>\n::</p>\n', contentMarkdown: '\n\n\n\n::file-tree{title="项目结构"}\nsrc/\n  components/\n …="4.5" maxStars="5" label="推荐指数" showScore}\n::\n\n\n', …} onTocReady=fn<onTocReady> onGoBack=fn<goBack> > 
+  at <[id] onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< Proxy(Object) {__v_skip: true} > > 
+  at <[id] key="/article/78-1" vnode= {__v_isVNode: true, __v_skip: true, type: {…}, props: {…}, key: null, …} route= {fullPath: '/article/78-1', hash: '', query: {…}, name: 'article-id', path: '/article/78-1', …}  ... > 
+  at <KeepAlive > 
+  at <BaseTransition onAfterLeave= [ƒ] mode="out-in" appear=false  ... > 
+  at <Transition onAfterLeave= [ƒ] name="page" mode="out-in" > 
+  at <RouterView name=undefined route=undefined > 
+  at <NuxtPage keepalive=true page-key=fn<getPageKey> > 
+  at <MessageProvider > 
+  at <ConfigProvider theme=null theme-overrides= {common: {…}, Dropdown: {…}} > 
+  at <Default ref=Ref< Proxy(Object) {__v_skip: true} > > 
+  at <AsyncComponentWrapper ref=Ref< Proxy(Object) {__v_skip: true} > > 
+  at <LayoutLoader key="default" layoutProps= {ref: RefImpl} name="default" > 
+  at <NuxtLayoutProvider layoutProps= {ref: RefImpl} key="default" name="default"  ... > 
+  at <BaseTransition mode="out-in" appear=false persisted=false  ... > 
+  at <Transition name="layout" mode="out-in" > 
+  at <NuxtLayout> 
+  at <App key=4 > 
+  at <NuxtRoot>

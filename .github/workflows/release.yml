@@ -1,0 +1,76 @@
+name: Build and Release Nuxt Frontend
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # 触发条件：推送 v 开头的标签，如 v1.0.0
+  workflow_dispatch:  # 允许手动触发
+
+permissions:
+  contents: write  # 允许创建 release 和上传文件
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: nuxt/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./nuxt
+        run: npm ci
+      
+      - name: Build Nuxt application
+        working-directory: ./nuxt
+        env:
+          NODE_ENV: production
+          NUXT_PUBLIC_API_BASE_URL: /api
+          NUXT_PUBLIC_SITE_URL: https://blog.wasd09090030.top
+          NUXT_API_BASE_URL: http://127.0.0.1:5000/api
+        run: npm run build
+      
+      - name: Create production archive
+        run: |
+          cd nuxt
+          tar -czf ../nuxt-build.tar.gz .output
+          cd ..
+      
+      - name: Generate build info
+        run: |
+          echo "Build Date: $(date)" > build-info.txt
+          echo "Commit: ${{ github.sha }}" >> build-info.txt
+          echo "Tag: ${{ github.ref_name }}" >> build-info.txt
+      
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          body: |
+            ## 🚀 Nuxt Frontend Project Release ${{ github.ref_name }}
+            
+            ### 📦 构建信息
+            - **构建时间**: ${{ job.status == 'success' && 'Success' || 'Failed' }}
+            - **Commit**: ${{ github.sha }}
+            
+            ### 📥 下载说明
+            下载 `nuxt-build-${{ github.ref_name }}.tar.gz` 并解压到服务器
+            
+            ### 🔧 部署步骤
+            1. 解压文件: `tar -xzf nuxt-build-${{ github.ref_name }}.tar.gz`
+            2. 安装依赖（如需要）: `cd .output && npm ci --production`
+            3. 启动服务: `node .output/server/index.mjs` 或使用 PM2
+          files: |
+            nuxt-build.tar.gz
+            build-info.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

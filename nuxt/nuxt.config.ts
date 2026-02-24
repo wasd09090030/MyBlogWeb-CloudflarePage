@@ -28,10 +28,6 @@ const createSwrHeaders = (maxAge: number, staleWhileRevalidate: number, withCdn 
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-09',
   devtools: { enabled: true },
-  // 混合架构：SSR 资源路径改为 /_ssr/，避免与 Cloudflare Pages 的 /_nuxt/ 冲突
-  app: {
-    buildAssetsDir: '/_ssr/'
-  },
   // 通过 NUXT_SOURCEMAP=true 按需开启 sourcemap
   sourcemap: enableSourceMap,
 
@@ -356,6 +352,8 @@ export default defineNuxtConfig({
 
   // 应用配置
   app: {
+    // 混合架构：SSR 资源路径改为 /_ssr/，避免与 Cloudflare Pages 的 /_nuxt/ 冲突
+    buildAssetsDir: '/_ssr/',
     // 页面过渡动画优化
     pageTransition: { name: 'page', mode: 'out-in' },
     layoutTransition: { name: 'layout', mode: 'out-in' },

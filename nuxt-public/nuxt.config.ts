@@ -1,6 +1,6 @@
 const isProduction = process.env.NODE_ENV === 'production'
 const enableSourceMap = process.env.NUXT_SOURCEMAP === 'true'
-const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://blog.wasd09090030.top'
+const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://wasd09090030.top'
 const apiBase = process.env.NUXT_PUBLIC_API_BASE_URL || 'https://backend.wasd09090030.top/api'
 
 export default defineNuxtConfig({

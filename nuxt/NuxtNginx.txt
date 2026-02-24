@@ -80,8 +80,9 @@ server
         proxy_cache_purge cache_one $host$request_uri$is_args$args;
     }
 
-    # Nuxt静态资源优先处理（关键：防止被代理到Node.js）
-    location ~* ^/_nuxt/ {
+    # SSR静态资源优先处理（关键：防止被代理到Node.js）
+    # 混合架构下 SSR 使用 /_ssr/ 路径，避免与 Cloudflare Pages 的 /_nuxt/ 冲突
+    location ~* ^/_ssr/ {
         root /www/wwwroot/Nuxt/public;
         try_files $uri $uri/ =404;
 

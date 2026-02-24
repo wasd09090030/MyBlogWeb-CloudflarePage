@@ -11,7 +11,7 @@ const PAGES_ORIGIN = 'https://myblogweb-cloudflarepage.pages.dev'  // Cloudflare
 const SERVER_ORIGIN = 'https://server.wasd09090030.top'
 
 // 需要转发到云服务器的路径前缀
-const SERVER_ROUTES = ['/admin', '/tools', '/mania', '/api', '/images']
+const SERVER_ROUTES = ['/admin', '/tools', '/mania', '/api', '/images', '/_ssr']
 
 // ===== Worker =====
 export default {

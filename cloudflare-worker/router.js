@@ -8,7 +8,7 @@
 
 // ===== 配置 =====
 const PAGES_ORIGIN = 'https://myblogweb-cloudflarepage.pages.dev'  // Cloudflare Pages 部署地址
-const SERVER_ORIGIN = 'https://你的云服务器IP或域名'    // 云服务器地址（如 https://server.wasd09090030.top）
+const SERVER_ORIGIN = 'https://server.wasd09090030.top'
 
 // 需要转发到云服务器的路径前缀
 const SERVER_ROUTES = ['/admin', '/tools', '/mania', '/api', '/images']

@@ -1,54 +1,73 @@
-name: Build and Release Nuxt Frontend
+name: Build and Release
 
 on:
   push:
     tags:
-      - 'v*.*.*'  # 触发条件：推送 v 开头的标签，如 v1.0.0
-  workflow_dispatch:  # 允许手动触发
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '构建目标'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - nuxt-ssr
+          - nuxt-public
+          - both
 
 permissions:
-  contents: write  # 允许创建 release 和上传文件
+  contents: write
 
 jobs:
-  build-and-release:
+  # ============================================================
+  # Nuxt SSR 动态站构建（部署到云服务器）
+  # 处理 /admin, /tools, /mania 等动态路由
+  # ============================================================
+  build-nuxt-ssr:
+    if: >-
+      github.event_name == 'push' ||
+      github.event.inputs.target == 'nuxt-ssr' ||
+      github.event.inputs.target == 'both'
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: nuxt/package-lock.json
-      
+
       - name: Install dependencies
         working-directory: ./nuxt
         run: npm ci
-      
-      - name: Build Nuxt application
+
+      - name: Build Nuxt SSR application
         working-directory: ./nuxt
         env:
           NODE_ENV: production
           NUXT_PUBLIC_API_BASE_URL: /api
-          NUXT_PUBLIC_SITE_URL: https://blog.wasd09090030.top
+          NUXT_PUBLIC_SITE_URL: https://wasd09090030.top
           NUXT_API_BASE_URL: http://127.0.0.1:5000/api
         run: npm run build
-      
+
       - name: Create production archive
         run: |
           cd nuxt
           tar -czf ../nuxt-build.tar.gz .output
           cd ..
-      
+
       - name: Generate build info
         run: |
           echo "Build Date: $(date)" > build-info.txt
           echo "Commit: ${{ github.sha }}" >> build-info.txt
           echo "Tag: ${{ github.ref_name }}" >> build-info.txt
-      
+          echo "Target: nuxt-ssr (dynamic)" >> build-info.txt
+
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v1
         with:
@@ -56,21 +75,68 @@ jobs:
           draft: false
           prerelease: false
           body: |
-            ## 🚀 Nuxt Frontend Project Release ${{ github.ref_name }}
-            
-            ### 📦 构建信息
-            - **构建时间**: ${{ job.status == 'success' && 'Success' || 'Failed' }}
-            - **Commit**: ${{ github.sha }}
-            
-            ### 📥 下载说明
-            下载 `nuxt-build-${{ github.ref_name }}.tar.gz` 并解压到服务器
-            
-            ### 🔧 部署步骤
-            1. 解压文件: `tar -xzf nuxt-build-${{ github.ref_name }}.tar.gz`
-            2. 安装依赖（如需要）: `cd .output && npm ci --production`
-            3. 启动服务: `node .output/server/index.mjs` 或使用 PM2
+            ## 🚀 Release ${{ github.ref_name }}
+
+            ### 📦 Nuxt SSR（动态站 — 云服务器）
+            处理路由：`/admin/*`, `/tools/*`, `/mania/*`
+
+            - **Commit**: `${{ github.sha }}`
+            - **构建时间**: ${{ job.status }}
+
+            ### 📥 部署步骤
+            1. 下载 `nuxt-build.tar.gz`
+            2. 解压: `tar -xzf nuxt-build.tar.gz`
+            3. 启动: `node .output/server/index.mjs` 或 PM2
+
+            ### 🌐 架构说明
+            - 静态页面（首页/文章/画廊/教程/关于）由 Cloudflare Pages 提供
+            - 动态页面（后台/工具箱/音游）由此 SSR 服务提供
+            - Cloudflare Worker 统一路由分发
           files: |
             nuxt-build.tar.gz
             build-info.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================================
+  # Nuxt Public 静态站构建（部署到 Cloudflare Pages）
+  # 仅在手动触发且选择 nuxt-public 或 both 时执行
+  # 通常由 Cloudflare Pages 自动构建,此 job 用于手动验证
+  # ============================================================
+  build-nuxt-public:
+    if: >-
+      github.event.inputs.target == 'nuxt-public' ||
+      github.event.inputs.target == 'both'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: nuxt-public/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./nuxt-public
+        run: npm ci
+
+      - name: Generate static site
+        working-directory: ./nuxt-public
+        env:
+          NODE_ENV: production
+          NUXT_PUBLIC_API_BASE_URL: https://backend.wasd09090030.top/api
+          NUXT_API_BASE_URL: https://backend.wasd09090030.top/api
+          NUXT_PUBLIC_SITE_URL: https://wasd09090030.top
+        run: npm run generate
+
+      - name: Deploy to Cloudflare Pages
+        if: github.event.inputs.target == 'nuxt-public' || github.event.inputs.target == 'both'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy nuxt-public/.output/public --project-name=myblogweb-cloudflarepage

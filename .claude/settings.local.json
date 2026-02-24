@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(curl -s -w \"\\\\n---HTTP_CODE:%{http_code}---\" https://backend.wasd09090030.top/api/articles --max-time 10)"
+      "Bash(curl -s -w \"\\\\n---HTTP_CODE:%{http_code}---\" https://backend.wasd09090030.top/api/articles --max-time 10)",
+      "mcp__mcp-router__fetch",
+      "mcp__mcp-router__sequentialthinking",
+      "Bash(ls -la \"E:\\\\CODE\\\\MyBlogWeb-CloudflarePage\\\\nuxt\\\\app\\\\shared\\\\api\"\" 2>nul || echo \"Directory not found \")",
+      "Bash(powershell -Command:*)",
+      "Bash(npx nuxt generate)"
     ]
   }
 }

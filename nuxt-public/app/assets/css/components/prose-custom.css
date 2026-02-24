@@ -1,0 +1,151 @@
+/**
+ * Tailwind Typography 自定义样式
+ * 配合 @tailwindcss/typography 使用
+ * 使用纯 CSS 定义以避免 IDE 报错
+ */
+
+/* 标题滚动偏移 - 固定导航栏 */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  scroll-margin-top: 5rem;
+}
+
+/* 代码块增强 */
+.prose pre {
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.prose :not(pre) > code {
+  background-color: rgb(253 242 248);  /* bg-pink-50 */
+  color: rgb(219 39 119);              /* text-pink-600 */
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}
+
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: '' !important;
+}
+
+/* 暗色模式代码 */
+.dark .prose :not(pre) > code {
+  background-color: rgb(131 24 67 / 0.3);  /* bg-pink-900/30 */
+  color: rgb(249 168 212);                  /* text-pink-300 */
+}
+
+/* 链接样式 */
+.prose a {
+  color: rgb(219 39 119);  /* text-pink-600 */
+  text-decoration: none;
+  transition: color 0.15s ease-in-out;
+}
+
+.prose a:hover {
+  color: rgb(236 72 153);  /* text-pink-500 */
+  text-decoration: underline;
+}
+
+.dark .prose a {
+  color: rgb(244 114 182);  /* text-pink-400 */
+}
+
+.dark .prose a:hover {
+  color: rgb(249 168 212);  /* text-pink-300 */
+}
+
+/* 引用块 */
+.prose blockquote {
+  border-left-width: 4px;
+  border-left-color: rgb(244 114 182);  /* border-pink-400 */
+  background-color: rgb(253 242 248 / 0.5);  /* bg-pink-50/50 */
+  padding-top: 0.25rem;
+  padding-right: 1rem;
+  padding-bottom: 0.25rem;
+  font-style: normal;
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+.dark .prose blockquote {
+  border-left-color: rgb(236 72 153);  /* border-pink-500 */
+  background-color: rgb(131 24 67 / 0.1);  /* bg-pink-900/10 */
+}
+
+/* 表格 */
+.prose table {
+  width: 100%;
+}
+
+.prose thead {
+  background-color: rgb(243 244 246);  /* bg-gray-100 */
+}
+
+.dark .prose thead {
+  background-color: rgb(31 41 55);  /* bg-gray-800 */
+}
+
+.prose th,
+.prose td {
+  border: 1px solid rgb(229 231 235);  /* border-gray-200 */
+  padding: 0.5rem 1rem;
+}
+
+.dark .prose th,
+.dark .prose td {
+  border-color: rgb(55 65 81);  /* border-gray-700 */
+}
+
+/* 图片 */
+.prose img {
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 水平线 */
+.prose hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgb(249 168 212), transparent);  /* via-pink-300 */
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.dark .prose hr {
+  background: linear-gradient(to right, transparent, rgb(219 39 119), transparent);  /* via-pink-600 */
+}
+
+/* 列表样式 */
+.prose ul > li::marker {
+  color: rgb(244 114 182);  /* text-pink-400 */
+}
+
+.prose ol > li::marker {
+  color: rgb(236 72 153);  /* text-pink-500 */
+  font-weight: 600;
+}
+
+/* KaTeX 数学公式 */
+.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* 选中文本 */
+.prose ::selection {
+  background-color: rgb(251 207 232 / 0.5);  /* bg-pink-200/50 */
+}
+
+.dark .prose ::selection {
+  background-color: rgb(236 72 153 / 0.3);  /* bg-pink-500/30 */
+}
+

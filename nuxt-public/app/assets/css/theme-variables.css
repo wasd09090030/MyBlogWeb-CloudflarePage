@@ -1,0 +1,390 @@
+/**
+ * 主题变量系统 - Theme Variables System
+ * 统一的色彩和样式变量定义
+ */
+
+/* ==================== 根变量 (Root Variables) ==================== */
+:root {
+  /* 过渡动画 */
+  --theme-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 间距系统 */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* 圆角系统 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Z-index层级 */
+  --z-base: 1;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+}
+
+/* ==================== 亮色主题 (Light Theme) ==================== */
+:root {
+  /* 背景色 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #F0F4F8;
+  --bg-tertiary: #dee2e6;
+  --bg-hover: #e9ecef;
+  --bg-active: #dee2e6;
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+
+  /* 文字颜色 */
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-tertiary: #adb5bd;
+  --text-inverse: #ffffff;
+  --text-muted: #98a2b3;
+
+  /* 主题色 */
+  --accent-primary: #0d6efd;
+  --accent-secondary: #6610f2;
+  --accent-success: #198754;
+  --accent-danger: #dc3545;
+  --accent-warning: #ffc107;
+  --accent-info: #0dcaf0;
+
+  /* 全局交互色 */
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-thumb-hover: #a8a8a8;
+  --focus-ring-color: rgba(13, 110, 253, 0.35);
+  --fab-bg: #00f5d4;
+  --fab-text: #04423d;
+  --fab-muted-bg: #94a3b8;
+  --fab-muted-text: #1f2937;
+
+  /* 代码展示区 */
+  --code-playground-bg: #171717;
+  --code-scrollbar-track: #1f2937;
+  --code-scrollbar-thumb: #4b5563;
+  --code-scrollbar-thumb-hover: #6b7280;
+  --code-block-bg: #161b22;
+  --code-block-text: #e6edf3;
+  --code-inline-bg: rgba(110, 118, 129, 0.4);
+  --hljs-keyword: #ff7b72;
+  --hljs-string: #a5d6ff;
+  --hljs-comment: #8b949e;
+  --hljs-number: #79c0ff;
+  --hljs-variable: #ffa657;
+  --nav-pulse-ring: rgba(13, 110, 253, 0.3);
+
+  /* 兼容别名（迁移期） */
+  --primary-color: var(--accent-primary);
+  --primary-color-hover: var(--accent-primary-hover);
+  --bs-primary: var(--accent-primary);
+
+  /* Hover状态 */
+  --accent-primary-hover: #0b5ed7;
+  --accent-secondary-hover: #520dc2;
+  --accent-success-hover: #157347;
+  --accent-danger-hover: #bb2d3b;
+
+  /* 渐变色 */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-soft: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --gradient-warm: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  --gradient-cool: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+
+  /* 边框颜色 */
+  --border-color: #dee2e6;
+  --border-color-light: #e9ecef;
+  --border-color-dark: #adb5bd;
+
+  /* 阴影 */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 12px 36px rgba(0, 0, 0, 0.25);
+  --shadow-2xl: 0 20px 50px rgba(0, 0, 0, 0.3);
+
+  /* 毛玻璃效果 */
+  --backdrop-blur: blur(10px);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.2);
+
+  /* 导航栏 */
+  --navbar-bg: linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95));
+  --navbar-text: #333333;
+  --navbar-text-hover: #0d6efd;
+  --navbar-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --navbar-scrolled-bg: rgba(255, 255, 255, 0.8);
+  --navbar-scrolled-border: rgba(0, 0, 0, 0.08);
+  --navbar-scrolled-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --nav-link-hover-bg: rgba(13, 110, 253, 0.08);
+  --nav-link-active-bg: rgba(13, 110, 253, 0.12);
+
+  /* 卡片 */
+  --card-bg: #ffffff;
+  --card-border: #e9ecef;
+  --card-shadow: var(--shadow-sm);
+
+  /* 输入框 */
+  --input-bg: #ffffff;
+  --input-border: #ced4da;
+  --input-focus-border: #80bdff;
+  --input-placeholder: #6c757d;
+
+  /* Footer */
+  --footer-bg: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%);
+  --footer-text: rgba(0, 0, 0, 0.8);
+  --footer-text-muted: rgba(0, 0, 0, 0.6);
+  --footer-link-hover-bg: rgba(13, 110, 253, 0.1);
+
+  /* 文章列表与分页 */
+  --article-category-hover-bg: rgba(13, 110, 253, 0.08);
+  --article-category-hover-border: rgba(13, 110, 253, 0.3);
+  --article-active-gradient: linear-gradient(135deg, #2563eb, #3b82f6);
+  --article-muted-chip-bg: rgba(90, 98, 105, 0.12);
+  --article-muted-chip-text: #5a6269;
+  --article-tag-color: #1874ff;
+  --article-tag-hover-color: #0d6efd;
+  --article-image-placeholder: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  --article-lazy-bg: #f8f9fa;
+  --article-lazy-shimmer: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  --pagination-hover-bg: #e0f2fe;
+  --pagination-hover-text: #0ea5e9;
+  --pagination-active-bg: #bae6fd;
+  --pagination-active-text: #0369a1;
+  --pagination-active-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+
+  /* SideBar / Welcome */
+  --panel-bg: #ffffff;
+  --panel-bg-soft: rgba(248, 249, 250, 0.9);
+  --panel-border-soft: rgba(0, 0, 0, 0.15);
+  --panel-hover-bg: #b2f7ef;
+  --panel-hover-shadow: rgba(178, 247, 239, 0.4);
+  --welcome-overlay-bg: #1c232c;
+  --welcome-badge-bg: rgba(255, 255, 255, 0.85);
+  --welcome-badge-text: #1f1f1f;
+}
+
+/* ==================== 暗色主题 (Dark Theme) ==================== */
+:root.dark,
+:root.dark-theme,
+:root[data-theme="dark"] {
+  /* 背景色 */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1a2332;
+  --bg-tertiary: #16232c;
+  --bg-hover: #334155;
+  --bg-active: #475569;
+  --bg-overlay: rgba(193, 60, 60, 0.7);
+
+  /* 文字颜色 */
+  --text-primary: #f1f5f9;
+  --text-secondary: #e2e8f0;
+  --text-tertiary: #cbd5e1;
+  --text-inverse: #0f172a;
+  --text-muted: #94a3b8;
+
+  /* 主题色 */
+  --accent-primary: #4299e1;
+  --accent-secondary: #9f7aea;
+  --accent-success: #48bb78;
+  --accent-danger: #f56565;
+  --accent-warning: #ed8936;
+  --accent-info: #4fd1c5;
+
+  /* 全局交互色 */
+  --scrollbar-track: #1f2937;
+  --scrollbar-thumb: #475569;
+  --scrollbar-thumb-hover: #64748b;
+  --focus-ring-color: rgba(96, 165, 250, 0.45);
+  --fab-bg: #2dd4bf;
+  --fab-text: #042f2e;
+  --fab-muted-bg: #64748b;
+  --fab-muted-text: #e2e8f0;
+
+  /* 代码展示区 */
+  --code-playground-bg: #0f172a;
+  --code-scrollbar-track: #1e293b;
+  --code-scrollbar-thumb: #475569;
+  --code-scrollbar-thumb-hover: #64748b;
+  --code-block-bg: #161b22;
+  --code-block-text: #e6edf3;
+  --code-inline-bg: rgba(110, 118, 129, 0.4);
+  --hljs-keyword: #ff7b72;
+  --hljs-string: #a5d6ff;
+  --hljs-comment: #8b949e;
+  --hljs-number: #79c0ff;
+  --hljs-variable: #ffa657;
+  --nav-pulse-ring: rgba(96, 165, 250, 0.35);
+
+  /* 兼容别名（迁移期） */
+  --primary-color: var(--accent-primary);
+  --primary-color-hover: var(--accent-primary-hover);
+  --bs-primary: var(--accent-primary);
+
+  /* Hover状态 */
+  --accent-primary-hover: #3182ce;
+  --accent-secondary-hover: #805ad5;
+  --accent-success-hover: #38a169;
+  --accent-danger-hover: #e53e3e;
+
+  /* 渐变色 */
+  --gradient-primary: linear-gradient(135deg, #4299e1 0%, #9f7aea 100%);
+  --gradient-secondary: linear-gradient(135deg, #ed64a6 0%, #f56565 100%);
+  --gradient-soft: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  --gradient-warm: linear-gradient(135deg, #ed64a6 0%, #ed8936 100%);
+  --gradient-cool: linear-gradient(135deg, #4299e1 0%, #2c5282 100%);
+
+  /* 边框颜色 */
+  --border-color: #4a5568;
+  --border-color-light: #374151;
+  --border-color-dark: #6b7280;
+
+  /* 阴影 */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 12px 36px rgba(0, 0, 0, 0.6);
+  --shadow-2xl: 0 20px 50px rgba(0, 0, 0, 0.7);
+
+  /* 毛玻璃效果 */
+  --backdrop-blur: blur(10px);
+  --glass-bg: rgba(30, 41, 59, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.1);
+
+  /* 导航栏 */
+  --navbar-bg: linear-gradient(rgba(26, 35, 50, 0.98), rgba(26, 35, 50, 0.95));
+  --navbar-text: #f1f5f9;
+  --navbar-text-hover: #60a5fa;
+  --navbar-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  --navbar-scrolled-bg: rgba(30, 30, 30, 0.8);
+  --navbar-scrolled-border: rgba(255, 255, 255, 0.08);
+  --navbar-scrolled-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  --nav-link-hover-bg: rgba(96, 165, 250, 0.15);
+  --nav-link-active-bg: rgba(96, 165, 250, 0.2);
+
+  /* 卡片 */
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --card-shadow: var(--shadow-md);
+
+  /* 输入框 */
+  --input-bg: #1e293b;
+  --input-border: #334155;
+  --input-focus-border: #60a5fa;
+  --input-placeholder: #94a3b8;
+
+  /* Footer */
+  --footer-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --footer-text: rgba(255, 255, 255, 0.9);
+  --footer-text-muted: rgba(255, 255, 255, 0.7);
+  --footer-link-hover-bg: rgba(96, 165, 250, 0.2);
+
+  /* 文章列表与分页 */
+  --article-category-hover-bg: rgba(56, 189, 248, 0.15);
+  --article-category-hover-border: rgba(56, 189, 248, 0.3);
+  --article-active-gradient: linear-gradient(135deg, #2563eb, #0ea5e9);
+  --article-muted-chip-bg: rgba(203, 213, 224, 0.15);
+  --article-muted-chip-text: #cbd5e0;
+  --article-tag-color: #38bdf8;
+  --article-tag-hover-color: #7dd3fc;
+  --article-image-placeholder: linear-gradient(135deg, #2d3748, #1a202c);
+  --article-lazy-bg: #1f2937;
+  --article-lazy-shimmer: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+  --pagination-hover-bg: rgba(56, 189, 248, 0.15);
+  --pagination-hover-text: #38bdf8;
+  --pagination-active-bg: rgba(56, 189, 248, 0.25);
+  --pagination-active-text: #7dd3fc;
+  --pagination-active-shadow: none;
+
+  /* SideBar / Welcome */
+  --panel-bg: #1f2937;
+  --panel-bg-soft: rgba(33, 37, 41, 0.9);
+  --panel-border-soft: rgba(255, 255, 255, 0.12);
+  --panel-hover-bg: rgba(56, 189, 248, 0.18);
+  --panel-hover-shadow: rgba(56, 189, 248, 0.35);
+  --welcome-overlay-bg: #0f172a;
+  --welcome-badge-bg: rgba(30, 41, 59, 0.88);
+  --welcome-badge-text: #e2e8f0;
+}
+
+/* ==================== 全局过渡 (Global Transitions) ==================== */
+* {
+  transition: background-color 0.3s ease,
+              color 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+/* 移除特定元素的过渡 */
+*:where(
+  .no-transition,
+  [data-no-transition],
+  img,
+  video,
+  iframe
+) {
+  transition: none !important;
+}
+
+/* ==================== 主题切换动画 (Theme Switch Animation) ==================== */
+@media (prefers-reduced-motion: no-preference) {
+  :root {
+    --theme-switch-duration: 0.3s;
+  }
+
+  html {
+    transition: background-color var(--theme-switch-duration) ease;
+  }
+
+  body {
+    transition: background-color var(--theme-switch-duration) ease,
+                color var(--theme-switch-duration) ease;
+  }
+}
+
+/* ==================== 辅助类 (Utility Classes) ==================== */
+
+/* 背景色辅助类 */
+.bg-primary { background-color: var(--bg-primary) !important; }
+.bg-secondary { background-color: var(--bg-secondary) !important; }
+.bg-tertiary { background-color: var(--bg-tertiary) !important; }
+
+/* 文字色辅助类 */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-tertiary { color: var(--text-tertiary) !important; }
+
+/* 边框色辅助类 */
+.border-color { border-color: var(--border-color) !important; }
+
+/* 阴影辅助类 */
+.shadow-sm { box-shadow: var(--shadow-sm) !important; }
+.shadow-md { box-shadow: var(--shadow-md) !important; }
+.shadow-lg { box-shadow: var(--shadow-lg) !important; }
+
+/* 毛玻璃效果 */
+.glass-effect {
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--glass-border);
+}
+
+/* 渐变背景 */
+.gradient-primary { background: var(--gradient-primary) !important; }
+.gradient-secondary { background: var(--gradient-secondary) !important; }
+.gradient-soft { background: var(--gradient-soft) !important; }

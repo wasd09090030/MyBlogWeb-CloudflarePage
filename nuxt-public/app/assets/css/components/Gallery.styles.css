@@ -1,0 +1,399 @@
+/* 画廊全屏容器样式 */
+.gallery-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1000;
+}
+
+/* 画廊内容过渡动画 */
+.gallery-content {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.gallery-content.gallery-ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gallery-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem 2rem 0;
+}
+
+.gallery-options {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.gallery-option {
+  appearance: none;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: rgba(255, 255, 255, 0.75);
+  color: rgba(15, 23, 42, 0.85);
+  padding: 0.55rem 1.4rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.gallery-option:hover {
+  border-color: rgba(100, 108, 255, 0.45);
+  color: rgba(30, 64, 175, 0.9);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.gallery-option.is-active {
+  background: rgba(15, 23, 42, 0.92);
+  color: #ffffff;
+  border-color: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.2);
+}
+
+/* 画廊淡入过渡 */
+.gallery-fade-enter-active {
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.gallery-fade-leave-active {
+  transition: opacity 0.3s ease-in;
+}
+
+.gallery-fade-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.gallery-fade-leave-to {
+  opacity: 0;
+}
+
+/* 加载动画退出过渡 */
+.loading-fade-enter-active,
+.loading-fade-leave-active {
+  transition: opacity 0.5s ease-out;
+}
+
+.loading-fade-enter-from,
+.loading-fade-leave-to {
+  opacity: 0;
+}
+
+.gallery-sections {
+  max-width: 100%;
+  padding: 2rem 2rem 4rem;
+}
+
+.gallery-fullscreen .fade-section {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+/* 状态覆盖层样式 */
+.loading-overlay,
+.error-overlay,
+.empty-state {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  color: white;
+  flex-direction: column;
+}
+
+/* 全屏模态框样式 - 优化版 */
+.fullscreen-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.fullscreen-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* 控制按钮组 */
+.fullscreen-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 100001;
+}
+
+.control-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+.control-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+.control-btn.close-btn {
+  background: rgba(239, 68, 68, 0.6);
+}
+
+.control-btn.close-btn:hover {
+  background: rgba(239, 68, 68, 0.8);
+}
+
+/* 图片内容区域 */
+.fullscreen-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 100000;
+}
+
+.image-wrapper {
+  transition: transform 0.15s ease-out;
+  will-change: transform;
+  user-select: none;
+}
+
+.fullscreen-image {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+  transition: box-shadow 0.3s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.fullscreen-image.is-dragging {
+  cursor: grabbing !important;
+}
+
+.fullscreen-image:not(.is-dragging):hover {
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.7);
+}
+
+/* 缩放指示器 */
+.zoom-indicator {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  z-index: 100001;
+  animation: fadeInUp 0.3s ease;
+}
+
+/* 操作提示 */
+.fullscreen-hint {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  z-index: 100001;
+  transition: opacity 0.3s ease;
+}
+
+.fullscreen-modal:hover .fullscreen-hint {
+  opacity: 0.8;
+}
+
+/* 过渡动画 */
+.fullscreen-fade-enter-active,
+.fullscreen-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fullscreen-fade-enter-from,
+.fullscreen-fade-leave-to {
+  opacity: 0;
+}
+
+.fullscreen-fade-enter-from .fullscreen-backdrop,
+.fullscreen-fade-leave-to .fullscreen-backdrop {
+  opacity: 0;
+}
+
+.fullscreen-fade-enter-from .fullscreen-image,
+.fullscreen-fade-leave-to .fullscreen-image {
+  transform: scale(0.9);
+  opacity: 0;
+}
+
+/* 图片缩放动画 */
+.image-zoom-enter-active {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.image-zoom-leave-active {
+  transition: all 0.3s ease-out;
+}
+
+.image-zoom-enter-from {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.image-zoom-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+/* 新增动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.empty-state {
+  padding: 4rem 2rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  /* 画廊内容移动端适配 */
+  .gallery-sections {
+    padding: 1rem 1rem 3rem;
+  }
+
+  .gallery-top {
+    padding: 1rem 1rem 0;
+    gap: 0.4rem;
+  }
+
+  .gallery-option {
+    padding: 0.45rem 1.1rem;
+    font-size: 0.9rem;
+  }
+  
+  /* 全屏查看移动端优化 */
+  .fullscreen-controls {
+    top: 15px;
+    right: 15px;
+    gap: 8px;
+  }
+  
+  .control-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .fullscreen-image {
+    max-width: 95vw;
+    max-height: 80vh;
+    border-radius: 6px;
+  }
+  
+  .zoom-indicator {
+    bottom: 100px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .fullscreen-hint {
+    bottom: 60px;
+    font-size: 0.75rem;
+    padding: 0 20px;
+    text-align: center;
+  }
+}
+
+/* 暗色主题适配 */
+:global(.dark-theme) .gallery-fullscreen {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+}
+
+:global(.dark-theme) .gallery-option {
+  background: rgba(30, 41, 59, 0.75);
+  color: rgba(248, 250, 252, 0.85);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+:global(.dark-theme) .gallery-option:hover {
+  border-color: rgba(129, 140, 248, 0.6);
+  color: rgba(224, 231, 255, 0.95);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
+}
+
+:global(.dark-theme) .gallery-option.is-active {
+  background: rgba(248, 250, 252, 0.92);
+  color: rgba(15, 23, 42, 0.9);
+  border-color: rgba(248, 250, 252, 0.9);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
+}
+

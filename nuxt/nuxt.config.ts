@@ -303,15 +303,16 @@ export default defineNuxtConfig({
     // 私有配置（服务器端）
     apiSecret: process.env.API_SECRET,
     // SSR 时的 API 地址：优先使用 NUXT_API_BASE_URL，否则与客户端保持一致
-    apiBaseServer: process.env.NUXT_API_BASE_URL 
+    apiBaseServer: process.env.NUXT_API_BASE_URL
       || process.env.NUXT_PUBLIC_API_BASE_URL
-      || (isProduction ? '' : 'http://127.0.0.1:5000/api'),
+      || (isProduction ? 'http://127.0.0.1:5000/api' : 'http://127.0.0.1:5000/api'),
 
     // 公共配置（客户端+服务器端）
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE_URL
         || (isProduction ? '/api' : 'http://localhost:5000/api'),
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL
+        || (isProduction ? 'https://wasd09090030.top' : 'http://localhost:3000')
     }
   },
 

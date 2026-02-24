@@ -1,21 +1,35 @@
+# ============================================================
+# 混合架构 Nginx 配置 — Nuxt SSR 动态站
+#
+# 职责：处理 Cloudflare Worker 转发过来的动态路由请求
+#       /admin/*, /tools/*, /mania/* → Nuxt SSR (port 3000)
+#       /api/* → .NET 后端 (port 5000)
+#
+# 静态博客页面（首页、文章、画廊、教程、关于）由 Cloudflare Pages 提供
+#
+# 架构：
+#   用户 → Cloudflare Worker (wasd09090030.top)
+#         ├── /admin, /tools, /mania, /api → 本服务器
+#         └── 其余路由 → Cloudflare Pages (静态)
+# ============================================================
+
 # 🔥 SWR 缓存区定义（需要放在 http 块中，此处仅作参考）
 # 请确保在 nginx.conf 的 http {} 块中添加以下配置：
 # proxy_cache_path /tmp/nginx_cache levels=1:2 keys_zone=cache_one:100m max_size=1g inactive=1d use_temp_path=off;
 
 server
 {
-listen 80;
+    listen 80;
     listen 443 ssl;
     listen 443 quic;
     http2 on;
-   server_name blog.wasd09090030.top;
+    server_name blog.wasd09090030.top;
     index index.html index.htm default.htm default.html;
-    #    root /www/wwwroot/Nuxt;
+
     #CERT-APPLY-CHECK--START
     # 用于SSL证书申请时的文件验证相关配置 -- 请勿删除
     include /www/server/panel/vhost/nginx/well-known/blog.wasd09090030.top.conf;
     #CERT-APPLY-CHECK--END
-
 
     #SSL-START SSL相关配置
     #error_page 404/404.html;
@@ -34,15 +48,12 @@ listen 80;
     add_header Strict-Transport-Security "max-age=31536000";
     add_header Alt-Svc 'quic=":443"; h3=":443"; h3-29=":443"; h3-27=":443";h3-25=":443"; h3-T050=":443"; h3-Q050=":443";h3-Q049=":443";h3-Q048=":443"; h3-Q046=":443"; h3-Q043=":443"';
     error_page 497  https://$host$request_uri;
-
-    
     #SSL-END
 
     #ERROR-PAGE-START  错误页相关配置
     #error_page 404 /404.html;
     #error_page 502 /502.html;
     #ERROR-PAGE-END
-
 
     #REWRITE-START 伪静态相关配置
     include /www/server/panel/vhost/rewrite/node_blog.wasd09090030.top.conf;
@@ -63,8 +74,8 @@ listen 80;
         return 403;
     }
 
-
     # HTTP反向代理相关配置开始 >>>
+
     location ~ /purge(/.*) {
         proxy_cache_purge cache_one $host$request_uri$is_args$args;
     }
@@ -73,8 +84,7 @@ listen 80;
     location ~* ^/_nuxt/ {
         root /www/wwwroot/Nuxt/public;
         try_files $uri $uri/ =404;
-        
-        # 设置正确的MIME类型
+
         types {
             application/javascript js mjs;
             text/css css;
@@ -85,12 +95,10 @@ listen 80;
             image/svg+xml svg;
             font/woff2 woff2;
         }
-        
-        # 静态资源强缓存（1年）
+
         add_header Cache-Control "public, max-age=60000, immutable";
         add_header X-Content-Type-Options "nosniff";
-        
-        # 开启Gzip
+
         gzip on;
         gzip_types text/css application/javascript image/svg+xml;
         gzip_vary on;
@@ -103,7 +111,8 @@ listen 80;
         add_header Cache-Control "public, max-age=31536000, immutable";
         expires 1y;
     }
-        # Nuxt Icon API - 必须在 /api/ 之前处理（优先级更高）
+
+    # Nuxt Icon API - 必须在 /api/ 之前处理（优先级更高）
     location /api/_nuxt_icon/ {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
@@ -114,9 +123,7 @@ listen 80;
         proxy_connect_timeout 30s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
-        
-        # 图标数据可以缓存（减少服务器负载）
-        add_header Cache-Control "public, max-age=86400"; # 缓存24小时
+        add_header Cache-Control "public, max-age=86400";
     }
 
     # API 代理到 .NET 后端 (5000端口)
@@ -130,14 +137,14 @@ listen 80;
         proxy_connect_timeout 30s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
-        
-        # 禁用缓存（API 数据实时性）
+
         proxy_no_cache 1;
         proxy_cache_bypass 1;
         add_header Cache-Control "no-cache, no-store, must-revalidate";
     }
 
-    # 🔥 SWR 缓存：所有其他请求代理到Nuxt SSR服务器
+    # 所有请求代理到 Nuxt SSR 服务器
+    # Worker 只会转发 /admin/*, /tools/*, /mania/* 到这里
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host:$server_port;
@@ -152,23 +159,22 @@ listen 80;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        
-        # 🔥 SWR 缓存配置（Stale-While-Revalidate）
+
+        # SWR 缓存配置
         proxy_cache cache_one;
-        proxy_cache_valid 200 10m;           # 成功响应缓存5分钟
-        proxy_cache_valid 301 302 1m;       # 重定向缓存1分钟
-        proxy_cache_valid 404 1m;           # 404缓存1分钟
-        
-        # SWR 核心：过期后仍可使用旧缓存，同时后台更新
+        proxy_cache_valid 200 10m;
+        proxy_cache_valid 301 302 1m;
+        proxy_cache_valid 404 1m;
+
         proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;
-        proxy_cache_background_update on;   # 后台静默更新
-        proxy_cache_lock on;                # 防止缓存击穿
-        proxy_cache_lock_timeout 5s;        # 锁超时时间
-        
+        proxy_cache_background_update on;
+        proxy_cache_lock on;
+        proxy_cache_lock_timeout 5s;
+
         proxy_cache_key $scheme$host$request_uri;
         add_header X-Cache-Status $upstream_cache_status;
-        
-        # 跳过缓存的情况：admin页面、带认证token、搜索请求
+
+        # 跳过缓存：admin页面、带认证token、搜索请求
         set $no_cache 0;
         if ($request_uri ~* "^/admin") {
             set $no_cache 1;
@@ -182,7 +188,7 @@ listen 80;
         if ($arg_nocache) {
             set $no_cache 1;
         }
-        
+
         proxy_cache_bypass $no_cache;
         proxy_no_cache $no_cache;
     }

@@ -20,6 +20,9 @@
           <NuxtLink to="/gallery" class="nav-link">
             <Icon name="images" size="sm" class="me-1" />画廊
           </NuxtLink>
+          <a href="/tools" class="nav-link">
+            <Icon name="wrench-screwdriver" size="sm" class="me-1" />工具箱
+          </a>
           <div
             class="nav-more-wrapper"
             @mouseenter="showMoreMenu = true"
@@ -34,6 +37,9 @@
                 <NuxtLink to="/tutorials" class="nav-more-item" role="menuitem">
                   <Icon name="book" size="xs" class="me-1" />教程
                 </NuxtLink>
+                <a href="/mania" class="nav-more-item" role="menuitem">
+                  <Icon name="musical-note" size="xs" class="me-1" />音游
+                </a>
                 <NuxtLink to="/about" class="nav-more-item" role="menuitem">
                   <Icon name="person-circle" size="xs" class="me-1" />关于站长
                 </NuxtLink>
@@ -75,9 +81,15 @@
             <NuxtLink to="/gallery" class="drawer-nav-item" @click="showMobileMenu = false">
               <Icon name="images" size="sm" />画廊
             </NuxtLink>
+            <a href="/tools" class="drawer-nav-item" @click="showMobileMenu = false">
+              <Icon name="wrench-screwdriver" size="sm" />工具箱
+            </a>
             <NuxtLink to="/tutorials" class="drawer-nav-item" @click="showMobileMenu = false">
               <Icon name="book" size="sm" />教程
             </NuxtLink>
+            <a href="/mania" class="drawer-nav-item" @click="showMobileMenu = false">
+              <Icon name="musical-note" size="sm" />音游
+            </a>
             <NuxtLink to="/about" class="drawer-nav-item" @click="showMobileMenu = false">
               <Icon name="person-circle" size="sm" />关于站长
             </NuxtLink>

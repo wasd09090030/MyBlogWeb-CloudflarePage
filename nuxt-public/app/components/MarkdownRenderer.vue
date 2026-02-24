@@ -28,9 +28,9 @@
     </div>
 
     <!-- 渲染错误 -->
-    <div v-else-if="error" class="my-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400">
-      渲染失败: {{ error }}
-    </div>
+    <n-alert v-else-if="error" type="error" title="渲染失败" class="my-4">
+      {{ error }}
+    </n-alert>
 
     <!-- MDC 渲染结果 -->
     <article
@@ -51,7 +51,7 @@
     />
 
     <!-- 无内容 -->
-    <div v-else class="my-4 text-center text-gray-400 py-8">暂无内容</div>
+    <n-empty v-else description="暂无内容" />
   </div>
 </template>
 

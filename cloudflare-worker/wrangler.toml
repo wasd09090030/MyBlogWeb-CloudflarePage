@@ -1,0 +1,11 @@
+name = "blog-router"
+main = "router.js"
+compatibility_date = "2026-01-01"
+
+# 绑定自定义域名路由
+# 在 Cloudflare Dashboard 中配置：
+# Workers Routes → wasd09090030.top/* → blog-router
+
+# 如果使用 Pages 绑定方式（推荐），在 Pages 项目中配置 Functions：
+# [assets]
+# binding = "ASSETS"

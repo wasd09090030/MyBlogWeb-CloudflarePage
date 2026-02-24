@@ -13,18 +13,18 @@
               <img src="/icon/logo.webp" alt="Logo" class="navbar-logo" loading="eager" fetchpriority="high" decoding="async" />
             </NuxtLink>
             <nav class="navbar-center-nav d-none d-lg-flex">
-              <NuxtLink to="/" class="nav-link">
+              <a href="/" class="nav-link">
                 <Icon name="house" size="sm" class="me-1" />首页
-              </NuxtLink>
-              <NuxtLink to="/gallery" class="nav-link">
+              </a>
+              <a href="/gallery" class="nav-link">
                 <Icon name="images" size="sm" class="me-1" />画廊
-              </NuxtLink>
+              </a>
               <NuxtLink to="/tools" class="nav-link">
                 <Icon name="wrench-screwdriver" size="sm" class="me-1" />工具箱
               </NuxtLink>
-              <div 
+              <div
                 class="nav-more-wrapper"
-                @mouseenter="showMoreMenu = true" 
+                @mouseenter="showMoreMenu = true"
                 @mouseleave="showMoreMenu = false"
               >
                 <button type="button" class="nav-link nav-more-trigger" aria-label="其他导航">
@@ -33,15 +33,15 @@
                 </button>
                 <Transition name="dropdown-fade">
                   <div v-show="showMoreMenu" class="nav-more-panel" role="menu" aria-label="其他">
-                    <NuxtLink to="/tutorials" class="nav-more-item" role="menuitem">
+                    <a href="/tutorials" class="nav-more-item" role="menuitem">
                       <Icon name="book" size="xs" class="me-1" />教程
-                    </NuxtLink>
+                    </a>
                     <NuxtLink to="/mania" class="nav-more-item" role="menuitem">
                       <Icon name="musical-note" size="xs" class="me-1" />音游
                     </NuxtLink>
-                    <NuxtLink to="/about" class="nav-more-item" role="menuitem">
+                    <a href="/about" class="nav-more-item" role="menuitem">
                       <Icon name="person-circle" size="xs" class="me-1" />关于站长
-                    </NuxtLink>
+                    </a>
                   </div>
                 </Transition>
               </div>
@@ -292,18 +292,16 @@ const handleCategorySelect = (key) => {
 
 const handleMobileMenuSelect = (key) => {
   showMobileMenu.value = false
-  if (key === 'home') {
-    router.push('/')
-  } else if (key === 'gallery') {
-    router.push('/gallery')
-  } else if (key === 'tutorials') {
-    router.push('/tutorials')
-  } else if (key === 'tools') {
-    router.push('/tools')
-  } else if (key === 'mania') {
-    router.push('/mania')
-  } else if (key === 'about') {
-    router.push('/about')
+  // Pages 静态路由 → 全页面跳转（跨项目）
+  const pagesRoutes = { home: '/', gallery: '/gallery', tutorials: '/tutorials', about: '/about' }
+  if (pagesRoutes[key]) {
+    window.location.href = pagesRoutes[key]
+    return
+  }
+  // 本项目内路由 → SPA 导航
+  const localRoutes = { tools: '/tools', mania: '/mania' }
+  if (localRoutes[key]) {
+    router.push(localRoutes[key])
   }
 }
 

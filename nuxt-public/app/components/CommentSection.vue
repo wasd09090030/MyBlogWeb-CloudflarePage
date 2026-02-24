@@ -164,6 +164,7 @@
 
 <script setup>
 import { useComments } from '~/composables/useComments'
+import { useMessage } from 'naive-ui'
 
 const props = defineProps({
   articleId: {
@@ -172,12 +173,7 @@ const props = defineProps({
   }
 })
 
-// 简易 toast 替代 naive-ui useMessage
-const message = {
-  success: (msg) => console.log('[success]', msg),
-  warning: (msg) => console.warn('[warning]', msg),
-  error: (msg) => console.error('[error]', msg)
-}
+const message = useMessage()
 
 // 响应式数据
 const comments = ref([])

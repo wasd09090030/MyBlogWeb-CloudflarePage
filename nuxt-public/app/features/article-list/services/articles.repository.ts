@@ -2,7 +2,7 @@ import type { ArticleLike } from '~/utils/workers/types'
 import type { ArticlesListOptions } from '~/features/article-list/types/article'
 import { createApiClient } from '~/shared/api/client'
 import { API_ENDPOINTS } from '~/shared/api/endpoints'
-import { buildFeaturedArticlesCacheKey } from '~/shared/cache/keys'
+import { buildFeaturedArticlesCacheKey, buildArticlesListCacheKey } from '~/shared/cache/keys'
 
 type NuxtDataContainer = {
   data?: Record<string, unknown>
@@ -84,6 +84,33 @@ export const createArticlesRepository = () => {
   }
 
   /**
+   * 获取第一页文章列表，使用 useFetch + getCachedData 将数据注入 SSG payload。
+   * 构建期执行远端请求并将结果嵌入 HTML payload；客户端水化时直接从 payload 读取，
+   * 无需额外网络请求，实现首屏文章卡片零延迟渲染。
+   */
+  const getFirstPageArticles = async (limit = 100): Promise<ArticleLike[]> => {
+    const key = buildArticlesListCacheKey({ summary: true, page: 1, limit })
+    const { data, error } = await useFetch<ArticleLike[] | { data?: ArticleLike[] }>(
+      `${client.baseURL}/articles`,
+      {
+        key,
+        params: { summary: true, page: 1, limit },
+        getCachedData: (k, nuxtApp) => {
+          return getCachedNuxtData<ArticleLike[] | { data?: ArticleLike[] }>(
+            nuxtApp as { payload: unknown; static: unknown },
+            k
+          )
+        }
+      }
+    )
+    if (error.value) throw error.value
+    const raw = data.value
+    if (!raw) return []
+    if (Array.isArray(raw)) return raw
+    return raw.data ?? []
+  }
+
+  /**
    * 按分类获取文章。
    */
   const getArticlesByCategory = async (category: string): Promise<ArticleLike[]> => {
@@ -93,6 +120,7 @@ export const createArticlesRepository = () => {
 
   return {
     getFeaturedArticles,
+    getFirstPageArticles,
     searchArticles,
     getArticles,
     getArticlesByCategory

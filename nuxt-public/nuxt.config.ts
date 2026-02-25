@@ -3,6 +3,26 @@ const enableSourceMap = process.env.NUXT_SOURCEMAP === 'true'
 const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://wasd09090030.top'
 const apiBase = process.env.NUXT_PUBLIC_API_BASE_URL || 'https://backend.wasd09090030.top/api'
 
+type ArticleRouteRecord = {
+  id: number
+  slug?: string | null
+  updatedAt?: string | null
+  createdAt?: string | null
+}
+
+const buildArticleRoute = (article: Pick<ArticleRouteRecord, 'id' | 'slug'>): string => {
+  return article.slug
+    ? `/article/${article.id}-${article.slug}`
+    : `/article/${article.id}`
+}
+
+const toIsoLastmod = (value?: string | null): string | undefined => {
+  if (!value) return undefined
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return undefined
+  return parsed.toISOString()
+}
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-09',
   devtools: { enabled: true },
@@ -196,7 +216,24 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
-    exclude: ['/admin/**', '/api/**']
+    exclude: ['/admin/**', '/api/**'],
+    urls: async () => {
+      try {
+        const res = await globalThis.fetch(`${apiBase}/articles`)
+        if (!res.ok) throw new Error(`API responded ${res.status}`)
+        const articles: ArticleRouteRecord[] = await res.json()
+        return articles.map((article) => {
+          const lastmod = toIsoLastmod(article.updatedAt || article.createdAt)
+          return {
+            loc: buildArticleRoute(article),
+            ...(lastmod ? { lastmod } : {})
+          }
+        })
+      } catch (e) {
+        console.error('❌ Failed to fetch sitemap article urls:', e)
+        return []
+      }
+    }
   },
 
   schemaOrg: {
@@ -274,12 +311,10 @@ export default defineNuxtConfig({
       try {
         const res = await globalThis.fetch(`${apiBase}/articles`)
         if (!res.ok) throw new Error(`API responded ${res.status}`)
-        const articles: { id: number; slug?: string }[] = await res.json()
+        const articles: ArticleRouteRecord[] = await res.json()
         for (const article of articles) {
           // 注册带 slug 的规范路由,避免预渲染时 301 重定向生成空页面
-          const route = article.slug
-            ? `/article/${article.id}-${article.slug}`
-            : `/article/${article.id}`
+          const route = buildArticleRoute(article)
           ctx.routes.add(route)
         }
         console.log(`✅ Prerender: registered ${articles.length} article routes`)

@@ -89,7 +89,11 @@ const error = ref(null)
 const loading = ref(false)
 const savedScrollPosition = ref(0)
 
-const { getAllArticles, getArticlesByCategory, searchArticles } = useArticlesFeature()
+const { getAllArticles, getArticlesByCategory, searchArticles, getFirstPageArticles } = useArticlesFeature()
+
+// SSG 预取：构建期执行远端请求并将第一页数据嵌入 payload；
+// 客户端水化时直接从 payload 读取，无需展示加载状态。
+const ssrInitialArticles = await getFirstPageArticles().catch(() => [])
 
 const currentPage = ref(1)
 const currentFilteredPage = ref(1)
@@ -274,6 +278,20 @@ onMounted(async () => {
     window.addEventListener('resize', checkMobile)
   }
 
+  // 优先使用 SSG 预取数据（默认首页，无搜索/分类参数）
+  if (!isFilteredMode.value && ssrInitialArticles.length > 0) {
+    articles.value = ssrInitialArticles
+    handleSyncPageFromQuery(route.query.page)
+    // 后台静默拉取全量数据，填充内存缓存供搜索/分类使用，不阻塞首屏渲染
+    getAllArticles(false).then((fullData) => {
+      if (fullData && fullData.length > ssrInitialArticles.length) {
+        articles.value = fullData
+      }
+    }).catch(() => {})
+    return
+  }
+
+  // 降级路径：SSR 数据不可用，或当前有查询参数（搜索/分类），走原有客户端请求逻辑
   await fetchArticles()
   handleSyncPageFromQuery(route.query.page)
 })

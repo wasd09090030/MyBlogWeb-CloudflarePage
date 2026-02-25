@@ -19,6 +19,14 @@ export const useArticlesFeature = () => {
   const repository = createArticlesRepository()
 
   /**
+   * 获取第一页文章（SSG payload 预取）。
+   * 将构建期第一页数据嵌入 HTML payload，水化时直接使用，无需客户端重新请求。
+   */
+  const getFirstPageArticles = async (limit = 100): Promise<ArticleLike[]> => {
+    return await repository.getFirstPageArticles(limit)
+  }
+
+  /**
    * 获取推荐文章。
    */
   const getFeaturedArticles = async (limit = 6): Promise<ArticleLike[] | null> => {
@@ -95,6 +103,7 @@ export const useArticlesFeature = () => {
   return {
     getFeaturedArticles,
     getFeaturedArticlesResult,
+    getFirstPageArticles,
     searchArticles,
     getArticles,
     getArticlesResult,

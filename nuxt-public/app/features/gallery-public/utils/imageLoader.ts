@@ -38,7 +38,7 @@ export async function preloadAllImagesWithWorker(
   loadingState: LoadingState,
   loadingProgressRef: Ref<number>,
   previewImagesRef: Ref<GalleryItem[]>,
-  preloadCount = 15,
+  preloadCount = 5,
   concurrencyLimit = 5
 ): Promise<void> {
   if (galleries.length === 0) return
@@ -49,7 +49,7 @@ export async function preloadAllImagesWithWorker(
   loadingState.loadedImagesCount.value = 0
   loadingProgressRef.value = 0
 
-  previewImagesRef.value = galleries.slice(0, 3)
+  previewImagesRef.value = imagesToPreload
 
   const { useImagePreloadWorker } = await import('~/composables/useImagePreloadWorker')
   const { preloadImages, isAvailable } = useImagePreloadWorker()
@@ -87,7 +87,7 @@ export async function preloadAllImages(
   loadingState: LoadingState,
   loadingProgressRef: Ref<number>,
   previewImagesRef: Ref<GalleryItem[]>,
-  preloadCount = 15,
+  preloadCount = 5,
   concurrencyLimit = 5
 ): Promise<void> {
   if (galleries.length === 0) return
@@ -98,7 +98,7 @@ export async function preloadAllImages(
   loadingState.loadedImagesCount.value = 0
   loadingProgressRef.value = 0
 
-  previewImagesRef.value = galleries.slice(0, 3)
+  previewImagesRef.value = imagesToPreload
 
   try {
     const chunks: GalleryItem[][] = []

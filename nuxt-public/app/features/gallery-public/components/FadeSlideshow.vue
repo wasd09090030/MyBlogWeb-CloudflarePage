@@ -11,12 +11,10 @@
           @click="$emit('image-click', gallery)"
         >
           <template v-if="hasImage(gallery, index)">
-            <ImageLoadingPlaceholder :show="!isImageLoaded(gallery, index)" />
             <img
               :src="gallery.imageUrl"
               alt="画廊图片"
               class="fade-image"
-              @load="handleImageLoad(gallery, index)"
               @error="handleImageError(gallery, index)"
             />
           </template>
@@ -35,8 +33,6 @@
 </template>
 
 <script setup>
-import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
-
 const props = defineProps({
   images: {
     type: Array,
@@ -45,7 +41,6 @@ const props = defineProps({
 })
 
 defineEmits(['image-click'])
-const imageLoadedMap = ref({})
 const imageErrorMap = ref({})
 
 const getImageKey = (image, index) => String(image?.id ?? image?.imageUrl ?? index)
@@ -54,14 +49,9 @@ const hasImage = (image, index) => {
   if (!imageUrl) return false
   return !imageErrorMap.value[getImageKey(image, index)]
 }
-const isImageLoaded = (image, index) => Boolean(imageLoadedMap.value[getImageKey(image, index)])
-const handleImageLoad = (image, index) => {
-  imageLoadedMap.value[getImageKey(image, index)] = true
-}
 const handleImageError = (image, index) => {
   const imageKey = getImageKey(image, index)
   imageErrorMap.value[imageKey] = true
-  imageLoadedMap.value[imageKey] = true
 }
 
 // DOM 引用
@@ -211,7 +201,6 @@ onUnmounted(() => {
 watch(
   () => props.images.map((image, index) => image?.id ?? image?.imageUrl ?? index),
   () => {
-    imageLoadedMap.value = {}
     imageErrorMap.value = {}
   },
   { immediate: true }

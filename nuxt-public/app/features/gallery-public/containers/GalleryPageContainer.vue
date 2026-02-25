@@ -90,7 +90,7 @@ const preloadAllImagesHandler = async () => {
       loadingState,
       loadingProgress,
       previewImages,
-      15,
+      5,
       5
     )
 

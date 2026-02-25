@@ -103,40 +103,40 @@ jobs:
   # 仅在手动触发且选择 nuxt-public 或 both 时执行
   # 通常由 Cloudflare Pages 自动构建,此 job 用于手动验证
   # ============================================================
-  build-nuxt-public:
-    if: >-
-      github.event.inputs.target == 'nuxt-public' ||
-      github.event.inputs.target == 'both'
-    runs-on: ubuntu-latest
+  # build-nuxt-public:
+  #   if: >-
+  #     github.event.inputs.target == 'nuxt-public' ||
+  #     github.event.inputs.target == 'both'
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: nuxt-public/package-lock.json
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '22'
+  #         cache: 'npm'
+  #         cache-dependency-path: nuxt-public/package-lock.json
 
-      - name: Install dependencies
-        working-directory: ./nuxt-public
-        run: npm ci
+  #     - name: Install dependencies
+  #       working-directory: ./nuxt-public
+  #       run: npm ci
 
-      - name: Generate static site
-        working-directory: ./nuxt-public
-        env:
-          NODE_ENV: production
-          NUXT_PUBLIC_API_BASE_URL: https://backend.wasd09090030.top/api
-          NUXT_API_BASE_URL: https://backend.wasd09090030.top/api
-          NUXT_PUBLIC_SITE_URL: https://wasd09090030.top
-        run: npm run generate
+  #     - name: Generate static site
+  #       working-directory: ./nuxt-public
+  #       env:
+  #         NODE_ENV: production
+  #         NUXT_PUBLIC_API_BASE_URL: https://backend.wasd09090030.top/api
+  #         NUXT_API_BASE_URL: https://backend.wasd09090030.top/api
+  #         NUXT_PUBLIC_SITE_URL: https://wasd09090030.top
+  #       run: npm run generate
 
-      - name: Deploy to Cloudflare Pages
-        if: github.event.inputs.target == 'nuxt-public' || github.event.inputs.target == 'both'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy nuxt-public/.output/public --project-name=myblogweb-cloudflarepage
+  #     - name: Deploy to Cloudflare Pages
+  #       if: github.event.inputs.target == 'nuxt-public' || github.event.inputs.target == 'both'
+  #       uses: cloudflare/wrangler-action@v3
+  #       with:
+  #         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  #         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  #         command: pages deploy nuxt-public/.output/public --project-name=myblogweb-cloudflarepage

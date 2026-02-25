@@ -270,7 +270,7 @@ const editArticle = (id) => {
 const triggerPagesDeployHook = async () => {
   isTriggeringPagesDeploy.value = true
   try {
-    const result = await authStore.authFetch<{ success?: boolean; message?: string }>(
+    const result = await authStore.authFetch(
       API_ENDPOINTS.ops.triggerPagesDeployHook,
       { method: 'POST' }
     )

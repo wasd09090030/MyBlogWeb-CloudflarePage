@@ -138,6 +138,18 @@
                 </template>
                 管理画廊
               </n-button>
+              <n-button
+                block
+                quaternary
+                class="justify-start"
+                :loading="isTriggeringPagesDeploy"
+                @click="triggerPagesDeployHook"
+              >
+                <template #icon>
+                  <Icon name="cloud-arrow-down" size="md" class="text-orange-500" />
+                </template>
+                触发 Pages 重构发布
+              </n-button>
               <n-button block quaternary class="justify-start" @click="$router.push('/admin/beatmaps')">
                 <template #icon>
                   <Icon name="musical-note" size="md" class="text-purple-500" />
@@ -167,6 +179,8 @@
 import { NButton, NTag } from 'naive-ui'
 import { useAdminArticlesFeature } from '~/features/article-admin/composables/useAdminArticlesFeature'
 import { useAdminCommentsFeature } from '~/features/article-admin/composables/useAdminCommentsFeature'
+import { API_ENDPOINTS } from '~/shared/api/endpoints'
+import { mapErrorToUserMessage } from '~/shared/errors'
 
 definePageMeta({
   ssr: false,
@@ -175,13 +189,13 @@ definePageMeta({
 })
 
 const router = useRouter()
-const config = useRuntimeConfig()
-const baseURL = config.public.apiBase
+const message = useMessage()
 const authStore = useAuthStore()
 const { getArticles, getCategoryLabel, getCategoryType } = useAdminArticlesFeature()
 const { getAllComments, getPendingComments } = useAdminCommentsFeature()
 
 const loading = ref(true)
+const isTriggeringPagesDeploy = ref(false)
 const articleCount = ref(0)
 const latestArticles = ref([])
 const commentStats = ref({ total: 0, pending: 0 })
@@ -251,6 +265,28 @@ const createArticle = () => {
 
 const editArticle = (id) => {
   router.push(`/admin/articles/${id}`)
+}
+
+const triggerPagesDeployHook = async () => {
+  isTriggeringPagesDeploy.value = true
+  try {
+    const result = await authStore.authFetch<{ success?: boolean; message?: string }>(
+      API_ENDPOINTS.ops.triggerPagesDeployHook,
+      { method: 'POST' }
+    )
+
+    if (result?.success === false) {
+      message.error(result.message || '触发 Cloudflare Pages 重构失败')
+      return
+    }
+
+    message.success(result?.message || '已触发 Cloudflare Pages 重构发布')
+  } catch (error) {
+    console.error('触发 Cloudflare Pages Deploy Hook 失败:', error)
+    message.error(mapErrorToUserMessage(error, '触发 Cloudflare Pages 重构失败'))
+  } finally {
+    isTriggeringPagesDeploy.value = false
+  }
 }
 
 const fetchDashboardData = async () => {

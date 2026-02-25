@@ -10,12 +10,20 @@
           @click="toggleAccordion(index)"
           @dblclick="$emit('image-click', gallery)"
         >
-          <img
-            :src="gallery.imageUrl"
-            alt="画廊图片"
-            class="accordion-image"
-            loading="lazy"
-          />
+          <template v-if="hasImage(gallery)">
+            <ImageLoadingPlaceholder :show="!isImageLoaded(gallery)" />
+            <img
+              :src="gallery.imageUrl"
+              alt="画廊图片"
+              class="accordion-image"
+              loading="lazy"
+              @load="handleImageLoad(gallery)"
+              @error="handleImageError(gallery)"
+            />
+          </template>
+          <div v-else class="accordion-fallback">
+            <Icon name="image" size="xl" />
+          </div>
           <div class="overlay"></div>
         </div>
       </div>
@@ -24,6 +32,8 @@
 </template>
 
 <script setup>
+import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
+
 const props = defineProps({
   images: {
     type: Array,
@@ -31,15 +41,42 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['image-click'])
+defineEmits(['image-click'])
 
 // 默认展开第一个
 const expandedIndex = ref(0)
+const imageLoadedMap = ref({})
+const imageErrorMap = ref({})
+
+const getImageKey = (image) => String(image?.id ?? image?.imageUrl ?? '')
+const hasImage = (image) => {
+  const imageUrl = image?.imageUrl
+  if (!imageUrl) return false
+  return !imageErrorMap.value[getImageKey(image)]
+}
+const isImageLoaded = (image) => Boolean(imageLoadedMap.value[getImageKey(image)])
+const handleImageLoad = (image) => {
+  imageLoadedMap.value[getImageKey(image)] = true
+}
+const handleImageError = (image) => {
+  const imageKey = getImageKey(image)
+  imageErrorMap.value[imageKey] = true
+  imageLoadedMap.value[imageKey] = true
+}
 
 // 切换展开项
 const toggleAccordion = (index) => {
   expandedIndex.value = index
 }
+
+watch(
+  () => props.images.map(image => image?.id ?? image?.imageUrl),
+  () => {
+    imageLoadedMap.value = {}
+    imageErrorMap.value = {}
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>
@@ -79,6 +116,16 @@ const toggleAccordion = (index) => {
   cursor: pointer;
   transition: flex 0.5s cubic-bezier(0.25, 1, 0.5, 1);
   min-width: 0; /* 防止内容撑开 flex item */
+}
+
+.accordion-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.75);
+  background: linear-gradient(140deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.4));
 }
 
 .accordion-item.expanded {

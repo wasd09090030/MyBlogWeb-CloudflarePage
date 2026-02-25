@@ -21,7 +21,19 @@
           @click="handleItemClick(index, item)"
         >
           <div class="item-content">
-            <img :src="item.imageUrl" class="carousel-image" loading="lazy" />
+            <template v-if="hasImage(item, index)">
+              <ImageLoadingPlaceholder :show="!isImageLoaded(item, index)" />
+              <img
+                :src="item.imageUrl"
+                class="carousel-image"
+                loading="lazy"
+                @load="handleImageLoad(item, index)"
+                @error="handleImageError(item, index)"
+              />
+            </template>
+            <div v-else class="carousel-fallback">
+              <Icon name="image" size="2xl" />
+            </div>
             <div class="item-overlay"></div>
           </div>
         </div>
@@ -32,6 +44,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
 
 const props = defineProps({
   images: {
@@ -45,6 +58,24 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['image-click'])
+const imageLoadedMap = ref({})
+const imageErrorMap = ref({})
+
+const getImageKey = (image, index) => String(image?._uniqueKey ?? image?.id ?? image?.imageUrl ?? index)
+const hasImage = (image, index) => {
+  const imageUrl = image?.imageUrl
+  if (!imageUrl) return false
+  return !imageErrorMap.value[getImageKey(image, index)]
+}
+const isImageLoaded = (image, index) => Boolean(imageLoadedMap.value[getImageKey(image, index)])
+const handleImageLoad = (image, index) => {
+  imageLoadedMap.value[getImageKey(image, index)] = true
+}
+const handleImageError = (image, index) => {
+  const imageKey = getImageKey(image, index)
+  imageErrorMap.value[imageKey] = true
+  imageLoadedMap.value[imageKey] = true
+}
 
 const activeIndex = ref(0)
 const autoplayTimer = ref(null)
@@ -246,6 +277,15 @@ const getItemStyle = (index) => {
     visibility: 'visible'
   }
 }
+
+watch(
+  () => internalImages.value.map((image, index) => getImageKey(image, index)),
+  () => {
+    imageLoadedMap.value = {}
+    imageErrorMap.value = {}
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>
@@ -313,6 +353,16 @@ const getItemStyle = (index) => {
   object-fit: cover;
   display: block;
   user-select: none;
+}
+
+.carousel-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.82);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.58), rgba(30, 41, 59, 0.3));
 }
 
 .item-overlay {

@@ -10,6 +10,7 @@
     <figure class="image-figure">
       <!-- 图片容器 -->
       <div class="image-wrapper" @click="handleImageClick">
+        <ImageLoadingPlaceholder :show="!imageLoaded" />
         <img
           :src="src"
           :alt="alt"
@@ -18,6 +19,7 @@
           class="enhanced-image"
           :class="{ 'cursor-zoom-in': zoomable }"
           @load="handleImageLoad"
+          @error="handleImageError"
         />
       </div>
       
@@ -44,6 +46,7 @@
 </template>
 
 <script setup>
+import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
 /**
  * ImageEnhanced 增强图片组件 - MDC 语法
  * 
@@ -152,6 +155,17 @@ const closeLightbox = () => {
 const handleImageLoad = () => {
   imageLoaded.value = true
 }
+const handleImageError = () => {
+  imageLoaded.value = true
+}
+
+watch(
+  () => props.src,
+  () => {
+    imageLoaded.value = false
+  },
+  { immediate: true }
+)
 
 // 监听 ESC 键关闭 Lightbox
 onMounted(() => {

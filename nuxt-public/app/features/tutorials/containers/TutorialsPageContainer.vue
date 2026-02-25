@@ -35,16 +35,21 @@
           >
             <div class="card-image-wrapper">
               <img
-                v-if="article.coverImage && article.coverImage !== 'null'"
+                v-if="hasCoverImage(article)"
                 :src="article.coverImage"
                 :alt="article.title"
                 class="card-img"
                 loading="lazy"
-                @error="handleImageError"
+                @load="handleCardImageLoad(article)"
+                @error="handleCardImageError($event, article)"
               />
               <div v-else class="image-placeholder gradient-soft">
                 <Icon name="journal-code" size="3xl" class="opacity-50" />
               </div>
+              <ImageLoadingPlaceholder
+                v-if="hasCoverImage(article)"
+                :show="!isCardImageLoaded(article)"
+              />
 
               <div class="image-overlay">
                 <span class="read-btn">
@@ -102,8 +107,9 @@ import { getExcerpt } from '~/utils/excerpt'
 import { useArticlesFeature } from '~/features/article-list/composables/useArticlesFeature'
 import { formatDate, getArticlePath } from '~/features/tutorials/utils/formatters'
 import { extractAvailableTags, processArticles } from '~/features/tutorials/utils/filters'
-import { scrollToListTop, handleImageError } from '~/features/tutorials/utils/navigation'
+import { scrollToListTop, handleImageError as handleCardImageDomError } from '~/features/tutorials/utils/navigation'
 import StateLoading from '~/shared/ui/StateLoading.vue'
+import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
 
 const articleListContainer = ref(null)
 const articles = ref([])
@@ -115,6 +121,8 @@ const currentPage = ref(1)
 const articlesPerPage = 9
 const selectedTag = ref('all')
 const sortOrder = ref('desc')
+const imageLoadedMap = ref({})
+const imageErrorMap = ref({})
 
 const fetchArticles = async () => {
   loading.value = true
@@ -170,6 +178,23 @@ const handleScrollToTop = () => {
   scrollToListTop(articleListContainer, 100)
 }
 
+const getArticleImageKey = (article) => String(article?.id ?? article?.slug ?? article?.title ?? '')
+const hasCoverImage = (article) => {
+  const coverImage = article?.coverImage
+  if (!coverImage || coverImage === 'null') return false
+  return !imageErrorMap.value[getArticleImageKey(article)]
+}
+const isCardImageLoaded = (article) => Boolean(imageLoadedMap.value[getArticleImageKey(article)])
+const handleCardImageLoad = (article) => {
+  imageLoadedMap.value[getArticleImageKey(article)] = true
+}
+const handleCardImageError = (event, article) => {
+  const imageKey = getArticleImageKey(article)
+  imageErrorMap.value[imageKey] = true
+  imageLoadedMap.value[imageKey] = true
+  handleCardImageDomError(event)
+}
+
 onMounted(() => {
   fetchArticles()
 })
@@ -179,6 +204,15 @@ watch([selectedTag, sortOrder], () => {
     currentPage.value = 1
   }
 })
+
+watch(
+  () => paginatedArticles.value.map(article => article.id),
+  () => {
+    imageLoadedMap.value = {}
+    imageErrorMap.value = {}
+  },
+  { immediate: true }
+)
 
 defineExpose({ refreshData: fetchArticles })
 </script>

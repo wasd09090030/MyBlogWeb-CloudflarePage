@@ -13,12 +13,20 @@
         @click="$emit('image-click', item)"
       >
         <div class="item-inner">
-          <img
-            :src="item.thumbnailUrl || item.imageUrl"
-            :alt="item.title || '画廊图片'"
-            class="waterfall-image"
-            loading="lazy"
-          />
+          <template v-if="hasImage(item, index)">
+            <ImageLoadingPlaceholder :show="!isImageLoaded(item, index)" />
+            <img
+              :src="item.thumbnailUrl || item.imageUrl"
+              :alt="item.title || '画廊图片'"
+              class="waterfall-image"
+              loading="lazy"
+              @load="handleImageLoad(item, index)"
+              @error="handleImageError(item, index)"
+            />
+          </template>
+          <div v-else class="waterfall-fallback">
+            <Icon name="image" size="xl" />
+          </div>
         </div>
       </div>
     </div>
@@ -38,6 +46,8 @@
 </template>
 
 <script setup>
+import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
+
 const props = defineProps({
   images: {
     type: Array,
@@ -82,6 +92,8 @@ const isMounted = ref(false)
 const displayedCount = ref(props.initialLoadCount)
 const isLoadingMore = ref(false)
 const hasMore = computed(() => displayedCount.value < props.images.length)
+const imageLoadedMap = ref({})
+const imageErrorMap = ref({})
 
 // 稳定随机（用于打乱和宽度分配）
 const hashString = (value) => {
@@ -118,6 +130,21 @@ const shuffledImages = computed(() => {
 const displayedImages = computed(() => {
   return shuffledImages.value.slice(0, displayedCount.value)
 })
+const getRenderImageKey = (image, index) => String(image?.id ?? image?.imageUrl ?? index)
+const hasImage = (image, index) => {
+  const imageUrl = image?.thumbnailUrl || image?.imageUrl
+  if (!imageUrl) return false
+  return !imageErrorMap.value[getRenderImageKey(image, index)]
+}
+const isImageLoaded = (image, index) => Boolean(imageLoadedMap.value[getRenderImageKey(image, index)])
+const handleImageLoad = (image, index) => {
+  imageLoadedMap.value[getRenderImageKey(image, index)] = true
+}
+const handleImageError = (image, index) => {
+  const imageKey = getRenderImageKey(image, index)
+  imageErrorMap.value[imageKey] = true
+  imageLoadedMap.value[imageKey] = true
+}
 
 const getImageRatio = (image) => {
   const width = Number(image?.imageWidth || image?.width || 0)
@@ -270,7 +297,10 @@ const destroyLayout = () => {
 // 重置显示数量（当图片数据变化时）
 watch(() => props.images, () => {
   displayedCount.value = Math.min(props.initialLoadCount, props.images.length)
+  imageLoadedMap.value = {}
+  imageErrorMap.value = {}
 }, { deep: true })
+
 
 // 暴露方法给父组件
 defineExpose({
@@ -437,6 +467,16 @@ onUnmounted(() => {
   object-fit: cover;
   transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
               filter 0.4s ease;
+}
+
+.waterfall-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.52), rgba(30, 41, 59, 0.28));
 }
 
 .waterfall-item:hover .waterfall-image {

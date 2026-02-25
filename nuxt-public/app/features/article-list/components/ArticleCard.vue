@@ -11,17 +11,20 @@
   >
     <!-- 封面图片区域 -->
     <div class="article-image-section">
-      <img
-        v-if="article.coverImage && article.coverImage !== 'null'"
-        :src="article.coverImage"
-        :alt="article.title"
-        class="article-image lazy-image"
-        style="height: 300px; aspect-ratio: 16/9; object-fit: cover; width: 100%;"
-        @error="handleImageError"
-        @load="handleImageLoad"
-        :loading="isPriority ? 'eager' : 'lazy'"
-        :fetchpriority="isPriority ? 'high' : 'low'"
-      />
+      <template v-if="hasCoverImage">
+        <ImageLoadingPlaceholder :show="!imageLoaded" />
+        <img
+          :src="article.coverImage"
+          :alt="article.title"
+          class="article-image lazy-image"
+          :class="{ 'lazy-loaded': imageLoaded }"
+          style="height: 300px; aspect-ratio: 16/9; object-fit: cover; width: 100%;"
+          @error="handleImageError"
+          @load="handleImageLoad"
+          :loading="isPriority ? 'eager' : 'lazy'"
+          :fetchpriority="isPriority ? 'high' : 'low'"
+        />
+      </template>
       <div v-else class="article-image-placeholder">
         <Icon name="image" size="3xl" class="text-muted" />
       </div>
@@ -64,6 +67,7 @@
 <script setup>
 import { getExcerpt } from '~/utils/excerpt'
 import { useArticleNavigation } from '~/composables/useArticleNavigation'
+import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
 
 const { navigateToArticle } = useArticleNavigation()
 
@@ -93,6 +97,12 @@ const props = defineProps({
 const isListView = computed(() => props.viewMode === 'list')
 const isGridView = computed(() => props.viewMode === 'grid')
 const isPriority = computed(() => props.index < 3)
+const imageLoaded = ref(false)
+const imageErrored = ref(false)
+const hasCoverImage = computed(() => {
+  const coverImage = props.article?.coverImage
+  return Boolean(coverImage && coverImage !== 'null' && !imageErrored.value)
+})
 
 const articleExcerpt = computed(() => getExcerpt(props.article.contentMarkdown || props.article.content))
 
@@ -152,12 +162,24 @@ const getCategoryClass = (category) => {
 }
 
 const handleImageError = (event) => {
+  imageErrored.value = true
+  imageLoaded.value = true
   event.target.style.display = 'none'
 }
 
 const handleImageLoad = (event) => {
+  imageLoaded.value = true
   event.target.classList.add('lazy-loaded')
 }
+
+watch(
+  () => props.article?.coverImage,
+  () => {
+    imageLoaded.value = false
+    imageErrored.value = false
+  },
+  { immediate: true }
+)
 
 function formatDate(dateString) {
   if (!dateString) return '未知日期'

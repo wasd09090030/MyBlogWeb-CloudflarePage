@@ -16,6 +16,10 @@ export const API_ENDPOINTS = {
     // 对齐后端 AiController: [HttpPost("summary")]，稳定端点为 /ai/summary。
     summary: '/ai/summary'
   },
+  ops: {
+    // 对齐后端 OpsController: [HttpPost("pages/deploy-hook")]。
+    triggerPagesDeployHook: '/ops/pages/deploy-hook'
+  },
   gallery: {
     // 对齐后端 GalleryController 的公开与管理端点。
     publicList: '/gallery',

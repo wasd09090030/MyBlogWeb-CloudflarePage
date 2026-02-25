@@ -11,6 +11,24 @@
           </template>
           返回
         </n-button>
+        <n-button tertiary @click="saveDraft">
+          <template #icon>
+            <Icon name="bookmark" size="sm" />
+          </template>
+          保存草稿
+        </n-button>
+        <n-button quaternary :disabled="!hasDraft" @click="restoreDraft">
+          <template #icon>
+            <Icon name="arrow-path" size="sm" />
+          </template>
+          恢复草稿
+        </n-button>
+        <n-button quaternary :disabled="!hasDraft" @click="clearDraft">
+          <template #icon>
+            <Icon name="x-mark" size="sm" />
+          </template>
+          清除草稿
+        </n-button>
         <n-button type="primary" :loading="isSaving" @click="saveArticle">
           <template #icon>
             <Icon name="save" size="sm" />
@@ -192,12 +210,21 @@ const router = useRouter()
 const message = useMessage()
 const { getArticle, createArticle, updateArticle, generateAiSummary: generateAiSummaryApi } = useAdminArticlesFeature()
 
-const isEdit = computed(() => !!route.params.id)
+const currentArticleId = computed(() => {
+  const rawId = route.params.id
+  if (Array.isArray(rawId)) {
+    return rawId[0] || ''
+  }
+  return rawId ? String(rawId) : ''
+})
+const isEdit = computed(() => !!currentArticleId.value)
+const DRAFT_STORAGE_PREFIX = 'admin:article:draft'
 
 const loading = ref(false)
 const isSaving = ref(false)
 const isValidImageUrl = ref(false)
 const isGeneratingAi = ref(false)
+const hasDraft = ref(false)
 
 const articleForm = ref({
   title: '',
@@ -230,6 +257,125 @@ const contentStats = computed(() => {
   const readTime = Math.max(1, Math.ceil(chars / 400))
   return { chars, lines, readTime }
 })
+const currentDraftKey = computed(() => (
+  isEdit.value ? `${DRAFT_STORAGE_PREFIX}:${currentArticleId.value}` : `${DRAFT_STORAGE_PREFIX}:create`
+))
+
+const updateDraftStatus = () => {
+  if (!process.client) {
+    hasDraft.value = false
+    return
+  }
+
+  try {
+    hasDraft.value = !!localStorage.getItem(currentDraftKey.value)
+  } catch (error) {
+    console.warn('读取本地草稿状态失败:', error)
+    hasDraft.value = false
+  }
+}
+
+const getDraftPayload = () => ({
+  title: articleForm.value.title || '',
+  slug: articleForm.value.slug || '',
+  content: articleForm.value.content || '',
+  contentMarkdown: articleForm.value.contentMarkdown || '',
+  coverImage: articleForm.value.coverImage || '',
+  category: articleForm.value.category || 'study',
+  tags: Array.isArray(articleForm.value.tags) ? articleForm.value.tags : [],
+  aiSummary: articleForm.value.aiSummary || '',
+  savedAt: new Date().toISOString()
+})
+
+const applyDraftPayload = (draft) => {
+  articleForm.value = {
+    title: draft.title || '',
+    slug: draft.slug || '',
+    content: draft.content || '',
+    contentMarkdown: draft.contentMarkdown || '',
+    coverImage: draft.coverImage || '',
+    category: draft.category || 'study',
+    tags: Array.isArray(draft.tags) ? draft.tags : [],
+    aiSummary: draft.aiSummary || ''
+  }
+}
+
+const saveDraft = ({ silent = false } = {}) => {
+  if (!process.client) {
+    return
+  }
+
+  try {
+    localStorage.setItem(currentDraftKey.value, JSON.stringify(getDraftPayload()))
+    hasDraft.value = true
+    if (!silent) {
+      message.success('草稿已保存到本地浏览器')
+    }
+  } catch (error) {
+    console.error('保存本地草稿失败:', error)
+    if (!silent) {
+      message.error('保存草稿失败，请检查浏览器存储空间')
+    }
+  }
+}
+
+const restoreDraft = ({ silent = false } = {}) => {
+  if (!process.client) {
+    return
+  }
+
+  try {
+    const rawDraft = localStorage.getItem(currentDraftKey.value)
+    if (!rawDraft) {
+      hasDraft.value = false
+      if (!silent) {
+        message.warning('当前没有可恢复的本地草稿')
+      }
+      return
+    }
+
+    const draft = JSON.parse(rawDraft)
+    applyDraftPayload(draft)
+
+    if (articleForm.value.coverImage) {
+      setTimeout(() => {
+        validateImageUrl(articleForm.value.coverImage)
+      }, 100)
+    } else {
+      isValidImageUrl.value = false
+    }
+
+    hasDraft.value = true
+    if (!silent) {
+      message.success('已恢复本地草稿')
+    }
+  } catch (error) {
+    console.error('恢复本地草稿失败:', error)
+    hasDraft.value = false
+    if (!silent) {
+      message.error('草稿数据损坏，恢复失败')
+    }
+  }
+}
+
+const clearDraft = ({ silent = false } = {}) => {
+  if (!process.client) {
+    return
+  }
+
+  try {
+    localStorage.removeItem(currentDraftKey.value)
+    hasDraft.value = false
+    if (!silent) {
+      message.success('本地草稿已清除')
+    }
+  } catch (error) {
+    console.error('清除本地草稿失败:', error)
+    if (!silent) {
+      message.error('清除草稿失败')
+    }
+  }
+}
 
 const handleResize = () => {
   windowHeight.value = window.innerHeight
@@ -238,7 +384,11 @@ const handleResize = () => {
 onMounted(() => {
   window.addEventListener('resize', handleResize)
   if (isEdit.value) {
-    fetchArticle(route.params.id)
+    fetchArticle(currentArticleId.value).finally(() => {
+      updateDraftStatus()
+    })
+  } else {
+    restoreDraft({ silent: true })
   }
 })
 
@@ -301,13 +451,14 @@ const saveArticle = async () => {
     }
 
     if (isEdit.value) {
-      await updateArticle(route.params.id, payload)
+      await updateArticle(currentArticleId.value, payload)
       message.success('文章已成功更新！')
     } else {
       await createArticle(payload)
       message.success('文章已成功创建！')
     }
 
+    clearDraft({ silent: true })
     router.push('/admin/articles')
   } catch (error) {
     console.error('保存文章失败:', error)
@@ -370,7 +521,7 @@ const handleSave = (text, html) => {
   if (html) {
     articleForm.value.content = html
   }
-  console.log('自动保存触发:', { textLength: text.length })
+  saveDraft({ silent: true })
 }
 
 const handleHtmlChange = (html) => {
@@ -397,6 +548,10 @@ watch(() => articleForm.value.coverImage, (newUrl) => {
   } else {
     setTimeout(() => validateImageUrl(newUrl), 500)
   }
+})
+
+watch(currentDraftKey, () => {
+  updateDraftStatus()
 })
 </script>
 

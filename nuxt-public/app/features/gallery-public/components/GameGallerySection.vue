@@ -20,11 +20,19 @@
           :style="getAspectRatioStyle(image)"
           @click="$emit('image-click', image)"
         >
-          <img
-            :src="image.thumbnailUrl || image.imageUrl"
-            :alt="image.title || '游戏截屏'"
-            loading="lazy"
-          />
+          <template v-if="hasImage(image, index)">
+            <ImageLoadingPlaceholder :show="!isImageLoaded(image, index)" />
+            <img
+              :src="image.thumbnailUrl || image.imageUrl"
+              :alt="image.title || '游戏截屏'"
+              loading="lazy"
+              @load="handleImageLoad(image, index)"
+              @error="handleImageError(image, index)"
+            />
+          </template>
+          <div v-else class="game-card-fallback">
+            <Icon name="image" size="lg" />
+          </div>
         </button>
       </div>
     </div>
@@ -32,6 +40,8 @@
 </template>
 
 <script setup>
+import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
+
 const props = defineProps({
   images: {
     type: Array,
@@ -40,6 +50,24 @@ const props = defineProps({
 })
 
 defineEmits(['image-click'])
+const imageLoadedMap = ref({})
+const imageErrorMap = ref({})
+
+const getImageKey = (image, index) => String(image?.id ?? image?.imageUrl ?? index)
+const hasImage = (image, index) => {
+  const imageUrl = image?.thumbnailUrl || image?.imageUrl
+  if (!imageUrl) return false
+  return !imageErrorMap.value[getImageKey(image, index)]
+}
+const isImageLoaded = (image, index) => Boolean(imageLoadedMap.value[getImageKey(image, index)])
+const handleImageLoad = (image, index) => {
+  imageLoadedMap.value[getImageKey(image, index)] = true
+}
+const handleImageError = (image, index) => {
+  const imageKey = getImageKey(image, index)
+  imageErrorMap.value[imageKey] = true
+  imageLoadedMap.value[imageKey] = true
+}
 
 const getTimestamp = (image) => {
   const dateValue = image?.createdAt || image?.created_at || image?.created || 0
@@ -76,6 +104,15 @@ const groupedImages = computed(() => {
   }
   return Array.from(map.values())
 })
+
+watch(
+  () => props.images.map((image, index) => getImageKey(image, index)),
+  () => {
+    imageLoadedMap.value = {}
+    imageErrorMap.value = {}
+  },
+  { immediate: true }
+)
 
 const getAspectRatioStyle = (image) => {
   const width = Number(image?.imageWidth || image?.width || 0)
@@ -143,6 +180,16 @@ const getAspectRatioStyle = (image) => {
   cursor: pointer;
   position: relative;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.game-card-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.78);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.62), rgba(15, 23, 42, 0.4));
 }
 
 .game-card img {

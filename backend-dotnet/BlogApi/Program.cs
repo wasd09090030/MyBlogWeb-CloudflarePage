@@ -39,6 +39,7 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<DeepSeekService>();
 builder.Services.AddScoped<ImagebedService>();
 builder.Services.AddScoped<CfImageConfigService>();
+builder.Services.AddScoped<CloudflarePagesDeployService>();
 builder.Services.AddScoped<IBeatmapValidationService, BeatmapValidationService>();
 builder.Services.AddScoped<IBeatmapParsingService, BeatmapParsingService>();
 builder.Services.AddScoped<IBeatmapMappingService, BeatmapMappingService>();

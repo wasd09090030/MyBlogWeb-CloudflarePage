@@ -10,11 +10,19 @@
           class="fade-item"
           @click="$emit('image-click', gallery)"
         >
-          <img
-            :src="gallery.imageUrl"
-            alt="画廊图片"
-            class="fade-image"
-          />
+          <template v-if="hasImage(gallery, index)">
+            <ImageLoadingPlaceholder :show="!isImageLoaded(gallery, index)" />
+            <img
+              :src="gallery.imageUrl"
+              alt="画廊图片"
+              class="fade-image"
+              @load="handleImageLoad(gallery, index)"
+              @error="handleImageError(gallery, index)"
+            />
+          </template>
+          <div v-else class="fade-fallback">
+            <Icon name="image" size="2xl" />
+          </div>
           <div class="fade-overlay">
             <div class="fade-content">
               <!-- 可扩展的内容区域 -->
@@ -27,6 +35,8 @@
 </template>
 
 <script setup>
+import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
+
 const props = defineProps({
   images: {
     type: Array,
@@ -34,7 +44,25 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['image-click'])
+defineEmits(['image-click'])
+const imageLoadedMap = ref({})
+const imageErrorMap = ref({})
+
+const getImageKey = (image, index) => String(image?.id ?? image?.imageUrl ?? index)
+const hasImage = (image, index) => {
+  const imageUrl = image?.imageUrl
+  if (!imageUrl) return false
+  return !imageErrorMap.value[getImageKey(image, index)]
+}
+const isImageLoaded = (image, index) => Boolean(imageLoadedMap.value[getImageKey(image, index)])
+const handleImageLoad = (image, index) => {
+  imageLoadedMap.value[getImageKey(image, index)] = true
+}
+const handleImageError = (image, index) => {
+  const imageKey = getImageKey(image, index)
+  imageErrorMap.value[imageKey] = true
+  imageLoadedMap.value[imageKey] = true
+}
 
 // DOM 引用
 const containerRef = ref(null)
@@ -179,6 +207,15 @@ defineExpose({
 onUnmounted(() => {
   destroySlider()
 })
+
+watch(
+  () => props.images.map((image, index) => image?.id ?? image?.imageUrl ?? index),
+  () => {
+    imageLoadedMap.value = {}
+    imageErrorMap.value = {}
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>
@@ -234,6 +271,16 @@ onUnmounted(() => {
   height: 100%;
   object-fit: cover;
   object-position: top;
+}
+
+.fade-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.82);
+  background: linear-gradient(140deg, rgba(15, 23, 42, 0.65), rgba(30, 41, 59, 0.38));
 }
 
 .fade-overlay {

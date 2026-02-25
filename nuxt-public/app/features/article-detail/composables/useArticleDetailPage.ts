@@ -51,8 +51,9 @@ export const useArticleDetailPage = async () => {
     {
       // id 变更时自动刷新详情。
       watch: [articleId],
-      // 不阻塞路由切换，交由页面内 pending 状态处理。
-      lazy: true,
+      // lazy: true 已移除：SSG 预渲染和直接访问时需等待数据解析后再生成 HTML，
+      // 否则 pending=true 导致骨架屏被渲染进静态文件，客户端水化后才显示内容。
+      // SPA 内部跳转依赖 getCachedData 的预加载缓存和 payload 命中，体验不受影响。
       getCachedData: (key, nuxtApp, ctx) => {
         // 手动刷新应强制走网络，避免取到旧 payload。
         if (ctx?.cause === 'refresh:manual') return undefined

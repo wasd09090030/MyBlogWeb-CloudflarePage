@@ -6,6 +6,7 @@
   >
     <ImageLoadingPlaceholder :show="!imageLoaded" />
     <img
+      ref="coverImageEl"
       :src="article.coverImage"
       :alt="article.title"
       class="w-full h-full object-cover" 
@@ -16,7 +17,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
 
 // 1. 设置最小宽高比为 1.5 (即 3:2，对应高宽比 2:3)
@@ -31,6 +32,7 @@ const props = defineProps({
 
 const imageLoaded = ref(false)
 const imageErrored = ref(false)
+const coverImageEl = ref(null)
 const coverContainerStyle = computed(() => ({
   aspectRatio: containerAspectRatio.value
 }))
@@ -59,12 +61,33 @@ function handleImageError() {
   imageLoaded.value = true
 }
 
+function syncLoadedStateFromElement() {
+  const imageElement = coverImageEl.value
+  if (!imageElement || !imageElement.complete) return
+
+  if (!imageElement.naturalWidth || !imageElement.naturalHeight) {
+    handleImageError()
+    return
+  }
+
+  imageLoaded.value = true
+  const imageRatio = imageElement.naturalWidth / imageElement.naturalHeight
+  containerAspectRatio.value = Math.max(imageRatio, 1.5)
+}
+
+onMounted(() => {
+  syncLoadedStateFromElement()
+})
+
 watch(
   () => props.article?.coverImage,
-  () => {
+  async () => {
     imageLoaded.value = false
     imageErrored.value = false
     containerAspectRatio.value = 1.5
+
+    await nextTick()
+    syncLoadedStateFromElement()
   },
   { immediate: true }
 )

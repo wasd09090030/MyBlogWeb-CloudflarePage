@@ -20,6 +20,7 @@
               aria-label="推荐文章封面加载中"
             />
             <img
+              :ref="(el) => setCardImageElement(article, el)"
               :src="article.coverImage"
               :alt="article.title"
               class="card-image"
@@ -80,6 +81,7 @@ const props = defineProps({
 const config = useRuntimeConfig()
 const imageLoadedMap = ref({})
 const imageErrorMap = ref({})
+const cardImageElements = ref({})
 
 const getApiBase = () => {
   const apiBase = config.public.apiBase
@@ -149,14 +151,55 @@ const handleCardImageError = (article) => {
   imageLoadedMap.value[imageKey] = true
 }
 
+const setCardImageElement = (article, element) => {
+  const imageKey = getImageKey(article)
+  if (!imageKey) return
+
+  const isImageElement = typeof HTMLImageElement !== 'undefined' && element instanceof HTMLImageElement
+
+  if (isImageElement) {
+    cardImageElements.value[imageKey] = element
+  } else {
+    delete cardImageElements.value[imageKey]
+  }
+}
+
+const syncImageLoadedState = (article) => {
+  const imageKey = getImageKey(article)
+  const imageElement = cardImageElements.value[imageKey]
+  if (!imageElement || !imageElement.complete) return
+
+  if (!imageElement.naturalWidth || !imageElement.naturalHeight) {
+    handleCardImageError(article)
+    return
+  }
+
+  imageLoadedMap.value[imageKey] = true
+}
+
+const syncAllImageLoadedStates = () => {
+  for (const article of articles.value) {
+    syncImageLoadedState(article)
+  }
+}
+
 watch(
   () => articles.value.map(article => article.id),
-  () => {
+  async () => {
     imageLoadedMap.value = {}
     imageErrorMap.value = {}
+    cardImageElements.value = {}
+
+    await nextTick()
+    syncAllImageLoadedStates()
   },
   { immediate: true }
 )
+
+onMounted(async () => {
+  await nextTick()
+  syncAllImageLoadedStates()
+})
 
 // 获取文章 URL（包含 slug）
 function getArticleUrl(article) {

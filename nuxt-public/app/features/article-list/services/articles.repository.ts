@@ -95,7 +95,7 @@ export const createArticlesRepository = () => {
    * 构建期执行远端请求并将结果嵌入 HTML payload；客户端水化时直接从 payload 读取，
    * 无需额外网络请求，实现首屏文章卡片零延迟渲染。
    */
-  const getFirstPageArticles = async (limit = 100): Promise<ArticleLike[]> => {
+  const getFirstPageArticles = async (limit = 8): Promise<ArticleLike[]> => {
     const key = buildArticlesListCacheKey({ summary: true, page: 1, limit })
     const { data, error } = await useFetch<ArticleLike[] | { data?: ArticleLike[] }>(
       `${client.baseURL}/articles`,

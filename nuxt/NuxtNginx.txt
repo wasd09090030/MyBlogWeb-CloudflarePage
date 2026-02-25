@@ -74,6 +74,15 @@ server
         return 403;
     }
 
+    # 公共路由重定向到主域名（这些页面由 Cloudflare Pages 提供）
+    # 防止 server.wasd09090030.top 上出现重复内容
+    location ~ ^/(article|gallery|tutorials|about|sitemap\.xml) {
+        return 301 https://wasd09090030.top$request_uri;
+    }
+    location = / {
+        return 301 https://wasd09090030.top;
+    }
+
     # HTTP反向代理相关配置开始 >>>
 
     location ~ /purge(/.*) {

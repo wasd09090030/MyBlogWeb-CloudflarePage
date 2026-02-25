@@ -87,7 +87,7 @@ namespace BlogApi.Controllers
         /// <param name="limit">返回数量上限。</param>
         /// <returns>推荐文章列表。</returns>
         [HttpGet("featured")]
-        public async Task<ActionResult<List<Article>>> GetFeatured([FromQuery] int limit = 5)
+        public async Task<ActionResult<List<Article>>> GetFeatured([FromQuery] int limit = 6)
         {
             var articles = await _articleService.GetFeaturedAsync(limit);
             return Ok(articles);

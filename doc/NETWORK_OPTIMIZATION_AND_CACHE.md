@@ -513,7 +513,7 @@ const { data: article } = await useAsyncData(
 
 ```typescript
 // features/article-list/services/articles.repository.ts
-const getFeaturedArticles = async (limit = 5) => {
+const getFeaturedArticles = async (limit = 6) => {
   const { data, error } = await useFetch<ArticleLike[]>(
     `${client.baseURL}/articles/featured`,
     {
@@ -899,7 +899,7 @@ const getAllArticles = async () => {
 
 ```typescript
 // ✅ 正确示例
-const getFeaturedArticles = async (limit = 5) => {
+const getFeaturedArticles = async (limit = 6) => {
   const { data } = await useFetch(
     `${client.baseURL}/articles/featured`,
     {
@@ -915,7 +915,7 @@ const getFeaturedArticles = async (limit = 5) => {
 }
 
 // ❌ 错误示例（客户端激活时重复请求）
-const getFeaturedArticles = async (limit = 5) => {
+const getFeaturedArticles = async (limit = 6) => {
   const api = createApiClient()
   return await api.get('/articles/featured', { params: { limit } })
 }

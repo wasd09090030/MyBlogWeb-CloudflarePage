@@ -1,6 +1,4 @@
+# server.wasd09090030.top 仅供 Worker 内部转发，不应被搜索引擎索引
+# 所有公开内容由 wasd09090030.top (Cloudflare Pages) 提供
 User-agent: *
-Disallow: /admin/
-Disallow: /api/
-Allow: /
-
-Sitemap: https://blog.wasd09090030.top/sitemap.xml
+Disallow: /

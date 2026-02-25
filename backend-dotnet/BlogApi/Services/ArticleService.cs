@@ -185,7 +185,7 @@ namespace BlogApi.Services
         /// </summary>
         /// <param name="limit">推荐条数上限。</param>
         /// <returns>推荐文章列表。</returns>
-        public async Task<List<Article>> GetFeaturedAsync(int limit = 5)
+        public async Task<List<Article>> GetFeaturedAsync(int limit = 6)
         {
             // 获取所有文章的ID
             var allIds = await _context.Articles

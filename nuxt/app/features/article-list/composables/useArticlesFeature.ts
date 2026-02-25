@@ -21,7 +21,7 @@ export const useArticlesFeature = () => {
   /**
    * 获取推荐文章。
    */
-  const getFeaturedArticles = async (limit = 5): Promise<ArticleLike[] | null> => {
+  const getFeaturedArticles = async (limit = 6): Promise<ArticleLike[] | null> => {
     return await repository.getFeaturedArticles(limit)
   }
 
@@ -88,7 +88,7 @@ export const useArticlesFeature = () => {
   /**
    * 以 AppResult 形式返回推荐文章。
    */
-  const getFeaturedArticlesResult = async (limit = 5): Promise<AppResult<ArticleLike[] | null>> => {
+  const getFeaturedArticlesResult = async (limit = 6): Promise<AppResult<ArticleLike[] | null>> => {
     return await toAppResult(() => getFeaturedArticles(limit), '获取推荐文章失败')
   }
 

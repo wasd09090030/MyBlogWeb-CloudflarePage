@@ -333,8 +333,7 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
-    exclude: ['/admin/**', '/api/**'],
-    sources: ['/api/__sitemap__/urls']
+    enabled: false
   },
 
   schemaOrg: {

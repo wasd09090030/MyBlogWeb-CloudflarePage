@@ -39,7 +39,7 @@ export const createArticlesRepository = () => {
   /**
    * 获取推荐文章，并利用 useFetch 缓存提高重复访问性能。
    */
-  const getFeaturedArticles = async (limit = 5): Promise<ArticleLike[] | null> => {
+  const getFeaturedArticles = async (limit = 6): Promise<ArticleLike[] | null> => {
     const { data, error } = await useFetch<ArticleLike[] | null>(`${client.baseURL}/articles/featured`, {
       // key 包含 limit，避免不同条数请求共享同一缓存桶。
       key: buildFeaturedArticlesCacheKey(limit),

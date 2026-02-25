@@ -91,9 +91,15 @@ const savedScrollPosition = ref(0)
 
 const { getAllArticles, getArticlesByCategory, searchArticles, getFirstPageArticles } = useArticlesFeature()
 
-// SSG 预取：构建期执行远端请求并将第一页数据嵌入 payload；
-// 客户端水化时直接从 payload 读取，无需展示加载状态。
-const ssrInitialArticles = await getFirstPageArticles().catch(() => [])
+// SSG 预取：构建期只将前 articlesPerPage 条文章 + total 嵌入 payload（轻量）；
+// 客户端水化时直接从 payload 读取，首屏0延迟；后台静默加载全量供翻页/搜索使用。
+const ssrResult = await getFirstPageArticles(articlesPerPage).catch(() => ({ articles: [], total: 0 }))
+const ssrInitialArticles = ssrResult.articles
+
+// 服务端返回的文章总数，用于首屏前分页组件能渲染正确总页数（无需等全量就绪）
+const serverTotalCount = ref(ssrResult.total)
+// 标记全量数据是否已加载完毕（影响翻页行为）
+const isFullDataReady = ref(false)
 
 const currentPage = ref(1)
 const currentFilteredPage = ref(1)
@@ -163,7 +169,11 @@ const filteredArticles = computed(() => {
   return articles.value
 })
 
-const totalPages = computed(() => Math.ceil(articles.value.length / articlesPerPage))
+const totalPages = computed(() => {
+  // 全量就绪后使用精确的数组长度；否则使用服务端返回的 total（避免只有8条时显示1页）
+  const count = isFullDataReady.value ? articles.value.length : serverTotalCount.value
+  return Math.ceil(count / articlesPerPage)
+})
 const totalFilteredPages = computed(() => Math.ceil(filteredArticles.value.length / articlesPerPage))
 
 const currentIndex = computed(() => (currentPage.value - 1) * articlesPerPage)
@@ -179,7 +189,25 @@ const paginatedFilteredArticles = computed(() => {
   return filteredArticles.value.slice(start, start + articlesPerPage)
 })
 
-const goToPage = (page) => updatePageState(page, totalPages, currentPage, articleListContainer)
+const goToPage = async (page) => {
+  // 翻页到第2页以上时若全量还未就绪，先等待加载完成再切片
+  if (!isFullDataReady.value && page > 1) {
+    loading.value = true
+    try {
+      const fullData = await getAllArticles(false)
+      if (fullData) {
+        articles.value = fullData
+        serverTotalCount.value = fullData.length
+        isFullDataReady.value = true
+      }
+    } catch (e) {
+      error.value = e
+    } finally {
+      loading.value = false
+    }
+  }
+  updatePageState(page, totalPages, currentPage, articleListContainer)
+}
 const goToFilteredPage = (page) => updatePageState(page, totalFilteredPages, currentFilteredPage, articleListContainer)
 
 const getPageNumbers = () => buildPageNumbers(totalPages.value, currentPage.value)
@@ -264,6 +292,10 @@ const fetchArticles = async () => {
     } else {
       const articlesData = await getAllArticles()
       articles.value = articlesData
+      if (articlesData) {
+        serverTotalCount.value = articlesData.length
+        isFullDataReady.value = true
+      }
     }
   } catch (e) {
     error.value = e
@@ -282,10 +314,12 @@ onMounted(async () => {
   if (!isFilteredMode.value && ssrInitialArticles.length > 0) {
     articles.value = ssrInitialArticles
     handleSyncPageFromQuery(route.query.page)
-    // 后台静默拉取全量数据，填充内存缓存供搜索/分类使用，不阻塞首屏渲染
+    // 后台静默拉取全量数据：填充内存缓存供搜索/分类使用，并解锁翻页，不阻塞首屏渲染
     getAllArticles(false).then((fullData) => {
-      if (fullData && fullData.length > ssrInitialArticles.length) {
+      if (fullData && fullData.length > 0) {
         articles.value = fullData
+        serverTotalCount.value = fullData.length
+        isFullDataReady.value = true
       }
     }).catch(() => {})
     return

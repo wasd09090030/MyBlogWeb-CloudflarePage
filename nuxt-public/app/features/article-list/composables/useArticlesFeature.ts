@@ -19,10 +19,11 @@ export const useArticlesFeature = () => {
   const repository = createArticlesRepository()
 
   /**
-   * 获取第一页文章（SSG payload 预取）。
-   * 将构建期第一页数据嵌入 HTML payload，水化时直接使用，无需客户端重新请求。
+   * 获取首屏文章（SSG payload 预取）。
+   * 构建期将前 limit 条文章 + total 嵌入 HTML payload，水化时直接使用，无需客户端重新请求。
+   * 返回 { articles, total }：articles 供首屏渲染，total 供分页组件提前计算总页数。
    */
-  const getFirstPageArticles = async (limit = 100): Promise<ArticleLike[]> => {
+  const getFirstPageArticles = async (limit = 8): Promise<{ articles: ArticleLike[]; total: number }> => {
     return await repository.getFirstPageArticles(limit)
   }
 

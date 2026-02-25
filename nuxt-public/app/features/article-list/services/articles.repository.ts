@@ -91,19 +91,23 @@ export const createArticlesRepository = () => {
   }
 
   /**
-   * 获取第一页文章列表，使用 useFetch + getCachedData 将数据注入 SSG payload。
+   * 获取首屏文章数据，使用 useFetch + getCachedData 将数据注入 SSG payload。
    * 构建期执行远端请求并将结果嵌入 HTML payload；客户端水化时直接从 payload 读取，
    * 无需额外网络请求，实现首屏文章卡片零延迟渲染。
+   *
+   * 关键设计：后端可能忽略 limit 参数返回全量数据，
+   * 此处前端主动截取前 limit 条写入 payload，保证 payload 体积轻量。
+   * total 从后端响应中准确获取，供分页组件提前渲染正确的总页数。
    */
-  const getFirstPageArticles = async (limit = 8): Promise<ArticleLike[]> => {
+  const getFirstPageArticles = async (limit = 8): Promise<{ articles: ArticleLike[]; total: number }> => {
     const key = buildArticlesListCacheKey({ summary: true, page: 1, limit })
-    const { data, error } = await useFetch<ArticleLike[] | { data?: ArticleLike[] }>(
+    const { data, error } = await useFetch<ArticleLike[] | { data?: ArticleLike[]; total?: number }>(
       `${client.baseURL}/articles`,
       {
         key,
         params: { summary: true, page: 1, limit },
         getCachedData: (k, nuxtApp) => {
-          return getCachedNuxtData<ArticleLike[] | { data?: ArticleLike[] }>(
+          return getCachedNuxtData<ArticleLike[] | { data?: ArticleLike[]; total?: number }>(
             nuxtApp as { payload: unknown; static: unknown },
             k
           )
@@ -112,9 +116,16 @@ export const createArticlesRepository = () => {
     )
     if (error.value) throw error.value
     const raw = data.value
-    if (!raw) return []
-    if (Array.isArray(raw)) return raw
-    return raw.data ?? []
+    if (!raw) return { articles: [], total: 0 }
+    if (Array.isArray(raw)) {
+      // 后端忽略 limit 返回全量时，前端截取前 limit 条；total 使用实际总数
+      return { articles: raw.slice(0, limit), total: raw.length }
+    }
+    const allData = raw.data ?? []
+    return {
+      articles: allData.slice(0, limit),
+      total: raw.total ?? allData.length
+    }
   }
 
   /**

@@ -12,8 +12,14 @@ type NuxtDataContainer = {
  * 从 Nuxt payload/static 缓存中读取指定 key 的数据。
  *
  * 兼容 SSR 首屏注入与静态化场景，避免重复请求。
+ *
+ * 重要：必须返回 undefined（而非 null）表示"无缓存"。
+ * Nuxt 的 getCachedData 回调规则：
+ *   - 返回 undefined → 触发实际 fetch
+ *   - 返回任何其他值（包括 null）→ 直接使用该值，跳过 fetch
+ * 返回 null 会导致构建期跳过请求、payload 中写入 null。
  */
-function getCachedNuxtData<T>(nuxtApp: { payload: unknown; static: unknown }, key: string): T | null {
+function getCachedNuxtData<T>(nuxtApp: { payload: unknown; static: unknown }, key: string): T | undefined {
   // 优先读取 payload（SSR 首屏注入），命中后不再回退 static。
   const payloadData = (nuxtApp.payload as NuxtDataContainer).data
   if (payloadData && key in payloadData) {
@@ -26,7 +32,8 @@ function getCachedNuxtData<T>(nuxtApp: { payload: unknown; static: unknown }, ke
     return staticData[key] as T
   }
 
-  return null
+  // 返回 undefined，告知 Nuxt 需要重新 fetch
+  return undefined
 }
 
 /**

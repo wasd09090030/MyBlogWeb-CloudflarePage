@@ -11,13 +11,11 @@
           @dblclick="$emit('image-click', gallery)"
         >
           <template v-if="hasImage(gallery)">
-            <ImageLoadingPlaceholder :show="!isImageLoaded(gallery)" />
             <img
               :src="gallery.imageUrl"
               alt="画廊图片"
               class="accordion-image"
               loading="lazy"
-              @load="handleImageLoad(gallery)"
               @error="handleImageError(gallery)"
             />
           </template>
@@ -32,8 +30,6 @@
 </template>
 
 <script setup>
-import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
-
 const props = defineProps({
   images: {
     type: Array,
@@ -45,7 +41,6 @@ defineEmits(['image-click'])
 
 // 默认展开第一个
 const expandedIndex = ref(0)
-const imageLoadedMap = ref({})
 const imageErrorMap = ref({})
 
 const getImageKey = (image) => String(image?.id ?? image?.imageUrl ?? '')
@@ -54,14 +49,9 @@ const hasImage = (image) => {
   if (!imageUrl) return false
   return !imageErrorMap.value[getImageKey(image)]
 }
-const isImageLoaded = (image) => Boolean(imageLoadedMap.value[getImageKey(image)])
-const handleImageLoad = (image) => {
-  imageLoadedMap.value[getImageKey(image)] = true
-}
 const handleImageError = (image) => {
   const imageKey = getImageKey(image)
   imageErrorMap.value[imageKey] = true
-  imageLoadedMap.value[imageKey] = true
 }
 
 // 切换展开项
@@ -72,7 +62,6 @@ const toggleAccordion = (index) => {
 watch(
   () => props.images.map(image => image?.id ?? image?.imageUrl),
   () => {
-    imageLoadedMap.value = {}
     imageErrorMap.value = {}
   },
   { immediate: true }

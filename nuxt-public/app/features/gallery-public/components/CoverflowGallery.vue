@@ -22,12 +22,10 @@
         >
           <div class="item-content">
             <template v-if="hasImage(item, index)">
-              <ImageLoadingPlaceholder :show="!isImageLoaded(item, index)" />
               <img
                 :src="item.imageUrl"
                 class="carousel-image"
                 loading="lazy"
-                @load="handleImageLoad(item, index)"
                 @error="handleImageError(item, index)"
               />
             </template>
@@ -44,7 +42,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
-import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
 
 const props = defineProps({
   images: {
@@ -58,7 +55,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['image-click'])
-const imageLoadedMap = ref({})
 const imageErrorMap = ref({})
 
 const getImageKey = (image, index) => String(image?._uniqueKey ?? image?.id ?? image?.imageUrl ?? index)
@@ -67,14 +63,9 @@ const hasImage = (image, index) => {
   if (!imageUrl) return false
   return !imageErrorMap.value[getImageKey(image, index)]
 }
-const isImageLoaded = (image, index) => Boolean(imageLoadedMap.value[getImageKey(image, index)])
-const handleImageLoad = (image, index) => {
-  imageLoadedMap.value[getImageKey(image, index)] = true
-}
 const handleImageError = (image, index) => {
   const imageKey = getImageKey(image, index)
   imageErrorMap.value[imageKey] = true
-  imageLoadedMap.value[imageKey] = true
 }
 
 const activeIndex = ref(0)
@@ -281,7 +272,6 @@ const getItemStyle = (index) => {
 watch(
   () => internalImages.value.map((image, index) => getImageKey(image, index)),
   () => {
-    imageLoadedMap.value = {}
     imageErrorMap.value = {}
   },
   { immediate: true }

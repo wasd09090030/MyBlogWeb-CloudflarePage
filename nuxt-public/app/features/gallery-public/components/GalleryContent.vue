@@ -112,9 +112,6 @@
                 @mousedown="$emit('start-drag', $event)"
                 @touchstart="$emit('start-drag', $event)"
               >
-                <ImageLoadingPlaceholder
-                  :show="!fullscreenImageLoaded"
-                />
                 <img
                   :src="selectedImage?.imageUrl"
                   alt="画廊图片"
@@ -145,7 +142,6 @@ import AccordionGallery from '~/features/gallery-public/components/AccordionGall
 import CoverflowGallery from '~/features/gallery-public/components/CoverflowGallery.vue'
 import MasonryWaterfall from '~/features/gallery-public/components/MasonryWaterfall.vue'
 import GameGallerySection from '~/features/gallery-public/components/GameGallerySection.vue'
-import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
 import StateLoading from '~/shared/ui/StateLoading.vue'
 import StateError from '~/shared/ui/StateError.vue'
 import StateEmpty from '~/shared/ui/StateEmpty.vue'
@@ -186,18 +182,8 @@ const fadeSlideshowRef = ref(null)
 const accordionGalleryRef = ref(null)
 const coverflowGalleryRef = ref(null)
 const masonryWaterfallRef = ref(null)
-const fullscreenImageLoaded = ref(false)
-
-watch(
-  () => props.selectedImage?.imageUrl,
-  () => {
-    fullscreenImageLoaded.value = false
-  },
-  { immediate: true }
-)
 
 const handleFullscreenImageLoad = () => {
-  fullscreenImageLoaded.value = true
   emit('image-load')
 }
 

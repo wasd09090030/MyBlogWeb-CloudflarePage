@@ -84,7 +84,6 @@ const effectiveViewMode = computed(() => {
 })
 
 const articleListContainer = ref(null)
-const articles = ref([])
 const error = ref(null)
 const loading = ref(false)
 const savedScrollPosition = ref(0)
@@ -101,6 +100,9 @@ const serverTotalCount = ref(ssrResult.total)
 // 标记全量数据是否已加载完毕（影响翻页行为）
 const isFullDataReady = ref(false)
 
+// articles 直接用 SSG 预取数据初始化，水化时无需等待 onMounted
+// 与服务端渲染的 HTML 完全一致，避免水化后再次赋值导致的闪烁/慢一拍
+const articles = ref(ssrInitialArticles)
 const currentPage = ref(1)
 const currentFilteredPage = ref(1)
 const articlesPerPage = 8
@@ -310,9 +312,8 @@ onMounted(async () => {
     window.addEventListener('resize', checkMobile)
   }
 
-  // 优先使用 SSG 预取数据（默认首页，无搜索/分类参数）
+  // articles 已由 SSG 数据初始化，onMounted 只需同步路由分页参数
   if (!isFilteredMode.value && ssrInitialArticles.length > 0) {
-    articles.value = ssrInitialArticles
     handleSyncPageFromQuery(route.query.page)
     // 后台静默拉取全量数据：填充内存缓存供搜索/分类使用，并解锁翻页，不阻塞首屏渲染
     getAllArticles(false).then((fullData) => {

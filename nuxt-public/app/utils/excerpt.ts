@@ -8,6 +8,8 @@ export function stripMdcMarkup(content?: string | null): string {
   output = output.replace(/:[A-Za-z][\w-]*(?:\{[^}]*\})?/g, '')
   output = output.replace(/^::.*$/gm, '')
   output = output.replace(/<[^>]*>/g, '')
+  // 处理被截断的不完整 HTML 标签（没有闭合 > 的残缺标签）
+  output = output.replace(/<[^>]*$/g, '')
   output = output.replace(/!\[([^\]]*)\]\([^\)]*\)/g, '$1')
   output = output.replace(/\[([^\]]+)\]\([^\)]*\)/g, '$1')
   output = output.replace(/`([^`]+)`/g, '$1')

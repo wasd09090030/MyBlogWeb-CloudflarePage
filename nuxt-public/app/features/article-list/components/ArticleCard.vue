@@ -49,8 +49,8 @@
       </div>
 
       <!-- 文章标签 -->
-      <div v-if="article.tags && article.tags.length > 0" class="article-tags">
-        <span v-for="tag in article.tags" :key="tag" class="article-tag">
+      <div v-if="normalizedTags.length > 0" class="article-tags">
+        <span v-for="tag in normalizedTags" :key="tag" class="article-tag">
           {{ tag }}
         </span>
       </div>
@@ -104,6 +104,12 @@ const imageErrored = ref(false)
 const hasCoverImage = computed(() => {
   const coverImage = props.article?.coverImage
   return Boolean(coverImage && coverImage !== 'null' && !imageErrored.value)
+})
+const normalizedTags = computed(() => {
+  if (!Array.isArray(props.article?.tags)) return []
+  return props.article.tags
+    .map((tag) => String(tag ?? '').trim())
+    .filter(Boolean)
 })
 
 const articleExcerpt = computed(() => getExcerpt(props.article.contentMarkdown || props.article.content))

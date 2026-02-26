@@ -207,6 +207,11 @@ watch(
 )
 </script>
 
+<!-- keen-slider CSS 仅在画廊页面按需加载 -->
+<style>
+@import 'keen-slider/keen-slider.min.css';
+</style>
+
 <style scoped>
 /* 淡入淡出幻灯片样式 */
 .fade-section {

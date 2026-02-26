@@ -31,6 +31,13 @@ export function buildFeaturedArticlesCacheKey(limit: number): string {
 }
 
 /**
+ * 画廊公开列表缓存 key。
+ */
+export function buildGalleryCacheKey(): string {
+  return 'gallery:public:list'
+}
+
+/**
  * 文章详情 useAsyncData key。
  *
  * 约定：

@@ -440,6 +440,9 @@ onUnmounted(() => {
 </style>
 
 <style>
+/* KaTeX 数学公式样式 — 仅在使用 MarkdownRenderer 的页面加载 */
+@import 'katex/dist/katex.min.css';
+
 /* MDC 组件统一块级显示，避免行内拼接 */
 .markdown-renderer .prose .alert-mdc,
 .markdown-renderer .prose .tabs-mdc,

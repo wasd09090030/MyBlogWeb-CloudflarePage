@@ -32,16 +32,27 @@
 
 <script setup>
 import GalleryContent from '~/features/gallery-public/components/GalleryContent.vue'
-import { useGalleryFeature } from '~/features/gallery-public/composables/useGalleryFeature'
+import { createGalleryRepository } from '~/features/gallery-public/services/gallery.repository'
 import { preloadAllImagesWithWorker, ensureMinLoadingTime } from '~/features/gallery-public/utils/imageLoader'
 import { zoomIn as zoomInFn, zoomOut as zoomOutFn, resetZoom as resetZoomFn, handleWheel as handleWheelFn, createDragHandler } from '~/features/gallery-public/utils/zoomAndDrag'
 import { initSliders, destroySliders, getGallerySlice as getSlice } from '~/features/gallery-public/utils/sliderManager'
 import { normalizeTag, bodyScrollManager } from '~/features/gallery-public/utils/utils'
-import { logAppError, mapErrorToUserMessage } from '~/shared/errors'
+import { mapErrorToUserMessage } from '~/shared/errors'
 
-const galleries = ref([])
-const loading = ref(true)
-const error = ref(null)
+// SSG 预渲染阶段拉取画廊数据，构建时将结果写入 _payload.json；
+// 客户端水化时直接从 payload 读取，无需额外网络请求。
+const { getGalleriesSSG } = createGalleryRepository()
+let _initialGalleries = []
+let _initialError = null
+try {
+  _initialGalleries = await getGalleriesSSG()
+} catch (err) {
+  _initialError = err
+}
+
+const galleries = ref(_initialGalleries)
+const loading = ref(false)  // SSG 数据已就绪，无需加载状态
+const error = ref(_initialError ? mapErrorToUserMessage(_initialError, '获取画廊数据失败，请稍后重试') : null)
 const showFullscreen = ref(false)
 const selectedImage = ref(null)
 const activeTag = ref('artwork')
@@ -65,8 +76,6 @@ const imageTransformStyle = computed(() => ({
   transform: `translate(${imagePosition.value.x}px, ${imagePosition.value.y}px) scale(${imageScale.value})`,
   cursor: imageScale.value > 1 ? (isDragging.value ? 'grabbing' : 'grab') : 'default'
 }))
-
-const { getGalleries } = useGalleryFeature()
 
 const artworkGalleries = computed(() => galleries.value.filter(gallery => normalizeTag(gallery.tag) === 'artwork'))
 const gameGalleries = computed(() => galleries.value.filter(gallery => normalizeTag(gallery.tag) === 'game'))
@@ -112,29 +121,6 @@ const preloadAllImagesHandler = async () => {
 }
 
 let startTime = Date.now()
-
-const fetchGalleries = async () => {
-  try {
-    startTime = Date.now()
-    loading.value = true
-    error.value = null
-    const data = await getGalleries()
-    galleries.value = data || []
-
-    if (galleries.value.length > 0) {
-      loading.value = false
-      await preloadAllImagesHandler()
-    } else {
-      loading.value = false
-      isInitialLoading.value = false
-    }
-  } catch (err) {
-    logAppError('gallery-page', '获取画廊数据', err)
-    error.value = mapErrorToUserMessage(err, '获取画廊数据失败，请稍后重试')
-    loading.value = false
-    isInitialLoading.value = false
-  }
-}
 
 const getGallerySlice = (start, end) => {
   return getSlice(artworkGalleries.value, start, end)
@@ -197,7 +183,16 @@ watch(activeTag, async (tag) => {
 
 onMounted(async () => {
   bodyScrollManager.disable()
-  await fetchGalleries()
+  if (error.value) {
+    isInitialLoading.value = false
+    return
+  }
+  startTime = Date.now()
+  if (galleries.value.length > 0) {
+    await preloadAllImagesHandler()
+  } else {
+    isInitialLoading.value = false
+  }
 })
 
 onUnmounted(() => {

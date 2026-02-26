@@ -41,8 +41,6 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/theme-variables.css',
     '~/assets/css/tailwind.css',
-    'katex/dist/katex.min.css',
-    'keen-slider/keen-slider.min.css',
     '~/assets/css/components/prose-custom.css',
     '~/assets/css/layout.css',
     '~/assets/css/app.css',
@@ -93,10 +91,18 @@ export default defineNuxtConfig({
         dark: 'material-theme-darker'
       },
       langs: [
-        'javascript', 'typescript', 'vue', 'vue-html', 'html', 'css', 'scss',
-        'json', 'yaml', 'markdown', 'bash', 'shell', 'python', 'java',
-        'csharp', 'cpp', 'c', 'sql', 'dockerfile', 'nginx', 'xml', 'diff',
-        'dart', 'rust', 'go', 'mermaid'
+        // 核心 Web 开发语言（高频使用）
+        'javascript', 'typescript', 'vue', 'html', 'css',
+        // 配置 / 数据格式
+        'json', 'yaml', 'bash', 'shell',
+        // 后端语言
+        'python', 'java', 'csharp', 'sql',
+        // 系统语言（按需保留，体积较大）
+        'cpp', 'c',
+        // 运维 / 工具
+        'dockerfile', 'nginx', 'xml', 'diff',
+        // 按需添加：'dart', 'rust', 'go', 'scss', 'markdown', 'vue-html'
+        // 注意：移除了 'mermaid'（用独立渲染库替代语法高亮）
       ]
     },
     remarkPlugins: {
@@ -159,8 +165,9 @@ export default defineNuxtConfig({
     worker: { format: 'es' },
     optimizeDeps: {
       include: [
-        'vue', 'keen-slider', 'naive-ui', 'katex', '@vueuse/core', 'mermaid',
+        'vue', 'keen-slider', 'naive-ui', 'katex', '@vueuse/core',
         'remark-math', 'rehype-katex'
+        // mermaid 已移出：代码层使用 await import('mermaid') 懒加载，不应预捆绑
       ],
       exclude: ['vue-demi']
     },

@@ -34,7 +34,6 @@
       <ArticleListArticleCard
         v-for="(article, index) in listContext.articles"
         :key="article.id"
-        v-memo="[article.id, article.title, article.coverImage, article.createdAt, article.category, listContext.currentPage, effectiveViewMode]"
         :article="article"
         :index="index"
         :is-reverse="isListView && (listContext.indexOffset + index + 1) % 2 === 0"
@@ -70,6 +69,8 @@ import { updatePageState, triggerViewSwitchAnimation } from '~/features/article-
 const route = useRoute()
 const viewMode = ref('list')
 const isSwitchingView = ref(false)
+// isHydrated 初始值为 false，与服务端保持一致；水化完成后才读取真实窗口宽度
+const isHydrated = ref(false)
 const isMobile = ref(false)
 const viewSwitchTimer = { timer: null }
 
@@ -80,6 +81,8 @@ const checkMobile = () => {
 }
 
 const effectiveViewMode = computed(() => {
+  // 未水化时永远返回 'list'，与服务端渲染结果一致
+  if (!isHydrated.value) return 'list'
   return isMobile.value ? 'grid' : viewMode.value
 })
 
@@ -89,6 +92,9 @@ const loading = ref(false)
 const savedScrollPosition = ref(0)
 
 const { getAllArticles, getArticlesByCategory, searchArticles, getFirstPageArticles } = useArticlesFeature()
+
+// ⚠️ articlesPerPage 必须在 getFirstPageArticles 调用之前声明，否则触发 const TDZ
+const articlesPerPage = 8
 
 // SSG 预取：构建期只将前 articlesPerPage 条文章 + total 嵌入 payload（轻量）；
 // 客户端水化时直接从 payload 读取，首屏0延迟；后台静默加载全量供翻页/搜索使用。
@@ -105,7 +111,6 @@ const isFullDataReady = ref(false)
 const articles = ref(ssrInitialArticles)
 const currentPage = ref(1)
 const currentFilteredPage = ref(1)
-const articlesPerPage = 8
 const useSkeletonLoader = ref(true)
 
 const paginationPage = computed({
@@ -307,6 +312,7 @@ const fetchArticles = async () => {
 }
 
 onMounted(async () => {
+  isHydrated.value = true
   checkMobile()
   if (import.meta.client) {
     window.addEventListener('resize', checkMobile)

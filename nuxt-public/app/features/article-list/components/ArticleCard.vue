@@ -14,6 +14,7 @@
       <template v-if="hasCoverImage">
         <ImageLoadingPlaceholder :show="!imageLoaded" />
         <img
+          ref="imageElement"
           :src="article.coverImage"
           :alt="article.title"
           class="article-image lazy-image"
@@ -97,6 +98,7 @@ const props = defineProps({
 const isListView = computed(() => props.viewMode === 'list')
 const isGridView = computed(() => props.viewMode === 'grid')
 const isPriority = computed(() => props.index < 3)
+const imageElement = ref(null)
 const imageLoaded = ref(false)
 const imageErrored = ref(false)
 const hasCoverImage = computed(() => {
@@ -164,12 +166,30 @@ const getCategoryClass = (category) => {
 const handleImageError = (event) => {
   imageErrored.value = true
   imageLoaded.value = true
-  event.target.style.display = 'none'
+  const target = event?.target
+  if (target) {
+    target.style.display = 'none'
+  }
 }
 
 const handleImageLoad = (event) => {
   imageLoaded.value = true
-  event.target.classList.add('lazy-loaded')
+  event?.target?.classList.add('lazy-loaded')
+}
+
+const syncImageLoadState = () => {
+  const image = imageElement.value
+  if (!image || !image.complete) return
+
+  if (image.naturalWidth > 0) {
+    imageLoaded.value = true
+    imageErrored.value = false
+    image.classList.add('lazy-loaded')
+    return
+  }
+
+  imageErrored.value = true
+  imageLoaded.value = true
 }
 
 watch(
@@ -177,9 +197,14 @@ watch(
   () => {
     imageLoaded.value = false
     imageErrored.value = false
+    nextTick(syncImageLoadState)
   },
   { immediate: true }
 )
+
+onMounted(() => {
+  nextTick(syncImageLoadState)
+})
 
 function formatDate(dateString) {
   if (!dateString) return '未知日期'

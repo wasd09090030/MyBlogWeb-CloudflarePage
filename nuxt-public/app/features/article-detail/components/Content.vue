@@ -15,18 +15,18 @@
     <!-- 从 HTML 标题中提取目录（作为备选方案仅用于 HTML 回退） -->
     <div v-if="!article.contentMarkdown" style="display: none;" ref="headingExtractor"></div>
 
-        <!-- 分割线 -->
-    <div class="h-px mt-20 bg-gray-500 dark:bg-gray-800 w-full mb-10"></div>
+    <template v-if="showSecondaryBlocks">
+      <!-- 分割线 -->
+      <div class="h-px mt-20 bg-gray-500 dark:bg-gray-800 w-full mb-10"></div>
 
-    <!-- 相关推荐 -->
-    <RelatedArticles :exclude-id="article.id" :count="3" />
+      <!-- 相关推荐 -->
+      <RelatedArticles :exclude-id="article.id" :count="3" />
 
-    <!-- 评论区 - 无缝衔接 -->
-    <section class="mt-12 pt-8 border-t border-gray-500 dark:border-gray-700">
-      <CommentSection :article-id="article.id" />
-    </section>
-
-
+      <!-- 评论区 -->
+      <section class="mt-12 pt-8 border-t border-gray-500 dark:border-gray-700">
+        <CommentSection :article-id="article.id" />
+      </section>
+    </template>
 
     <!-- 底部返回按钮 -->
     <div class="mt-10 mb-4 text-center">
@@ -49,6 +49,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['toc-ready', 'go-back'])
+const showSecondaryBlocks = ref(false)
 
 // 从 MarkdownRenderer 接收 TOC 数据（来自 AST，更快）
 function onTocReady(toc) {
@@ -106,10 +107,24 @@ function extractHeadingsFromDOM() {
   })
 }
 
+function scheduleSecondaryBlocksRender() {
+  const reveal = () => {
+    showSecondaryBlocks.value = true
+  }
+
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(() => reveal(), { timeout: 1200 })
+  } else {
+    setTimeout(reveal, 300)
+  }
+}
+
 onMounted(() => {
   // 仅当使用 HTML 回退时从 DOM 提取标题
   if (props.article && !props.article.contentMarkdown) {
     extractHeadingsFromDOM()
   }
+
+  scheduleSecondaryBlocksRender()
 })
 </script>

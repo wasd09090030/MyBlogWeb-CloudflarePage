@@ -1,4 +1,5 @@
 import { consumePreloadedArticle } from '~/utils/articlePreloadCache'
+import { parseMarkdown } from '@nuxtjs/mdc/runtime'
 import { createArticleDetailRepository } from '~/features/article-detail/services/articleDetail.repository'
 import { logAppError, toNuxtErrorPayload } from '~/shared/errors'
 import { buildArticleAsyncDataKey } from '~/shared/cache/keys'
@@ -44,6 +45,49 @@ export const useArticleDetailPage = async () => {
 
       if (!response) {
         throw createError(toNuxtErrorPayload({ statusCode: 404, statusMessage: '文章不存在' }))
+      }
+
+      const detail = response as Record<string, unknown> & {
+        content?: string | null
+        contentMarkdown?: string | null
+        comments?: unknown
+        _mdcAst?: unknown
+        _mdcToc?: unknown
+      }
+
+      // 评论区始终通过 CommentSection 独立请求，详情 payload 不再携带评论列表。
+      delete detail.comments
+
+      const markdown = typeof detail.contentMarkdown === 'string'
+        ? detail.contentMarkdown.trim()
+        : ''
+
+      // 静态生成/SSR 阶段提前解析 Markdown，避免客户端首访重解析。
+      if (import.meta.server && markdown && !detail._mdcAst) {
+        try {
+          const ast = await parseMarkdown(markdown, {
+            highlight: {
+              theme: {
+                default: 'material-theme-lighter',
+                dark: 'material-theme-darker'
+              }
+            },
+            toc: {
+              depth: 4,
+              searchDepth: 4
+            }
+          })
+          detail._mdcAst = ast
+          detail._mdcToc = ast?.toc
+        } catch (parseError: unknown) {
+          const message = parseError instanceof Error ? parseError.message : String(parseError)
+          console.warn('[ArticlePage] 服务端预解析 Markdown 失败，降级客户端解析:', message)
+        }
+      }
+
+      // Markdown 存在时无需重复携带 HTML 内容，减少 payload 体积。
+      if (markdown) {
+        delete detail.content
       }
 
       return response
@@ -165,15 +209,29 @@ export const useArticleDetailPage = async () => {
 
   const getDescription = (content: string | undefined | null, maxLength = 160): string => {
     if (!content) return '文章详情'
-    const text = content.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+    const text = content
+      .replace(/```[\s\S]*?```/g, ' ')
+      .replace(/`[^`]+`/g, ' ')
+      .replace(/!\[[^\]]*]\([^)]+\)/g, ' ')
+      .replace(/\[([^\]]+)]\([^)]+\)/g, '$1')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/[#>*_~\-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
     return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text
   }
 
   useSeoMeta({
     title: () => (article.value as { title?: string } | null)?.title || '文章详情',
-    description: () => (article.value as { aiSummary?: string; content?: string } | null)?.aiSummary || getDescription((article.value as { content?: string } | null)?.content),
+    description: () => {
+      const detail = article.value as { aiSummary?: string; content?: string; contentMarkdown?: string } | null
+      return detail?.aiSummary || getDescription(detail?.content || detail?.contentMarkdown)
+    },
     ogTitle: () => (article.value as { title?: string } | null)?.title || '文章详情',
-    ogDescription: () => (article.value as { aiSummary?: string; content?: string } | null)?.aiSummary || getDescription((article.value as { content?: string } | null)?.content),
+    ogDescription: () => {
+      const detail = article.value as { aiSummary?: string; content?: string; contentMarkdown?: string } | null
+      return detail?.aiSummary || getDescription(detail?.content || detail?.contentMarkdown)
+    },
     ogImage: () => {
       const image = (article.value as { coverImage?: string } | null)?.coverImage
       return image && image !== 'null' ? image : undefined
@@ -197,13 +255,14 @@ export const useArticleDetailPage = async () => {
       title?: string
       aiSummary?: string
       content?: string
+      contentMarkdown?: string
       coverImage?: string
       createdAt?: string
       updatedAt?: string
     }
 
     const title = detail.title || '文章详情'
-    const description = detail.aiSummary || getDescription(detail.content)
+    const description = detail.aiSummary || getDescription(detail.content || detail.contentMarkdown)
     const imageUrl = resolveUrl(detail.coverImage && detail.coverImage !== 'null'
       ? detail.coverImage
       : '/og-default.svg')

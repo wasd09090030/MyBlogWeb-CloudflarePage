@@ -99,6 +99,9 @@ const loading = ref(false)
 const error = ref(null)
 const containerRef = ref(null)
 
+let katexStylesReady = false
+let katexStylesPromise = null
+
 // Mermaid 实例缓存
 let mermaidInstance = null
 let mermaidLoading = false
@@ -120,6 +123,30 @@ const proseClasses = computed(() => {
     props.customClass
   ].filter(Boolean).join(' ')
 })
+
+function hasMathSyntax(markdown) {
+  if (!markdown || typeof markdown !== 'string') return false
+  if (markdown.includes('$$')) return true
+  if (markdown.includes('\\(') || markdown.includes('\\[')) return true
+  return /(^|[^\\])\$[^$\n]+\$/m.test(markdown)
+}
+
+async function ensureKatexStylesIfNeeded() {
+  if (!process.client || katexStylesReady) return
+  if (!hasMathSyntax(props.markdown)) return
+
+  if (!katexStylesPromise) {
+    katexStylesPromise = import('katex/dist/katex.min.css')
+      .then(() => {
+        katexStylesReady = true
+      })
+      .catch((e) => {
+        console.warn('[KaTeX] 样式加载失败:', e)
+      })
+  }
+
+  await katexStylesPromise
+}
 
 // 预加载 Mermaid 库（检测到 mermaid 代码块时提前加载）
 async function preloadMermaid() {
@@ -288,6 +315,8 @@ const parseContent = async () => {
   error.value = null
 
   try {
+    await ensureKatexStylesIfNeeded()
+
     // 🔥 并行执行：Worker 预处理 + 主线程 Markdown 解析
     // Worker 线程：TOC 提取、Mermaid 检测、文本统计（不阻塞主线程）
     // 主线程：parseMarkdown AST 生成（必须在主线程）
@@ -366,6 +395,7 @@ watch(() => [props.markdown, props.precomputedAst], () => {
   
   // 如果有预解析的 AST，直接使用
   if (props.precomputedAst) {
+    void ensureKatexStylesIfNeeded()
     ast.value = props.precomputedAst
     if (props.precomputedToc) {
       emit('toc-ready', props.precomputedToc)
@@ -381,6 +411,8 @@ watch(() => [props.markdown, props.precomputedAst], () => {
 }, { immediate: false })
 
 onMounted(() => {
+  void ensureKatexStylesIfNeeded()
+
   // 🔥 优先使用服务端预解析的 AST（跳过客户端解析，大幅提升性能）
   if (props.precomputedAst) {
     console.log('[MDC] 使用服务端预解析的 AST，跳过客户端解析')
@@ -440,9 +472,6 @@ onUnmounted(() => {
 </style>
 
 <style>
-/* KaTeX 数学公式样式 — 仅在使用 MarkdownRenderer 的页面加载 */
-@import 'katex/dist/katex.min.css';
-
 /* MDC 组件统一块级显示，避免行内拼接 */
 .markdown-renderer .prose .alert-mdc,
 .markdown-renderer .prose .tabs-mdc,

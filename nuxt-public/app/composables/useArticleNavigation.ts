@@ -35,6 +35,20 @@ type ArticleApiResponse = Record<string, unknown> & {
   _mdcToc?: unknown
 }
 
+function normalizePreloadedArticle(data: ArticleApiResponse): ArticleApiResponse {
+  const normalized = { ...data }
+
+  // 评论区走独立 API，预加载缓存不携带 comments。
+  delete (normalized as Record<string, unknown>).comments
+
+  // Markdown 已存在时不再携带冗余 HTML 正文，减少预加载对象体积。
+  if (typeof normalized.contentMarkdown === 'string' && normalized.contentMarkdown.trim().length > 0) {
+    delete (normalized as Record<string, unknown>).content
+  }
+
+  return normalized
+}
+
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : '未知错误'
 }
@@ -95,7 +109,7 @@ export function useArticleNavigation() {
         void client.get<ArticleApiResponse>(API_ENDPOINTS.articles.detail(articleId))
           .then((articleData) => {
             if (!articleData) return
-            setPreloadedArticle(cacheKey, articleData)
+            setPreloadedArticle(cacheKey, normalizePreloadedArticle(articleData))
           })
           .catch((error: unknown) => {
             console.warn('[ArticleNav] 后台预加载失败（已降级，不影响浏览）:', getErrorMessage(error))

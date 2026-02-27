@@ -9,7 +9,10 @@
       ref="coverImageEl"
       :src="article.coverImage"
       :alt="article.title"
-      class="w-full h-full object-cover" 
+      class="w-full h-full object-cover"
+      loading="eager"
+      decoding="async"
+      fetchpriority="high"
       @load="handleImageLoad"
       @error="handleImageError"
     />

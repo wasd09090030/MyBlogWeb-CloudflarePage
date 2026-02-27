@@ -31,6 +31,17 @@ export default defineNuxtPlugin((nuxtApp) => {
     return error instanceof Error ? error.message : String(error)
   }
 
+  function normalizePreloadedArticle(data: Record<string, unknown>): Record<string, unknown> {
+    const normalized = { ...data }
+    delete normalized.comments
+
+    if (typeof normalized.contentMarkdown === 'string' && normalized.contentMarkdown.trim().length > 0) {
+      delete normalized.content
+    }
+
+    return normalized
+  }
+
   /**
    * 检查路由是否是文章页
    */
@@ -59,10 +70,11 @@ export default defineNuxtPlugin((nuxtApp) => {
           API_ENDPOINTS.articles.detail(articleId)
         )
         if (result) {
-          prefetchCache.set(cacheKey, result)
-          const articleSlug = typeof result.slug === 'string' ? result.slug : null
+          const normalized = normalizePreloadedArticle(result)
+          prefetchCache.set(cacheKey, normalized)
+          const articleSlug = typeof normalized.slug === 'string' ? normalized.slug : null
           const asyncDataKey = buildArticleAsyncDataKey(articleId, articleSlug)
-          setPreloadedArticle(asyncDataKey, result)
+          setPreloadedArticle(asyncDataKey, normalized)
         }
       } catch (e: unknown) {
         console.warn('[WorkerPrefetch] 文章预取失败:', getErrorMessage(e))

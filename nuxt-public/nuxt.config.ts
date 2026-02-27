@@ -10,10 +10,102 @@ type ArticleRouteRecord = {
   createdAt?: string | null
 }
 
+type ArticleRoutePageResponse = {
+  data?: unknown
+  total?: number
+  pageSize?: number
+  totalPages?: number
+}
+
+const ARTICLE_ROUTE_PAGE_SIZE = 100
+
 const buildArticleRoute = (article: Pick<ArticleRouteRecord, 'id' | 'slug'>): string => {
   return article.slug
     ? `/article/${article.id}-${article.slug}`
     : `/article/${article.id}`
+}
+
+const toArticleRouteRecord = (input: unknown): ArticleRouteRecord | null => {
+  if (!input || typeof input !== 'object') return null
+
+  const item = input as Record<string, unknown>
+  const id = Number(item.id)
+  if (!Number.isFinite(id) || id <= 0) return null
+
+  const slug = typeof item.slug === 'string' && item.slug.trim().length > 0
+    ? item.slug.trim()
+    : null
+
+  const updatedAt = typeof item.updatedAt === 'string' ? item.updatedAt : null
+  const createdAt = typeof item.createdAt === 'string' ? item.createdAt : null
+
+  return {
+    id,
+    slug,
+    updatedAt,
+    createdAt
+  }
+}
+
+const normalizeArticleRouteList = (payload: unknown): ArticleRouteRecord[] => {
+  const list = Array.isArray(payload) ? payload : []
+  return list
+    .map(toArticleRouteRecord)
+    .filter((item): item is ArticleRouteRecord => item !== null)
+}
+
+const fetchAllArticleRoutes = async (): Promise<ArticleRouteRecord[]> => {
+  const dedup = new Map<number, ArticleRouteRecord>()
+
+  let currentPage = 1
+  let totalPages = 1
+  let pagedApiSucceeded = false
+
+  while (currentPage <= totalPages) {
+    const url = `${apiBase}/articles?summary=true&page=${currentPage}&limit=${ARTICLE_ROUTE_PAGE_SIZE}`
+    const res = await globalThis.fetch(url)
+    if (!res.ok) {
+      throw new Error(`API responded ${res.status} while fetching ${url}`)
+    }
+
+    const payload = await res.json()
+    if (Array.isArray(payload)) {
+      for (const article of normalizeArticleRouteList(payload)) {
+        dedup.set(article.id, article)
+      }
+      pagedApiSucceeded = dedup.size > 0
+      break
+    }
+
+    const pageData = payload as ArticleRoutePageResponse
+    const pageItems = normalizeArticleRouteList(pageData.data)
+    for (const article of pageItems) {
+      dedup.set(article.id, article)
+    }
+    pagedApiSucceeded = true
+
+    const candidateTotalPages = Number(pageData.totalPages)
+    if (Number.isFinite(candidateTotalPages) && candidateTotalPages > 0) {
+      totalPages = candidateTotalPages
+    } else {
+      const total = Number(pageData.total)
+      const pageSize = Number(pageData.pageSize) || ARTICLE_ROUTE_PAGE_SIZE
+      totalPages = total > 0 ? Math.ceil(total / pageSize) : currentPage
+    }
+
+    currentPage += 1
+  }
+
+  if (pagedApiSucceeded && dedup.size > 0) {
+    return Array.from(dedup.values())
+  }
+
+  // 兼容后端未实现 summary/page/limit 的场景
+  const fallbackRes = await globalThis.fetch(`${apiBase}/articles`)
+  if (!fallbackRes.ok) {
+    throw new Error(`API responded ${fallbackRes.status} while fetching fallback /articles`)
+  }
+  return normalizeArticleRouteList(await fallbackRes.json())
 }
 
 const toIsoLastmod = (value?: string | null): string | undefined => {
@@ -86,6 +178,8 @@ export default defineNuxtConfig({
 
   mdc: {
     highlight: {
+      // 静态站不存在运行时 /api/_mdc/highlight，避免首访先 404 再回退。
+      noApiRoute: true,
       theme: {
         default: 'material-theme-lighter',
         dark: 'material-theme-darker'
@@ -226,9 +320,7 @@ export default defineNuxtConfig({
     exclude: ['/admin/**', '/api/**'],
     urls: async () => {
       try {
-        const res = await globalThis.fetch(`${apiBase}/articles`)
-        if (!res.ok) throw new Error(`API responded ${res.status}`)
-        const articles: ArticleRouteRecord[] = await res.json()
+        const articles = await fetchAllArticleRoutes()
         return articles.map((article) => {
           const lastmod = toIsoLastmod(article.updatedAt || article.createdAt)
           return {
@@ -287,7 +379,8 @@ export default defineNuxtConfig({
     componentIslands: false,
     asyncContext: true,
     headNext: true,
-    crossOriginPrefetch: true
+    // 关闭动态 speculation rules patch，避免控制台持续告警。
+    crossOriginPrefetch: false
   },
 
   routeRules: {
@@ -316,9 +409,7 @@ export default defineNuxtConfig({
     // 构建时动态拉取所有文章路由
     async 'prerender:routes'(ctx) {
       try {
-        const res = await globalThis.fetch(`${apiBase}/articles`)
-        if (!res.ok) throw new Error(`API responded ${res.status}`)
-        const articles: ArticleRouteRecord[] = await res.json()
+        const articles = await fetchAllArticleRoutes()
         for (const article of articles) {
           // 注册带 slug 的规范路由,避免预渲染时 301 重定向生成空页面
           const route = buildArticleRoute(article)

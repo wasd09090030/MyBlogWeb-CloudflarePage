@@ -27,7 +27,7 @@
               :alt="image.title || '游戏截屏'"
               loading="lazy"
               @load="handleImageLoad(image, index)"
-              @error="handleImageError(image, index)"
+              @error="handleImageError(image, index, $event)"
             />
           </template>
           <div v-else class="game-card-fallback">
@@ -63,7 +63,16 @@ const isImageLoaded = (image, index) => Boolean(imageLoadedMap.value[getImageKey
 const handleImageLoad = (image, index) => {
   imageLoadedMap.value[getImageKey(image, index)] = true
 }
-const handleImageError = (image, index) => {
+const handleImageError = (image, index, event) => {
+  const fallbackUrl = image?.imageUrl
+  const target = event?.target
+  if (fallbackUrl && target instanceof HTMLImageElement) {
+    const currentSrc = target.getAttribute('src') || ''
+    if (currentSrc !== fallbackUrl) {
+      target.src = fallbackUrl
+      return
+    }
+  }
   const imageKey = getImageKey(image, index)
   imageErrorMap.value[imageKey] = true
   imageLoadedMap.value[imageKey] = true

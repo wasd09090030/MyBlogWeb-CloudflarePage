@@ -21,7 +21,7 @@
               class="waterfall-image"
               loading="lazy"
               @load="handleImageLoad(item, index)"
-              @error="handleImageError(item, index)"
+              @error="handleImageError(item, index, $event)"
             />
           </template>
           <div v-else class="waterfall-fallback">
@@ -140,7 +140,16 @@ const isImageLoaded = (image, index) => Boolean(imageLoadedMap.value[getRenderIm
 const handleImageLoad = (image, index) => {
   imageLoadedMap.value[getRenderImageKey(image, index)] = true
 }
-const handleImageError = (image, index) => {
+const handleImageError = (image, index, event) => {
+  const fallbackUrl = image?.imageUrl
+  const target = event?.target
+  if (fallbackUrl && target instanceof HTMLImageElement) {
+    const currentSrc = target.getAttribute('src') || ''
+    if (currentSrc !== fallbackUrl) {
+      target.src = fallbackUrl
+      return
+    }
+  }
   const imageKey = getRenderImageKey(image, index)
   imageErrorMap.value[imageKey] = true
   imageLoadedMap.value[imageKey] = true

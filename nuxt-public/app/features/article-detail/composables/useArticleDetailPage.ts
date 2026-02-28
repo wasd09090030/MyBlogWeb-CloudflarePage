@@ -1,5 +1,6 @@
 import { consumePreloadedArticle } from '~/utils/articlePreloadCache'
 import { parseMarkdown } from '@nuxtjs/mdc/runtime'
+import mdcHighlighter from '#mdc-highlighter'
 import { createArticleDetailRepository } from '~/features/article-detail/services/articleDetail.repository'
 import { logAppError, toNuxtErrorPayload } from '~/shared/errors'
 import { buildArticleAsyncDataKey } from '~/shared/cache/keys'
@@ -70,7 +71,8 @@ export const useArticleDetailPage = async () => {
               theme: {
                 default: 'material-theme-lighter',
                 dark: 'material-theme-darker'
-              }
+              },
+              highlighter: mdcHighlighter
             },
             toc: {
               depth: 4,

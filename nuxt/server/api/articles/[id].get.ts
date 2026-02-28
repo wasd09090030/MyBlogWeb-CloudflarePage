@@ -1,4 +1,5 @@
 import { parseMarkdown } from '@nuxtjs/mdc/runtime'
+import mdcHighlighter from '#mdc-highlighter'
 import { defineEventHandler, getRouterParam, createError } from 'h3'
 
 type ArticleDetailResponse = Record<string, unknown> & {
@@ -46,7 +47,8 @@ export default defineEventHandler(async (event) => {
           theme: {
             default: 'material-theme-lighter',
             dark: 'material-theme-darker'
-          }
+          },
+          highlighter: mdcHighlighter
         },
         toc: {
           depth: 4,

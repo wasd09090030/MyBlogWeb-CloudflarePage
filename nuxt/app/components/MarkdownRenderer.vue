@@ -57,6 +57,7 @@
 
 <script setup>
 import { parseMarkdown } from '@nuxtjs/mdc/runtime'
+import mdcHighlighter from '#mdc-highlighter'
 import { useMarkdownWorker } from '~/composables/useMarkdownWorker'
 
 // Worker 预处理（TOC 提取、Mermaid 检测等在 Worker 线程执行）
@@ -99,6 +100,16 @@ const ast = ref(null)
 const loading = ref(false)
 const error = ref(null)
 const containerRef = ref(null)
+
+const markdownParseOptions = {
+  highlight: {
+    theme: {
+      default: 'material-theme-lighter',
+      dark: 'material-theme-darker'
+    },
+    highlighter: mdcHighlighter
+  }
+}
 
 // Mermaid 实例缓存
 let mermaidInstance = null
@@ -294,7 +305,7 @@ const parseContent = async () => {
     // 主线程：parseMarkdown AST 生成（必须在主线程）
     const [preprocessed, result] = await Promise.all([
       preprocessMarkdown(props.markdown).catch(() => null),
-      parseMarkdown(props.markdown)
+      parseMarkdown(props.markdown, markdownParseOptions)
     ])
 
     ast.value = result

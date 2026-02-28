@@ -240,6 +240,20 @@ export const useArticleDetailPage = async () => {
     },
     ogUrl: () => canonicalUrl.value || undefined,
     ogType: 'article',
+    ogSiteName: 'WyrmKk',
+    articlePublishedTime: () => (article.value as { createdAt?: string } | null)?.createdAt || undefined,
+    articleModifiedTime: () => (article.value as { updatedAt?: string } | null)?.updatedAt || undefined,
+    articleAuthor: 'WyrmKk',
+    articleTag: () => {
+      const tags = (article.value as { tags?: string[] } | null)?.tags
+      return tags?.length ? tags : undefined
+    },
+    twitterCard: 'summary_large_image',
+    twitterTitle: () => (article.value as { title?: string } | null)?.title || '文章详情',
+    twitterDescription: () => {
+      const detail = article.value as { aiSummary?: string; content?: string; contentMarkdown?: string } | null
+      return detail?.aiSummary || getDescription(detail?.content || detail?.contentMarkdown)
+    },
     twitterImage: () => {
       const image = (article.value as { coverImage?: string } | null)?.coverImage
       return image && image !== 'null' ? image : undefined
@@ -247,6 +261,9 @@ export const useArticleDetailPage = async () => {
   })
 
   useHead(() => ({
+    meta: [
+      { name: 'robots', content: 'index, follow' }
+    ],
     link: canonicalUrl.value ? [{ rel: 'canonical', href: canonicalUrl.value }] : []
   }))
 
@@ -261,6 +278,7 @@ export const useArticleDetailPage = async () => {
       coverImage?: string
       createdAt?: string
       updatedAt?: string
+      tags?: string[]
     }
 
     const title = detail.title || '文章详情'
@@ -270,6 +288,11 @@ export const useArticleDetailPage = async () => {
       : '/og-default.svg')
     const articleUrl = canonicalUrl.value || resolveUrl(canonicalPath.value)
     const siteUrl = baseSiteUrl.value || resolveUrl('/')
+
+    // 计算字数（如果有 Markdown 内容）
+    const wordCount = detail.contentMarkdown
+      ? detail.contentMarkdown.replace(/```[\s\S]*?```/g, '').split(/\s+/).length
+      : undefined
 
     // 同时输出 Article 与 BreadcrumbList，提升搜索引擎理解度。
     return [
@@ -283,9 +306,19 @@ export const useArticleDetailPage = async () => {
           name: 'WyrmKk',
           url: siteUrl
         },
+        publisher: {
+          '@type': 'Organization',
+          name: 'WyrmKk',
+          logo: {
+            '@type': 'ImageObject',
+            url: resolveUrl('/icon/Myfavicon.ico')
+          }
+        },
         datePublished: detail.createdAt,
         dateModified: detail.updatedAt || detail.createdAt,
-        mainEntityOfPage: articleUrl
+        mainEntityOfPage: articleUrl,
+        ...(wordCount ? { wordCount } : {}),
+        ...(detail.tags?.length ? { keywords: detail.tags.join(', ') } : {})
       },
       {
         '@type': 'BreadcrumbList',

@@ -163,15 +163,22 @@ export default defineNuxtConfig({
   fonts: {
     provider: 'local',
     defaults: {
-      weights: [400],
+      weights: [400, 600, 700],  // 添加常用字重
       styles: ['normal', 'italic'],
-      subsets: ['latin']
+      subsets: ['latin'],
+      fallbacks: {
+        'sans-serif': ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Arial']
+      }
     },
     families: [
       {
         name: 'Open Sans',
         provider: 'local',
-        global: true
+        global: true,
+        // 关键优化：添加 font-display 策略
+        display: 'swap',  // 避免 FOIT（Flash of Invisible Text）
+        preload: true,
+        fallback: ['system-ui', 'Arial']
       }
     ]
   },
@@ -190,7 +197,7 @@ export default defineNuxtConfig({
         // 配置 / 数据格式
         'json', 'yaml', 'bash', 'shell',
         // 后端语言
-        'python', 'java', 'csharp', 'sql',
+        'python', 'java', 'csharp', 'sql','markdown',
         // 系统语言（按需保留，体积较大）
         'cpp', 'c',
         // 运维 / 工具
@@ -283,7 +290,30 @@ export default defineNuxtConfig({
         treeshake: { preset: 'recommended' },
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules/mermaid')) return 'vendor-markdown'
+            // Markdown 渲染相关（大型库）
+            if (id.includes('node_modules/mermaid')) {
+              return 'vendor-mermaid'
+            }
+            // 数学公式渲染
+            if (id.includes('node_modules/katex')) {
+              return 'vendor-katex'
+            }
+            // Markdown 插件
+            if (id.includes('remark-') || id.includes('rehype-')) {
+              return 'vendor-markdown-plugins'
+            }
+            // UI 库（Naive UI 较大）
+            if (id.includes('node_modules/naive-ui')) {
+              return 'vendor-ui'
+            }
+            // 轮播图库
+            if (id.includes('node_modules/keen-slider')) {
+              return 'vendor-slider'
+            }
+            // VueUse 工具库
+            if (id.includes('node_modules/@vueuse')) {
+              return 'vendor-vueuse'
+            }
           }
         }
       },
@@ -365,7 +395,8 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/x-icon', href: '/icon/Myfavicon.ico' },
         { rel: 'dns-prefetch', href: 'https://cfimg.wasd09090030.top' },
         { rel: 'dns-prefetch', href: 'https://backend.wasd09090030.top' },
-        { rel: 'preconnect', href: 'https://cfimg.wasd09090030.top', crossorigin: 'anonymous' }
+        { rel: 'preconnect', href: 'https://cfimg.wasd09090030.top', crossorigin: 'anonymous' },
+        { rel: 'preconnect', href: 'https://backend.wasd09090030.top', crossorigin: 'anonymous' }
       ]
     }
   },
@@ -380,7 +411,7 @@ export default defineNuxtConfig({
     asyncContext: true,
     headNext: true,
     // 关闭动态 speculation rules patch，避免控制台持续告警。
-    crossOriginPrefetch: false
+    crossOriginPrefetch: false,
   },
 
   routeRules: {
@@ -401,7 +432,10 @@ export default defineNuxtConfig({
       autoSubfolderIndex: false,
       crawlLinks: true,
       routes: ['/'],
-      failOnError: false
+      failOnError: false,
+      // 并行预渲染优化
+      concurrency: 10,  // 同时预渲染 10 个页面
+      interval: 0       // 无延迟，最大化并行效率
     }
   },
 
@@ -422,6 +456,50 @@ export default defineNuxtConfig({
     },
     'build:done': () => {
       console.log('✅ Static build completed')
+    },
+    // 新增：生成 Cloudflare Pages 专用 _headers 文件
+    'nitro:build:public-assets'(nitro) {
+      const headersContent = `
+# 静态资源强缓存（1年）
+/_nuxt/*
+  Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+
+/icon/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/Picture/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/flower/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML 页面缓存（5分钟，CDN 1小时）
+/*.html
+  Cache-Control: public, max-age=300, s-maxage=3600
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# 首页特殊处理（更短缓存）
+/index.html
+  Cache-Control: public, max-age=60, s-maxage=300
+  Link: </icon/Myfavicon.ico>; rel=preload; as=image
+  Link: <https://cfimg.wasd09090030.top>; rel=preconnect; crossorigin
+
+# 安全头（全局）
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+`.trim()
+
+      const fs = require('fs')
+      const path = require('path')
+      const headersPath = path.join(nitro.options.output.publicDir, '_headers')
+      fs.writeFileSync(headersPath, headersContent)
+      console.log('✅ Generated _headers for Cloudflare Pages')
     }
   }
 })

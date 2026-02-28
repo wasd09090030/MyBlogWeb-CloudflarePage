@@ -69,8 +69,8 @@ export const useArticleDetailPage = async () => {
           const ast = await parseMarkdown(markdown, {
             highlight: {
               theme: {
-                default: 'material-theme-lighter',
-                dark: 'material-theme-darker'
+                default: 'github-light',
+                dark: 'one-dark-pro'
               },
               highlighter: mdcHighlighter
             },

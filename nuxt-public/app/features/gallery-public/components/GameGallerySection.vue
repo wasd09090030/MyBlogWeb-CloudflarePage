@@ -17,7 +17,6 @@
           :key="`${image.id ?? image.imageUrl ?? 'game'}-${index}`"
           type="button"
           class="game-card"
-          :style="getAspectRatioStyle(image)"
           @click="$emit('image-click', image)"
         >
           <template v-if="hasImage(image, index)">
@@ -123,14 +122,6 @@ watch(
   { immediate: true }
 )
 
-const getAspectRatioStyle = (image) => {
-  const width = Number(image?.imageWidth || image?.width || 0)
-  const height = Number(image?.imageHeight || image?.height || 0)
-  if (width > 0 && height > 0) {
-    return { aspectRatio: `${width} / ${height}` }
-  }
-  return { aspectRatio: '4 / 3' }
-}
 </script>
 
 <style scoped>
@@ -177,18 +168,19 @@ const getAspectRatioStyle = (image) => {
 .game-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1rem;
+  gap: 0;
 }
 
 .game-card {
   background: transparent;
   border: none;
-  border-radius: 14px;
+  border-radius: 0;
   overflow: hidden;
   padding: 0;
   cursor: pointer;
   position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: clamp(180px, 20vw, 260px);
+  transition: none;
 }
 
 .game-card-fallback {
@@ -209,8 +201,8 @@ const getAspectRatioStyle = (image) => {
 }
 
 .game-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 28px rgba(15, 23, 42, 0.18);
+  transform: none;
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {
@@ -224,6 +216,10 @@ const getAspectRatioStyle = (image) => {
 
   .game-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+  .game-card {
+    height: 170px;
   }
 }
 

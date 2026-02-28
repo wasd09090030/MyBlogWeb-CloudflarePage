@@ -181,8 +181,8 @@ export default defineNuxtConfig({
       // 静态站不存在运行时 /api/_mdc/highlight，避免首访先 404 再回退。
       noApiRoute: true,
       theme: {
-        default: 'material-theme-lighter',
-        dark: 'material-theme-darker'
+        default: 'github-light',
+        dark: 'one-dark-pro'
       },
       langs: [
         // 核心 Web 开发语言（高频使用）

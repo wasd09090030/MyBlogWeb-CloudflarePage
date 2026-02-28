@@ -77,7 +77,7 @@ const infiniteScrollTrigger = ref(null)
 const itemObserver = ref(null)
 
 // 布局参数
-const gridGap = 16
+const gridGap = 5
 const gridRowHeight = 8
 const minWidthPercent = 15
 const maxWidthPercent = 45
@@ -421,7 +421,7 @@ onUnmounted(() => {
   display: grid;
   grid-auto-flow: dense;
   grid-auto-rows: var(--grid-row-height, 8px);
-  gap: 1rem;
+  gap: 5px;
   width: 100%;
   max-width: 100%; /* 移除最大宽度限制，让图片占据更多空间 */
   margin: 0 auto;
@@ -431,7 +431,7 @@ onUnmounted(() => {
 
 .waterfall-item {
   position: relative;
-  border-radius: 20px;
+  border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
   transform-origin: center;
@@ -549,12 +549,12 @@ onUnmounted(() => {
   }
 
   .waterfall-container {
-    gap: 0.75rem;
+    gap: 5px;
     padding: 0;
   }
 
   .waterfall-item {
-    border-radius: 12px;
+    border-radius: 5px;
   }
 }
 
@@ -564,11 +564,11 @@ onUnmounted(() => {
   }
 
   .waterfall-container {
-    gap: 0.5rem;
+    gap: 5px;
   }
 
   .waterfall-item {
-    border-radius: 10px;
+    border-radius: 4px;
   }
 
   .infinite-scroll-trigger {

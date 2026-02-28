@@ -103,8 +103,8 @@ const containerRef = ref(null)
 const markdownParseOptions = {
   highlight: {
     theme: {
-      default: 'material-theme-lighter',
-      dark: 'material-theme-darker'
+      default: 'github-light',
+      dark: 'one-dark-pro'
     },
     highlighter: mdcHighlighter
   }

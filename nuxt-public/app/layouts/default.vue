@@ -34,8 +34,8 @@
             </button>
             <Transition name="dropdown-fade">
               <div v-show="showMoreMenu" class="nav-more-panel" role="menu" aria-label="其他">
-                <NuxtLink to="/tutorials" class="nav-more-item" role="menuitem">
-                  <Icon name="book" size="xs" class="me-1" />教程
+                <NuxtLink to="/archive" class="nav-more-item" role="menuitem">
+                  <Icon name="book" size="xs" class="me-1" />归档
                 </NuxtLink>
                 <a href="/mania" target="_blank" rel="noopener noreferrer" class="nav-more-item" role="menuitem">
                   <Icon name="musical-note" size="xs" class="me-1" />音游
@@ -84,8 +84,8 @@
             <a href="/tools" target="_blank" rel="noopener noreferrer" class="drawer-nav-item" @click="showMobileMenu = false">
               <Icon name="wrench-screwdriver" size="sm" />工具箱
             </a>
-            <NuxtLink to="/tutorials" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="book" size="sm" />教程
+            <NuxtLink to="/archive" class="drawer-nav-item" @click="showMobileMenu = false">
+              <Icon name="book" size="sm" />归档
             </NuxtLink>
             <a href="/mania" target="_blank" rel="noopener noreferrer" class="drawer-nav-item" @click="showMobileMenu = false">
               <Icon name="musical-note" size="sm" />音游
@@ -257,8 +257,8 @@ const isHomeRoute = computed(() => route.path === '/')
 const isGalleryRoute = computed(() => route.path === '/gallery')
 const isArticleDetailRoute = computed(() => route.path.startsWith('/article/'))
 const isAboutRoute = computed(() => route.path === '/about')
-const isTutorialsRoute = computed(() => route.path === '/tutorials')
-const showSidebar = computed(() => !isGalleryRoute.value && !isArticleDetailRoute.value && !isAboutRoute.value && !isTutorialsRoute.value)
+const isArchiveRoute = computed(() => route.path === '/archive')
+const showSidebar = computed(() => !isGalleryRoute.value && !isArticleDetailRoute.value && !isAboutRoute.value && !isArchiveRoute.value)
 
 onMounted(() => {
   isHydrated.value = true

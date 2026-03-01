@@ -1,5 +1,5 @@
 /**
- * 教程页面的格式化函数
+ * 归档页格式化函数
  */
 
 export function formatDate(dateString?: string | null): string {
@@ -9,6 +9,15 @@ export function formatDate(dateString?: string | null): string {
     month: '2-digit',
     day: '2-digit'
   })
+}
+
+/** 只显示月/日，用于时间线条目中 */
+export function formatDateShort(dateString?: string | null): string {
+  if (!dateString) return ''
+  const d = new Date(dateString)
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${m}/${day}`
 }
 
 type ArticlePathInput = {

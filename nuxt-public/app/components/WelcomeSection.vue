@@ -70,8 +70,8 @@
           </div>
         </div>
 
-        <!-- 教程卡片 -->
-        <div class="info-card host-card" @click="goToTutorials">
+        <!-- 归档卡片 -->
+        <div class="info-card host-card" @click="goToArchive">
           <div class="hover-bg-effect"></div>
           <div class="card-hover-reveal">
             <span class="hover-text">Start</span>
@@ -85,7 +85,7 @@
                 <Icon name="book" size="24" />
           
 
-            <h5 class="card-title">教程</h5>
+            <h5 class="card-title">归档</h5>
           </div>
         </div>
       </div>
@@ -191,8 +191,8 @@ const goToGallery = () => {
   router.push('/gallery')
 }
 
-const goToTutorials = () => {
-  router.push('/tutorials')
+const goToArchive = () => {
+  router.push('/archive')
 }
 
 // 悬浮按钮相关方法

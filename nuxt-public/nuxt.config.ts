@@ -248,7 +248,30 @@ export default defineNuxtConfig({
     },
     provider: 'iconify',
     clientBundle: {
-      scan: true
+      scan: true,
+      // 预加载常用图标，避免运行时加载超时
+      icons: [
+        'heroicons:document-text',
+        'heroicons:folder-open',
+        'heroicons:puzzle-piece',
+        'heroicons:code-bracket-square',
+        'heroicons:bars-3-bottom-left',
+        'heroicons:home',
+        'heroicons:bars-3',
+        'heroicons:x-mark',
+        'heroicons:sun',
+        'heroicons:moon',
+        'heroicons:calendar',
+        'heroicons:book-open',
+        'heroicons:code-bracket',
+        'heroicons:magnifying-glass',
+        'heroicons:heart',
+        'heroicons:chat-bubble-oval-left',
+        'heroicons:arrow-left',
+        'heroicons:arrow-right',
+        'heroicons:chevron-up',
+        'heroicons:chevron-down'
+      ]
     }
   },
 

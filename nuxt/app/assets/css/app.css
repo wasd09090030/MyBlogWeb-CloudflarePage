@@ -59,7 +59,7 @@ input[type="reset"],
 
 /* 导航栏 Logo 样式 */
 .navbar-logo {
-  height: 42px;
+  height: 40px;
   width: auto;
   display: block;
   transition: transform 0.3s ease, filter 0.3s ease;

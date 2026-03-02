@@ -1,32 +1,30 @@
 <template>
-  <section class="gallery-section">
-    <div class="accordion-container">
-      <div class="accordion-gallery">
-        <div
-          v-for="(gallery, index) in images"
-          :key="`accordion-${gallery.id}-${index}`"
-          class="accordion-item"
-          :class="{ 'expanded': index === expandedIndex }"
-          @click="toggleAccordion(index)"
-          @dblclick="$emit('image-click', gallery)"
-        >
-          <template v-if="hasImage(gallery)">
-            <img
-              :src="gallery.imageUrl"
-              alt="画廊图片"
-              class="accordion-image"
-              loading="lazy"
-              @error="handleImageError(gallery)"
-            />
-          </template>
-          <div v-else class="accordion-fallback">
-            <Icon name="image" size="xl" />
-          </div>
-          <div class="overlay"></div>
+  <div class="accordion-fill">
+    <div class="accordion-gallery">
+      <div
+        v-for="(gallery, index) in images"
+        :key="`accordion-${gallery.id}-${index}`"
+        class="accordion-item"
+        :class="{ 'expanded': index === expandedIndex }"
+        @click="toggleAccordion(index)"
+        @dblclick="$emit('image-click', gallery)"
+      >
+        <template v-if="hasImage(gallery)">
+          <img
+            :src="gallery.thumbnailUrl || gallery.imageUrl"
+            alt="画廊图片"
+            class="accordion-image"
+            loading="lazy"
+            @error="handleImageError(gallery, $event)"
+          />
+        </template>
+        <div v-else class="accordion-fallback">
+          <Icon name="image" size="xl" />
         </div>
+        <div class="overlay"></div>
       </div>
     </div>
-  </section>
+  </div>
 </template>
 
 <script setup>
@@ -45,13 +43,21 @@ const imageErrorMap = ref({})
 
 const getImageKey = (image) => String(image?.id ?? image?.imageUrl ?? '')
 const hasImage = (image) => {
-  const imageUrl = image?.imageUrl
+  const imageUrl = image?.thumbnailUrl || image?.imageUrl
   if (!imageUrl) return false
   return !imageErrorMap.value[getImageKey(image)]
 }
-const handleImageError = (image) => {
-  const imageKey = getImageKey(image)
-  imageErrorMap.value[imageKey] = true
+const handleImageError = (image, event) => {
+  const fallbackUrl = image?.imageUrl
+  const target = event?.target
+  if (fallbackUrl && target instanceof HTMLImageElement) {
+    const currentSrc = target.getAttribute('src') || ''
+    if (currentSrc !== fallbackUrl) {
+      target.src = fallbackUrl
+      return
+    }
+  }
+  imageErrorMap.value[getImageKey(image)] = true
 }
 
 // 切换展开项
@@ -69,24 +75,10 @@ watch(
 </script>
 
 <style scoped>
-.gallery-section {
-  height: 80vh;
-  margin-bottom: 4rem;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+.accordion-fill {
   width: 100%;
-  box-sizing: border-box;
-}
-
-.accordion-container {
-  width: 100%;
-  height: 80vh; 
-  min-height: 400px;
-  border-radius: 15px;
-  overflow: hidden; /* 确保内容不溢出 */
+  height: 100%;
+  overflow: hidden;
 }
 
 .accordion-gallery {
@@ -162,9 +154,5 @@ watch(
   }
 }
 
-/* 暗色主题 */
-:global(.dark-theme) .gallery-section {
-  background: rgba(45, 55, 72, 0.8);
-  color: #ffffff;
-}
+
 </style>

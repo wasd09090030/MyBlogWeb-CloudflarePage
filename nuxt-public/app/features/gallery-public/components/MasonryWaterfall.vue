@@ -1,9 +1,9 @@
 <template>
   <section class="waterfall-section" ref="sectionRef">
-    <!-- 标题区域 -->
-    <div class="section-header fade-up"></div>
-    
     <div class="waterfall-container" ref="containerRef" :style="gridStyle">
+      <!-- 嵌入的画廊组件（显式放置在网格中） -->
+      <slot name="embedded" :grid-columns="gridColumns" :grid-gap="gridGap" :grid-row-height="gridRowHeight" />
+
       <div
         v-for="(item, index) in layoutItems"
         :key="`${item.id ?? 'img'}-${index}`"
@@ -359,59 +359,17 @@ onUnmounted(() => {
 
 <style scoped>
 .waterfall-section {
-  padding: 1.5rem 0.75rem;
+  padding: 4.5rem 0.5rem 1.5rem;
   width: 100%;
-}
-
-.section-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.fade-up {
-  animation: fade-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .fade-in {
   animation: fade-in 0.4s ease both;
 }
 
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fade-up,
-  .fade-in {
-    animation: none;
-  }
-}
-
-.section-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-}
-
-.title-icon {
-  color: var(--accent-primary);
-}
-
-.section-subtitle {
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  margin: 0;
 }
 
 .waterfall-container {
@@ -553,61 +511,4 @@ onUnmounted(() => {
   }
 }
 
-/* 暗色主题 */
-:global(.dark) .waterfall-section,
-:global(.dark-theme) .waterfall-section {
-  background: linear-gradient(180deg, transparent 0%, var(--glass-bg) 100%);
-}
-
-:global(.dark) .section-title,
-:global(.dark-theme) .section-title {
-  color: var(--text-primary);
-}
-
-:global(.dark) .title-icon,
-:global(.dark-theme) .title-icon {
-  color: var(--accent-secondary);
-}
-
-:global(.dark) .section-subtitle,
-:global(.dark-theme) .section-subtitle {
-  color: var(--text-muted);
-}
-
-:global(.dark) .waterfall-item,
-:global(.dark-theme) .waterfall-item {
-  background: var(--card-bg);
-  box-shadow: var(--shadow-md);
-}
-
-:global(.dark) .waterfall-item:hover,
-:global(.dark-theme) .waterfall-item:hover {
-  box-shadow: var(--shadow-xl);
-}
-
-:global(.dark) .item-overlay,
-:global(.dark-theme) .item-overlay {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--accent-secondary) 70%, transparent) 0%,
-    color-mix(in srgb, var(--accent-primary) 70%, transparent) 100%
-  );
-}
-
-:global(.dark) .loading-indicator,
-:global(.dark-theme) .loading-indicator {
-  color: var(--accent-secondary);
-}
-
-:global(.dark) .loading-spinner,
-:global(.dark-theme) .loading-spinner {
-  border-color: color-mix(in srgb, var(--accent-secondary) 25%, transparent);
-  border-top-color: var(--accent-secondary);
-}
-
-:global(.dark) .end-message,
-:global(.dark-theme) .end-message {
-  color: var(--accent-success);
-  background: color-mix(in srgb, var(--accent-success) 12%, transparent);
-}
 </style>

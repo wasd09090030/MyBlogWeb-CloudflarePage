@@ -305,8 +305,4 @@ watch(
   }
 }
 
-/* 暗色主题 */
-:global(.dark-theme) .fade-section {
-  background: rgba(45, 55, 72, 0.3);
-}
 </style>

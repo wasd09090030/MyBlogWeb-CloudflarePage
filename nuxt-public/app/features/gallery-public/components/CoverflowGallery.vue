@@ -1,5 +1,5 @@
 <template>
-  <section class="gallery-section">
+  <div class="coverflow-fill">
     <div 
       class="carousel-container" 
       @mouseenter="pauseAutoplay" 
@@ -23,10 +23,10 @@
           <div class="item-content">
             <template v-if="hasImage(item, index)">
               <img
-                :src="item.imageUrl"
+                :src="item.thumbnailUrl || item.imageUrl"
                 class="carousel-image"
                 loading="lazy"
-                @error="handleImageError(item, index)"
+                @error="handleImageError(item, index, $event)"
               />
             </template>
             <div v-else class="carousel-fallback">
@@ -37,7 +37,7 @@
         </div>
       </div>
     </div>
-  </section>
+  </div>
 </template>
 
 <script setup>
@@ -59,13 +59,21 @@ const imageErrorMap = ref({})
 
 const getImageKey = (image, index) => String(image?._uniqueKey ?? image?.id ?? image?.imageUrl ?? index)
 const hasImage = (image, index) => {
-  const imageUrl = image?.imageUrl
+  const imageUrl = image?.thumbnailUrl || image?.imageUrl
   if (!imageUrl) return false
   return !imageErrorMap.value[getImageKey(image, index)]
 }
-const handleImageError = (image, index) => {
-  const imageKey = getImageKey(image, index)
-  imageErrorMap.value[imageKey] = true
+const handleImageError = (image, index, event) => {
+  const fallbackUrl = image?.imageUrl
+  const target = event?.target
+  if (fallbackUrl && target instanceof HTMLImageElement) {
+    const currentSrc = target.getAttribute('src') || ''
+    if (currentSrc !== fallbackUrl) {
+      target.src = fallbackUrl
+      return
+    }
+  }
+  imageErrorMap.value[getImageKey(image, index)] = true
 }
 
 const activeIndex = ref(0)
@@ -279,10 +287,9 @@ watch(
 </script>
 
 <style scoped>
-.gallery-section {
-  height: 80vh;
+.coverflow-fill {
   width: 100%;
-  padding: 10px 0;
+  height: 100%;
   overflow: hidden;
   perspective: 1200px;
   background: transparent;
@@ -295,7 +302,7 @@ watch(
   display: flex;
   justify-content: center;
   align-items: center;
-  touch-action: pan-y; /* Allow vertical scroll, handle horizontal in JS */
+  touch-action: pan-y;
   user-select: none;
 }
 
@@ -375,16 +382,7 @@ watch(
 /* 响应式调整 */
 @media (max-width: 768px) {
   .carousel-item {
-    width: 220px;
-    height: 320px;
-  }
-  
-  .gallery-section {
-    padding: 20px 0;
-  }
-  
-  .carousel-container {
-    height: 360px;
+    width: 180px;
   }
 }
 

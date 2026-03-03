@@ -94,10 +94,6 @@ const router = useRouter();
 const isCollapsed = ref(true);
 const isHydrated = ref(false);
 
-// 使用优化后的composable（带缓存）
-const { getAllArticles, categoryStats, monthStats } = useArticlesFeature();
-
-// 基础分类配置
 const categoryConfig = [
   { key: 'study', label: '学习', icon: 'journal-text' },
   { key: 'game', label: '游戏', icon: 'controller' },
@@ -105,11 +101,50 @@ const categoryConfig = [
   { key: 'resource', label: '资源分享', icon: 'folder2-open' }
 ];
 
+const buildSidebarStats = (articles = []) => {
+  const nextCategoryStats = { study: 0, game: 0, work: 0, resource: 0 };
+  const nextMonthStats = {};
+
+  articles.forEach((article) => {
+    if (article?.category && nextCategoryStats[article.category] !== undefined) {
+      nextCategoryStats[article.category] = (nextCategoryStats[article.category] || 0) + 1;
+    }
+
+    if (!article?.createdAt) return;
+
+    const date = new Date(article.createdAt);
+    if (Number.isNaN(date.getTime())) return;
+
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    nextMonthStats[key] = (nextMonthStats[key] || 0) + 1;
+  });
+
+  return {
+    categoryStats: nextCategoryStats,
+    monthStats: nextMonthStats
+  };
+};
+
+const { getAllArticles } = useArticlesFeature();
+
+const { data: sidebarStatsData } = await useAsyncData(
+  'sidebar-stats-ssg',
+  async () => {
+    const articles = await getAllArticles();
+    return buildSidebarStats(Array.isArray(articles) ? articles : []);
+  },
+  {
+    server: true,
+    default: () => buildSidebarStats([])
+  }
+);
+
 // 计算属性：分类列表（响应式更新）
 const categories = computed(() => {
+  const categoryStats = sidebarStatsData.value?.categoryStats || {};
   return categoryConfig.map(cat => ({
     ...cat,
-    count: categoryStats.value?.[cat.key] || 0
+    count: categoryStats[cat.key] || 0
   }));
 });
 
@@ -133,23 +168,13 @@ const generateRecentMonths = (length = 6) => {
 
 // 月份归档（计算属性，响应式更新）
 const monthArchives = computed(() => {
+  const monthStats = sidebarStatsData.value?.monthStats || {};
   const baseMonths = generateRecentMonths();
   return baseMonths.map(month => ({
     ...month,
-    count: monthStats.value?.[month.key] || 0
+    count: monthStats[month.key] || 0
   }));
 });
-
-// 初始化：确保缓存已加载
-const initStats = async () => {
-  try {
-    // 调用getAllArticles会自动使用/更新缓存
-    await getAllArticles();
-    console.log('SideBar: 文章统计完成（使用缓存）');
-  } catch (error) {
-    console.error('SideBar: 获取文章统计失败:', error);
-  }
-};
 
 const goToCategory = (categoryKey) => {
   router.push({ path: '/', query: { category: categoryKey } });
@@ -173,16 +198,13 @@ const handleClickOutside = (event) => {
   }
 };
 
-onMounted(async () => {
+onMounted(() => {
   isHydrated.value = true;
   document.addEventListener('click', handleClickOutside);
   const savedState = localStorage.getItem('sidebarState');
   if (savedState) {
     isCollapsed.value = savedState === 'collapsed';
   }
-  
-  // 初始化文章统计（使用缓存）
-  await initStats();
 });
 
 onBeforeUnmount(() => {

@@ -133,6 +133,7 @@ watch(
 .game-section-header {
   text-align: center;
   margin-bottom: 2rem;
+  margin-top: 5%;
 }
 
 .game-section-title {

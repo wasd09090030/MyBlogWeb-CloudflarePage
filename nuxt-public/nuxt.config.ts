@@ -1,119 +1,9 @@
+import { buildArticleRoute, fetchAllArticleRoutes, toIsoLastmod } from './build/article-route-data'
+
 const isProduction = process.env.NODE_ENV === 'production'
 const enableSourceMap = process.env.NUXT_SOURCEMAP === 'true'
 const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://wasd09090030.top'
 const apiBase = process.env.NUXT_PUBLIC_API_BASE_URL || 'https://backend.wasd09090030.top/api'
-
-type ArticleRouteRecord = {
-  id: number
-  slug?: string | null
-  updatedAt?: string | null
-  createdAt?: string | null
-}
-
-type ArticleRoutePageResponse = {
-  data?: unknown
-  total?: number
-  pageSize?: number
-  totalPages?: number
-}
-
-const ARTICLE_ROUTE_PAGE_SIZE = 100
-
-const buildArticleRoute = (article: Pick<ArticleRouteRecord, 'id' | 'slug'>): string => {
-  return article.slug
-    ? `/article/${article.id}-${article.slug}`
-    : `/article/${article.id}`
-}
-
-const toArticleRouteRecord = (input: unknown): ArticleRouteRecord | null => {
-  if (!input || typeof input !== 'object') return null
-
-  const item = input as Record<string, unknown>
-  const id = Number(item.id)
-  if (!Number.isFinite(id) || id <= 0) return null
-
-  const slug = typeof item.slug === 'string' && item.slug.trim().length > 0
-    ? item.slug.trim()
-    : null
-
-  const updatedAt = typeof item.updatedAt === 'string' ? item.updatedAt : null
-  const createdAt = typeof item.createdAt === 'string' ? item.createdAt : null
-
-  return {
-    id,
-    slug,
-    updatedAt,
-    createdAt
-  }
-}
-
-const normalizeArticleRouteList = (payload: unknown): ArticleRouteRecord[] => {
-  const list = Array.isArray(payload) ? payload : []
-  return list
-    .map(toArticleRouteRecord)
-    .filter((item): item is ArticleRouteRecord => item !== null)
-}
-
-const fetchAllArticleRoutes = async (): Promise<ArticleRouteRecord[]> => {
-  const dedup = new Map<number, ArticleRouteRecord>()
-
-  let currentPage = 1
-  let totalPages = 1
-  let pagedApiSucceeded = false
-
-  while (currentPage <= totalPages) {
-    const url = `${apiBase}/articles?summary=true&page=${currentPage}&limit=${ARTICLE_ROUTE_PAGE_SIZE}`
-    const res = await globalThis.fetch(url)
-    if (!res.ok) {
-      throw new Error(`API responded ${res.status} while fetching ${url}`)
-    }
-
-    const payload = await res.json()
-    if (Array.isArray(payload)) {
-      for (const article of normalizeArticleRouteList(payload)) {
-        dedup.set(article.id, article)
-      }
-      pagedApiSucceeded = dedup.size > 0
-      break
-    }
-
-    const pageData = payload as ArticleRoutePageResponse
-    const pageItems = normalizeArticleRouteList(pageData.data)
-    for (const article of pageItems) {
-      dedup.set(article.id, article)
-    }
-    pagedApiSucceeded = true
-
-    const candidateTotalPages = Number(pageData.totalPages)
-    if (Number.isFinite(candidateTotalPages) && candidateTotalPages > 0) {
-      totalPages = candidateTotalPages
-    } else {
-      const total = Number(pageData.total)
-      const pageSize = Number(pageData.pageSize) || ARTICLE_ROUTE_PAGE_SIZE
-      totalPages = total > 0 ? Math.ceil(total / pageSize) : currentPage
-    }
-
-    currentPage += 1
-  }
-
-  if (pagedApiSucceeded && dedup.size > 0) {
-    return Array.from(dedup.values())
-  }
-
-  // 兼容后端未实现 summary/page/limit 的场景
-  const fallbackRes = await globalThis.fetch(`${apiBase}/articles`)
-  if (!fallbackRes.ok) {
-    throw new Error(`API responded ${fallbackRes.status} while fetching fallback /articles`)
-  }
-  return normalizeArticleRouteList(await fallbackRes.json())
-}
-
-const toIsoLastmod = (value?: string | null): string | undefined => {
-  if (!value) return undefined
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return undefined
-  return parsed.toISOString()
-}
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-09',
@@ -373,7 +263,7 @@ export default defineNuxtConfig({
     exclude: ['/admin/**', '/api/**'],
     urls: async () => {
       try {
-        const articles = await fetchAllArticleRoutes()
+        const articles = await fetchAllArticleRoutes(apiBase)
         return articles.map((article) => {
           const lastmod = toIsoLastmod(article.updatedAt || article.createdAt)
           return {
@@ -466,7 +356,7 @@ export default defineNuxtConfig({
     // 构建时动态拉取所有文章路由
     async 'prerender:routes'(ctx) {
       try {
-        const articles = await fetchAllArticleRoutes()
+        const articles = await fetchAllArticleRoutes(apiBase)
         for (const article of articles) {
           // 注册带 slug 的规范路由,避免预渲染时 301 重定向生成空页面
           const route = buildArticleRoute(article)

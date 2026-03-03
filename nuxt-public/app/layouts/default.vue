@@ -143,44 +143,16 @@
     </footer>
     <Teleport to="body">
       <ClientOnly>
-        <div class="floating-action-buttons" aria-label="Quick actions">
-          <button
-            v-if="!isHomeRoute"
-            type="button"
-            class="fab-btn"
-            @click="goHome"
-            aria-label="回主页"
-          >
-            <Icon name="house" size="16" />
-          </button>
-          <button
-            type="button"
-            class="fab-btn"
-            @click="scrollToTop"
-            aria-label="回到顶部"
-          >
-            <Icon name="arrow-up" size="16" />
-          </button>
-          <button
-            type="button"
-            class="fab-btn"
-            @click="toggleTheme"
-            :aria-label="isDarkMode ? '切换到浅色模式' : '切换到深色模式'"
-          >
-            <Icon v-if="isHydrated" :name="isDarkMode ? 'sun-fill' : 'moon-fill'" size="16" :solid="true" />
-            <Icon v-else name="moon-fill" size="16" :solid="true" />
-          </button>
-          <button
-            type="button"
-            class="fab-btn"
-            :class="{ 'is-muted': !showBackgroundAnimation }"
-            @click="toggleBackgroundAnimation"
-            :aria-pressed="!showBackgroundAnimation"
-            aria-label="背景动画开关"
-          >
-            <Icon name="sparkles" size="16" />
-          </button>
-        </div>
+        <FloatingQuickActions
+          :is-home-route="isHomeRoute"
+          :is-dark-mode="isDarkMode"
+          :is-hydrated="isHydrated"
+          :show-background-animation="showBackgroundAnimation"
+          @go-home="goHome"
+          @scroll-top="scrollToTop"
+          @toggle-theme="toggleTheme"
+          @toggle-background="toggleBackgroundAnimation"
+        />
       </ClientOnly>
     </Teleport>
   </div>
@@ -191,6 +163,7 @@
 <script setup>
 import { defineAsyncComponent } from 'vue'
 import { darkTheme } from 'naive-ui'
+import FloatingQuickActions from '~/shared/ui/FloatingQuickActions.vue'
 
 const HomeWelcomeSection = defineAsyncComponent(() => import('~/features/home/components/HomeWelcomeSection.vue'))
 

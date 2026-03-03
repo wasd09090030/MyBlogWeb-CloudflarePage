@@ -208,44 +208,6 @@ input[type="reset"],
   border: none;
 }
 
-/* Floating action buttons */
-.floating-action-buttons {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  z-index: 1200;
-}
-
-.fab-btn {
-  background: var(--fab-bg);
-  color: var(--fab-text);
-  border: none;
-  width: 42px;
-  height: 42px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s ease, background-color 0.15s ease;
-}
-
-.fab-btn:hover {
-  transform: translateY(-1px);
-}
-
-.fab-btn:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 3px;
-}
-
-.fab-btn.is-muted {
-  background: var(--fab-muted-bg);
-  color: var(--fab-muted-text);
-}
-
 /* 移除主内容区域内的列的左右padding */
 .main-content .col-12,
 .main-content .col-lg-8,
@@ -428,19 +390,6 @@ main {
   .main-content .col-12 {
     padding-right: 0 !important;
   }
-
-  .floating-action-buttons {
-    right: 16px;
-    bottom: 16px;
-    gap: 0.5rem;
-  }
-
-  .fab-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 6px;
-  }
-
 
   .sidebar-content {
     display: none;

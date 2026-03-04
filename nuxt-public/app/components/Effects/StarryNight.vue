@@ -17,14 +17,14 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 const stars = ref([])
 const isActive = ref(true)
 
-// 星星配置
-const STAR_COUNT = 80
+// 星星配置 - 优化：减少数量以提高性能
+const STAR_COUNT = 50
 
-// 星星类型配置
+// 星星类型配置 - 优化：降低透明度减少视觉干扰
 const STAR_TYPES = [
-  { size: 1, opacity: 0.3, twinkleSpeed: 2 },    // 小星星
-  { size: 1.5, opacity: 0.5, twinkleSpeed: 3 },  // 中星星
-  { size: 2, opacity: 0.8, twinkleSpeed: 4 }     // 大星星
+  { size: 1, opacity: 0.2, twinkleSpeed: 2 },    // 小星星
+  { size: 1.5, opacity: 0.35, twinkleSpeed: 3 },  // 中星星
+  { size: 2, opacity: 0.5, twinkleSpeed: 4 }     // 大星星
 ]
 
 // 只显示活跃的星星
@@ -107,6 +107,8 @@ onUnmounted(() => {
   z-index: 99;
   overflow: hidden;
   background: transparent;
+  /* 性能优化：提示浏览器这个元素会变化 */
+  contain: layout style paint;
 }
 
 /* 星星样式 */
@@ -120,6 +122,8 @@ onUnmounted(() => {
   user-select: none;
   animation: starDrift var(--drift-duration) ease-in-out infinite;
   animation-delay: var(--drift-delay);
+  /* 性能优化：提示浏览器优化这些属性的动画 */
+  will-change: transform;
 }
 
 .star-inner {
@@ -127,11 +131,14 @@ onUnmounted(() => {
   height: 100%;
   background: white;
   border-radius: 50%;
-  box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.8),
-              0 0 10px 4px rgba(135, 206, 250, 0.4);
+  /* 优化：简化 box-shadow 减少渲染负担 */
+  box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.6),
+              0 0 8px 2px rgba(135, 206, 250, 0.3);
   animation: starTwinkle var(--twinkle-speed) ease-in-out infinite;
   animation-delay: var(--delay);
   opacity: var(--opacity);
+  /* 性能优化：提示浏览器优化这些属性的动画 */
+  will-change: opacity, transform;
 }
 
 /* 星星闪烁动画 */
@@ -168,10 +175,10 @@ onUnmounted(() => {
     width: calc(1.5px * var(--size));
     height: calc(1.5px * var(--size));
   }
-  
+
   .star-inner {
-    box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.6),
-                0 0 6px 2px rgba(135, 206, 250, 0.3);
+    box-shadow: 0 0 3px 1px rgba(255, 255, 255, 0.5),
+                0 0 5px 1px rgba(135, 206, 250, 0.2);
   }
 }
 
@@ -180,9 +187,17 @@ onUnmounted(() => {
   .star-inner {
     animation-duration: calc(var(--twinkle-speed) * 3) !important;
   }
-  
+
   .star {
     animation: none !important;
+  }
+}
+
+/* 低性能设备优化：减少视觉效果 */
+@media (max-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .star-inner {
+    /* 移动端进一步简化 box-shadow */
+    box-shadow: 0 0 2px 1px rgba(255, 255, 255, 0.4);
   }
 }
 </style>

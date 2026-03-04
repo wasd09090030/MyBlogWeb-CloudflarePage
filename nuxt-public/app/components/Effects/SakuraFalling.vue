@@ -21,8 +21,8 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 const petals = ref([])
 const isActive = ref(true)
 
-// 花瓣配置
-const PETAL_COUNT = 15
+// 花瓣配置 - 优化：减少数量以提高性能
+const PETAL_COUNT = 12
 const PETAL_IMAGES = [
   '/flower/f01.webp',
   '/flower/f02.webp'
@@ -83,27 +83,31 @@ const handleResize = () => {
   initPetals()
 }
 
+// 动画结束处理函数
+const handleAnimationEnd = (e) => {
+  if (e.target.classList.contains('sakura-petal')) {
+    const petalElement = e.target
+    const index = Array.from(petalElement.parentNode.children).indexOf(petalElement)
+    if (index !== -1) {
+      restartPetal(index)
+    }
+  }
+}
+
 onMounted(() => {
   initPetals()
-  
+
   // 监听窗口大小改变
   window.addEventListener('resize', handleResize)
-  
+
   // 监听动画结束事件
-  document.addEventListener('animationend', (e) => {
-    if (e.target.classList.contains('sakura-petal')) {
-      const petalElement = e.target
-      const index = Array.from(petalElement.parentNode.children).indexOf(petalElement)
-      if (index !== -1) {
-        restartPetal(index)
-      }
-    }
-  })
+  document.addEventListener('animationend', handleAnimationEnd)
 })
 
 onUnmounted(() => {
   isActive.value = false
   window.removeEventListener('resize', handleResize)
+  document.removeEventListener('animationend', handleAnimationEnd)
 })
 </script>
 
@@ -117,6 +121,8 @@ onUnmounted(() => {
   pointer-events: none;
   z-index: 99;
   overflow: hidden;
+  /* 性能优化：提示浏览器这个元素会变化 */
+  contain: layout style paint;
 }
 
 .sakura-petal {
@@ -130,6 +136,8 @@ onUnmounted(() => {
   animation-fill-mode: forwards;
   pointer-events: none;
   user-select: none;
+  /* 性能优化：提示浏览器优化这些属性的动画 */
+  will-change: transform, opacity;
 }
 
 .petal-image {
@@ -139,6 +147,8 @@ onUnmounted(() => {
   display: inline-block;
   animation: sakuraRotate calc(var(--duration) * 0.5) linear infinite;
   filter: drop-shadow(1px 1px 2px rgba(255, 192, 203, 0.3));
+  /* 性能优化：提示浏览器优化这些属性的动画 */
+  will-change: transform;
 }
 
 @keyframes sakuraFall {

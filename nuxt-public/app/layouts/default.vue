@@ -4,10 +4,12 @@
   <n-message-provider>
   <div id="app" :class="['min-vh-100', isDarkMode ? 'dark-theme' : 'light-theme']">
     <!-- 根据主题切换动画效果 -->
-    <Teleport to="body">
-      <LazyEffectsSakuraFalling v-if="showBackgroundAnimation && !isDarkMode" />
-      <LazyEffectsStarryNight v-else-if="showBackgroundAnimation" />
-    </Teleport>
+    <ClientOnly>
+      <Teleport to="body">
+        <LazyEffectsSakuraFalling v-if="showBackgroundAnimation && !isDarkMode" />
+        <LazyEffectsStarryNight v-else-if="showBackgroundAnimation" />
+      </Teleport>
+    </ClientOnly>
     <header v-if="!isGalleryRoute" class="app-navbar" :class="{ 'navbar-hidden': isNavbarHidden, 'navbar-scrolled': hasScrolled }">
       <div class="navbar-container">
         <NuxtLink to="/" class="navbar-brand">

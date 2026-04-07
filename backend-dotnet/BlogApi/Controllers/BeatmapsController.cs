@@ -15,12 +15,18 @@ namespace BlogApi.Controllers
         private readonly BeatmapService _beatmapService;
         private readonly ImagebedService _imagebedService;
 
+        /// <summary>
+        /// 初始化谱面控制器，注入谱面与图床相关服务。
+        /// </summary>
         public BeatmapsController(BeatmapService beatmapService, ImagebedService imagebedService)
         {
             _beatmapService = beatmapService;
             _imagebedService = imagebedService;
         }
 
+        /// <summary>
+        /// 上传 .osz 文件并解析生成谱面集。
+        /// </summary>
         [Authorize]
         [HttpPost("upload")]
         [RequestSizeLimit(200_000_000)]
@@ -43,6 +49,9 @@ namespace BlogApi.Controllers
             }
         }
 
+        /// <summary>
+        /// 通过外部导入参数创建谱面集。
+        /// </summary>
         [Authorize]
         [HttpPost("import")]
         public async Task<ActionResult<BeatmapUploadResultDto>> Import([FromBody] BeatmapImportRequestDto dto)
@@ -59,6 +68,9 @@ namespace BlogApi.Controllers
             }
         }
 
+        /// <summary>
+        /// 获取全部谱面集列表。
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<List<BeatmapSetDto>>> GetAll()
         {
@@ -67,6 +79,9 @@ namespace BlogApi.Controllers
             return Ok(list);
         }
 
+        /// <summary>
+        /// 根据谱面集 ID 获取谱面集详情。
+        /// </summary>
         [HttpGet("{id:int}")]
         public async Task<ActionResult<BeatmapSetDto>> GetById(int id)
         {
@@ -75,6 +90,9 @@ namespace BlogApi.Controllers
             return Ok(ToBeatmapSetDto(set));
         }
 
+        /// <summary>
+        /// 根据难度 ID 获取 Mania 游戏所需的谱面数据。
+        /// </summary>
         [HttpGet("difficulty/{id:int}")]
         public async Task<ActionResult<BeatmapDataDto>> GetDifficultyData(int id)
         {
@@ -106,6 +124,9 @@ namespace BlogApi.Controllers
             return Ok(dto);
         }
 
+        /// <summary>
+        /// 删除指定谱面集及其关联数据。
+        /// </summary>
         [Authorize]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
@@ -126,6 +147,9 @@ namespace BlogApi.Controllers
             }
         }
 
+        /// <summary>
+        /// 通过图床域名重定向访问谱面关联静态资源。
+        /// </summary>
         [HttpGet("asset/{setKey}/{*path}")]
         public async Task<IActionResult> GetAsset(string setKey, string path)
         {
@@ -151,6 +175,9 @@ namespace BlogApi.Controllers
             return Redirect(targetUrl);
         }
 
+        /// <summary>
+        /// 将谱面集实体转换为 API 返回 DTO。
+        /// </summary>
         private BeatmapSetDto ToBeatmapSetDto(BeatmapSet set)
         {
             return new BeatmapSetDto
@@ -180,6 +207,9 @@ namespace BlogApi.Controllers
             };
         }
 
+        /// <summary>
+        /// 构建谱面资源访问 URL。
+        /// </summary>
         private string? BuildAssetUrl(string storageKey, string? relativePath)
         {
             if (string.IsNullOrWhiteSpace(storageKey) || string.IsNullOrWhiteSpace(relativePath))

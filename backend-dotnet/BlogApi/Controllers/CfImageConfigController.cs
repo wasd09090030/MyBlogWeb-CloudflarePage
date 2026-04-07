@@ -12,6 +12,9 @@ namespace BlogApi.Controllers
     {
         private readonly CfImageConfigService _cfImageConfigService;
 
+        /// <summary>
+        /// 初始化 Cloudflare 图片配置控制器。
+        /// </summary>
         public CfImageConfigController(CfImageConfigService cfImageConfigService)
         {
             _cfImageConfigService = cfImageConfigService;

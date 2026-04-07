@@ -1,7 +1,6 @@
 ## 开发环境
 
-Windows WSL2 Ubuntu 22.04
-
+Windows WSL2，Node.js 18+，.NET 8 SDK，VS Code
 ## 1. 项目概览
 本仓库是全栈博客系统，采用混合架构：
 - 静态博客前端：`nuxt-public/`（Nuxt 3，SSG 静态生成，部署到 Cloudflare Pages）
@@ -81,6 +80,7 @@ Windows WSL2 Ubuntu 22.04
 - C#：4 空格缩进，类型/公开成员 PascalCase，局部变量 camelCase
 - 样式：Tailwind + 组件样式文件（`nuxt/assets/css/components/*.styles.css`）
 - 新增前端业务代码优先进入 `features/*`，避免继续堆积在 `pages/*` 或全局 `components/*`
+- 所有的非naiveui的自行设计的部分应该封装成vue组件放在nuxt-public\app\shared\ui下
 
 ## 5. 配置与样式注意事项
 - Tailwind 扫描需覆盖：`app/features/**/*.{js,vue,ts}`（已纳入）

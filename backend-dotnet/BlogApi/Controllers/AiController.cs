@@ -11,6 +11,9 @@ namespace BlogApi.Controllers
         private readonly DeepSeekService _deepSeekService;
         private readonly ILogger<AiController> _logger;
 
+        /// <summary>
+        /// 初始化 AI 控制器，注入 AI 服务与日志服务。
+        /// </summary>
         public AiController(DeepSeekService deepSeekService, ILogger<AiController> logger)
         {
             _deepSeekService = deepSeekService;

@@ -12,6 +12,9 @@ namespace BlogApi.Controllers
     {
         private readonly ImagebedService _imagebedService;
 
+        /// <summary>
+        /// 初始化图床控制器，注入图床服务。
+        /// </summary>
         public ImagebedController(ImagebedService imagebedService)
         {
             _imagebedService = imagebedService;

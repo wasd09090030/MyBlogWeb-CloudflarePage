@@ -12,11 +12,17 @@ namespace BlogApi.Controllers
     {
         private readonly CommentService _commentService;
 
+        /// <summary>
+        /// 初始化评论控制器，注入评论业务服务。
+        /// </summary>
         public CommentsController(CommentService commentService)
         {
             _commentService = commentService;
         }
 
+        /// <summary>
+        /// 创建一条新评论，并记录提交者 IP。
+        /// </summary>
         [HttpPost]
         public async Task<ActionResult<Comment>> Create([FromBody] CreateCommentDto dto)
         {
@@ -25,6 +31,9 @@ namespace BlogApi.Controllers
             return CreatedAtAction(nameof(GetByArticle), new { articleId = comment.ArticleId }, comment);
         }
 
+        /// <summary>
+        /// 获取指定文章下的评论列表。
+        /// </summary>
         [HttpGet("article/{articleId}")]
         public async Task<ActionResult<List<Comment>>> GetByArticle(int articleId)
         {
@@ -32,6 +41,9 @@ namespace BlogApi.Controllers
             return Ok(comments);
         }
 
+        /// <summary>
+        /// 获取后台全部评论。
+        /// </summary>
         [Authorize]
         [HttpGet("admin/all")]
         public async Task<ActionResult<List<Comment>>> GetAll()
@@ -40,6 +52,9 @@ namespace BlogApi.Controllers
             return Ok(comments);
         }
 
+        /// <summary>
+        /// 获取后台待审核评论列表。
+        /// </summary>
         [Authorize]
         [HttpGet("admin/pending")]
         public async Task<ActionResult<List<Comment>>> GetPending()
@@ -48,6 +63,9 @@ namespace BlogApi.Controllers
             return Ok(comments);
         }
 
+        /// <summary>
+        /// 更新指定评论的审核状态。
+        /// </summary>
         [Authorize]
         [HttpPatch("admin/{id}/status")]
         public async Task<ActionResult<Comment>> UpdateStatus(int id, [FromBody] UpdateCommentStatusDto dto)
@@ -59,6 +77,9 @@ namespace BlogApi.Controllers
             return Ok(comment);
         }
 
+        /// <summary>
+        /// 为指定评论点赞。
+        /// </summary>
         [HttpPost("{id}/like")]
         public async Task<ActionResult<Comment>> Like(int id)
         {
@@ -69,6 +90,9 @@ namespace BlogApi.Controllers
             return Ok(comment);
         }
 
+        /// <summary>
+        /// 删除指定评论。
+        /// </summary>
         [Authorize]
         [HttpDelete("admin/{id}")]
         public async Task<IActionResult> Delete(int id)

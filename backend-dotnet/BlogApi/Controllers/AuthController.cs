@@ -12,12 +12,18 @@ namespace BlogApi.Controllers
         private readonly AuthService _authService;
         private readonly JwtService _jwtService;
 
+        /// <summary>
+        /// 初始化认证控制器，注入认证与 JWT 服务。
+        /// </summary>
         public AuthController(AuthService authService, JwtService jwtService)
         {
             _authService = authService;
             _jwtService = jwtService;
         }
 
+        /// <summary>
+        /// 校验管理员凭据并签发访问令牌与刷新令牌。
+        /// </summary>
         [HttpPost("login")]
         public ActionResult<AuthResponse> Login([FromBody] LoginDto dto)
         {
@@ -51,6 +57,9 @@ namespace BlogApi.Controllers
             }
         }
 
+        /// <summary>
+        /// 使用刷新令牌换取新的访问令牌。
+        /// </summary>
         [HttpPost("refresh")]
         public ActionResult<AuthResponse> RefreshToken([FromBody] RefreshTokenDto dto)
         {
@@ -75,6 +84,9 @@ namespace BlogApi.Controllers
             }
         }
 
+        /// <summary>
+        /// 吊销当前用户刷新令牌并执行登出。
+        /// </summary>
         [Authorize]
         [HttpPost("logout")]
         public IActionResult Logout()
@@ -91,6 +103,9 @@ namespace BlogApi.Controllers
             }
         }
 
+        /// <summary>
+        /// 验证当前访问令牌是否有效。
+        /// </summary>
         [Authorize]
         [HttpGet("verify")]
         public IActionResult VerifyToken()
@@ -100,6 +115,9 @@ namespace BlogApi.Controllers
             return Ok(new { success = true, message = "Token 有效", username });
         }
 
+        /// <summary>
+        /// 修改管理员登录密码。
+        /// </summary>
         [Authorize]
         [HttpPost("change-password")]
         public ActionResult<AuthResponse> ChangePassword([FromBody] ChangePasswordDto dto)

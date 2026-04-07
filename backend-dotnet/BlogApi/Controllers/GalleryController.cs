@@ -12,12 +12,17 @@ namespace BlogApi.Controllers
     {
         private readonly GalleryService _galleryService;
 
+        /// <summary>
+        /// 初始化画廊控制器，注入画廊业务服务。
+        /// </summary>
         public GalleryController(GalleryService galleryService)
         {
             _galleryService = galleryService;
         }
 
-        // 公开接口：获取所有激活的画廊图片
+        /// <summary>
+        /// 获取所有已激活的画廊图片（公开接口）。
+        /// </summary>
         [HttpGet]
         public async Task<ActionResult<List<Gallery>>> GetAllActive()
         {
@@ -25,7 +30,9 @@ namespace BlogApi.Controllers
             return Ok(galleries);
         }
 
-        // 管理员接口：获取所有画廊图片
+        /// <summary>
+        /// 获取全部画廊图片（管理员接口）。
+        /// </summary>
         [Authorize]
         [HttpGet("admin")]
         public async Task<ActionResult<List<Gallery>>> GetAll()
@@ -34,7 +41,9 @@ namespace BlogApi.Controllers
             return Ok(galleries);
         }
 
-        // 管理员接口：获取单个画廊图片
+        /// <summary>
+        /// 根据 ID 获取画廊图片详情（管理员接口）。
+        /// </summary>
         [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<Gallery>> GetById(int id)
@@ -46,7 +55,9 @@ namespace BlogApi.Controllers
             return Ok(gallery);
         }
 
-        // 公开接口：获取图片宽高
+        /// <summary>
+        /// 获取指定图片宽高信息（公开接口）。
+        /// </summary>
         [HttpGet("{id}/dimensions")]
         public async Task<ActionResult<GalleryDimensionsDto>> GetDimensions(int id)
         {
@@ -62,7 +73,9 @@ namespace BlogApi.Controllers
             });
         }
 
-        // 管理员接口：刷新所有图片宽高
+        /// <summary>
+        /// 刷新全部画廊图片宽高数据（管理员接口）。
+        /// </summary>
         [Authorize]
         [HttpPost("refresh-dimensions")]
         public async Task<ActionResult<GalleryRefreshResultDto>> RefreshDimensions()
@@ -71,7 +84,9 @@ namespace BlogApi.Controllers
             return Ok(result);
         }
 
-        // 管理员接口：创建画廊图片
+        /// <summary>
+        /// 创建新的画廊图片记录（管理员接口）。
+        /// </summary>
         [Authorize]
         [HttpPost]
         public async Task<ActionResult<Gallery>> Create([FromBody] CreateGalleryDto dto)
@@ -80,7 +95,9 @@ namespace BlogApi.Controllers
             return CreatedAtAction(nameof(GetById), new { id = gallery.Id }, gallery);
         }
 
-        // 管理员接口：更新画廊图片
+        /// <summary>
+        /// 更新指定画廊图片信息（管理员接口）。
+        /// </summary>
         [Authorize]
         [HttpPatch("{id}")]
         public async Task<ActionResult<Gallery>> Update(int id, [FromBody] UpdateGalleryDto dto)
@@ -92,7 +109,9 @@ namespace BlogApi.Controllers
             return Ok(gallery);
         }
 
-        // 管理员接口：删除画廊图片
+        /// <summary>
+        /// 删除指定画廊图片（管理员接口）。
+        /// </summary>
         [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
@@ -104,7 +123,9 @@ namespace BlogApi.Controllers
             return NoContent();
         }
 
-        // 管理员接口：批量更新排序
+        /// <summary>
+        /// 批量更新画廊图片排序值（管理员接口）。
+        /// </summary>
         [Authorize]
         [HttpPatch("batch/sort-order")]
         public async Task<IActionResult> UpdateSortOrder([FromBody] List<UpdateSortOrderDto> updates)
@@ -113,7 +134,9 @@ namespace BlogApi.Controllers
             return Ok(new { message = "排序更新成功" });
         }
 
-        // 管理员接口：切换激活状态
+        /// <summary>
+        /// 切换指定画廊图片激活状态（管理员接口）。
+        /// </summary>
         [Authorize]
         [HttpPatch("{id}/toggle-active")]
         public async Task<ActionResult<Gallery>> ToggleActive(int id)
@@ -125,7 +148,9 @@ namespace BlogApi.Controllers
             return Ok(gallery);
         }
 
-        // 管理员接口：批量导入图片
+        /// <summary>
+        /// 批量导入画廊图片（管理员接口）。
+        /// </summary>
         [Authorize]
         [HttpPost("batch/import")]
         public async Task<ActionResult<List<Gallery>>> BatchImport([FromBody] BatchImportGalleryDto dto)

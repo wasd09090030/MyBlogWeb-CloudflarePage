@@ -11,6 +11,9 @@ namespace BlogApi.Controllers
     {
         private readonly CloudflarePagesDeployService _cloudflarePagesDeployService;
 
+        /// <summary>
+        /// 初始化运维控制器，注入 Cloudflare Pages 部署服务。
+        /// </summary>
         public OpsController(CloudflarePagesDeployService cloudflarePagesDeployService)
         {
             _cloudflarePagesDeployService = cloudflarePagesDeployService;

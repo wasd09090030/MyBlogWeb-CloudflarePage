@@ -68,9 +68,9 @@ function getTagSize(count: number): string {
   font-weight: 500;
   
   /* 默认 MD3 Tonal 风格 */
-  background-color: var(--n-border-color, rgba(0, 0, 0, 0.04));
-  color: var(--n-text-color-2, #475569);
-  border: 1px solid transparent;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
 
 .tag-hash {
@@ -84,7 +84,8 @@ function getTagSize(count: number): string {
   font-size: 0.75em;
   font-weight: 600;
   margin-left: 0.35em;
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--article-muted-chip-bg);
+  color: var(--article-muted-chip-text);
   padding: 0.15em 0.45em;
   border-radius: 12px;
   line-height: 1;
@@ -93,14 +94,16 @@ function getTagSize(count: number): string {
 
 /* Hover 浮起态 (MD3 Elevation & State Layer) */
 .tag-pill:hover {
-  background-color: var(--n-text-color-3, rgba(0, 0, 0, 0.08));
-  color: var(--n-text-color, #0f172a);
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-color-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
 }
 
 .tag-pill:hover .tag-count {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
 }
 
 /* Active 激活态 (MD3 Primary Container/Primary) */

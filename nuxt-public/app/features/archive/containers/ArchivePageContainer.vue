@@ -120,10 +120,36 @@ onMounted(fetchArticles)
 }
 
 .archive-page {
+  --archive-accent-soft: rgba(13, 110, 253, 0.08);
+  --archive-accent-soft-strong: rgba(13, 110, 253, 0.18);
+  --archive-track-color: var(--border-color-light);
+  --archive-hover-bg: var(--nav-link-hover-bg);
+  --archive-dot-color: var(--text-tertiary);
+  --archive-dot-border: var(--bg-primary);
+  --archive-dot-wrapper-hover: rgba(13, 110, 253, 0.12);
+  --archive-card-bg: var(--card-bg);
+  --archive-card-border: var(--border-color);
+  --archive-card-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+  --archive-chip-dismiss-bg: rgba(0, 0, 0, 0.08);
   min-height: 100vh;
   padding: 2rem 1.5rem 5rem;
   max-width: 1080px;
   margin: 0 auto;
+  color: var(--text-primary);
+}
+
+:global(.dark) .archive-page,
+.dark-theme .archive-page {
+  --archive-accent-soft: rgba(66, 153, 225, 0.16);
+  --archive-accent-soft-strong: rgba(66, 153, 225, 0.28);
+  --archive-track-color: var(--border-color);
+  --archive-hover-bg: rgba(96, 165, 250, 0.14);
+  --archive-dot-color: var(--text-muted);
+  --archive-dot-border: var(--card-bg);
+  --archive-dot-wrapper-hover: rgba(66, 153, 225, 0.2);
+  --archive-card-border: var(--border-color-light);
+  --archive-card-shadow: 0 20px 44px rgba(2, 6, 23, 0.28);
+  --archive-chip-dismiss-bg: rgba(255, 255, 255, 0.1);
 }
 
 .archive-body {
@@ -147,7 +173,7 @@ onMounted(fetchArticles)
 .md3-filter-chip {
   display: inline-flex;
   align-items: center;
-  background: var(--primary-color-10, rgba(99, 102, 241, 0.08));
+  background: var(--archive-accent-soft);
   color: var(--primary-color, #6366f1);
   padding: 0.6rem 1.25rem;
   border-radius: 999px;
@@ -184,7 +210,7 @@ onMounted(fetchArticles)
 }
 
 .md3-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
+  background: var(--archive-chip-dismiss-bg);
   transform: scale(1.1);
 }
 
@@ -221,7 +247,7 @@ onMounted(fetchArticles)
   height: 10px;
   border-radius: 50%;
   background: var(--primary-color, #6366f1);
-  box-shadow: 0 0 0 3px var(--primary-color-10, rgba(99, 102, 241, 0.18));
+  box-shadow: 0 0 0 3px var(--archive-accent-soft-strong);
   z-index: 2;
 }
 
@@ -240,7 +266,7 @@ onMounted(fetchArticles)
   bottom: 0;
   left: 4px;
   width: 1.5px;
-  background: var(--n-border-color, rgba(0, 0, 0, 0.08));
+  background: var(--archive-track-color);
   z-index: 0;
 }
 
@@ -257,7 +283,12 @@ onMounted(fetchArticles)
 }
 
 .timeline-item:hover {
-  background: var(--n-border-color, rgba(99, 102, 241, 0.05));
+  background: var(--archive-hover-bg);
+}
+
+.timeline-item:focus-visible {
+  background: var(--archive-hover-bg);
+  box-shadow: 0 0 0 3px var(--archive-accent-soft);
 }
 
 .timeline-track {
@@ -288,8 +319,8 @@ onMounted(fetchArticles)
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--n-text-color-3, rgba(0, 0, 0, 0.18));
-  border: 1.5px solid var(--n-card-color, #fff);
+  background: var(--archive-dot-color);
+  border: 1.5px solid var(--archive-dot-border);
   box-sizing: content-box;
   transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
 }
@@ -301,7 +332,7 @@ onMounted(fetchArticles)
 }
 
 .timeline-item:hover .timeline-dot-wrapper {
-  background: rgba(99, 102, 241, 0.12);
+  background: var(--archive-dot-wrapper-hover);
 }
 
 /* 内容区：日期左 + 标题右 */
@@ -317,7 +348,7 @@ onMounted(fetchArticles)
   flex-shrink: 0;
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
-  color: var(--n-text-color-3, #a0aec0);
+  color: var(--text-muted);
   letter-spacing: 0.02em;
   line-height: 1.4;
   width: 2.8rem;
@@ -328,7 +359,7 @@ onMounted(fetchArticles)
   flex: 1;
   font-size: 0.93rem;
   font-weight: 500;
-  color: var(--n-text-color, #374151);
+  color: var(--text-primary);
   line-height: 1.55;
   white-space: nowrap;
   overflow: hidden;
@@ -342,11 +373,11 @@ onMounted(fetchArticles)
 
 /* --- 右侧 Tag Cloud 卡片 --- */
 .md3-card {
-  background: var(--n-card-color, #fff);
+  background: var(--archive-card-bg);
   border-radius: 24px;
   padding: 1.8rem;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.02);
-  border: 1px solid var(--n-border-color, rgba(0, 0, 0, 0.03));
+  box-shadow: var(--archive-card-shadow);
+  border: 1px solid var(--archive-card-border);
 }
 
 .panel-header {
@@ -363,12 +394,12 @@ onMounted(fetchArticles)
 .panel-title {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--n-text-color, #1e293b);
+  color: var(--text-primary);
   flex: 1;
 }
 
 .panel-count {
-  background: var(--primary-color-10, rgba(99, 102, 241, 0.1));
+  background: var(--archive-accent-soft);
   color: var(--primary-color, #6366f1);
   padding: 0.2rem 0.75rem;
   border-radius: 999px;

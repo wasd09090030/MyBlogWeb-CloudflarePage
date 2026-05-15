@@ -136,7 +136,7 @@ const getSliderRefs = () => {
     fadeSlideshowRef: ref(null),
     accordionGalleryRef: ref(null),
     coverflowGalleryRef: ref(null),
-    masonryWaterfallRef: ref(null)
+    masonryListRef: ref(null)
   }
 }
 

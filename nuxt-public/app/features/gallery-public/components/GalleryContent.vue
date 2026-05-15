@@ -44,38 +44,22 @@
           </div>
         </div>
 
-        <!-- Artwork：三个组件嵌入瀑布流网格中，浑然一体 -->
+        <!-- Artwork：顶部 Hero 保留嵌入感，后续图片流走稳定 masonry -->
         <template v-if="activeTag === 'artwork' && artworkGalleries.length > 0">
-          <MasonryWaterfall
-            ref="masonryWaterfallRef"
-            :images="getGallerySlice(0, artworkGalleries.length)"
-            :column-count="4"
+          <GalleryHeroSection
+            ref="galleryHeroSectionRef"
+            :fade-images="getGallerySlice(0, 5)"
+            :accordion-images="getGallerySlice(5, 10)"
+            :coverflow-images="getGallerySlice(10, 15)"
+            :preview-images="getGallerySlice(15, 18)"
             @image-click="$emit('open-fullscreen', $event)"
-          >
-            <template #embedded="{ gridColumns: gCols, gridGap: gGap, gridRowHeight: gRowH }">
-              <div class="embedded-fade" :style="getEmbeddedStyle('fade', gCols, gGap, gRowH)">
-                <FadeSlideshow
-                  ref="fadeSlideshowRef"
-                  :images="getGallerySlice(0, 5)"
-                  @image-click="$emit('open-fullscreen', $event)"
-                />
-              </div>
-              <div class="embedded-card" :style="getEmbeddedStyle('accordion', gCols, gGap, gRowH)">
-                <AccordionGallery
-                  ref="accordionGalleryRef"
-                  :images="getGallerySlice(5, 10)"
-                  @image-click="$emit('open-fullscreen', $event)"
-                />
-              </div>
-              <div class="embedded-card" :style="getEmbeddedStyle('coverflow', gCols, gGap, gRowH)">
-                <CoverflowGallery
-                  ref="coverflowGalleryRef"
-                  :images="getGallerySlice(10, 15)"
-                  @image-click="$emit('open-fullscreen', $event)"
-                />
-              </div>
-            </template>
-          </MasonryWaterfall>
+          />
+
+          <GalleryMasonryList
+            ref="galleryMasonryListRef"
+            :images="getGallerySlice(0, artworkGalleries.length)"
+            @image-click="$emit('open-fullscreen', $event)"
+          />
         </template>
 
         <!-- Game 板块 -->
@@ -141,10 +125,8 @@
 </template>
 
 <script setup>
-import FadeSlideshow from '~/features/gallery-public/components/FadeSlideshow.vue'
-import AccordionGallery from '~/features/gallery-public/components/AccordionGallery.vue'
-import CoverflowGallery from '~/features/gallery-public/components/CoverflowGallery.vue'
-import MasonryWaterfall from '~/features/gallery-public/components/MasonryWaterfall.vue'
+import GalleryHeroSection from '~/features/gallery-public/components/GalleryHeroSection.vue'
+import GalleryMasonryList from '~/features/gallery-public/components/GalleryMasonryList.vue'
 import GameGallerySection from '~/features/gallery-public/components/GameGallerySection.vue'
 import StateLoading from '~/shared/ui/StateLoading.vue'
 import StateError from '~/shared/ui/StateError.vue'
@@ -182,75 +164,8 @@ const emit = defineEmits([
   'gallery-visible'
 ])
 
-const fadeSlideshowRef = ref(null)
-const accordionGalleryRef = ref(null)
-const coverflowGalleryRef = ref(null)
-const masonryWaterfallRef = ref(null)
-
-// 视口高度跟踪（用于计算嵌入组件的网格行跨度）
-const viewportHeight = ref(900)
-let onVhResize = null
-
-onMounted(() => {
-  viewportHeight.value = window.innerHeight
-  onVhResize = () => { viewportHeight.value = window.innerHeight }
-  window.addEventListener('resize', onVhResize)
-})
-
-onUnmounted(() => {
-  if (onVhResize) window.removeEventListener('resize', onVhResize)
-})
-
-/**
- * 计算嵌入组件在网格中占据的行数
- * 每个网格行 = gridRowHeight(8px) + gridGap(10px) = 18px
- */
-const calcRowSpan = (vh, rowH, gap) => {
-  const px = viewportHeight.value * vh
-  return Math.ceil((px + gap) / (rowH + gap))
-}
-
-/**
- * 生成嵌入组件的 grid 定位样式
- * FadeSlideshow: 4/5 宽度, 75vh 高度
- * AccordionGallery / CoverflowGallery: 3/5 宽度, 60vh 高度
- */
-const getEmbeddedStyle = (type, cols, gap, rowH) => {
-  const fadeVh = 0.75
-  const sectionVh = 0.6
-  const fadeRowSpan = calcRowSpan(fadeVh, rowH, gap)
-  const sectionRowSpan = calcRowSpan(sectionVh, rowH, gap)
-  // 小屏幕全宽，大屏幕按比例
-  const fullWidth = cols < 12
-
-  if (type === 'fade') {
-    const colSpan = fullWidth ? cols : Math.round(cols * 4 / 5)
-    return {
-      gridColumn: `1 / span ${colSpan}`,
-      gridRow: `1 / span ${fadeRowSpan}`,
-    }
-  }
-
-  if (type === 'accordion') {
-    const colSpan = fullWidth ? cols : Math.round(cols * 3 / 5)
-    const startRow = fadeRowSpan + 1
-    return {
-      gridColumn: `1 / span ${colSpan}`,
-      gridRow: `${startRow} / span ${sectionRowSpan}`,
-    }
-  }
-
-  if (type === 'coverflow') {
-    const colSpan = fullWidth ? cols : Math.round(cols * 3 / 5)
-    const startRow = fadeRowSpan + sectionRowSpan + 1
-    return {
-      gridColumn: `1 / span ${colSpan}`,
-      gridRow: `${startRow} / span ${sectionRowSpan}`,
-    }
-  }
-
-  return {}
-}
+const galleryHeroSectionRef = ref(null)
+const galleryMasonryListRef = ref(null)
 
 const handleFullscreenImageLoad = () => {
   emit('image-load')
@@ -258,11 +173,10 @@ const handleFullscreenImageLoad = () => {
 
 defineExpose({
   getSliderRefs() {
+    const heroRefs = galleryHeroSectionRef.value?.getSliderRefs?.() || {}
     return {
-      fadeSlideshowRef,
-      accordionGalleryRef,
-      coverflowGalleryRef,
-      masonryWaterfallRef
+      ...heroRefs,
+      masonryListRef: galleryMasonryListRef
     }
   }
 })

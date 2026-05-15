@@ -18,7 +18,7 @@ type GalleryRefs = {
   fadeSlideshowRef?: Ref<SliderLike | null>
   accordionGalleryRef?: Ref<SliderLike | null>
   coverflowGalleryRef?: Ref<SliderLike | null>
-  masonryWaterfallRef?: Ref<LayoutLike | null>
+  masonryListRef?: Ref<LayoutLike | null>
 }
 
 export async function initSliders(
@@ -45,8 +45,8 @@ export async function initSliders(
           if (refs.coverflowGalleryRef?.value?.initSlider) {
             await refs.coverflowGalleryRef.value.initSlider()
           }
-          if (refs.masonryWaterfallRef?.value?.initLayout) {
-            await refs.masonryWaterfallRef.value.initLayout()
+          if (refs.masonryListRef?.value?.initLayout) {
+            await refs.masonryListRef.value.initLayout()
           }
         }, 200)
       }, 150)
@@ -59,7 +59,7 @@ export function destroySliders(refs: GalleryRefs): void {
   refs.fadeSlideshowRef?.value?.destroySlider?.()
   refs.accordionGalleryRef?.value?.destroySlider?.()
   refs.coverflowGalleryRef?.value?.destroySlider?.()
-  refs.masonryWaterfallRef?.value?.destroyLayout?.()
+  refs.masonryListRef?.value?.destroyLayout?.()
 }
 
 export function getGallerySlice<T>(allGalleries: T[], start: number, end: number): T[] {

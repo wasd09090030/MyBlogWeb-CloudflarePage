@@ -13,6 +13,10 @@ export function stripMdcMarkup(content?: string | null): string {
   output = output.replace(/!\[([^\]]*)\]\([^\)]*\)/g, '$1')
   output = output.replace(/\[([^\]]+)\]\([^\)]*\)/g, '$1')
   output = output.replace(/`([^`]+)`/g, '$1')
+  // 过滤 Markdown 强调标记，避免 `**文本**` 之类的符号残留到预览区
+  output = output.replace(/(\*\*\*|___)([^*_]+?)\1/g, '$2')
+  output = output.replace(/(\*\*|__)([^*_]+?)\1/g, '$2')
+  output = output.replace(/(\*|_)([^*_]+?)\1/g, '$2')
   output = output.replace(/^\s*#{1,6}\s+/gm, '')
   output = output.replace(/^\s*>+\s?/gm, '')
   output = output.replace(/^\s*[-*+]\s+/gm, '')

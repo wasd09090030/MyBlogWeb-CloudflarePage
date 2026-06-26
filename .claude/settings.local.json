@@ -6,7 +6,9 @@
       "mcp__mcp-router__sequentialthinking",
       "Bash(ls -la \"E:\\\\CODE\\\\MyBlogWeb-CloudflarePage\\\\nuxt\\\\app\\\\shared\\\\api\"\" 2>nul || echo \"Directory not found \")",
       "Bash(powershell -Command:*)",
-      "Bash(npx nuxt generate)"
+      "Bash(npx nuxt generate)",
+      "Bash(git check-ignore *)",
+      "Bash(echo \"---exit: $?\")"
     ]
   }
 }

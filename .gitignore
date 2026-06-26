@@ -77,5 +77,14 @@ desktop.ini
 **/.output/
 **/.data/
 
-#skils
+# Claude / Codex tooling
 .codex/
+.claude/settings.local.json
+# AI tooling — intentionally tracked
+# OpenSpec change artifacts (proposal/design/specs/tasks) and Claude skills +
+# slash commands are intentionally committed so they survive across machines
+# and sessions. The `!` rules below are defensive: if a broader ignore pattern
+# is added later, these paths remain tracked.
+!/openspec/
+!/.claude/skills/
+!/.claude/commands/

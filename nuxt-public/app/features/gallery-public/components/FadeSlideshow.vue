@@ -21,11 +21,6 @@
           <div v-else class="fade-fallback">
             <Icon name="image" size="2xl" />
           </div>
-          <div class="fade-overlay">
-            <div class="fade-content">
-              <!-- 可扩展的内容区域 -->
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -265,6 +260,15 @@ watch(
   height: 100%;
   object-fit: cover;
   object-position: top;
+  transition:
+    transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 0.45s ease;
+  will-change: transform;
+}
+
+.fade-item:hover .fade-image {
+  transform: scale(1.025);
+  filter: saturate(1.06) contrast(1.02);
 }
 
 .fade-fallback {
@@ -277,31 +281,21 @@ watch(
   background: linear-gradient(140deg, rgba(15, 23, 42, 0.65), rgba(30, 41, 59, 0.38));
 }
 
-.fade-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(45deg, rgba(0,0,0,0.3), transparent 50%, rgba(0,0,0,0.3));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.fade-item:hover .fade-overlay {
-  opacity: 1;
-}
-
-.fade-content {
-  text-align: center;
-  color: white;
-  padding: 1rem;
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
   .fade-section {
     height: 62vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-image {
+    transition: none !important;
+  }
+
+  .fade-item:hover .fade-image {
+    transform: none;
+    filter: none;
   }
 }
 

@@ -55,18 +55,39 @@
             @image-click="$emit('open-fullscreen', $event)"
           />
 
-          <GalleryMasonryList
-            ref="galleryMasonryListRef"
-            :images="getGallerySlice(0, artworkGalleries.length)"
-            @image-click="$emit('open-fullscreen', $event)"
-          />
+          <GalleryTimelineLayout :groups="artworkMonthGroups">
+            <template #month="{ group }">
+              <GalleryMasonryList
+                ref="galleryMasonryListRef"
+                :images="group.items"
+                :initial-load-count="24"
+                :load-more-count="12"
+                @image-click="$emit('open-fullscreen', $event)"
+              />
+            </template>
+          </GalleryTimelineLayout>
         </template>
 
         <!-- Game 板块 -->
-        <GameGallerySection
-          v-if="activeTag === 'game'"
-          :images="gameGalleries"
-          @image-click="$emit('open-fullscreen', $event)"
+        <GalleryTimelineLayout
+          v-if="activeTag === 'game' && gameGalleries.length > 0"
+          :groups="gameMonthGroups"
+        >
+          <template #month="{ group }">
+            <GameGallerySection
+              :images="group.items"
+              :show-section-header="false"
+              :show-month-title="false"
+              @image-click="$emit('open-fullscreen', $event)"
+            />
+          </template>
+        </GalleryTimelineLayout>
+
+        <StateEmpty
+          v-if="activeTag === 'game' && gameGalleries.length === 0"
+          icon="images"
+          title="暂无游戏截屏"
+          description="画廊中还没有游戏截图"
         />
       </div>
     </Transition>
@@ -126,8 +147,10 @@
 
 <script setup>
 import GalleryHeroSection from '~/features/gallery-public/components/GalleryHeroSection.vue'
+import GalleryTimelineLayout from '~/features/gallery-public/components/GalleryTimelineLayout.vue'
 import GalleryMasonryList from '~/features/gallery-public/components/GalleryMasonryList.vue'
 import GameGallerySection from '~/features/gallery-public/components/GameGallerySection.vue'
+import { groupGalleryByMonth } from '~/features/gallery-public/utils/monthGrouping'
 import StateLoading from '~/shared/ui/StateLoading.vue'
 import StateError from '~/shared/ui/StateError.vue'
 import StateEmpty from '~/shared/ui/StateEmpty.vue'
@@ -166,6 +189,16 @@ const emit = defineEmits([
 
 const galleryHeroSectionRef = ref(null)
 const galleryMasonryListRef = ref(null)
+
+const artworkMonthGroups = computed(() => groupGalleryByMonth(
+  props.getGallerySlice(0, props.artworkGalleries.length),
+  { sectionPrefix: 'gallery-artwork-month' }
+))
+
+const gameMonthGroups = computed(() => groupGalleryByMonth(
+  props.gameGalleries,
+  { sectionPrefix: 'gallery-game-month' }
+))
 
 const handleFullscreenImageLoad = () => {
   emit('image-load')

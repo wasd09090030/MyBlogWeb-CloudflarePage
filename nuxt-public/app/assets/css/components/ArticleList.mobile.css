@@ -1,0 +1,274 @@
+/* ========== 移动端规则 ==========
+   所有规则必须包在 @media (max-width: <breakpoint>) 内。
+   允许的断点: 576px / 768px / 992px。
+*/
+
+/* 平板端 (992px以下) */
+@media (max-width: 992px) {
+  .articles-container.grid-mode {
+    grid-template-columns: 1fr;
+  }
+
+  .article-list-page {
+    padding: 1.25rem;
+  }
+}
+
+/* 移动端 (768px以下) */
+@media (max-width: 768px) {
+  .category-bar {
+    padding: 0.6rem 0.8rem;
+    gap: 0.5rem;
+  }
+
+  .category-list {
+    gap: 0.4rem;
+  }
+
+  .category-list-item {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .category-bar-actions {
+    gap: 0.4rem;
+  }
+
+  .view-toggle-btn {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0.4rem;
+  }
+
+  /* 移动端隐藏视图切换按钮 */
+  .category-bar-actions {
+    display: none;
+  }
+
+  .page-header__icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .page-header__icon img {
+    width: 26px;
+    height: 26px;
+  }
+
+  .page-header__heading {
+    font-size: 1.3rem;
+  }
+
+  .page-header__subtitle {
+    font-size: 0.85rem;
+  }
+
+  /* 移动端强制使用网格布局 */
+  .articles-container,
+  .articles-container.list-mode,
+  .articles-container.grid-mode {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .article-card,
+  .article-card-reverse {
+    flex-direction: column;
+    margin-bottom: 0;
+    min-height: auto;
+    border-radius: 10px;
+  }
+
+  .article-image-section {
+    flex: 0 0 auto;
+    height: 140px;
+  }
+
+  .article-image-section .article-image {
+    height: 140px !important;
+  }
+
+  .article-content-section {
+    flex: 1;
+    padding: 0.75rem;
+    justify-content: flex-start;
+    gap: 0.45rem;
+  }
+
+  .article-title {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .article-content-preview {
+    -webkit-line-clamp: 2;
+    font-size: 0.8rem;
+  }
+
+  .article-excerpt {
+    display: none;
+  }
+
+  .article-tags {
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+    gap: 0.45rem;
+  }
+
+  .article-meta {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .article-date {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .article-category {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  /* 移动端隐藏阅读全文按钮 */
+  .learn-more {
+    display: none;
+  }
+
+  .article-list-page {
+    padding: 0.75rem;
+  }
+
+  /* 分页器优化 */
+  .pagination-container {
+    margin-top: 1rem !important;
+  }
+
+  .pagination .page-link {
+    padding: 0.6rem 0.9rem;
+    font-size: 1rem;
+    min-width: 42px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pagination .page-item {
+    margin: 0 2px;
+  }
+}
+
+/* 小屏移动端 (576px以下) */
+@media (max-width: 576px) {
+  .page-header {
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+  }
+
+  .page-header__title {
+    gap: 0.6rem;
+  }
+
+  .page-header__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .page-header__icon img {
+    width: 22px;
+    height: 22px;
+  }
+
+  .page-header__heading {
+    font-size: 1.1rem;
+  }
+
+  .page-header__subtitle {
+    font-size: 0.75rem;
+  }
+
+  /* 小屏幕保持两列网格 */
+  .articles-container,
+  .articles-container.list-mode,
+  .articles-container.grid-mode {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .article-card {
+    border-radius: 8px;
+  }
+
+  .article-image-section {
+    height: 120px;
+  }
+
+  .article-image-section .article-image {
+    height: 120px !important;
+  }
+
+  .article-content-section {
+    padding: 0.5rem;
+  }
+
+  .article-title {
+    font-size: 0.85rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .article-meta {
+    flex-direction: row;
+    gap: 0.2rem;
+  }
+
+  .article-date,
+  .article-category {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  .pagination .page-link {
+    padding: 0.5rem 0.7rem;
+    margin: 0 1px;
+    font-size: 0.9rem;
+    min-width: 38px;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pagination .page-item {
+    margin: 0 1px;
+  }
+
+  .pagination-container .text-center {
+    font-size: 0.8rem;
+  }
+
+  .article-list-page {
+    padding: 0.5rem;
+  }
+
+  /* 搜索/筛选提示优化 */
+  .alert.alert-info {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .alert.alert-info .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}

@@ -216,5 +216,6 @@ defineExpose({
 </script>
 
 <style scoped>
-@import '~/assets/css/components/Gallery.styles.css';
+@import '~/assets/css/components/Gallery.desktop.css';
+@import '~/assets/css/components/Gallery.mobile.css';
 </style>

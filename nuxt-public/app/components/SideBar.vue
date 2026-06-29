@@ -213,5 +213,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-@import'../assets/css/components/SideBar.styles.css';
+@import '../assets/css/components/SideBar.desktop.css';
+@import '../assets/css/components/SideBar.mobile.css';
 </style>

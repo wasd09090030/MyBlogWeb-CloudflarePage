@@ -256,7 +256,8 @@ const getArticlePath = (article) => {
 </script>
 
 <style scoped>
-@import '~/assets/css/components/WelcomeSection.styles.css';
+@import '~/assets/css/components/WelcomeSection.desktop.css';
+@import '~/assets/css/components/WelcomeSection.mobile.css';
 
 .welcome-image-wrapper {
   position: relative;

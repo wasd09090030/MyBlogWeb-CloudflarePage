@@ -377,5 +377,6 @@ const goToArticles = () => {
 </script>
 
 <style scoped>
-@import '~/assets/css/components/AboutPage.styles.css';
+@import '~/assets/css/components/AboutPage.desktop.css';
+@import '~/assets/css/components/AboutPage.mobile.css';
 </style>

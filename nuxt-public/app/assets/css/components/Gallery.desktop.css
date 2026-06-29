@@ -1,3 +1,8 @@
+/* ========== 桌面端基线规则 ==========
+   任何不在 @media 包裹内的规则都属于桌面基线。
+   移动覆盖在 Gallery.mobile.css 中。
+*/
+
 /* 画廊全屏容器样式 */
 .gallery-fullscreen {
   position: fixed;
@@ -361,49 +366,7 @@
   padding: 4rem 2rem;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  /* 画廊内容移动端适配 */
-  .gallery-option {
-    padding: 0.45rem 1.1rem;
-    font-size: 0.9rem;
-  }
-  
-  /* 全屏查看移动端优化 */
-  .fullscreen-controls {
-    top: 15px;
-    right: 15px;
-    gap: 8px;
-  }
-  
-  .control-btn {
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-  }
-  
-  .fullscreen-image {
-    max-width: 95vw;
-    max-height: 80vh;
-    border-radius: 6px;
-  }
-  
-  .zoom-indicator {
-    bottom: 100px;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-  }
-  
-  .fullscreen-hint {
-    bottom: 60px;
-    font-size: 0.75rem;
-    padding: 0 20px;
-    text-align: center;
-  }
-}
-
 /* 暗色主题：仅改变页面背景 */
 :global(.dark-theme) .gallery-fullscreen {
   background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
 }
-

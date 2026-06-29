@@ -1,3 +1,8 @@
+/* ========== 桌面端基线规则 ==========
+   任何不在 @media 包裹内的规则都属于桌面基线。
+   移动/平板覆盖在 SideBar.mobile.css 中。
+*/
+
 /* 桌面端侧边栏样式 */
 .desktop-sidebar {
   height: 100%;
@@ -321,7 +326,7 @@
   border: 1px solid var(--panel-border-soft);
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 
+  box-shadow:
     var(--shadow-sm),
     var(--shadow-xs);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -342,7 +347,7 @@
 
 .quote-wrapper:hover {
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     var(--shadow-lg),
     var(--shadow-sm);
 }
@@ -507,14 +512,14 @@
 .dark-theme .quote-wrapper {
   background: var(--panel-bg-soft);
   border: 1px solid var(--panel-border-soft);
-  box-shadow: 
+  box-shadow:
     var(--shadow-md),
     var(--shadow-sm);
 }
 
 :global(.dark) .quote-wrapper:hover,
 .dark-theme .quote-wrapper:hover {
-  box-shadow: 
+  box-shadow:
     var(--shadow-xl),
     var(--shadow-md);
 }
@@ -862,7 +867,7 @@
     box-shadow: 0 10px 25px rgba(36, 41, 46, 0.4), 0 0 0 10px rgba(36, 41, 46, 0);
   }
   100% {
-    box-shadow: 0 10px 25px rgba(36, 41, 46, 0.4), 0 0 0 0 rgba(36, 41, 46, 0);
+    box-shadow: 0 10px 25px rgba(36, 41, 46, 0.4), 0 0 0 0 transparent;
   }
 }
 
@@ -887,109 +892,6 @@
     width: 300px;
     height: 300px;
     opacity: 0;
-  }
-}
-
-/* 移动端适配 */
-@media (max-width: 576px) {
-  .contact-icons {
-    gap: 1rem;
-  }
-
-  .category-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .contact-icon {
-    width: 45px;
-    height: 45px;
-  }
-  
-  .contact-icon i {
-    font-size: 1.3rem;
-  }
-  
-  .quote-wrapper {
-    padding: 1.2rem;
-  }
-  
-  .quote-text {
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-  
-  .quote-author {
-    font-size: 0.8rem;
-  }
-  
-  .quote-title {
-    font-size: 0.85rem;
-  }
-  
-  .quote-title i {
-    font-size: 0.9rem;
-  }
-  
-  .quote-refresh-btn {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .quote-mark {
-    font-size: 1.2rem;
-  }
-}
-
-/* 移动端特殊样式 */
-@media (max-width: 991px) {
-  .desktop-sidebar {
-    display: none !important;
-  }
-  
-  .mobile-personal-info {
-    right: 15px;
-  }
-  
-  .personal-info-sidebar {
-    width: 260px;
-    padding: 1.25rem;
-  }
-  
-  .avatar-container {
-    width: 80px;
-    height: 80px;
-  }
-  
-  .user-name {
-    font-size: 1.1rem;
-  }
-  
-  .nav-button {
-    padding: 0.6rem 0.8rem;
-    font-size: 0.9rem;
-  }
-  
-  .toggle-button {
-    width: 45px;
-    height: 45px;
-    font-size: 1.2rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .mobile-personal-info {
-    right: 10px;
-  }
-  
-  .personal-info-sidebar {
-    width: 240px;
-    padding: 1rem;
-  }
-  
-  .toggle-button {
-    width: 40px;
-    height: 40px;
-    font-size: 1.1rem;
   }
 }
 

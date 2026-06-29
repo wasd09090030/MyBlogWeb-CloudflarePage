@@ -1,0 +1,24 @@
+/* ========== 全局响应式工具类 - 移动端 ==========
+ * 在不同断点下隐藏对应的工具类元素。
+ */
+
+/* 小屏移动端 (576px以下) */
+@media (max-width: 576px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* 移动端 (768px以下) */
+@media (max-width: 768px) {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+/* 平板端 (992px以下) */
+@media (max-width: 992px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}

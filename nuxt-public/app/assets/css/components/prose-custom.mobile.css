@@ -1,0 +1,5 @@
+/* ========== 移动端规则 ==========
+ * 当前 prose-custom 没有 viewport-conditional 样式;
+ * 此文件保留为配对文件,后续如需移动端 prose 覆盖(如减小标题字号、
+ * 缩小代码块 padding 等),在此文件内用 @media (max-width: <576/768/992>px) 块添加。
+ */

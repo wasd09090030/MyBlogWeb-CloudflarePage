@@ -1,0 +1,105 @@
+/* ========== 移动端规则 ==========
+   所有规则必须包在 @media (max-width: <breakpoint>) 内。
+   允许的断点: 576px / 768px / 992px。
+*/
+
+/* 平板端 (992px以下) - 之前文件使用 991px，迁移时归一化为 992px(肉眼不可见的 1px 差异) */
+@media (max-width: 992px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+
+  .mobile-personal-info {
+    right: 15px;
+  }
+
+  .personal-info-sidebar {
+    width: 260px;
+    padding: 1.25rem;
+  }
+
+  .avatar-container {
+    width: 80px;
+    height: 80px;
+  }
+
+  .user-name {
+    font-size: 1.1rem;
+  }
+
+  .nav-button {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .toggle-button {
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
+  }
+}
+
+/* 小屏移动端 (576px以下) */
+@media (max-width: 576px) {
+  .contact-icons {
+    gap: 1rem;
+  }
+
+  .category-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-icon {
+    width: 45px;
+    height: 45px;
+  }
+
+  .contact-icon i {
+    font-size: 1.3rem;
+  }
+
+  .quote-wrapper {
+    padding: 1.2rem;
+  }
+
+  .quote-text {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .quote-author {
+    font-size: 0.8rem;
+  }
+
+  .quote-title {
+    font-size: 0.85rem;
+  }
+
+  .quote-title i {
+    font-size: 0.9rem;
+  }
+
+  .quote-refresh-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .quote-mark {
+    font-size: 1.2rem;
+  }
+
+  .mobile-personal-info {
+    right: 10px;
+  }
+
+  .personal-info-sidebar {
+    width: 240px;
+    padding: 1rem;
+  }
+
+  .toggle-button {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+}

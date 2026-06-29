@@ -1,10 +1,10 @@
 /**
- * Tailwind Typography 自定义样式
+ * Tailwind Typography 自定义样式 - 桌面端
  * 配合 @tailwindcss/typography 使用
  * 使用纯 CSS 定义以避免 IDE 报错
  */
 
-/* 标题滚动偏移 - 固定导航栏 */
+/* 标题滚动偏移 - 固定导航 */
 .prose h1,
 .prose h2,
 .prose h3,
@@ -59,7 +59,7 @@
   color: rgb(249 168 212);  /* text-pink-300 */
 }
 
-/* 引用块 */
+/* 引用 */
 .prose blockquote {
   border-left-width: 4px;
   border-left-color: rgb(244 114 182);  /* border-pink-400 */
@@ -148,4 +148,3 @@
 .dark .prose ::selection {
   background-color: rgb(236 72 153 / 0.3);  /* bg-pink-500/30 */
 }
-

@@ -78,15 +78,29 @@ Windows WSL2，Node.js 18+，.NET 8 SDK，VS Code
 ## 4. 编码与风格约定
 - Vue/Nuxt：2 空格缩进，组件 PascalCase，组合式函数 `useXxx`
 - C#：4 空格缩进，类型/公开成员 PascalCase，局部变量 camelCase
-- 样式：Tailwind + 组件样式文件（`nuxt/assets/css/components/*.styles.css`）
+- 样式：Tailwind + 组件样式文件（`nuxt-public/app/assets/css/components/*.{desktop,mobile}.css`）
 - 新增前端业务代码优先进入 `features/*`，避免继续堆积在 `pages/*` 或全局 `components/*`
 - 所有的非naiveui的自行设计的部分应该封装成vue组件放在nuxt-public\app\shared\ui下
+
+### 4.1 响应式样式分离约定（nuxt-public，自 2026-06 起生效）
+
+桌面端与移动端样式**必须**物理分离到成对文件中：
+
+- `<Name>.desktop.css` — 仅含桌面基线规则（不包 `@media (max-width: ...)`）
+- `<Name>.mobile.css` — 全部规则包在 `@media (max-width: 576/768/992px)` 块内
+- 加载顺序：desktop 先于 mobile（保证 mobile 可覆盖）
+- 允许的断点仅 `576px`、`768px`、`992px`
+- 新增组件**禁止**使用混写的 `.styles.css` 命名
+- 全局工具类（`hide-mobile` / `hide-tablet` / `hide-desktop`）位于 `responsive-utilities.{desktop,mobile}.css`，通过 `nuxt.config.ts` 的 `css: []` 数组全局加载
+- 全局 prose 样式位于 `prose-custom.{desktop,mobile}.css`，加载方式同上
+- 受 change `extract-mobile-styles` 约束（详见 `openspec/changes/archive/2026-06-.../`）
 
 ## 5. 配置与样式注意事项
 - Tailwind 扫描需覆盖：`app/features/**/*.{js,vue,ts}`（已纳入）
 - `NuxtLoadingIndicator` 已全局启用，避免在业务跳转里重复手动 `start/finish`
 - `nuxt-vitalizer` 当前保留入口样式（`disableStylesheets: false`），避免 admin 样式缺失
 - SSR 项目 `buildAssetsDir` 为 `/_ssr/`，与 Pages 的 `/_nuxt/` 隔离
+- `nuxt.config.ts` 的 `css: []` 数组中保持 `*.desktop.css` 在 `*.mobile.css` 之前
 
 ## 6. 关键配置文件
 - `nuxt-public/nuxt.config.ts`：静态生成配置，含 `prerender:routes` hook

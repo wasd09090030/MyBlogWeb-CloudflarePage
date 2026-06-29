@@ -1,0 +1,10 @@
+/* ========== 全局响应式工具类 - 桌面端 ==========
+ * 桌面基线: 三个工具类均不隐藏任何元素。
+ * 移动覆盖在 responsive-utilities.mobile.css 中。
+ */
+
+.hide-mobile,
+.hide-tablet,
+.hide-desktop {
+  /* 默认不应用任何 display 覆盖 */
+}

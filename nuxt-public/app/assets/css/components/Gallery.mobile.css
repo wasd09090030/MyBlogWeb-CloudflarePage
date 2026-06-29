@@ -1,0 +1,45 @@
+/* ========== 移动端规则 ==========
+   所有规则必须包在 @media (max-width: <breakpoint>) 内。
+   允许的断点: 576px / 768px / 992px。
+*/
+
+/* 移动端 (768px以下) */
+@media (max-width: 768px) {
+  /* 画廊内容移动端适配 */
+  .gallery-option {
+    padding: 0.45rem 1.1rem;
+    font-size: 0.9rem;
+  }
+
+  /* 全屏查看移动端优化 */
+  .fullscreen-controls {
+    top: 15px;
+    right: 15px;
+    gap: 8px;
+  }
+
+  .control-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .fullscreen-image {
+    max-width: 95vw;
+    max-height: 80vh;
+    border-radius: 6px;
+  }
+
+  .zoom-indicator {
+    bottom: 100px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .fullscreen-hint {
+    bottom: 60px;
+    font-size: 0.75rem;
+    padding: 0 20px;
+    text-align: center;
+  }
+}

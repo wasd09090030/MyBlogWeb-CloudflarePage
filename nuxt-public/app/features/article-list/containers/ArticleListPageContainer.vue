@@ -360,7 +360,8 @@ defineExpose({
 </script>
 
 <style>
-@import '~/assets/css/components/ArticleList.styles.css';
+@import '~/assets/css/components/ArticleList.desktop.css';
+@import '~/assets/css/components/ArticleList.mobile.css';
 </style>
 
 <style scoped>

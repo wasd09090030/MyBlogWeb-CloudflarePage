@@ -23,7 +23,10 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/theme-variables.css',
     '~/assets/css/tailwind.css',
-    '~/assets/css/components/prose-custom.css',
+    '~/assets/css/components/prose-custom.desktop.css',
+    '~/assets/css/components/prose-custom.mobile.css',
+    '~/assets/css/components/responsive-utilities.desktop.css',
+    '~/assets/css/components/responsive-utilities.mobile.css',
     '~/assets/css/layout.css',
     '~/assets/css/app.css',
   ],

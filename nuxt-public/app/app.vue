@@ -227,24 +227,9 @@ a:hover {
   box-shadow: var(--shadow-lg) !important;
 }
 
-/* 响应式隐藏类 */
-@media (max-width: 576px) {
-  .hide-mobile {
-    display: none !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .hide-tablet {
-    display: none !important;
-  }
-}
-
-@media (max-width: 992px) {
-  .hide-desktop {
-    display: none !important;
-  }
-}
+/* 响应式隐藏类 - 桌面/移动规则已迁移到
+   assets/css/components/responsive-utilities.{desktop,mobile}.css
+   并通过 nuxt.config.ts 的 css: [] 数组全局加载。 */
 
 /* 加载状态 */
 .loading {

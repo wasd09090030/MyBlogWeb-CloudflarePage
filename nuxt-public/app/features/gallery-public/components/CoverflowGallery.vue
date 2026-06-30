@@ -30,7 +30,7 @@
               />
             </template>
             <div v-else class="carousel-fallback">
-              <Icon name="image" size="2xl" />
+              <Icon name="heroicons:photo" size="2xl" />
             </div>
             <div class="item-overlay"></div>
           </div>

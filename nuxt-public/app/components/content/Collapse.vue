@@ -7,7 +7,7 @@
       <span class="font-medium">
         <slot name="title">{{ title }}</slot>
       </span>
-      <Icon name="chevron-down" class="collapse-icon transition-transform duration-200" size="md" />
+      <Icon name="heroicons:chevron-down" class="collapse-icon transition-transform duration-200" size="md" />
     </summary>
     
     <div class="collapse-content px-4 py-3 bg-white dark:bg-gray-900">

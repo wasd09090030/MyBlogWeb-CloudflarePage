@@ -27,7 +27,7 @@
       <StateEmpty v-else>
         <n-empty description="找不到文章" class="py-20">
           <template #icon>
-            <Icon name="file-earmark-x" size="3xl" />
+            <Icon name="heroicons:document-minus" size="3xl" />
           </template>
           <template #extra>
             <n-button @click="goBack">返回首页</n-button>

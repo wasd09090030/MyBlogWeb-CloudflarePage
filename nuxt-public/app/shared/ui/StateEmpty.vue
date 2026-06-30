@@ -21,7 +21,7 @@
 defineProps({
   icon: {
     type: String,
-    default: 'images'
+    default: 'heroicons:photo'
   },
   title: {
     type: String,

@@ -3,7 +3,7 @@
     <div class="loading-container">
       <n-spin size="large" :stroke="isDarkMode ? '#fff' : '#667eea'">
         <template #icon>
-          <Icon name="images" size="2xl" />
+          <Icon name="heroicons:photo" size="2xl" />
         </template>
       </n-spin>
       

@@ -19,7 +19,7 @@
           />
         </template>
         <div v-else class="accordion-fallback">
-          <Icon name="image" size="xl" />
+          <Icon name="heroicons:photo" size="xl" />
         </div>
         <div class="overlay"></div>
       </div>

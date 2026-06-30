@@ -163,7 +163,11 @@ export default defineNuxtConfig({
         'heroicons:arrow-left',
         'heroicons:arrow-right',
         'heroicons:chevron-up',
-        'heroicons:chevron-down'
+        'heroicons:chevron-down',
+        // 品牌类图标（Group D 替换后），避免首屏闪烁
+        'mdi:github',
+        'mdi:robot',
+        'mdi:gamepad-variant'
       ]
     }
   },

@@ -17,7 +17,7 @@
       
       <div v-else class="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800 text-gray-500">
         <div class="text-center p-8">
-          <Icon name="film" size="3xl" class="mb-3 mx-auto" />
+          <Icon name="mdi:film" size="3xl" class="mb-3 mx-auto" />
           <p class="text-sm">无效的 URL</p>
         </div>
       </div>

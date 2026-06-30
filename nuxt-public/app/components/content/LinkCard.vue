@@ -9,7 +9,7 @@
       class="link-card-button"
       :bordered="false"
     >
-       <Icon name="cloud-arrow-down" size="36px" class="text-white" />
+       <Icon name="heroicons:cloud-arrow-down" size="36px" class="text-white" />
       <span class="link-text">{{ text }}</span>
     </n-button>
   </div>

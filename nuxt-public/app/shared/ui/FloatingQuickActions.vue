@@ -7,7 +7,7 @@
       @click="$emit('go-home')"
       aria-label="回主页"
     >
-      <Icon name="house" size="16" />
+      <Icon name="heroicons:home" size="16" />
       <span class="floating-quick-actions__tip">主页</span>
     </button>
 
@@ -17,7 +17,7 @@
       @click="$emit('scroll-top')"
       aria-label="回到顶部"
     >
-      <Icon name="arrow-up" size="16" />
+      <Icon name="heroicons:arrow-up" size="16" />
       <span class="floating-quick-actions__tip">顶部</span>
     </button>
 
@@ -27,8 +27,8 @@
       @click="$emit('toggle-theme')"
       :aria-label="isDarkMode ? '切换到浅色模式' : '切换到深色模式'"
     >
-      <Icon v-if="isHydrated" :name="isDarkMode ? 'sun-fill' : 'moon-fill'" size="16" :solid="true" />
-      <Icon v-else name="moon-fill" size="16" :solid="true" />
+      <Icon v-if="isHydrated" :name="isDarkMode ? 'heroicons:sun-solid' : 'heroicons:moon-solid'" size="16" :solid="true" />
+      <Icon v-else name="heroicons:moon-solid" size="16" :solid="true" />
       <span class="floating-quick-actions__tip">{{ isDarkMode ? '浅色' : '深色' }}</span>
     </button>
 
@@ -40,7 +40,7 @@
       :aria-pressed="!showBackgroundAnimation"
       aria-label="背景动画开关"
     >
-      <Icon name="sparkles" size="16" />
+      <Icon name="heroicons:sparkles" size="16" />
       <span class="floating-quick-actions__tip">背景</span>
     </button>
   </div>

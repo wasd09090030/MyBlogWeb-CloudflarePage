@@ -32,7 +32,7 @@
     <div class="mt-10 mb-4 text-center">
       <n-button @click="() => $emit('go-back')" type="info" size="large">
         <template #icon>
-          <Icon name="arrow-left" size="md" />
+          <Icon name="heroicons:arrow-left" size="md" />
         </template>
         返回上页
       </n-button>

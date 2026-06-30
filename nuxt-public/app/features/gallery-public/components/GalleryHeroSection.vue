@@ -33,7 +33,7 @@
             />
           </template>
           <div v-else class="gallery-hero__preview-fallback">
-            <Icon name="image" size="xl" />
+            <Icon name="heroicons:photo" size="xl" />
           </div>
         </article>
       </div>
@@ -63,7 +63,7 @@
             />
           </template>
           <div v-else class="gallery-hero__preview-fallback">
-            <Icon name="image" size="xl" />
+            <Icon name="heroicons:photo" size="xl" />
           </div>
         </article>
       </div>

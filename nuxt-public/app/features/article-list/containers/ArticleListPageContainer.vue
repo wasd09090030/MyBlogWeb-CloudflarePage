@@ -44,7 +44,7 @@
 
     <n-empty v-else :description="listContext.emptyText" class="my-5">
       <template #icon>
-        <Icon name="journal-text" size="3xl" />
+        <Icon name="heroicons:document-text" size="3xl" />
       </template>
     </n-empty>
 

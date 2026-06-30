@@ -6,11 +6,11 @@
       @click="toggleCollapse"
     >
       <h6 class="flex items-center gap-2 text-sm font-semibold m-0 text-gray-800 dark:text-gray-100">
-        <Icon name="list-ul" size="sm" class="text-pink-500 dark:text-pink-400" />
+        <Icon name="heroicons:list-bullet" size="sm" class="text-pink-500 dark:text-pink-400" />
         文章目录
       </h6>
       <Icon 
-        :name="isCollapsed ? 'chevron-down' : 'chevron-up'" 
+        :name="isCollapsed ? 'heroicons:chevron-down' : 'heroicons:chevron-up'" 
         size="sm"
         class="text-gray-500 dark:text-gray-400 transition-transform duration-200"
       />
@@ -61,7 +61,7 @@
       <div class="px-3 py-3 border-t border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-900/30">
         <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 mb-2">
           <span class="flex items-center gap-1">
-            <Icon name="book" size="sm" class="text-gray-500 dark:text-gray-400" />
+            <Icon name="heroicons:book-open" size="sm" class="text-gray-500 dark:text-gray-400" />
             阅读进度
           </span>
           <span class="font-semibold text-pink-600 dark:text-pink-400">{{ Math.round(progress) }}%</span>

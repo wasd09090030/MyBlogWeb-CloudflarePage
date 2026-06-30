@@ -81,8 +81,8 @@
     </div>
 
     <div class="toggle-button" @click="toggleCollapse">
-      <Icon v-if="isHydrated" :name="isCollapsed ? 'layout-sidebar' : 'x-lg'" size="md" />
-      <Icon v-else name="layout-sidebar" size="md" />
+      <Icon v-if="isHydrated" :name="isCollapsed ? 'heroicons:bars-3-bottom-left' : 'heroicons:x-mark'" size="md" />
+      <Icon v-else name="heroicons:bars-3-bottom-left" size="md" />
     </div>
   </div>
 </template>
@@ -95,10 +95,10 @@ const isCollapsed = ref(true);
 const isHydrated = ref(false);
 
 const categoryConfig = [
-  { key: 'study', label: '学习', icon: 'journal-text' },
-  { key: 'game', label: '游戏', icon: 'controller' },
-  { key: 'work', label: '个人作品', icon: 'code-square' },
-  { key: 'resource', label: '资源分享', icon: 'folder2-open' }
+  { key: 'study', label: '学习', icon: 'heroicons:document-text' },
+  { key: 'game', label: '游戏', icon: 'mdi:gamepad-variant' },
+  { key: 'work', label: '个人作品', icon: 'heroicons:code-bracket-square' },
+  { key: 'resource', label: '资源分享', icon: 'heroicons:folder-open' }
 ];
 
 const buildSidebarStats = (articles = []) => {

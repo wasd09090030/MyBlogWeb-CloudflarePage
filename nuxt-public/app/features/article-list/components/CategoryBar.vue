@@ -47,7 +47,7 @@
         @click="$emit('update:viewMode', 'list')"
         title="列表视图"
       >
-        <Icon name="view-stacked" size="sm" />
+        <Icon name="heroicons:bars-4" size="sm" />
       </button>
       <button 
         type="button" 
@@ -56,7 +56,7 @@
         @click="$emit('update:viewMode', 'grid')"
         title="网格视图"
       >
-        <Icon name="grid-3x3-gap-fill" size="sm" />
+        <Icon name="heroicons:squares-2x2-solid" size="sm" />
       </button>
     </div>
   </div>

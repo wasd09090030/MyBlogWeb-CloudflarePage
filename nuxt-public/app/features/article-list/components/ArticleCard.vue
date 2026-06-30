@@ -27,7 +27,7 @@
         />
       </template>
       <div v-else class="article-image-placeholder">
-        <Icon name="image" size="3xl" class="text-muted" />
+        <Icon name="heroicons:photo" size="3xl" class="text-muted" />
       </div>
     </div>
 

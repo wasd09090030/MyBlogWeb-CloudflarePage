@@ -14,7 +14,7 @@
         <div class="explore-btn-container">
           <button class="explore-btn" @click="goToRandomArticle" aria-label="随机浏览文章">
 
-              <Icon name="arrow-path" size="20" class="me-2" />
+              <Icon name="heroicons:arrow-path" size="20" class="me-2" />
 
             <span>开始探索</span>
           </button>
@@ -45,12 +45,12 @@
           <div class="card-hover-reveal">
             <span class="hover-text">Start</span>
   
-              <Icon name="arrow-right" size="lg" />
+              <Icon name="heroicons:arrow-right" size="lg" />
          
           </div>
           <!-- 默认内容 -->
           <div class="card-content-wrapper">      
-                <Icon name="file-text" size="24" />
+                <Icon name="heroicons:document-text" size="24" />
             <h5 class="card-title">文章</h5>
           </div>
         </div>
@@ -61,11 +61,11 @@
           <div class="card-hover-reveal">
             <span class="hover-text">Start</span>
         
-              <Icon name="arrow-right" size="lg" />
+              <Icon name="heroicons:arrow-right" size="lg" />
 
           </div>
           <div class="card-content-wrapper">    
-                <Icon name="images" size="24" />
+                <Icon name="heroicons:photo" size="24" />
             <h5 class="card-title">画廊</h5>
           </div>
         </div>
@@ -76,13 +76,13 @@
           <div class="card-hover-reveal">
             <span class="hover-text">Start</span>
           
-              <Icon name="arrow-right" size="lg" />
+              <Icon name="heroicons:arrow-right" size="lg" />
        
           </div>
           <div class="card-content-wrapper">
 
           
-                <Icon name="book" size="24" />
+                <Icon name="heroicons:book-open" size="24" />
           
 
             <h5 class="card-title">归档</h5>
@@ -106,7 +106,7 @@
           <span class="fab-menu-label">文章</span>
           <div class="fab-menu-icon articles-icon">
          
-              <Icon name="file-text" size="md" />
+              <Icon name="heroicons:document-text" size="md" />
          
           </div>
         </div>
@@ -114,7 +114,7 @@
           <span class="fab-menu-label">画廊</span>
           <div class="fab-menu-icon gallery-icon">
       
-              <Icon name="images" size="md" />
+              <Icon name="heroicons:photo" size="md" />
        
           </div>
         </div>
@@ -122,7 +122,7 @@
           <span class="fab-menu-label">关于</span>
           <div class="fab-menu-icon about-icon">
        
-              <Icon name="person-circle" size="md" />
+              <Icon name="heroicons:user-circle" size="md" />
           </div>
         </div>
       </div>
@@ -134,8 +134,8 @@
         @click="toggleFab"
       >
       
-          <Icon name="grid-3x3-gap-fill" size="lg" class="fab-icon-default" />
-          <Icon name="x-lg" size="lg" class="fab-icon-close" />
+          <Icon name="heroicons:squares-2x2-solid" size="lg" class="fab-icon-default" />
+          <Icon name="heroicons:x-mark" size="lg" class="fab-icon-close" />
  
       </button>
     </div>

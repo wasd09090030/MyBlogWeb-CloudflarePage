@@ -17,13 +17,13 @@
         </NuxtLink>
         <nav class="navbar-center-nav d-none d-lg-flex">
           <NuxtLink to="/" class="nav-link">
-            <Icon name="house" size="sm" class="me-1" />首页
+            <Icon name="heroicons:home" size="sm" class="me-1" />首页
           </NuxtLink>
           <NuxtLink to="/gallery" class="nav-link">
-            <Icon name="images" size="sm" class="me-1" />画廊
+            <Icon name="heroicons:photo" size="sm" class="me-1" />画廊
           </NuxtLink>
           <a href="/tools" target="_blank" rel="noopener noreferrer" class="nav-link">
-            <Icon name="wrench-screwdriver" size="sm" class="me-1" />工具箱
+            <Icon name="heroicons:wrench-screwdriver" size="sm" class="me-1" />工具箱
           </a>
           <div
             class="nav-more-wrapper"
@@ -31,19 +31,19 @@
             @mouseleave="showMoreMenu = false"
           >
             <button type="button" class="nav-link nav-more-trigger" aria-label="其他导航">
-              <Icon name="grid-3x3-gap" size="sm" class="me-1" />其他
-              <Icon name="chevron-down" size="xs" class="ms-1" />
+              <Icon name="heroicons:squares-2x2" size="sm" class="me-1" />其他
+              <Icon name="heroicons:chevron-down" size="xs" class="ms-1" />
             </button>
             <Transition name="dropdown-fade">
               <div v-show="showMoreMenu" class="nav-more-panel" role="menu" aria-label="其他">
                 <NuxtLink to="/archive" class="nav-more-item" role="menuitem">
-                  <Icon name="book" size="xs" class="me-1" />归档
+                  <Icon name="heroicons:book-open" size="xs" class="me-1" />归档
                 </NuxtLink>
                 <a href="/mania" target="_blank" rel="noopener noreferrer" class="nav-more-item" role="menuitem">
-                  <Icon name="musical-note" size="xs" class="me-1" />音游
+                  <Icon name="heroicons:musical-note" size="xs" class="me-1" />音游
                 </a>
                 <NuxtLink to="/about" class="nav-more-item" role="menuitem">
-                  <Icon name="person-circle" size="xs" class="me-1" />关于站长
+                  <Icon name="heroicons:user-circle" size="xs" class="me-1" />关于站长
                 </NuxtLink>
               </div>
             </Transition>
@@ -55,7 +55,7 @@
           @click="showMobileMenu = true"
           aria-label="打开导航菜单"
         >
-          <Icon name="list" size="lg" />
+          <Icon name="heroicons:bars-3" size="lg" />
         </button>
         <div class="navbar-right-buttons d-none d-lg-flex">
           <LazyEffectsSearchBar />
@@ -73,33 +73,33 @@
           <div class="drawer-header">
             <span class="drawer-title">导航菜单</span>
             <button type="button" class="drawer-close" @click="showMobileMenu = false" aria-label="关闭">
-              <Icon name="x-mark" size="md" />
+              <Icon name="heroicons:x-mark" size="md" />
             </button>
           </div>
           <nav class="drawer-nav">
             <NuxtLink to="/" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="house" size="sm" />首页
+              <Icon name="heroicons:home" size="sm" />首页
             </NuxtLink>
             <NuxtLink to="/gallery" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="images" size="sm" />画廊
+              <Icon name="heroicons:photo" size="sm" />画廊
             </NuxtLink>
             <a href="/tools" target="_blank" rel="noopener noreferrer" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="wrench-screwdriver" size="sm" />工具箱
+              <Icon name="heroicons:wrench-screwdriver" size="sm" />工具箱
             </a>
             <NuxtLink to="/archive" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="book" size="sm" />归档
+              <Icon name="heroicons:book-open" size="sm" />归档
             </NuxtLink>
             <a href="/mania" target="_blank" rel="noopener noreferrer" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="musical-note" size="sm" />音游
+              <Icon name="heroicons:musical-note" size="sm" />音游
             </a>
             <NuxtLink to="/about" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="person-circle" size="sm" />关于站长
+              <Icon name="heroicons:user-circle" size="sm" />关于站长
             </NuxtLink>
           </nav>
           <div class="drawer-footer">
             <button type="button" class="drawer-theme-btn" @click="toggleTheme">
-              <Icon v-if="isHydrated" :name="isDarkMode ? 'sun-fill' : 'moon-fill'" size="md" :solid="true" />
-              <Icon v-else name="moon-fill" size="md" :solid="true" />
+              <Icon v-if="isHydrated" :name="isDarkMode ? 'heroicons:sun-solid' : 'heroicons:moon-solid'" size="md" :solid="true" />
+              <Icon v-else name="heroicons:moon-solid" size="md" :solid="true" />
               {{ isDarkMode ? '浅色模式' : '深色模式' }}
             </button>
           </div>

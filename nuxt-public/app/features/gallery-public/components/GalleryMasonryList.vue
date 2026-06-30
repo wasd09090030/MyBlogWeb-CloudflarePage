@@ -36,7 +36,7 @@
               />
             </template>
             <div v-else class="gallery-masonry__fallback">
-              <Icon name="image" size="xl" />
+              <Icon name="heroicons:photo" size="xl" />
             </div>
           </div>
         </article>
@@ -49,7 +49,7 @@
         <span>加载更多图片...</span>
       </div>
       <div v-else-if="!hasMore && displayedCount > 0" class="end-message fade-in">
-        <Icon name="check-circle" size="md" />
+        <Icon name="heroicons:check-circle" size="md" />
         <span>已加载全部 {{ displayedCount }} 张图片</span>
       </div>
     </div>

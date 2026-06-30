@@ -8,7 +8,7 @@
             class="hero-role-badge fade-up"
             :style="{ animationDelay: '0.1s' }"
           >
-            <Icon name="code-slash" size="sm" /> {{ ownerProfile.role }}
+            <Icon name="heroicons:code-bracket" size="sm" /> {{ ownerProfile.role }}
           </div>
           
           <h1 class="hero-title">
@@ -58,7 +58,7 @@
             @click="goToArticles"
             :style="{ animationDelay: '0.8s' }"
           >
-            <Icon name="lightning-charge-fill" size="sm" :solid="true" class="me-2" />最新作品
+            <Icon name="heroicons:bolt-solid" size="sm" :solid="true" class="me-2" />最新作品
           </button>
           <a
             class="btn-outline fade-scale"
@@ -67,7 +67,7 @@
             rel="noopener"
             :style="{ animationDelay: '0.9s' }"
           >
-            <Icon name="github" size="sm" class="me-2" />GitHub
+            <Icon name="mdi:github" size="sm" class="me-2" />GitHub
           </a>
         </div>
       </div>
@@ -94,14 +94,14 @@
             class="floating-badge badge-1 fade-in"
             :style="{ animationDelay: '0.6s' }"
           >
-            <Icon name="code-square" size="sm" /> Fullstack
+            <Icon name="heroicons:code-bracket-square" size="sm" /> Fullstack
           </div>
           
           <div
             class="floating-badge badge-2 fade-in"
             :style="{ animationDelay: '0.7s' }"
           >
-            <Icon name="controller" size="sm" /> Gamer
+            <Icon name="mdi:gamepad-variant" size="sm" /> Gamer
           </div>
         </div>
         
@@ -155,13 +155,13 @@
 
             <div class="project-footer">
               <div class="project-meta">
-                <span><Icon name="activity" size="sm" /> {{ project.update }}</span>
+                <span><Icon name="heroicons:chart-bar" size="sm" /> {{ project.update }}</span>
               </div>
               <NuxtLink v-if="project.link" :to="project.link" class="project-link">
-                {{ project.cta }} <Icon name="arrow-right" size="sm" />
+                {{ project.cta }} <Icon name="heroicons:arrow-right" size="sm" />
               </NuxtLink>
               <a v-else :href="project.external" target="_blank" class="project-link">
-                {{ project.cta }} <Icon name="box-arrow-up-right" size="sm" />
+                {{ project.cta }} <Icon name="heroicons:arrow-top-right-on-square" size="sm" />
               </a>
             </div>
           </div>
@@ -232,19 +232,19 @@ const highlightCards = [
   {
     title: '前端开发',
     description: '基于Nuxt，注重交互体验与性能优化。',
-    icon: 'window-stack',
+    icon: 'heroicons:computer-desktop',
     accent: 'linear-gradient(135deg, #6366f1, #8b5cf6)'
   },
   {
     title: '后端架构',
     description: '基于 .NET 8 构建稳健、高性能的 API 服务。',
-    icon: 'hdd-network',
+    icon: 'heroicons:server-stack',
     accent: 'linear-gradient(135deg, #3b82f6, #0ea5e9)'
   },
   {
     title: 'Deployment & DevOps',
     description: 'BT panel+Cloudflare 自动化部署与服务器运维。',
-    icon: 'clouds',
+    icon: 'heroicons:cloud',
     accent: 'linear-gradient(135deg, #f59e0b, #ef4444)'
   }
 ]
@@ -345,27 +345,27 @@ const projects = [
 const techStacks = [
   {
     title: 'Frontend',
-    icon: 'code-square',
+    icon: 'heroicons:code-bracket-square',
     items: ['Vue 3', 'Nuxt 3', 'TypeScript', 'Tailwind', 'Bootstrap 5', 'Vite']
   },
   {
     title: 'Backend',
-    icon: 'server',
+    icon: 'heroicons:server',
     items: ['C#', '.NET 8', 'ASP.NET Core', 'Entity Framework', 'Python', 'Node.js']
   },
   {
     title: 'Database & Tools',
-    icon: 'database',
+    icon: 'heroicons:circle-stack',
     items: ['SQLite','MySql', 'Redis', 'PostgreSQL', 'Docker', 'Git', 'Nginx']
   },
   {
     title: 'AI assistants',
-    icon: 'robot',
+    icon: 'mdi:robot',
     items: ['Deepseek API', 'Copilot', 'Codex', 'Claude Code', 'Qwen']
   },
     {
     title: 'Desktop/Mobile development',
-    icon: 'phone',
+    icon: 'heroicons:device-phone-mobile',
     items: ['Dart','Flutter','C++', 'QT', 'Electron', 'Webview2', 'ArkTS']
   }
 

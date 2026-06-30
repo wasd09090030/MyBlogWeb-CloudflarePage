@@ -49,25 +49,25 @@ const alertConfig = {
   info: {
     bg: 'bg-blue-50 dark:bg-blue-900/20',
     border: 'border-blue-500',
-    icon: 'information-circle',
+    icon: 'heroicons:information-circle',
     iconColor: 'text-blue-600 dark:text-blue-400'
   },
   success: {
     bg: 'bg-green-50 dark:bg-green-900/20',
     border: 'border-green-500',
-    icon: 'check-circle',
+    icon: 'heroicons:check-circle',
     iconColor: 'text-green-600 dark:text-green-400'
   },
   warning: {
     bg: 'bg-yellow-50 dark:bg-yellow-900/20',
     border: 'border-yellow-500',
-    icon: 'exclamation-triangle',
+    icon: 'heroicons:exclamation-triangle',
     iconColor: 'text-yellow-600 dark:text-yellow-400'
   },
   error: {
     bg: 'bg-red-50 dark:bg-red-900/20',
     border: 'border-red-500',
-    icon: 'x-circle',
+    icon: 'heroicons:x-circle',
     iconColor: 'text-red-600 dark:text-red-400'
   }
 }

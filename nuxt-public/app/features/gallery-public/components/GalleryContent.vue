@@ -14,7 +14,7 @@
 
     <StateEmpty
       v-if="!isInitialLoading && !loading && !error && galleries.length === 0"
-      icon="images"
+      icon="heroicons:photo"
       title="暂无图片"
       description="画廊中还没有任何图片"
     />
@@ -85,7 +85,7 @@
 
         <StateEmpty
           v-if="activeTag === 'game' && gameGalleries.length === 0"
-          icon="images"
+          icon="heroicons:photo"
           title="暂无游戏截屏"
           description="画廊中还没有游戏截图"
         />
@@ -99,16 +99,16 @@
 
           <div class="fullscreen-controls">
             <button class="control-btn" @click.stop="$emit('zoom-in')" title="放大">
-              <Icon name="zoom-in" size="lg" />
+              <Icon name="heroicons:magnifying-glass-plus" size="lg" />
             </button>
             <button class="control-btn" @click.stop="$emit('zoom-out')" title="缩小">
-              <Icon name="zoom-out" size="lg" />
+              <Icon name="heroicons:magnifying-glass-minus" size="lg" />
             </button>
             <button class="control-btn" @click.stop="$emit('reset-zoom')" title="重置">
-              <Icon name="arrows-angle-contract" size="lg" />
+              <Icon name="heroicons:arrows-pointing-in" size="lg" />
             </button>
             <button class="control-btn close-btn" @click="$emit('close-fullscreen')" title="关闭">
-              <Icon name="x-lg" size="lg" />
+              <Icon name="heroicons:x-mark" size="lg" />
             </button>
           </div>
 

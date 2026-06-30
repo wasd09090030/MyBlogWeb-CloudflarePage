@@ -12,8 +12,8 @@
         :loading="likingInProgress"
       >
         <template #icon>
-          <Icon v-if="isHydrated" :name="isLiked ? 'heart-fill' : 'heart'" :class="isLiked ? 'text-red-500' : 'text-gray-400'" size="2xl" />
-          <Icon v-else name="heart" class="text-gray-400" size="2xl" />
+          <Icon v-if="isHydrated" :name="isLiked ? 'heroicons:heart-solid' : 'heroicons:heart'" :class="isLiked ? 'text-red-500' : 'text-gray-400'" size="2xl" />
+          <Icon v-else name="heroicons:heart" class="text-gray-400" size="2xl" />
         </template>
       </n-button>
       <div class="flex flex-col justify-center ml-3">
@@ -27,7 +27,7 @@
     <!-- 评论表单 -->
     <div class="mb-12 max-w-3xl mx-auto">
       <h3 class="text-xl font-medium text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
-        <Icon name="chat-dots" class="text-gray-400" />
+        <Icon name="heroicons:chat-bubble-oval-left" class="text-gray-400" />
         <span>评论</span>
       </h3>
       
@@ -79,7 +79,7 @@
             >
             发表评论
               <template #icon>
-                <Icon name="send" size="sm" class="ml-1" />
+                <Icon name="heroicons:paper-airplane" size="sm" class="ml-1" />
               </template>
             </n-button>
           </div>
@@ -100,7 +100,7 @@
       </div>
 
       <div v-else-if="comments.length === 0" class="py-12 text-center text-gray-400">
-        <Icon name="chat-square-dots" size="2xl" class="mb-2 opacity-50" />
+        <Icon name="heroicons:chat-bubble-left-right" size="2xl" class="mb-2 opacity-50" />
         <p class="text-sm">Be the first to comment.</p>
       </div>
 
@@ -138,7 +138,7 @@
                   :class="comment.isLiked ? 'text-red-500' : 'text-gray-400'"
                   @click="likeComment(comment.id)"
                 >
-                  <Icon :name="comment.isLiked ? 'heart-fill' : 'heart'" size="sm" />
+                  <Icon :name="comment.isLiked ? 'heroicons:heart-solid' : 'heroicons:heart'" size="sm" />
                   <span>{{ comment.likes || 0 }}</span>
                 </button>
                 
@@ -148,7 +148,7 @@
                   target="_blank"
                   class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-blue-500 transition-colors"
                 >
-                   <Icon name="link-45deg" size="sm" />
+                   <Icon name="heroicons:link" size="sm" />
                    <span>Website</span>
                 </a>
               </div>

@@ -14,7 +14,7 @@
     <template #header>
       <div class="playground-header flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <n-space align="center" size="small">
-          <Icon name="code-slash" size="md" class="text-gray-600 dark:text-gray-400" />
+          <Icon name="heroicons:code-bracket" size="md" class="text-gray-600 dark:text-gray-400" />
           <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ title }}</span>
           <n-tag size="tiny" :bordered="false" class="lang-tag">{{ lang }}</n-tag>
         </n-space>
@@ -28,13 +28,13 @@
             @click="runCode"
           >
             <template #icon>
-              <Icon name="play" size="sm" />
+              <Icon name="heroicons:play" size="sm" />
             </template>
             {{ isRunning ? '运行中…' : '运行' }}
           </n-button>
           <n-button size="small" :type="copied ? 'success' : 'default'" @click="copyCode">
             <template #icon>
-              <Icon :name="copied ? 'check' : 'copy'" size="sm" />
+              <Icon :name="copied ? 'heroicons:check' : 'heroicons:document-duplicate'" size="sm" />
             </template>
             {{ copied ? '已复制' : '复制' }}
           </n-button>
@@ -57,11 +57,11 @@
         >
           <div class="output-header flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900">
             <n-space align="center" size="small">
-              <Icon name="chevron-right" size="sm" class="text-green-500" />
+              <Icon name="heroicons:chevron-right" size="sm" class="text-green-500" />
               <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">输出结果</span>
             </n-space>
             <n-button text size="tiny" class="text-gray-400" @click="output = null">
-              <Icon name="x-mark" size="sm" />
+              <Icon name="heroicons:x-mark" size="sm" />
             </n-button>
           </div>
           <pre class="output-content text-sm text-gray-200 dark:text-gray-200 whitespace-pre-wrap px-4 py-3 dark:bg-gray-950">{{ output }}</pre>

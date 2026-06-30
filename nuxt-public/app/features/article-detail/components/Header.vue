@@ -10,11 +10,11 @@
         {{ getCategoryName(article.category) }}
       </n-tag>
       <span class="flex items-center gap-1">
-        <Icon name="calendar3" size="sm" />
+        <Icon name="heroicons:calendar" size="sm" />
         {{ formatDate(article.createdAt) }}
       </span>
       <span v-if="article.updatedAt && article.updatedAt !== article.createdAt" class="flex items-center gap-1">
-        <Icon name="pencil-square" size="sm" />
+        <Icon name="heroicons:pencil-square" size="sm" />
         更新于 {{ formatDate(article.updatedAt) }}
       </span>
     </div>
@@ -22,7 +22,7 @@
     <!-- AI 摘要 -->
     <div v-if="article.aiSummary" class="bg-sky-50 dark:bg-sky-900/20 border-l-4 border-sky-500 rounded-r-lg p-4 mb-6">
       <div class="flex items-center gap-2 text-sky-700 dark:text-sky-300 font-semibold text-sm mb-2">
-        <Icon name="robot" size="sm" />
+        <Icon name="mdi:robot" size="sm" />
         <span>AI 摘要</span>
       </div>
       <p class="text-gray-700 dark:text-gray-300 italic leading-relaxed">
@@ -33,7 +33,7 @@
     <!-- 返回按钮 -->
     <n-button @click="() => $emit('go-back')" quaternary strong secondary type="success">
       <template #icon>
-        <Icon name="arrow-left" size="sm" />
+        <Icon name="heroicons:arrow-left" size="sm" />
       </template>
       返回
     </n-button>

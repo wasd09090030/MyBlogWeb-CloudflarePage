@@ -1,7 +1,7 @@
 <template>
   <div v-if="articles && articles.length > 0" class="related-articles-mdc my-12">
     <div class="related-articles-header">
-      <Icon name="hand-thumb-up" size="30" class="text-blue-600 dark:text-blue-400" />
+      <Icon name="heroicons:hand-thumb-up" size="30" class="text-blue-600 dark:text-blue-400" />
       <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">相关推荐</h3>
     </div>
 
@@ -30,7 +30,7 @@
             />
           </template>
           <div v-else class="card-fallback">
-            <Icon name="image" size="3xl" class="text-gray-400 dark:text-gray-500" />
+            <Icon name="heroicons:photo" size="3xl" class="text-gray-400 dark:text-gray-500" />
           </div>
 
           <div class="card-content-overlay">
@@ -38,7 +38,7 @@
               {{ article.title }}
             </h4>
             <div class="card-meta">
-              <Icon name="calendar" size="sm" />
+              <Icon name="heroicons:calendar" size="sm" />
               <time :datetime="article.createdAt">
                 {{ formatDate(article.createdAt) }}
               </time>

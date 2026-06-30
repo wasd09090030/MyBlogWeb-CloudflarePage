@@ -19,7 +19,7 @@
       <ArticleDetailToc v-else-if="headings.length > 0" :headings="headings" />
       <!-- 无目录提示 -->
       <div v-else class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
-        <Icon name="list-ul" size="lg" class="mb-2 opacity-50" />
+        <Icon name="heroicons:list-bullet" size="lg" class="mb-2 opacity-50" />
         <p>暂无目录</p>
       </div>
     </div>

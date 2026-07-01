@@ -1,5 +1,7 @@
 import { buildArticleRoute, fetchAllArticleRoutes, toIsoLastmod } from './build/article-route-data'
 
+// Editorial 字体仅作用于画廊时间线月份标题
+
 const isProduction = process.env.NODE_ENV === 'production'
 const enableSourceMap = process.env.NUXT_SOURCEMAP === 'true'
 const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://wasd09090030.top'
@@ -29,6 +31,11 @@ export default defineNuxtConfig({
     '~/assets/css/components/responsive-utilities.mobile.css',
     '~/assets/css/layout.css',
     '~/assets/css/app.css',
+    // Editorial 字体（仅作用于画廊时间线月份标题）
+    '@fontsource/playfair-display/400.css',
+    '@fontsource/playfair-display/700.css',
+    '@fontsource/playfair-display/400-italic.css',
+    '@fontsource/playfair-display/700-italic.css'
   ],
 
   components: {
@@ -41,6 +48,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/icon',
     '@nuxt/fonts',
+    '@vueuse/motion/nuxt',
     '@bg-dev/nuxt-naiveui',
     '@nuxtjs/mdc',
     '@nuxtjs/seo',
@@ -73,6 +81,7 @@ export default defineNuxtConfig({
         preload: true,
         fallback: ['system-ui', 'Arial']
       }
+      // Playfair Display 改由 @fontsource/playfair-display 直接在 css:[] 注入
     ]
   },
 
@@ -184,14 +193,14 @@ export default defineNuxtConfig({
 
   vite: {
     worker: { format: 'es' },
-    optimizeDeps: {
-      include: [
-        'vue', 'keen-slider', 'naive-ui', 'katex', '@vueuse/core',
-        'remark-math', 'rehype-katex'
-        // mermaid 已移出：代码层使用 await import('mermaid') 懒加载，不应预捆绑
-      ],
-      exclude: ['vue-demi']
-    },
+      optimizeDeps: {
+        include: [
+          'vue', 'keen-slider', 'naive-ui', 'katex', '@vueuse/core', '@vueuse/motion',
+          'remark-math', 'rehype-katex'
+          // mermaid 已移出：代码层使用 await import('mermaid') 懒加载，不应预捆绑
+        ],
+        exclude: ['vue-demi']
+      },
     define: { global: 'globalThis' },
     build: {
       modulePreload: { polyfill: true },

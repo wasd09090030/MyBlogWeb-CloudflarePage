@@ -16,6 +16,13 @@
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 1000;
+  /* 视觉隐藏滚动条：保持可滚动（body 已被 bodyScrollManager 锁，必须依赖此层浏览）
+     沿用 ArticleList.desktop.css L46-L57 的项目惯例 */
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;        /* IE/Edge legacy */
+}
+.gallery-fullscreen::-webkit-scrollbar {
+  display: none;                  /* WebKit/Blink */
 }
 
 /* 画廊内容过渡动画 */

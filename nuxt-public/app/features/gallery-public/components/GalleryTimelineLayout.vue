@@ -10,7 +10,6 @@
       >
         <div class="gallery-timeline__year-header">
           <span class="gallery-timeline__year-label">{{ yearGroup.yearLabel }}</span>
-          <span class="gallery-timeline__year-count">{{ yearGroup.totalCount }}</span>
         </div>
         <svg
           v-if="yearGroup.months.length > 0"
@@ -39,9 +38,7 @@
               aria-hidden="true"
             >{{ group.englishShort }}</span>
           </span>
-          <span class="gallery-timeline__count">{{ group.items.length }}</span>
           <span class="gallery-timeline__fill-bar" aria-hidden="true"></span>
-          <span class="gallery-timeline__hover-chip" aria-hidden="true">{{ group.items.length }} 张</span>
         </button>
       </div>
     </nav>
@@ -88,7 +85,6 @@
               <rect x="0" y="0" width="5.66" height="5.66" transform="rotate(45 2.83 2.83)" />
             </svg>
             <span class="gallery-month-section__rule" aria-hidden="true"></span>
-            <span class="gallery-month-section__count">{{ group.items.length }} 张</span>
           </div>
         </header>
 
@@ -251,18 +247,20 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  max-height: calc(100vh - 6rem);
-  overflow: auto;
+  /* max-height 与 overflow: auto 已在 gallery-timeline-editorial-minimal 中移除：
+     rail 改为随页面自然流动，配合 position: sticky 保持当前月份可见 */
   padding: 0.35rem 0.25rem 0.35rem 0;
 }
 
 .gallery-timeline__rail {
   position: absolute;
-  left: 0.55rem;
+  left: 0.5rem;
   top: 0.75rem;
   bottom: 0.75rem;
-  width: 1px;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.18), rgba(15, 23, 42, 0.04));
+  width: 2px;
+  background: rgba(15, 23, 42, 0.25);
+  border-radius: 1px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.65);
 }
 
 /* ====== Year band (archive 2026-06-27 杂志感目录) ====== */
@@ -312,13 +310,7 @@ onUnmounted(() => {
   color: rgba(15, 23, 42, 0.92);
 }
 
-.gallery-timeline__year-count {
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: rgba(15, 23, 42, 0.38);
-  font-variant-numeric: tabular-nums;
-}
+/* gallery-timeline-editorial-minimal · 已移除 .gallery-timeline__year-count（原数字埋点） */
 
 .gallery-timeline__item {
   appearance: none;
@@ -339,7 +331,7 @@ onUnmounted(() => {
   transition: background 0.2s ease, color 0.2s ease;
 }
 
-/* 给 fill-bar 与 hover-chip 留出右侧空间（room: 32px） */
+/* 给 fill-bar 留出右侧空间（room: 32px） */
 .gallery-timeline__item {
   padding-right: 36px;
 }
@@ -364,6 +356,21 @@ onUnmounted(() => {
   box-shadow: inset 2px 0 0 var(--color-editorial-glow, rgba(15, 23, 42, 0.32));
   transform: translateX(4px);
   transition: background 0.2s ease, color 0.2s ease, box-shadow 220ms ease-out, transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* gallery-timeline-editorial-minimal · Active 月从主 rail 伸出的短引出线（::before）
+   用伪元素模拟以避免 layout 抖动；与现有 inset box-shadow 并存不冲突 */
+.gallery-timeline__item[aria-current="true"]::before {
+  content: '';
+  position: absolute;
+  left: -0.45rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.4rem;
+  height: 2px;
+  background: var(--color-editorial-glow, rgba(15, 23, 42, 0.32));
+  border-radius: 999px;
+  z-index: 1;
 }
 
 .gallery-timeline__item[aria-current="true"] .gallery-timeline__label {
@@ -445,32 +452,9 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* Hover chip: 仅 desktop 可见，触摸设备与键盘不显示 */
-.gallery-timeline__hover-chip {
-  position: absolute;
-  right: -2px;
-  top: 50%;
-  transform: translate(100%, -50%);
-  margin-right: 0.4rem;
-  padding: 0.18rem 0.5rem;
-  background: var(--color-editorial-glow, rgba(15, 23, 42, 0.92));
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 600;
-  border-radius: 4px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 200ms ease;
-  z-index: 2;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .gallery-timeline__item:hover .gallery-timeline__hover-chip,
-  .gallery-timeline__item:focus-visible .gallery-timeline__hover-chip {
-    opacity: 1;
-  }
-}
+/* Hover chip 已全部移除（gallery-timeline-editorial-minimal）：
+   见 design.md D1 与 proposal.md "What Changes"。
+   原 .gallery-timeline__hover-chip + @media (hover: hover) 包裹 + 暗色覆盖 + 移动端 display: none 全部删除 */
 
 /* Year ornament: 4×4 菱形，置于年份 header 与首月行之间 */
 .gallery-timeline__year-ornament {
@@ -483,11 +467,8 @@ onUnmounted(() => {
   align-self: flex-start;
 }
 
-.gallery-timeline__count {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: rgba(15, 23, 42, 0.46);
-}
+/* gallery-timeline-editorial-minimal · 已移除 .gallery-timeline__count 与 .gallery-timeline__hover-chip
+   （原数字埋点） */
 
 .gallery-timeline-layout__content {
   min-width: 0;
@@ -559,31 +540,20 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
-.gallery-month-section__count {
-  margin-left: 0.25rem;
-  color: rgba(15, 23, 42, 0.55);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  flex: 0 0 auto;
-}
-
 .gallery-month-section__content {
   min-width: 0;
 }
 
+/* gallery-timeline-editorial-minimal · 已移除 .gallery-month-section__count（原数字埋点） */
+
 /* ====== Dark theme overrides ====== */
 :global(.dark-theme) .gallery-timeline__rail {
-  background: linear-gradient(180deg, rgba(226, 232, 240, 0.2), rgba(226, 232, 240, 0.05));
+  background: rgba(226, 232, 240, 0.32);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.45);
 }
 
 :global(.dark-theme) .gallery-timeline__year-label {
   color: rgba(226, 232, 240, 0.55);
-}
-
-:global(.dark-theme) .gallery-timeline__year-count {
-  color: rgba(226, 232, 240, 0.32);
 }
 
 :global(.dark-theme) .gallery-timeline__year.is-active .gallery-timeline__year-label {
@@ -610,7 +580,7 @@ onUnmounted(() => {
   background: rgba(248, 250, 252, 0.92);
 }
 
-/* 4.10 · 暗色主题：sublabel、fill-bar、hover-chip 暗色覆盖 */
+/* 4.10 · 暗色主题：sublabel、fill-bar 暗色覆盖 */
 :global(.dark-theme) .gallery-timeline__sublabel {
   color: rgba(226, 232, 240, 0.5);
 }
@@ -619,13 +589,17 @@ onUnmounted(() => {
   box-shadow: inset 2px 0 0 var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
 }
 
+/* gallery-timeline-editorial-minimal · Active 月 ::before 引出线暗色覆盖 */
+:global(.dark-theme) .gallery-timeline__item[aria-current="true"]::before {
+  background: var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
+}
+
 :global(.dark-theme) .gallery-timeline__item[aria-current="true"] .gallery-timeline__fill-bar {
   background: var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
   box-shadow: 0 0 6px var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
 }
 
-:global(.dark-theme) .gallery-month-section__eyebrow,
-:global(.dark-theme) .gallery-month-section__count {
+:global(.dark-theme) .gallery-month-section__eyebrow {
   color: rgba(226, 232, 240, 0.55);
 }
 
@@ -647,7 +621,10 @@ onUnmounted(() => {
     flex-direction: row;
     gap: 0.45rem;
     max-height: none;
-    overflow-x: auto;
+    /* gallery-timeline-editorial-minimal：移除 overflow-x: auto，
+       改用 flex-wrap 让月份 chip 自动换行，避免移动端出现横向滚动条 */
+    flex-wrap: wrap;
+    align-content: flex-start;
     padding: 0.65rem 0.25rem;
     margin: 0 0 0.75rem;
     background: linear-gradient(180deg, rgba(245, 247, 250, 0.96), rgba(245, 247, 250, 0.76));
@@ -655,7 +632,21 @@ onUnmounted(() => {
   }
 
   .gallery-timeline__rail {
-    display: none;
+    /* gallery-timeline-editorial-minimal：取消 display: none，
+       改为贴在 rail 容器底部的横向 1px 渐变尾线，替代桌面 2px 竖向引导线 */
+    display: block;
+    top: auto;
+    bottom: 0;
+    left: 0.25rem;
+    right: 0.25rem;
+    width: auto;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      rgba(15, 23, 42, 0.25) 0%,
+      rgba(15, 23, 42, 0.05) 100%
+    );
+    box-shadow: none;
   }
 
   /* 移动端：年份作为横向 chip 头，月份在其下横排 */
@@ -726,10 +717,8 @@ onUnmounted(() => {
   .gallery-timeline__sublabel {
     font-size: 0.55rem;
   }
-
-  .gallery-timeline__hover-chip {
-    display: none;
-  }
+  /* gallery-timeline-editorial-minimal · 已移除移动端 .gallery-timeline__hover-chip { display: none }
+     （原 hover-chip 已整段删除） */
 }
 
 @media (max-width: 1024px) {
@@ -747,8 +736,7 @@ onUnmounted(() => {
 @media (prefers-reduced-motion: reduce) {
   .gallery-timeline__item,
   .gallery-timeline__item .gallery-timeline__dot,
-  .gallery-timeline__item .gallery-timeline__fill-bar,
-  .gallery-timeline__hover-chip {
+  .gallery-timeline__item .gallery-timeline__fill-bar {
     transition: none !important;
   }
 
@@ -758,13 +746,16 @@ onUnmounted(() => {
     box-shadow: none;
   }
 
+  .gallery-timeline__item[aria-current="true"]::before {
+    /* 伪元素无 transition，但保险起见加 transform: none */
+    transform: translateY(-50%);
+  }
+
   .gallery-timeline__item[aria-current="true"] .gallery-timeline__dot {
     box-shadow: none;
   }
 
-  .gallery-timeline__hover-chip {
-    transition: none !important;
-  }
+  /* gallery-timeline-editorial-minimal · 已移除 .gallery-timeline__hover-chip reduced-motion 段 */
 
   .gallery-month-section__header,
   .gallery-month-section__content {

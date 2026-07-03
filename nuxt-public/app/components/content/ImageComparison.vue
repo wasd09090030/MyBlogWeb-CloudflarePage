@@ -34,10 +34,10 @@
       </div>
       
       <!-- 标签 -->
-      <div v-if="showLabels" class="absolute top-4 left-4 px-3 py-1 bg-black/60 text-white text-sm rounded-full backdrop-blur-sm">
+      <div v-if="showLabels" class="absolute top-4 left-4 px-3 py-1 bg-black/60 text-white text-sm rounded-full backdrop-blur-xs">
         {{ beforeLabel }}
       </div>
-      <div v-if="showLabels" class="absolute top-4 right-4 px-3 py-1 bg-black/60 text-white text-sm rounded-full backdrop-blur-sm">
+      <div v-if="showLabels" class="absolute top-4 right-4 px-3 py-1 bg-black/60 text-white text-sm rounded-full backdrop-blur-xs">
         {{ afterLabel }}
       </div>
     </div>

@@ -2,6 +2,8 @@ name: Build and Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*.*.*'
   workflow_dispatch:
@@ -26,7 +28,7 @@ jobs:
   # ============================================================
   build-nuxt-ssr:
     if: >-
-      github.event_name == 'push' ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
       github.event.inputs.target == 'nuxt-ssr' ||
       github.event.inputs.target == 'both'
     runs-on: ubuntu-latest
@@ -105,6 +107,7 @@ jobs:
   # ============================================================
   build-nuxt-public:
     if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       github.event.inputs.target == 'nuxt-public' ||
       github.event.inputs.target == 'both'
     runs-on: ubuntu-latest
@@ -134,7 +137,6 @@ jobs:
         run: npm run generate
 
       - name: Deploy to Cloudflare Pages
-        if: github.event.inputs.target == 'nuxt-public' || github.event.inputs.target == 'both'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

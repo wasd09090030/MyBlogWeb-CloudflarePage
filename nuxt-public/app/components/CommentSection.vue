@@ -3,7 +3,7 @@
     <!-- 点赞区域 -->
     <div class="flex justify-center mb-10">
       <n-button
-        class="like-btn px-6 h-12 text-lg shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700 bg-gray-50"
+        class="like-btn px-6 h-12 text-lg shadow-xs hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700 bg-gray-50"
         :type="isLiked ? 'error' : 'default'"
         quaternary
         circle
@@ -35,7 +35,7 @@
         评论提交成功！正在等待审核...
       </n-alert>
 
-      <div class="bg-white dark:bg-gray-900/50 rounded-xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm transition-shadow hover:shadow-md">
+      <div class="bg-white dark:bg-gray-900/50 rounded-xl p-6 border border-gray-100 dark:border-gray-800 shadow-xs transition-shadow hover:shadow-md">
         <n-form ref="formRef" :model="newComment" :rules="rules" :show-label="false">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <n-form-item path="author">
@@ -43,7 +43,7 @@
                 v-model:value="newComment.author" 
                 placeholder="Name *" 
                 size="large" 
-                class="rounded-lg !bg-gray-50 dark:!bg-gray-800/50 !border !border-gray-200 dark:!border-gray-700 focus:!bg-white dark:focus:!bg-gray-900 focus:!border-gray-300 dark:focus:!border-gray-600" 
+                class="rounded-lg bg-gray-50! dark:bg-gray-800/50! border! border-gray-200! dark:border-gray-700! focus:bg-white! dark:focus:bg-gray-900! focus:border-gray-300! dark:focus:border-gray-600!" 
               />
             </n-form-item>
             <n-form-item path="email">
@@ -51,7 +51,7 @@
                 v-model:value="newComment.email" 
                 placeholder="Email (Optional)" 
                 size="large" 
-                class="rounded-lg !bg-gray-50 dark:!bg-gray-800/50 !border !border-gray-200 dark:!border-gray-700 focus:!bg-white dark:focus:!bg-gray-900 focus:!border-gray-300 dark:focus:!border-gray-600" 
+                class="rounded-lg bg-gray-50! dark:bg-gray-800/50! border! border-gray-200! dark:border-gray-700! focus:bg-white! dark:focus:bg-gray-900! focus:border-gray-300! dark:focus:border-gray-600!" 
               />
             </n-form-item>
           </div>
@@ -63,7 +63,7 @@
               placeholder="Write your thoughts..."
               :autosize="{ minRows: 4, maxRows: 8 }"
               size="large"
-              class="rounded-lg !bg-gray-50 dark:!bg-gray-800/50 !border !border-gray-200 dark:!border-gray-700 focus:!bg-white dark:focus:!bg-gray-900 focus:!border-gray-300 dark:focus:!border-gray-600"
+              class="rounded-lg bg-gray-50! dark:bg-gray-800/50! border! border-gray-200! dark:border-gray-700! focus:bg-white! dark:focus:bg-gray-900! focus:border-gray-300! dark:focus:border-gray-600!"
               :maxlength="1000"
             />
           </n-form-item>
@@ -111,7 +111,7 @@
           class="group"
         >
           <div class="flex gap-4">
-            <div class="flex-shrink-0">
+            <div class="shrink-0">
                <n-avatar
                 round
                 :size="42"
@@ -119,11 +119,11 @@
                 class="border border-gray-100 dark:border-gray-700 bg-gray-50"
               />
             </div>
-            <div class="flex-grow">
+            <div class="grow">
               <div class="flex items-center justify-between mb-1">
                 <div class="flex items-center gap-2">
                   <span class="font-semibold text-gray-900 dark:text-gray-100">{{ comment.author }}</span>
-                  <span v-if="comment.isAdmin" class="px-1.5 py-0.5 bg-black text-white text-[10px] font-bold rounded uppercase tracking-wider">Author</span>
+                  <span v-if="comment.isAdmin" class="px-1.5 py-0.5 bg-black text-white text-[10px] font-bold rounded-sm uppercase tracking-wider">Author</span>
                 </div>
                 <span class="text-xs text-gray-400">{{ formatDate(comment.createdAt) }}</span>
               </div>
@@ -195,12 +195,12 @@ const rules = {
   author: {
     required: true,
     message: 'Name is required',
-    trigger: 'blur'
+    trigger: 'blur-sm'
   },
   content: {
     required: true,
     message: 'Content is required',
-    trigger: 'blur'
+    trigger: 'blur-sm'
   }
 }
 

@@ -6,24 +6,24 @@
       <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4"></div>
       <!-- 模拟段落 -->
       <div class="space-y-2">
-        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-full"></div>
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-5/6"></div>
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-4/6"></div>
       </div>
       <!-- 模拟代码块 -->
       <div class="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
       <!-- 模拟段落 -->
       <div class="space-y-2">
-        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-full"></div>
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-3/4"></div>
       </div>
       <!-- 模拟小标题 -->
       <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded-lg w-1/2 mt-6"></div>
       <!-- 模拟列表 -->
       <div class="space-y-2 pl-4">
-        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
-        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/5"></div>
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-2/3"></div>
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-1/2"></div>
+        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-3/5"></div>
       </div>
     </div>
 
@@ -288,7 +288,7 @@ async function renderMermaidDiagrams() {
         
         // 创建容器替换原来的 pre 元素
         const container = document.createElement('div')
-        container.className = 'mermaid-diagram my-6 flex justify-center overflow-x-auto p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700'
+        container.className = 'mermaid-diagram my-6 flex justify-center overflow-x-auto p-4 bg-white dark:bg-gray-800 rounded-xl shadow-xs border border-gray-200 dark:border-gray-700'
         container.innerHTML = svg
         
         preElement.replaceWith(container)
@@ -303,7 +303,7 @@ async function renderMermaidDiagrams() {
           <p class="text-red-600 dark:text-red-400 text-sm mb-2">Mermaid 图表渲染失败: ${err.message}</p>
           <details class="text-xs">
             <summary class="text-gray-500 cursor-pointer">查看源码</summary>
-            <pre class="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded overflow-x-auto">${code}</pre>
+            <pre class="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-sm overflow-x-auto">${code}</pre>
           </details>
         `
         preElement.replaceWith(errorContainer)

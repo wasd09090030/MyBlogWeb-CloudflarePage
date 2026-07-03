@@ -1,18 +1,18 @@
 <template>
   <aside 
     v-if="article"
-    class="hidden lg:block w-72 flex-shrink-0 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-r-xl"
+    class="hidden lg:block w-72 shrink-0 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 rounded-r-xl"
   >
     <div class="sticky top-16 p-4 h-[calc(100vh-4rem)] overflow-y-auto">
       <!-- 目录加载中骨架屏 -->
       <div v-if="headings.length === 0 && pending" class="animate-pulse space-y-3">
         <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
         <div class="space-y-2 px-2">
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5"></div>
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/5 ml-4"></div>
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5"></div>
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 ml-4"></div>
-          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-4/5"></div>
+          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-3/5 ml-4"></div>
+          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-4/5"></div>
+          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-2/3 ml-4"></div>
+          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-sm w-3/4"></div>
         </div>
       </div>
       <!-- 实际目录 -->

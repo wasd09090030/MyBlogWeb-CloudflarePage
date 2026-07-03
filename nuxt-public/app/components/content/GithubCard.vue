@@ -1,14 +1,14 @@
 <template>
   <div class="github-card-mdc my-6">
     <div v-if="loading" class="loading-skeleton p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
-      <div class="skeleton-line w-3/4 h-6 mb-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-      <div class="skeleton-line w-full h-4 mb-2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-      <div class="skeleton-line w-5/6 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+      <div class="skeleton-line w-3/4 h-6 mb-3 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
+      <div class="skeleton-line w-full h-4 mb-2 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
+      <div class="skeleton-line w-5/6 h-4 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
     </div>
     
-    <div v-else-if="repoData" class="github-card p-4 bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden">
+    <div v-else-if="repoData" class="github-card p-4 bg-white dark:bg-linear-to-br dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden">
       <!-- 装饰性光晕效果 -->
-      <div class="absolute inset-0 bg-gradient-to-br from-blue-50/60 via-transparent to-transparent dark:from-sky-500/10 dark:via-transparent dark:to-transparent pointer-events-none"></div>
+      <div class="absolute inset-0 bg-linear-to-br from-blue-50/60 via-transparent to-transparent dark:from-sky-500/10 dark:via-transparent dark:to-transparent pointer-events-none"></div>
       
       <!-- 内容区域 -->
       <div class="relative z-10">

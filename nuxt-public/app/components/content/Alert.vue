@@ -1,8 +1,8 @@
 <template>
-  <div :class="alertClasses" class="alert-mdc my-4 p-4 rounded-lg border-l-4 shadow-sm">
+  <div :class="alertClasses" class="alert-mdc my-4 p-4 rounded-lg border-l-4 shadow-xs">
     <div class="flex items-start gap-3">
       <!-- 图标 -->
-      <div class="flex-shrink-0 mt-0.5">
+      <div class="shrink-0 mt-0.5">
         <Icon :name="iconName" :class="iconColorClass" size="xl" />
       </div>
       

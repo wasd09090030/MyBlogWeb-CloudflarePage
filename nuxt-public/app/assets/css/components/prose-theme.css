@@ -1,0 +1,99 @@
+/**
+ * Tailwind Typography 主题变量与基础元素样式
+ * 由 tailwind.config.js（v3 JS 配置）移植而来 —— Tailwind v4 起 typography 定制以 CSS 承载。
+ *
+ * 说明：
+ * - 颜色使用 v3 调色板字面值（v4 默认主题改为 oklch 且变量按需生成，字面值保证与升级前渲染一致）。
+ * - 暗色两态直接写死最终取值（.prose / .dark .prose），等价于 v3 中 dark:prose-invert 的效果；
+ *   本项目 prose 与 dark:prose-invert 始终成对出现（见 MarkdownRenderer.vue）。
+ * - 元素级覆盖（代码、链接、引用底色等）见 prose-custom.desktop.css，其优先级更高，此处不重复。
+ * - v3 配置中的 blog 变体为死配置（size 校验器不含 'blog'），未移植。
+ */
+
+/* ==================== 亮色变量（v3 DEFAULT） ==================== */
+.prose {
+  --tw-prose-body: #374151;            /* gray-700 */
+  --tw-prose-headings: #111827;        /* gray-900 */
+  --tw-prose-lead: #4b5563;            /* gray-600 */
+  --tw-prose-links: #db2777;           /* pink-600 */
+  --tw-prose-bold: #111827;            /* gray-900 */
+  --tw-prose-counters: #6b7280;        /* gray-500 */
+  --tw-prose-bullets: #d1d5db;         /* gray-300 */
+  --tw-prose-hr: #e5e7eb;              /* gray-200 */
+  --tw-prose-quotes: #111827;          /* gray-900 */
+  --tw-prose-quote-borders: #f9a8d4;   /* pink-300 */
+  --tw-prose-captions: #6b7280;        /* gray-500 */
+  --tw-prose-kbd: #111827;             /* gray-900 */
+  --tw-prose-kbd-shadows: 17 24 39;
+  --tw-prose-code: #db2777;            /* pink-600 */
+  --tw-prose-pre-code: #e5e7eb;        /* gray-200 */
+  --tw-prose-pre-bg: #1f2937;          /* gray-800 */
+  --tw-prose-th-borders: #d1d5db;      /* gray-300 */
+  --tw-prose-td-borders: #e5e7eb;      /* gray-200 */
+}
+
+/* ==================== 暗色变量（v3 invert 集） ==================== */
+.dark .prose {
+  --tw-prose-body: #d1d5db;            /* gray-300 */
+  --tw-prose-headings: #ffffff;
+  --tw-prose-lead: #9ca3af;            /* gray-400 */
+  --tw-prose-links: #f472b6;           /* pink-400 */
+  --tw-prose-bold: #ffffff;
+  --tw-prose-counters: #9ca3af;        /* gray-400 */
+  --tw-prose-bullets: #4b5563;         /* gray-600 */
+  --tw-prose-hr: #374151;              /* gray-700 */
+  --tw-prose-quotes: #f3f4f6;          /* gray-100 */
+  --tw-prose-quote-borders: #ec4899;   /* pink-500 */
+  --tw-prose-captions: #9ca3af;        /* gray-400 */
+  --tw-prose-kbd: #ffffff;
+  --tw-prose-kbd-shadows: 255 255 255;
+  --tw-prose-code: #f472b6;            /* pink-400 */
+  --tw-prose-pre-code: #d1d5db;        /* gray-300 */
+  --tw-prose-pre-bg: rgb(30 30 30);
+  --tw-prose-th-borders: #4b5563;      /* gray-600 */
+  --tw-prose-td-borders: #374151;      /* gray-700 */
+}
+
+/* ==================== 基础元素样式（v3 JS 配置中未被 prose-custom 覆盖的部分） ==================== */
+
+/* 标题锚点定位 */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  position: relative;
+}
+
+/* 代码块内边距（圆角/阴影由 prose-custom 提供） */
+.prose pre {
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+/* 引用块左内边距（其余边距/配色由 prose-custom 提供） */
+.prose blockquote {
+  padding-left: 1rem;
+}
+
+/* 表格 */
+.prose table {
+  border-collapse: collapse;
+}
+
+.prose thead th {
+  font-weight: 600;
+}
+
+/* 图片上下边距（圆角/阴影/水平居中由 prose-custom 提供） */
+.prose img {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ==================== 尺寸变体（v3 lg 覆盖） ==================== */
+.prose-lg {
+  font-size: 1.125rem;
+  line-height: 1.75;
+}

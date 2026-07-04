@@ -39,13 +39,13 @@
                   :class="[
                     getTocTextClass(heading),
                     activeHeading === heading.id 
-                      ? 'bg-pink-100 dark:bg-pink-500/20 text-pink-600 dark:text-pink-300 font-medium shadow-sm dark:shadow-pink-500/10' 
+                      ? 'bg-pink-100 dark:bg-pink-500/20 text-pink-600 dark:text-pink-300 font-medium shadow-xs dark:shadow-pink-500/10' 
                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-pink-600 dark:hover:text-pink-400'
                   ]"
                   @click.prevent="scrollToHeading(heading.id)"
                 >
                   <span 
-                    class="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all duration-200"
+                    class="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200"
                     :class="activeHeading === heading.id ? 'bg-pink-500 dark:bg-pink-400 scale-125' : 'bg-gray-400 dark:bg-gray-500'"
                   />
                   <span class="truncate">{{ heading.text }}</span>
@@ -68,7 +68,7 @@
         </div>
         <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner">
           <div 
-            class="h-full bg-gradient-to-r from-pink-500 to-rose-500 dark:from-pink-400 dark:to-rose-400 rounded-full transition-all duration-300"
+            class="h-full bg-linear-to-r from-pink-500 to-rose-500 dark:from-pink-400 dark:to-rose-400 rounded-full transition-all duration-300"
             :style="{ width: `${progress}%` }"
           />
         </div>

@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/vite'
 import { buildArticleRoute, fetchAllArticleRoutes, toIsoLastmod } from './build/article-route-data'
 
 // Editorial 字体仅作用于画廊时间线月份标题
@@ -25,6 +26,7 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/theme-variables.css',
     '~/assets/css/tailwind.css',
+    '~/assets/css/components/prose-theme.css',
     '~/assets/css/components/prose-custom.desktop.css',
     '~/assets/css/components/prose-custom.mobile.css',
     '~/assets/css/components/responsive-utilities.desktop.css',
@@ -127,23 +129,6 @@ export default defineNuxtConfig({
     }
   },
 
-  postcss: {
-    plugins: {
-      tailwindcss: {},
-      autoprefixer: {},
-      ...(isProduction ? {
-        cssnano: {
-          preset: ['default', {
-            discardComments: { removeAll: true },
-            normalizeWhitespace: true,
-            minifyFontValues: true,
-            minifyGradients: true
-          }]
-        }
-      } : {})
-    }
-  },
-
   icon: {
     serverBundle: {
       collections: ['heroicons', 'mdi']
@@ -192,6 +177,7 @@ export default defineNuxtConfig({
   },
 
   vite: {
+    plugins: [tailwindcss()],
     worker: { format: 'es' },
       optimizeDeps: {
         include: [
@@ -341,6 +327,10 @@ export default defineNuxtConfig({
     headNext: true,
     // 关闭动态 speculation rules patch，避免控制台持续告警。
     crossOriginPrefetch: false,
+    // Tailwind v4 使用真实 @layer 分层输出；Nuxt 默认内联的组件 CSS 副本会丢失 @layer 包裹，
+    // 未分层声明必然压过分层声明（CSS Cascade Layers 规则），导致 .prose 排版规则被内联的
+    // preflight 重置覆盖（列表 padding/margin 归零）。关闭内联以保持分层语义正确。
+    inlineSSRStyles: false,
   },
 
   routeRules: {

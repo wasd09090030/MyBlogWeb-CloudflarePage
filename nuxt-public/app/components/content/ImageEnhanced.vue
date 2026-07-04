@@ -3,7 +3,7 @@
     class="image-enhanced-mdc my-6"
     :class="[
       `align-${align}`,
-      { 'has-border': border, 'rounded': rounded }
+      { 'has-border': border, 'rounded-sm': rounded }
     ]"
     :style="containerStyle"
   >

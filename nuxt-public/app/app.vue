@@ -56,12 +56,12 @@ router.afterEach((to, from) => {
 </script>
 
 <style>
-/* 全局样式重置 */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/*
+ * 全局样式重置已移除：Tailwind v4 的 preflight（@layer base）已提供等价重置，
+ * 且工具类/typography 规则均运行在原生 CSS @layer 中——任何未分层的声明（包括这里曾有的
+ * `* { margin: 0; padding: 0; box-sizing: border-box; }`）都会无条件压过已分层规则，
+ * 无论选择器优先级如何。之前正是这条规则清零了 .mb-8、.prose p 等一切 margin/padding。
+ */
 
 html {
   scroll-behavior: smooth;
@@ -169,21 +169,27 @@ body {
   outline-offset: 2px;
 }
 
-/* 图片优化 */
-img {
-  max-width: 100%;
-  height: auto;
-}
+/*
+ * 包入 @layer base：这两条裸元素选择器（img/a）若不分层，会无条件压过 Tailwind v4 的
+ * 分层工具类（如 h-full 作用于 img、text-{color} 作用于 a），参见 app.vue 顶部说明。
+ */
+@layer base {
+  /* 图片优化 */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 
-/* 链接样式 */
-a {
-  color: var(--accent-primary);
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
+  /* 链接样式 */
+  a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
 
-a:hover {
-  color: var(--accent-primary-hover);
+  a:hover {
+    color: var(--accent-primary-hover);
+  }
 }
 
 /* 按钮基础样式 */

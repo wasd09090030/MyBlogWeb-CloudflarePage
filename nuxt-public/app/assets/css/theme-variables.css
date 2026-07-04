@@ -336,22 +336,26 @@
 }
 
 /* ==================== 全局过渡 (Global Transitions) ==================== */
-* {
-  transition: background-color 0.3s ease,
-              color 0.3s ease,
-              border-color 0.3s ease,
-              box-shadow 0.3s ease;
-}
+/* 包入 @layer base：Tailwind v4 的工具类运行在原生 CSS @layer 中（utilities 层序在 base 之后），
+   未分层的裸星号选择器会无条件压过它们，导致 transition-all、duration 与 ease 系工具类失效。 */
+@layer base {
+  * {
+    transition: background-color 0.3s ease,
+                color 0.3s ease,
+                border-color 0.3s ease,
+                box-shadow 0.3s ease;
+  }
 
-/* 移除特定元素的过渡 */
-*:where(
-  .no-transition,
-  [data-no-transition],
-  img,
-  video,
-  iframe
-) {
-  transition: none !important;
+  /* 移除特定元素的过渡 */
+  *:where(
+    .no-transition,
+    [data-no-transition],
+    img,
+    video,
+    iframe
+  ) {
+    transition: none !important;
+  }
 }
 
 /* ==================== 主题切换动画 (Theme Switch Animation) ==================== */

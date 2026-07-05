@@ -32,6 +32,7 @@ namespace BlogApi.DTOs
         public string Title { get; set; } = string.Empty;
         public string? Slug { get; set; }
         public string? CoverImage { get; set; }
+        public string? ThumbnailUrl { get; set; }
         public ArticleCategory Category { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

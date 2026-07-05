@@ -107,12 +107,14 @@ namespace BlogApi.Services
                     Content = a.Content.Length > 240 ? a.Content.Substring(0, 240) : a.Content,
                     // Markdown 截断更短，尽量减少半截语法导致的渲染噪音。
                     ContentMarkdown = a.ContentMarkdown != null && a.ContentMarkdown.Length > 240
-                        ? a.ContentMarkdown.Substring(0, 200) 
+                        ? a.ContentMarkdown.Substring(0, 200)
                         : a.ContentMarkdown,
                     Tags = a.Tags,
                     AiSummary = a.AiSummary
                 })
                 .ToListAsync();
+
+            await ApplyThumbnailUrlsAsync(data);
 
             // 未分页时 pageSize 使用当前 data 数量，避免返回 0 造成 totalPages 计算异常。
             var currentPage = page ?? 1;
@@ -226,7 +228,7 @@ namespace BlogApi.Services
                 (a.ContentMarkdown != null && EF.Functions.Like(a.ContentMarkdown, $"%{keyword}%"))
             );
 
-            return await query
+            var results = await query
                 .OrderByDescending(a => a.CreatedAt)
                 .Take(50) // 限制最多返回50条结果
                 .Select(a => new ArticleSummaryDto
@@ -241,12 +243,30 @@ namespace BlogApi.Services
                     // 搜索结果仅返回摘要，避免把全文直接拉回列表页。
                     Content = a.Content.Length > 240 ? a.Content.Substring(0, 240) : a.Content,
                     ContentMarkdown = a.ContentMarkdown != null && a.ContentMarkdown.Length > 240
-                        ? a.ContentMarkdown.Substring(0, 200) 
+                        ? a.ContentMarkdown.Substring(0, 200)
                         : a.ContentMarkdown,
                     Tags = a.Tags,
                     AiSummary = a.AiSummary
                 })
                 .ToListAsync();
+
+            await ApplyThumbnailUrlsAsync(results);
+            return results;
+        }
+
+        /// <summary>
+        /// 批量补齐文章摘要的缩略图地址。
+        /// 复用画廊的 <see cref="ThumbnailUrlBuilder"/>，与 <see cref="CfImageConfig"/> 全局配置保持一致。
+        /// </summary>
+        private async Task ApplyThumbnailUrlsAsync(List<ArticleSummaryDto> summaries)
+        {
+            if (summaries.Count == 0) return;
+            var config = await _context.CfImageConfigs.AsNoTracking().FirstOrDefaultAsync();
+            foreach (var summary in summaries)
+            {
+                if (string.IsNullOrWhiteSpace(summary.CoverImage)) continue;
+                summary.ThumbnailUrl = ThumbnailUrlBuilder.BuildThumbnailUrl(summary.CoverImage, config);
+            }
         }
 
         /// <summary>

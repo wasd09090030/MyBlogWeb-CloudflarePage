@@ -67,6 +67,8 @@ export type ArticleLike = {
   tags?: string[]
   category?: string
   createdAt?: string | number | Date
+  coverImage?: string | null
+  thumbnailUrl?: string | null
   [key: string]: unknown
 }
 

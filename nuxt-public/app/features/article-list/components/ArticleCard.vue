@@ -15,7 +15,7 @@
         <ImageLoadingPlaceholder :show="!imageLoaded" />
         <img
           ref="imageElement"
-          :src="article.coverImage"
+          :src="article.thumbnailUrl || article.coverImage"
           :alt="article.title"
           class="article-image lazy-image"
           :class="{ 'lazy-loaded': imageLoaded }"

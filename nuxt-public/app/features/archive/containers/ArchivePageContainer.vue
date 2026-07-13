@@ -5,9 +5,14 @@
       <div class="archive-main">
         <StateLoading v-if="loading" message="探索记忆坐标中..." class="py-12" />
 
-        <n-alert v-else-if="error" type="error" title="数据读取失败" class="mb-8">
-          {{ error.message }}
-        </n-alert>
+        <UAlert
+          v-else-if="error"
+          color="error"
+          variant="soft"
+          title="数据读取失败"
+          class="mb-8"
+          :description="error.message"
+        />
 
         <template v-else>
           <!-- MD3 风格的筛选气泡 -->
@@ -18,8 +23,9 @@
             </button>
           </div>
 
-          <n-empty
+          <StateEmpty
             v-if="timelineGroups.length === 0"
+            icon="heroicons:inbox"
             description="此处空空如也，尚未有记录"
             class="my-16"
           />
@@ -78,6 +84,7 @@ import { useArticlesFeature } from '~/features/article-list/composables/useArtic
 import { computeTagStats, groupArticlesByMonth } from '~/features/archive/utils/archive'
 import { formatDateShort, getArticlePath } from '~/features/archive/utils/formatters'
 import StateLoading from '~/shared/ui/StateLoading.vue'
+import StateEmpty from '~/shared/ui/StateEmpty.vue'
 import ArchiveTagCloud from '~/shared/ui/ArchiveTagCloud.vue'
 
 const { getAllArticles } = useArticlesFeature()

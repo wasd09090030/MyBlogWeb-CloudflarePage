@@ -28,9 +28,7 @@
     </div>
 
     <!-- 渲染错误 -->
-    <n-alert v-else-if="error" type="error" title="渲染失败" class="my-4">
-      {{ error }}
-    </n-alert>
+    <UAlert v-else-if="error" color="error" variant="soft" title="渲染失败" class="my-4" :description="error" />
 
     <!-- MDC 渲染结果 -->
     <article
@@ -51,13 +49,14 @@
     />
 
     <!-- 无内容 -->
-    <n-empty v-else description="暂无内容" />
+    <StateEmpty v-else icon="heroicons:document" description="暂无内容" />
   </div>
 </template>
 
 <script setup>
 import { parseMarkdown } from '@nuxtjs/mdc/runtime'
 import mdcHighlighter from '#mdc-highlighter'
+import StateEmpty from '~/shared/ui/StateEmpty.vue'
 
 // Worker 预处理已移除,使用内联 fallback
 const preprocessMarkdown = async (md) => null

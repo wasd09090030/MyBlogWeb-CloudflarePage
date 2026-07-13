@@ -2,18 +2,30 @@
   <div class="article-list-page" ref="articleListContainer">
     <ArticleListCategoryBar :view-mode="effectiveViewMode" @update:view-mode="setViewMode" />
 
-    <n-alert v-if="error" type="error" title="加载失败" class="mb-4">
-      加载或操作文章失败：{{ error.message }}
-    </n-alert>
+    <UAlert
+      v-if="error"
+      color="error"
+      variant="soft"
+      title="加载失败"
+      class="mb-4"
+      :description="`加载或操作文章失败：${error.message}`"
+    />
 
-    <n-alert v-if="route.query.search || route.query.category" type="info" class="mb-4" closable @close="clearSearch">
-      <template #header>
+    <UAlert
+      v-if="route.query.search || route.query.category"
+      color="info"
+      variant="soft"
+      class="mb-4"
+      close
+      @close="clearSearch"
+    >
+      <template #title>
         <div class="d-flex flex-wrap align-items-center gap-3">
           <span v-if="route.query.search">搜索结果："{{ route.query.search }}"</span>
           <span v-if="route.query.category">分类筛选：{{ getCategoryName(route.query.category) }}</span>
         </div>
       </template>
-    </n-alert>
+    </UAlert>
 
     <LazySkeletonLoader
       v-if="loading && useSkeletonLoader"
@@ -42,11 +54,12 @@
       />
     </TransitionGroup>
 
-    <n-empty v-else :description="listContext.emptyText" class="my-5">
-      <template #icon>
-        <Icon name="heroicons:document-text" size="3xl" />
-      </template>
-    </n-empty>
+    <StateEmpty
+      v-else
+      icon="heroicons:document-text"
+      :description="listContext.emptyText"
+      class="my-5"
+    />
 
     <ArticleListArticlePagination
       :current-page="paginationPage"
@@ -65,6 +78,7 @@ import ArticleListArticlePagination from '~/features/article-list/components/Art
 import { getCategoryName } from '~/features/article-list/utils/formatters'
 import { buildPageNumbers, syncPageFromQuery } from '~/features/article-list/utils/pagination'
 import { updatePageState, triggerViewSwitchAnimation } from '~/features/article-list/utils/navigation'
+import StateEmpty from '~/shared/ui/StateEmpty.vue'
 
 const route = useRoute()
 const viewMode = ref('list')

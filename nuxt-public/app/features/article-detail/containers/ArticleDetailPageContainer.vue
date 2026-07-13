@@ -4,15 +4,13 @@
       <!-- 状态渲染优先级：loading -> error -> content -> empty -->
       <StateLoading v-if="pending">
         <div class="flex flex-col items-center justify-center min-h-[60vh]">
-          <n-spin size="large" />
+          <UProgress :indeterminate="true" animation="carousel" size="lg" color="primary" />
           <p class="mt-4 text-gray-500 dark:text-gray-400">加载中...</p>
         </div>
       </StateLoading>
 
       <StateError v-else-if="error">
-        <n-alert type="error" title="加载失败" class="max-w-4xl mx-auto my-8">
-          加载文章失败: {{ error.message }}
-        </n-alert>
+        <UAlert color="error" variant="soft" title="加载失败" class="max-w-4xl mx-auto my-8" :description="`加载文章失败: ${error.message}`" />
       </StateError>
 
       <article v-else-if="article" class="relative">
@@ -24,16 +22,13 @@
         </div>
       </article>
 
-      <StateEmpty v-else>
-        <n-empty description="找不到文章" class="py-20">
-          <template #icon>
-            <Icon name="heroicons:document-minus" size="3xl" />
-          </template>
-          <template #extra>
-            <n-button @click="goBack">返回首页</n-button>
-          </template>
-        </n-empty>
-      </StateEmpty>
+      <StateEmpty
+        v-else
+        icon="heroicons:document-minus"
+        description="找不到文章"
+        :actions="[{ label: '返回首页', onClick: goBack, color: 'primary', variant: 'solid' }]"
+        class="py-20"
+      />
     </div>
 
     <ArticleDetailSidebar :article="article" :headings="headings" :pending="pending" />

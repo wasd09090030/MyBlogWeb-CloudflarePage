@@ -1,3 +1,7 @@
+## Purpose
+
+Define the long-term layout, interaction, responsive, and accessibility contract for the public game screenshot gallery.
+
 ## Requirements
 
 ### Requirement: Skeleton selection by month image count

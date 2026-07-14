@@ -160,11 +160,6 @@
   --article-image-placeholder: linear-gradient(135deg, #f8f9fa, #e9ecef);
   --article-lazy-bg: #f8f9fa;
   --article-lazy-shimmer: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  --pagination-hover-bg: #e0f2fe;
-  --pagination-hover-text: #0ea5e9;
-  --pagination-active-bg: #bae6fd;
-  --pagination-active-text: #0369a1;
-  --pagination-active-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
 
   /* SideBar / Welcome */
   --panel-bg: #ffffff;
@@ -186,7 +181,7 @@
 
 /* ==================== 暗色主题 (Dark Theme) ==================== */
 :root.dark,
-:root.dark-theme,
+:root.dark,
 :root[data-theme="dark"] {
   /* 背景色 */
   --bg-primary: #0f172a;
@@ -311,11 +306,6 @@
   --article-image-placeholder: linear-gradient(135deg, #2d3748, #1a202c);
   --article-lazy-bg: #1f2937;
   --article-lazy-shimmer: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
-  --pagination-hover-bg: rgba(56, 189, 248, 0.15);
-  --pagination-hover-text: #38bdf8;
-  --pagination-active-bg: rgba(56, 189, 248, 0.25);
-  --pagination-active-text: #7dd3fc;
-  --pagination-active-shadow: none;
 
   /* SideBar / Welcome */
   --panel-bg: #1f2937;

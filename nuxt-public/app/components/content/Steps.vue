@@ -2,59 +2,53 @@
   <div class="steps-mdc my-6 p-4 bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 relative overflow-hidden">
     <!-- 装饰性光晕效果 -->
     <div class="absolute inset-0 bg-linear-to-br from-blue-50/70 via-transparent to-transparent dark:from-sky-500/15 dark:via-transparent dark:to-transparent pointer-events-none"></div>
-    
+
     <!-- 内容区域 -->
     <div class="relative z-10">
-      <n-steps
-        :current="currentStep"
-        :status="status"
-        :vertical="vertical"
-        :size="size"
-        @update:current="onStepChange"
-      >
-        <n-step
-          v-for="(step, index) in stepsList"
-          :key="index"
-          :title="step.title"
-          :description="step.description"
-        />
-      </n-steps>
-      
+      <UStepper
+        v-model="stepperIndex"
+        :items="stepperItems"
+        :orientation="vertical ? 'vertical' : 'horizontal'"
+        :size="size === 'small' ? 'sm' : 'md'"
+        :disabled="!clickable"
+      />
+
       <!-- 控制按钮（可选） -->
       <div v-if="showControls" class="steps-controls flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700" :class="{ 'justify-center': vertical }">
-        <n-button
+        <UButton
           :disabled="currentStep <= 1"
+          color="neutral"
+          variant="soft"
           @click="prevStep"
-          secondary
         >
-          <template #icon>
+          <template #leading-icon>
             <Icon name="mdi:chevron-left" />
           </template>
           上一步
-        </n-button>
-        
-        <n-button
+        </UButton>
+
+        <UButton
           v-if="currentStep < stepsList.length"
           :disabled="currentStep >= stepsList.length"
+          color="primary"
           @click="nextStep"
-          type="primary"
         >
           下一步
-          <template #icon>
+          <template #trailing-icon>
             <Icon name="mdi:chevron-right" />
           </template>
-        </n-button>
-        
-        <n-button
+        </UButton>
+
+        <UButton
           v-else
-          type="success"
+          color="success"
           @click="onComplete"
         >
-          <template #icon>
+          <template #leading-icon>
             <Icon name="mdi:check" />
           </template>
           完成
-        </n-button>
+        </UButton>
       </div>
     </div>
   </div>
@@ -63,9 +57,9 @@
 <script setup>
 /**
  * Steps 步骤条组件 - MDC 语法
- * 
+ *
  * 在 Markdown 中使用：
- * ::steps{current="2" status="process"}
+ * ::steps{current="2"}
  * ---
  * steps:
  *   - title: "第一步"
@@ -76,38 +70,26 @@
  *     description: "开始使用"
  * ---
  * ::
- * 
+ *
  * 垂直布局带控制按钮：
  * ::steps{current="1" vertical showControls}
  * ---
  * steps:
  *   - title: "安装依赖"
  *     description: "npm install"
- *   - title: "配置文件"
- *     description: "修改 config.js"
- *   - title: "运行项目"
- *     description: "npm run dev"
- * ---
  * ::
- * 
+ *
  * 可点击步骤：
  * ::steps{current="2" clickable showControls}
- * ---
- * steps:
- *   - title: "选择模板"
- *   - title: "填写信息"
- *   - title: "确认提交"
- * ---
- * ::
  */
 
 const props = defineProps({
-  // 当前步骤（从1开始）
+  // 当前步骤：1-based 索引（沿用历史 NaiveUI n-steps 的 1-based 语义；Nuxt UI UStepper 内部是 0-based，由 stepperIndex 计算属性双向转换）
   current: {
     type: [Number, String],
     default: 1
   },
-  // 当前步骤状态: process | finish | error | wait
+  // 步骤状态（保留字段以兼容 MDC frontmatter；UStepper 通过颜色自动判断）
   status: {
     type: String,
     default: 'process',
@@ -143,14 +125,35 @@ const props = defineProps({
 
 const emit = defineEmits(['update:current', 'change', 'complete'])
 
+// 对外 API 维持 1-based；UStepper 内部是 0-based，转换放在 stepperIndex
 const currentStep = ref(Number(props.current) || 1)
-
-watch(() => props.current, (newVal) => {
-  currentStep.value = Number(newVal) || 1
+const stepperIndex = computed({
+  get: () => Math.max(0, currentStep.value - 1),
+  set: (val) => {
+    const oneBased = val + 1
+    if (oneBased !== currentStep.value) {
+      currentStep.value = oneBased
+      emit('update:current', oneBased)
+      emit('change', oneBased)
+    }
+  }
 })
 
-const stepsList = computed(() => {
-  return props.steps || []
+watch(() => props.current, (newVal) => {
+  const parsed = Number(newVal) || 1
+  if (parsed !== currentStep.value) {
+    currentStep.value = parsed
+  }
+})
+
+const stepsList = computed(() => props.steps || [])
+
+// 将 props.steps（[{title, description}]）映射为 UStepper 期望的 items 格式
+const stepperItems = computed(() => {
+  return stepsList.value.map((step) => ({
+    title: step.title,
+    description: step.description
+  }))
 })
 
 const prevStep = () => {
@@ -169,68 +172,13 @@ const nextStep = () => {
   }
 }
 
-const onStepChange = (value) => {
-  if (props.clickable) {
-    currentStep.value = value
-    emit('update:current', value)
-    emit('change', value)
-  }
-}
-
 const onComplete = () => {
   emit('complete')
 }
 </script>
 
 <style scoped>
-/* 暗色模式下 n-steps 组件的颜色调整 */
-.dark .steps-mdc :deep(.n-step__title) {
-  color: #e2e8f0;
-}
-
-.dark .steps-mdc :deep(.n-step__description) {
-  color: #94a3b8;
-}
-
-.dark .steps-mdc :deep(.n-step__indicator) {
-  background: #0f172a;
-  border: 1px solid #334155;
-  color: #e2e8f0;
-}
-
-.dark .steps-mdc :deep(.n-step__line) {
-  background: linear-gradient(90deg, #1f2937, #334155);
-}
-
-.dark .steps-mdc :deep(.n-step--process .n-step__indicator) {
-  background: #0b1220;
-  border-color: #38bdf8;
-  color: #e0f2fe;
-}
-
-.dark .steps-mdc :deep(.n-step--finish .n-step__indicator) {
-  background: #052e2b;
-  border-color: #34d399;
-  color: #d1fae5;
-}
-
-.dark .steps-mdc :deep(.n-step--error .n-step__indicator) {
-  background: #3b1d2a;
-  border-color: #f87171;
-  color: #fecaca;
-}
-
-.dark .steps-mdc :deep(.n-step--finish .n-step__line) {
-  background: linear-gradient(90deg, #10b981, #34d399);
-}
-
-.dark .steps-mdc :deep(.n-step--process .n-step__line) {
-  background: linear-gradient(90deg, #38bdf8, #0ea5e9);
-}
-
-.dark .steps-mdc :deep(.n-step--error .n-step__line) {
-  background: linear-gradient(90deg, #f87171, #ef4444);
-}
+/* UStepper 暗色模式配色由组件内置类处理，无需 :deep 覆写 */
 
 @media (max-width: 640px) {
   .steps-controls {

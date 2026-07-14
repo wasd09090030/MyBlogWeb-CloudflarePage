@@ -102,12 +102,12 @@ jobs:
 
   # ============================================================
   # Nuxt Public 静态站构建（部署到 Cloudflare Pages）
-  # 仅在手动触发且选择 nuxt-public 或 both 时执行
-  # 通常由 Cloudflare Pages 自动构建,此 job 用于手动验证
+  # ★ Phase 0 改造（2026-07-10）：关闭 push main 自动触发
+  #   只在手动 workflow_dispatch（target=nuxt-public / both）时执行
+  #   Cloudflare Pages 控制台仍可能存在 GitHub 集成自动部署，需另行手动断开
   # ============================================================
   build-nuxt-public:
     if: >-
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       github.event.inputs.target == 'nuxt-public' ||
       github.event.inputs.target == 'both'
     runs-on: ubuntu-latest

@@ -63,7 +63,7 @@ defineProps({
   object-position: center;
 }
 
-:global(.dark-theme) .image-loading-overlay {
+:global(.dark) .image-loading-overlay {
   background: rgba(15, 23, 42, 0.62);
 }
 </style>

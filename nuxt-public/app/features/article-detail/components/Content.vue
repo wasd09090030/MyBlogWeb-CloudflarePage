@@ -30,12 +30,9 @@
 
     <!-- 底部返回按钮 -->
     <div class="mt-10 mb-4 text-center">
-      <n-button @click="() => $emit('go-back')" type="info" size="large">
-        <template #icon>
-          <Icon name="heroicons:arrow-left" size="md" />
-        </template>
+      <UButton color="info" variant="solid" size="lg" leading-icon="heroicons:arrow-left" @click="() => $emit('go-back')">
         返回上页
-      </n-button>
+      </UButton>
     </div>
   </div>
 </template>

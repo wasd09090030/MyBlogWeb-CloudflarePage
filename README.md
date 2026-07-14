@@ -84,7 +84,7 @@ MyBlogWeb-CloudflarePage/
 ├── .github/workflows/
 │   └── release.yml                # CI/CD（支持 SSR/静态站独立构建）
 │
-└── doc/
+└── docs/
     ├── CloudflarePages-Deploy-Guide.md
     └── Hybrid-Architecture.md
 ```
@@ -110,10 +110,14 @@ MyBlogWeb-CloudflarePage/
 
 ## 技术栈
 
-**前端**: Nuxt 3 + Vue 3 (Composition API) + NaiveUI + TailwindCSS + MDC
+**前端**: Nuxt 4 + Vue 3 (Composition API) + Nuxt UI v3（`nuxt-public/` 静态站已迁移完成）+ NaiveUI（`nuxt/` SSR 站，迁移排队中）+ TailwindCSS + MDC
 **后端**: ASP.NET Core 8.0 + Entity Framework Core + SQLite
 **基础设施**: Cloudflare Pages + Cloudflare Worker + Nginx + PM2
 **CI/CD**: GitHub Actions（双目标构建）
+
+> **关于 `nuxt-public/` UI 库迁移**：本项目静态站 (`nuxt-public/`) 已从 NaiveUI 完整迁移到 **Nuxt UI v3**（基于 Reka UI + Tailwind Variants）。
+> 主题系统统一到 `@nuxtjs/color-mode`（`<html>.dark` / `.light`），所有 NaiveUI 组件与 `n-config-provider` 主题层已移除。
+> 迁移详情与回滚指引见 [`openspec/changes/nuxt-ui-migration/`](./openspec/changes/nuxt-ui-migration/)。
 
 ## 开发命令
 
@@ -207,8 +211,8 @@ NUXT_PUBLIC_SITE_URL=https://wasd09090030.top
 
 ## 相关文档
 
-- [Cloudflare Pages 部署指南](doc/CloudflarePages-Deploy-Guide.md)
-- [混合架构说明](doc/Hybrid-Architecture.md)
+- [Cloudflare Pages 部署指南](docs/CloudflarePages-Deploy-Guide.md)
+- [混合架构说明](docs/Hybrid-Architecture.md)
 - [API 接口文档](API_INTERFACE_DOCUMENTATION.md)
 - [图床实现说明](IMAGEBED_IMPLEMENTATION.md)
 - [MDC 组件指南](MDC_COMPONENTS_GUIDE.md)

@@ -96,25 +96,25 @@
 }
 
 :global(.dark) .category-bar,
-.dark-theme .category-bar {
+.dark .category-bar {
   background: var(--card-bg);
   border-color: var(--border-color);
 }
 
 :global(.dark) .category-list-item,
-.dark-theme .category-list-item {
+.dark .category-list-item {
   color: var(--text-secondary);
 }
 
 :global(.dark) .category-list-item:hover,
-.dark-theme .category-list-item:hover {
+.dark .category-list-item:hover {
   background: var(--article-category-hover-bg);
   border-color: var(--article-category-hover-border);
   color: var(--accent-primary);
 }
 
 :global(.dark) .category-list-item.active,
-.dark-theme .category-list-item.active {
+.dark .category-list-item.active {
   background: var(--article-active-gradient);
   color: var(--text-inverse);
 }
@@ -398,7 +398,7 @@
 }
 
 :global(.dark) .article-tag,
-.dark-theme .article-tag {
+.dark .article-tag {
   color: var(--article-tag-color);
   /* 移除所有装饰性样式 */
   background: none;
@@ -406,7 +406,7 @@
 }
 
 :global(.dark) .article-tag:hover,
-.dark-theme .article-tag:hover {
+.dark .article-tag:hover {
   color: var(--article-tag-hover-color);
   /* 移除所有装饰性样式 */
   background: none;
@@ -519,7 +519,7 @@
 }
 
 :global(.dark) .button-text,
-.dark-theme .button-text {
+.dark .button-text {
   color: var(--text-primary);
 }
 
@@ -541,231 +541,75 @@
   50% { transform: translateX(5px); }
 }
 
-/* 分页样式 */
-.pagination-container {
-  margin-top: 0.5rem;
-}
-
-/* Naive UI 分页组件样式覆盖 */
-.pagination-container :deep(.n-pagination) {
-  gap: 8px;
-  --n-item-size: 42px;
-  --n-item-font-size: 16px;
-}
-
-.pagination-container :deep(.n-pagination-item) {
-  min-width: 42px;
-  height: 42px;
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 10px;
-  transition: all 0.25s ease;
-}
-
-.pagination-container :deep(.n-pagination-item:not(.n-pagination-item--disabled):hover) {
-  background-color: var(--pagination-hover-bg);
-  color: var(--pagination-hover-text);
-}
-
-.pagination-container :deep(.n-pagination-item--active) {
-  background-color: var(--accent-primary) !important;
-  color: var(--text-inverse) !important;
-  font-weight: 600;
-}
-
-.pagination-container :deep(.n-pagination-item--active:hover) {
-  background-color: var(--accent-primary-hover) !important;
-}
-
-.pagination-container :deep(.n-pagination-item--disabled) {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* 深色主题分页样式 */
-:global(.dark) .pagination-container :deep(.n-pagination-item),
-.dark-theme .pagination-container :deep(.n-pagination-item) {
-  color: var(--text-muted);
-}
-
-:global(.dark) .pagination-container :deep(.n-pagination-item:not(.n-pagination-item--disabled):hover),
-.dark-theme .pagination-container :deep(.n-pagination-item:not(.n-pagination-item--disabled):hover) {
-  background-color: var(--pagination-hover-bg);
-  color: var(--pagination-hover-text);
-}
-
-:global(.dark) .pagination-container :deep(.n-pagination-item--active),
-.dark-theme .pagination-container :deep(.n-pagination-item--active) {
-  background-color: var(--accent-primary) !important;
-  color: var(--text-inverse) !important;
-}
-
-:global(.dark) .pagination-container :deep(.n-pagination-item--active:hover),
-.dark-theme .pagination-container :deep(.n-pagination-item--active:hover) {
-  background-color: var(--accent-primary-hover) !important;
-}
-
-/* 旧版 Bootstrap 分页样式保留（兼容） */
-.pagination {
-  gap: 8px;
-  align-items: center;
-}
-
-.pagination .page-link {
-  border: none;
-  background-color: transparent;
-  color: var(--text-muted);
-  padding: 0.6rem 1rem;
-  margin: 0;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  font-weight: 500;
-  min-width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pagination .page-link:hover {
-  background-color: var(--pagination-hover-bg);
-  color: var(--pagination-hover-text);
-  transform: translateY(-1px);
-}
-
-.pagination .page-item.active .page-link {
-  background-color: var(--pagination-active-bg);
-  color: var(--pagination-active-text);
-  font-weight: 600;
-  box-shadow: var(--pagination-active-shadow);
-}
-
-.pagination .page-item.disabled .page-link {
-  color: var(--text-tertiary);
-  background-color: transparent;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.pagination .page-link.disabled {
-  color: var(--text-tertiary);
-  cursor: not-allowed;
-}
-
-/* 深色主题分页样式 */
-:global(.dark) .pagination .page-link,
-.dark-theme .pagination .page-link {
-  color: var(--text-muted);
-}
-
-:global(.dark) .pagination .page-link:hover,
-.dark-theme .pagination .page-link:hover {
-  background-color: var(--pagination-hover-bg);
-  color: var(--pagination-hover-text);
-}
-
-:global(.dark) .pagination .page-item.active .page-link,
-.dark-theme .pagination .page-item.active .page-link {
-  background-color: var(--pagination-active-bg);
-  color: var(--pagination-active-text);
-  box-shadow: none;
-}
-
-:global(.dark) .pagination .page-item.disabled .page-link,
-.dark-theme .pagination .page-item.disabled .page-link {
-  color: var(--text-tertiary);
-}
-
-/* 分页信息文字 */
-.pagination-container .text-muted {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-muted) !important;
-}
-
-:global(.dark) .pagination-container .text-muted,
-.dark-theme .pagination-container .text-muted {
-  color: var(--text-muted) !important;
-}
-
-/* 移除复杂动画，保持简洁 */
-.page-btn {
-  transition: all 0.2s ease;
-}
-
-.page-btn:active {
-  transform: scale(0.95);
-}
-
 /* ========== 暗色主题适配（桌面端） ========== */
 
 :global(.dark) .article-card,
-.dark-theme .article-card {
+.dark .article-card {
   background: var(--card-bg);
   border-color: var(--border-color);
 }
 
-.dark-theme .article-card:hover {
+.dark .article-card:hover {
   /* box-shadow removed */
 }
 
 :global(.dark) .article-title,
-.dark-theme .article-title {
+.dark .article-title {
   color: var(--text-primary);
 }
 
 :global(.dark) .article-title-link:hover .article-title,
-.dark-theme .article-title-link:hover .article-title {
+.dark .article-title-link:hover .article-title {
   color: var(--accent-primary);
 }
 
 :global(.dark) .article-content-preview,
-.dark-theme .article-content-preview {
+.dark .article-content-preview {
   color: var(--text-secondary);
 }
 
 :global(.dark) .article-date,
-.dark-theme .article-date {
+.dark .article-date {
   background: var(--article-muted-chip-bg);
   color: var(--article-muted-chip-text);
 }
 
 :global(.dark) .article-image-placeholder,
-.dark-theme .article-image-placeholder {
+.dark .article-image-placeholder {
   background: var(--article-image-placeholder);
 }
 
 :global(.dark) .page-header,
-.dark-theme .page-header,
-.dark-theme .page-header {
+.dark .page-header,
+.dark .page-header {
   background: var(--card-bg);
   border-color: var(--border-color);
   box-shadow: none;
 }
 
 :global(.dark) .page-header__heading,
-.dark-theme .page-header__heading,
-.dark-theme .page-header__heading {
+.dark .page-header__heading,
+.dark .page-header__heading {
   color: var(--text-primary);
 }
 
 :global(.dark) .page-header__subtitle,
-.dark-theme .page-header__subtitle,
-.dark-theme .page-header__subtitle {
+.dark .page-header__subtitle,
+.dark .page-header__subtitle {
   color: var(--text-muted);
 }
 
 :global(.dark) .view-toggle-btn,
-.dark-theme .view-toggle-btn,
-.dark-theme .view-toggle-btn {
+.dark .view-toggle-btn,
+.dark .view-toggle-btn {
   border-color: var(--border-color);
   background: var(--bg-secondary);
   color: var(--text-secondary);
 }
 
 :global(.dark) .view-toggle-btn.active,
-.dark-theme .view-toggle-btn.active,
-.dark-theme .view-toggle-btn.active {
+.dark .view-toggle-btn.active,
+.dark .view-toggle-btn.active {
   background: var(--article-active-gradient);
   color: var(--text-inverse);
   border-color: transparent;

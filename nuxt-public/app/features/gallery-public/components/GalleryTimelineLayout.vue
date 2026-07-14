@@ -547,63 +547,63 @@ onUnmounted(() => {
 /* gallery-timeline-editorial-minimal · 已移除 .gallery-month-section__count（原数字埋点） */
 
 /* ====== Dark theme overrides ====== */
-:global(.dark-theme) .gallery-timeline__rail {
+:global(.dark) .gallery-timeline__rail {
   background: rgba(226, 232, 240, 0.32);
   box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.45);
 }
 
-:global(.dark-theme) .gallery-timeline__year-label {
+:global(.dark) .gallery-timeline__year-label {
   color: rgba(226, 232, 240, 0.55);
 }
 
-:global(.dark-theme) .gallery-timeline__year.is-active .gallery-timeline__year-label {
+:global(.dark) .gallery-timeline__year.is-active .gallery-timeline__year-label {
   color: rgba(248, 250, 252, 0.92);
 }
 
-:global(.dark-theme) .gallery-timeline__item {
+:global(.dark) .gallery-timeline__item {
   color: rgba(226, 232, 240, 0.68);
 }
 
-:global(.dark-theme) .gallery-timeline__item:hover,
-:global(.dark-theme) .gallery-timeline__item:focus-visible,
-:global(.dark-theme) .gallery-timeline__item[aria-current="true"] {
+:global(.dark) .gallery-timeline__item:hover,
+:global(.dark) .gallery-timeline__item:focus-visible,
+:global(.dark) .gallery-timeline__item[aria-current="true"] {
   background: rgba(15, 23, 42, 0.62);
   color: rgba(248, 250, 252, 0.95);
 }
 
-:global(.dark-theme) .gallery-timeline__dot {
+:global(.dark) .gallery-timeline__dot {
   background: rgba(226, 232, 240, 0.34);
   box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.66);
 }
 
-:global(.dark-theme) .gallery-timeline__item[aria-current="true"] .gallery-timeline__dot {
+:global(.dark) .gallery-timeline__item[aria-current="true"] .gallery-timeline__dot {
   background: rgba(248, 250, 252, 0.92);
 }
 
 /* 4.10 · 暗色主题：sublabel、fill-bar 暗色覆盖 */
-:global(.dark-theme) .gallery-timeline__sublabel {
+:global(.dark) .gallery-timeline__sublabel {
   color: rgba(226, 232, 240, 0.5);
 }
 
-:global(.dark-theme) .gallery-timeline__item[aria-current="true"] {
+:global(.dark) .gallery-timeline__item[aria-current="true"] {
   box-shadow: inset 2px 0 0 var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
 }
 
 /* gallery-timeline-editorial-minimal · Active 月 ::before 引出线暗色覆盖 */
-:global(.dark-theme) .gallery-timeline__item[aria-current="true"]::before {
+:global(.dark) .gallery-timeline__item[aria-current="true"]::before {
   background: var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
 }
 
-:global(.dark-theme) .gallery-timeline__item[aria-current="true"] .gallery-timeline__fill-bar {
+:global(.dark) .gallery-timeline__item[aria-current="true"] .gallery-timeline__fill-bar {
   background: var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
   box-shadow: 0 0 6px var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
 }
 
-:global(.dark-theme) .gallery-month-section__eyebrow {
+:global(.dark) .gallery-month-section__eyebrow {
   color: rgba(226, 232, 240, 0.55);
 }
 
-:global(.dark-theme) .gallery-month-section__title {
+:global(.dark) .gallery-month-section__title {
   color: rgba(248, 250, 252, 0.95);
 }
 
@@ -722,11 +722,11 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1024px) {
-  :global(.dark-theme) .gallery-timeline {
+  :global(.dark) .gallery-timeline {
     background: linear-gradient(180deg, rgba(26, 32, 44, 0.96), rgba(26, 32, 44, 0.74));
   }
 
-  :global(.dark-theme) .gallery-timeline__item {
+  :global(.dark) .gallery-timeline__item {
     border-color: rgba(226, 232, 240, 0.12);
     background: rgba(15, 23, 42, 0.48);
   }

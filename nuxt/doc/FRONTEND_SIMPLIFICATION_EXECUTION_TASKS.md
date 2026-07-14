@@ -227,7 +227,7 @@
 **目标文件**
 - `nuxt/doc/API_INTERFACE_DOCUMENTATION.md`
 - `nuxt/doc/IMAGEBED_IMPLEMENTATION.md`
-- `doc/NUXT_FRONTEND_MIGRATION_CHECKLIST.md`
+- `docs/NUXT_FRONTEND_MIGRATION_CHECKLIST.md`
 
 **执行步骤**
 - [x] 更新端点、调用入口、目录位置与真实代码一致。

@@ -1,6 +1,10 @@
 # Spec: Responsive Styles Splitting (nuxt-public)
 
-## ADDED Requirements
+## Purpose
+
+Define the desktop/mobile CSS file splitting convention and its verification requirements for `nuxt-public`.
+
+## Requirements
 
 ### Requirement: Desktop and mobile styles live in separate paired files
 The `nuxt-public` static blog SHALL organize each component's responsive CSS as a pair of physically distinct files: `<Name>.desktop.css` and `<Name>.mobile.css`. The legacy `<Name>.styles.css` mixed-file pattern SHALL NOT be used for new code or as the steady state of migrated code.

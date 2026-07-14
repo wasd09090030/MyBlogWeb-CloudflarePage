@@ -1,12 +1,10 @@
 
 <template>
-  <n-config-provider :theme="isDarkMode ? darkTheme : null" :theme-overrides="themeOverrides">
-  <n-message-provider>
-  <div id="app" :class="['min-vh-100', isDarkMode ? 'dark-theme' : 'light-theme']">
+  <div id="app" :class="['min-vh-100', colorMode.value === 'dark' ? 'dark' : 'light']">
     <!-- 根据主题切换动画效果 -->
     <ClientOnly>
       <Teleport to="body">
-        <LazyEffectsSakuraFalling v-if="showBackgroundAnimation && !isDarkMode" />
+        <LazyEffectsSakuraFalling v-if="showBackgroundAnimation && colorMode.value !== 'dark'" />
         <LazyEffectsStarryNight v-else-if="showBackgroundAnimation" />
       </Teleport>
     </ClientOnly>
@@ -97,10 +95,10 @@
             </NuxtLink>
           </nav>
           <div class="drawer-footer">
-            <button type="button" class="drawer-theme-btn" @click="toggleTheme">
-              <Icon v-if="isHydrated" :name="isDarkMode ? 'heroicons:sun-solid' : 'heroicons:moon-solid'" size="md" :solid="true" />
+            <button type="button" class="drawer-theme-btn" @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'">
+              <Icon v-if="isHydrated" :name="colorMode.value === 'dark' ? 'heroicons:sun-solid' : 'heroicons:moon-solid'" size="md" :solid="true" />
               <Icon v-else name="heroicons:moon-solid" size="md" :solid="true" />
-              {{ isDarkMode ? '浅色模式' : '深色模式' }}
+              {{ colorMode.value === 'dark' ? '浅色模式' : '深色模式' }}
             </button>
           </div>
         </div>
@@ -147,31 +145,33 @@
       <ClientOnly>
         <FloatingQuickActions
           :is-home-route="isHomeRoute"
-          :is-dark-mode="isDarkMode"
+          :is-dark-mode="colorMode.value === 'dark'"
           :is-hydrated="isHydrated"
           :show-background-animation="showBackgroundAnimation"
           @go-home="goHome"
           @scroll-top="scrollToTop"
-          @toggle-theme="toggleTheme"
+          @toggle-theme="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
           @toggle-background="toggleBackgroundAnimation"
         />
       </ClientOnly>
     </Teleport>
   </div>
-  </n-message-provider>
-  </n-config-provider>
 </template>
 
 <script setup>
 import { defineAsyncComponent } from 'vue'
-import { darkTheme } from 'naive-ui'
 import FloatingQuickActions from '~/shared/ui/FloatingQuickActions.vue'
 
 const HomeWelcomeSection = defineAsyncComponent(() => import('~/features/home/components/HomeWelcomeSection.vue'))
 
 const route = useRoute()
 const router = useRouter()
-const { isDarkMode, initTheme, toggleTheme } = useTheme()
+
+// 主题控制由 @nuxtjs/color-mode 接管（Nuxt UI 自动注册）
+// - colorMode.value 当前实际值（'light' | 'dark'，system 已解析）
+// - colorMode.preference 用户偏好（'light' | 'dark' | 'system'）
+// 写入 preference 即可触发 localStorage 持久化 + DOM class 同步
+const colorMode = useColorMode()
 
 const showMobileMenu = ref(false)
 const isHydrated = ref(false)
@@ -183,18 +183,8 @@ const lastScrollY = ref(0)
 const scrollThreshold = 60
 const showBackgroundAnimation = ref(true)
 
-const themeOverrides = computed(() => ({
-  common: {
-    primaryColor: '#0d6efd',
-    primaryColorHover: '#0b5ed7',
-    primaryColorPressed: '#0a58ca'
-  },
-  Dropdown: {
-    borderRadius: '12px',
-    padding: '6px',
-    optionBorderRadius: '8px'
-  }
-}))
+// 原 themeOverrides（n-config-provider）已迁移到 app.config.ts 的 ui.colors
+// 与 main.css 的 @theme 块；Nuxt UI 直接消费，无需在此维护
 
 const handleScroll = () => {
   const currentScrollY = window.scrollY
@@ -237,7 +227,7 @@ const showSidebar = computed(() => !isGalleryRoute.value && !isArticleDetailRout
 
 onMounted(() => {
   isHydrated.value = true
-  initTheme()
+  // 主题初始化由 @nuxtjs/color-mode 自动处理（SSG 阶段 useColorMode 即可读取，无须手动挂载钩子）
   window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
@@ -248,7 +238,7 @@ onUnmounted(() => {
 
 <style scoped>
 :global(.dark),
-.dark-theme {
+.dark {
   background-color: transparent;
   color: var(--text-primary);
 }
@@ -280,12 +270,12 @@ onUnmounted(() => {
   transform: translateY(-100%);
 }
 :global(.dark) .app-navbar,
-.dark-theme .app-navbar {
+.dark .app-navbar {
   background: transparent;
   border-bottom-color: transparent;
 }
 :global(.dark) .app-navbar.navbar-scrolled,
-.dark-theme .app-navbar.navbar-scrolled {
+.dark .app-navbar.navbar-scrolled {
   background: var(--navbar-scrolled-bg);
   border-bottom-color: var(--navbar-scrolled-border);
   box-shadow: var(--navbar-scrolled-shadow);
@@ -395,25 +385,25 @@ onUnmounted(() => {
   outline-offset: 2px;
 }
 :global(.dark) .nav-link,
-.dark-theme .nav-link {
+.dark .nav-link {
   color: var(--text-primary);
 }
 :global(.dark) .nav-link:hover,
-.dark-theme .nav-link:hover {
+.dark .nav-link:hover {
   background: var(--nav-link-hover-bg);
   color: var(--primary-color-hover);
 }
 :global(.dark) .nav-link:active,
-.dark-theme .nav-link:active {
+.dark .nav-link:active {
   background: var(--nav-link-active-bg);
 }
 :global(.dark) .nav-more-panel,
-.dark-theme .nav-more-panel {
+.dark .nav-more-panel {
   border-color: var(--border-color-dark);
   background: var(--bg-secondary);
 }
 :global(.dark) .nav-more-item,
-.dark-theme .nav-more-item {
+.dark .nav-more-item {
   border-color: var(--border-color-dark);
   background: var(--bg-primary);
 }
@@ -558,7 +548,7 @@ onUnmounted(() => {
   z-index: 10;
 }
 :global(.dark) .blog-footer,
-.dark-theme .blog-footer {
+.dark .blog-footer {
   border-top-color: var(--border-color-dark);
   background: var(--footer-bg);
 }
@@ -597,11 +587,11 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 :global(.dark) .footer-link,
-.dark-theme .footer-link {
+.dark .footer-link {
   color: var(--text-secondary);
 }
 :global(.dark) .footer-link:hover,
-.dark-theme .footer-link:hover {
+.dark .footer-link:hover {
   color: var(--primary-color);
   background-color: var(--footer-link-hover-bg);
 }
@@ -611,7 +601,7 @@ onUnmounted(() => {
   user-select: none;
 }
 :global(.dark) .footer-divider,
-.dark-theme .footer-divider {
+.dark .footer-divider {
   color: var(--text-tertiary);
 }
 .footer-copyright {
@@ -620,7 +610,7 @@ onUnmounted(() => {
   letter-spacing: 0.01em;
 }
 :global(.dark) .footer-copyright,
-.dark-theme .footer-copyright {
+.dark .footer-copyright {
   color: var(--text-tertiary);
 }
 @media (max-width: 576px) {

@@ -357,7 +357,7 @@ function formatDate(dateString) {
   overflow: hidden;
 }
 
-:global(.dark-theme) .related-article-card {
+:global(.dark) .related-article-card {
   border-color: rgba(71, 85, 105, 0.75);
   box-shadow: 0 12px 28px rgba(2, 6, 23, 0.45);
 }

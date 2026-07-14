@@ -65,6 +65,7 @@
       :current-page="paginationPage"
       :total-pages="listContext.totalPages"
       :total-count="listContext.totalCount"
+      :articles-per-page="articlesPerPage"
       @update:page="updatePaginationPage"
     />
   </div>

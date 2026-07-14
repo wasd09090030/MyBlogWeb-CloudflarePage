@@ -1,6 +1,10 @@
 # Spec: Icon System (nuxt-public)
 
-## ADDED Requirements
+## Purpose
+
+Define the icon naming, registration, verification, and visual-preservation contract for `nuxt-public`.
+
+## Requirements
 
 ### Requirement: All `<Icon>` usages use Iconify `collection:icon` format
 Every `<Icon>` template usage in `nuxt-public/app/` SHALL pass a `name` prop matching the Iconify `collection:icon` format (e.g. `heroicons:home`, `mdi:github`). Bare short names without a collection prefix SHALL NOT be used. Existing `collection:icon` usages (e.g. `mdi:magnify` in `Effects/SearchBar.vue`) already conform and are not changed by name.

@@ -24,35 +24,37 @@
       <!-- 目录列表 -->
       <nav class="flex-1 py-3 overflow-y-auto custom-scrollbar">
         <ul class="space-y-0.5 px-2">
-          <li 
-            v-for="heading in tocItems" 
+          <li
+            v-for="heading in tocItems"
             :key="heading.id"
             :class="getTocItemClass(heading)"
             :style="getTocItemStyle(heading)"
           >
-            <n-tooltip placement="left" :delay="300" :disabled="!isTextTruncated(heading.id)">
-              <template #trigger>
-                <a 
-                  :ref="el => setItemRef(heading.id, el)"
-                  :href="`#${heading.id}`"
-                  class="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
-                  :class="[
-                    getTocTextClass(heading),
-                    activeHeading === heading.id 
-                      ? 'bg-pink-100 dark:bg-pink-500/20 text-pink-600 dark:text-pink-300 font-medium shadow-xs dark:shadow-pink-500/10' 
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-pink-600 dark:hover:text-pink-400'
-                  ]"
-                  @click.prevent="scrollToHeading(heading.id)"
-                >
-                  <span 
-                    class="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200"
-                    :class="activeHeading === heading.id ? 'bg-pink-500 dark:bg-pink-400 scale-125' : 'bg-gray-400 dark:bg-gray-500'"
-                  />
-                  <span class="truncate">{{ heading.text }}</span>
-                </a>
-              </template>
-              {{ heading.text }}
-            </n-tooltip>
+            <UTooltip
+              :text="heading.text"
+              :disabled="!isTextTruncated(heading.id)"
+              placement="left"
+              :delay-duration="300"
+            >
+              <a
+                :ref="el => setItemRef(heading.id, el)"
+                :href="`#${heading.id}`"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
+                :class="[
+                  getTocTextClass(heading),
+                  activeHeading === heading.id
+                    ? 'bg-pink-100 dark:bg-pink-500/20 text-pink-600 dark:text-pink-300 font-medium shadow-xs dark:shadow-pink-500/10'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-pink-600 dark:hover:text-pink-400'
+                ]"
+                @click.prevent="scrollToHeading(heading.id)"
+              >
+                <span
+                  class="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200"
+                  :class="activeHeading === heading.id ? 'bg-pink-500 dark:bg-pink-400 scale-125' : 'bg-gray-400 dark:bg-gray-500'"
+                />
+                <span class="truncate">{{ heading.text }}</span>
+              </a>
+            </UTooltip>
           </li>
         </ul>
       </nav>

@@ -181,6 +181,7 @@ cp -r nuxt/app/pages/tools nuxt-public/app/pages/
   }
   ```
 - 检查是否依赖 naive-ui 组件，如有需替换
+- **`nuxt-public/` 默认组件库已迁移到 Nuxt UI v3**（截至 2026-07-13，见 `openspec/changes/nuxt-ui-migration/`）。迁移工具箱/音游页面到静态站时，**新增组件请直接使用 Nuxt UI（`<UButton>`/`<UCard>`/`<UInput>` 等），不要引入新的 NaiveUI 实例**。若确实需要 NaiveUI 组件，建议留在 `nuxt/`（SSR）或评估替代方案。
 
 ### 3.3 迁移 Mania 音游
 

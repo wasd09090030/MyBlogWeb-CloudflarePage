@@ -146,7 +146,7 @@ const iconsColumn2 = [
 }
 
 /* 暗色主题适配 */
-.dark-theme .icon-item {
+.dark .icon-item {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.1);
 }

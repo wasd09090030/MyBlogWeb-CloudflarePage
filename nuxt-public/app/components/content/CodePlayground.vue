@@ -1,9 +1,7 @@
 <template>
-  <n-card
+  <UCard
     class="code-playground-mdc my-6 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
-    :bordered="false"
-    content-style="padding: 0;"
-    header-style="padding: 0;"
+    :ui="{ root: 'p-0 gap-0', header: 'p-0', body: 'p-0' }"
   >
     <!-- 隐藏的原始内容容器 -->
     <div ref="slotContainer" style="display: none;">
@@ -13,32 +11,32 @@
     <!-- 头部 -->
     <template #header>
       <div class="playground-header flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <n-space align="center" size="small">
+        <div class="flex items-center gap-2">
           <Icon name="heroicons:code-bracket" size="md" class="text-gray-600 dark:text-gray-400" />
           <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ title }}</span>
-          <n-tag size="tiny" :bordered="false" class="lang-tag">{{ lang }}</n-tag>
-        </n-space>
-        <n-space align="center" size="small">
+          <UBadge size="xs" variant="subtle" color="neutral" class="lang-tag">{{ lang }}</UBadge>
+        </div>
+        <div class="flex items-center gap-2">
           <!-- 仅 JS/TS 且声明 runnable 时显示运行按钮 -->
-          <n-button
+          <UButton
             v-if="isRunnable"
-            type="success"
-            size="small"
+            color="success"
+            size="sm"
             :loading="isRunning"
             @click="runCode"
           >
-            <template #icon>
+            <template #leading-icon>
               <Icon name="heroicons:play" size="sm" />
             </template>
             {{ isRunning ? '运行中…' : '运行' }}
-          </n-button>
-          <n-button size="small" :type="copied ? 'success' : 'default'" @click="copyCode">
-            <template #icon>
+          </UButton>
+          <UButton size="sm" :color="copied ? 'success' : 'neutral'" variant="soft" @click="copyCode">
+            <template #leading-icon>
               <Icon :name="copied ? 'heroicons:check' : 'heroicons:document-duplicate'" size="sm" />
             </template>
             {{ copied ? '已复制' : '复制' }}
-          </n-button>
-        </n-space>
+          </UButton>
+        </div>
       </div>
     </template>
 
@@ -56,19 +54,19 @@
           class="output-panel border-t border-gray-200 dark:border-gray-700"
         >
           <div class="output-header flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900">
-            <n-space align="center" size="small">
+            <div class="flex items-center gap-2">
               <Icon name="heroicons:chevron-right" size="sm" class="text-green-500" />
               <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">输出结果</span>
-            </n-space>
-            <n-button text size="tiny" class="text-gray-400" @click="output = null">
+            </div>
+            <UButton color="neutral" variant="ghost" size="xs" class="text-gray-400" @click="output = null">
               <Icon name="heroicons:x-mark" size="sm" />
-            </n-button>
+            </UButton>
           </div>
           <pre class="output-content text-sm text-gray-200 dark:text-gray-200 whitespace-pre-wrap px-4 py-3 dark:bg-gray-950">{{ output }}</pre>
         </div>
       </Transition>
     </div>
-  </n-card>
+  </UCard>
 </template>
 
 <script setup>

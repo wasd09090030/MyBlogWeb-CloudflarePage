@@ -945,13 +945,13 @@ onUnmounted(() => {
   }
 }
 
-:global(.dark-theme) .game-section-title {
+:global(.dark) .game-section-title {
   color: rgba(248, 250, 252, 0.9);
 }
 
-:global(.dark-theme) .game-section-subtitle,
-:global(.dark-theme) .game-month-title,
-:global(.dark-theme) .game-empty {
+:global(.dark) .game-section-subtitle,
+:global(.dark) .game-month-title,
+:global(.dark) .game-empty {
   color: rgba(226, 232, 240, 0.75);
 }
 </style>

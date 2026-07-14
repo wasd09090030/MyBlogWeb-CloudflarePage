@@ -1,20 +1,17 @@
 <template>
   <div class="initial-loading-overlay">
     <div class="loading-container">
-      <n-spin size="large" :stroke="isDarkMode ? '#fff' : '#667eea'">
-        <template #icon>
-          <Icon name="heroicons:photo" size="2xl" />
-        </template>
-      </n-spin>
-      
+      <div class="spinner-icon-wrapper">
+        <Icon name="heroicons:photo" size="2xl" class="spinner-icon" />
+      </div>
+
       <div class="loading-info">
         <p class="loading-text">正在加载画廊 {{ Math.round(loadingProgress) }}%</p>
-        <n-progress 
-          type="line" 
-          :percentage="loadingProgress" 
-          :show-indicator="false"
-          :height="6"
-          :border-radius="3"
+        <UProgress
+          :model-value="loadingProgress"
+          :max="100"
+          color="primary"
+          size="md"
         />
         <p class="loading-tip">图片未压缩，请注意流量...</p>
       </div>
@@ -23,7 +20,8 @@
 </template>
 
 <script setup>
-const { isDarkMode } = useTheme()
+// 主题色改由 CSS 变量 + :global(.dark) 选择器控制（见 .spinner-icon-wrapper）
+// 不再依赖 useTheme() 的 isDarkMode 响应式切换
 
 defineProps({
   loadingProgress: {
@@ -64,6 +62,24 @@ defineProps({
   padding: 2rem;
 }
 
+.spinner-icon-wrapper {
+  /* 原 n-spin stroke 颜色（dark=白、light=#667eea）通过 CSS 变量按主题切换 */
+  color: #667eea;
+}
+
+:global(.dark) .spinner-icon-wrapper {
+  color: #ffffff;
+}
+
+.spinner-icon {
+  display: block;
+  animation: spinner-rotate 1.2s linear infinite;
+}
+
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+
 .loading-info {
   display: flex;
   flex-direction: column;
@@ -86,15 +102,15 @@ defineProps({
 }
 
 /* 暗色主题 */
-:global(.dark-theme) .initial-loading-overlay {
+:global(.dark) .initial-loading-overlay {
   background: #18171d;
 }
 
-:global(.dark-theme) .loading-text {
+:global(.dark) .loading-text {
   color: #e2e8f0;
 }
 
-:global(.dark-theme) .loading-tip {
+:global(.dark) .loading-tip {
   color: #a0aec0;
 }
 

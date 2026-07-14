@@ -374,6 +374,6 @@
 }
 
 /* 暗色主题：仅改变页面背景 */
-:global(.dark-theme) .gallery-fullscreen {
+:global(.dark) .gallery-fullscreen {
   background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
 }

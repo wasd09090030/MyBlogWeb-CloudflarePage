@@ -78,8 +78,9 @@ desktop.ini
 **/.data/
 
 # Claude / Codex tooling
+.zcode/
 .codex/
-.claude/settings.local.json
+.claude/
 # AI tooling — intentionally tracked
 # OpenSpec change artifacts (proposal/design/specs/tasks) and Claude skills +
 # slash commands are intentionally committed so they survive across machines

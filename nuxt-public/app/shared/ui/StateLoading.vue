@@ -2,7 +2,7 @@
   <div class="loading-overlay" role="status" aria-live="polite">
     <slot>
       <div class="state-loading-default">
-        <n-spin size="large" />
+        <UProgress :indeterminate="true" animation="carousel" size="lg" color="primary" />
         <p class="state-loading-text">{{ message }}</p>
       </div>
     </slot>
@@ -17,7 +17,7 @@
  *
  * 不适用场景：
  * - 按钮内联 loading（应使用按钮自身 loading 属性）
- * - 极小局部骨架（应在业务组件内使用 n-skeleton）
+ * - 极小局部骨架（应使用业务组件内的骨架占位）
  */
 defineProps({
   message: {

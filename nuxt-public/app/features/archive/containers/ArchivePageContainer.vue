@@ -146,7 +146,7 @@ onMounted(fetchArticles)
 }
 
 :global(.dark) .archive-page,
-.dark-theme .archive-page {
+.dark .archive-page {
   --archive-accent-soft: rgba(66, 153, 225, 0.16);
   --archive-accent-soft-strong: rgba(66, 153, 225, 0.28);
   --archive-track-color: var(--border-color);

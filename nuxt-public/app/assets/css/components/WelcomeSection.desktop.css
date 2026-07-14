@@ -230,7 +230,7 @@
 
 
 :global(.dark) .top-section,
-.dark-theme .top-section {
+.dark .top-section {
   background: var(--panel-bg-soft);
   border-color: var(--article-category-hover-border);
 }
@@ -552,91 +552,91 @@
 
 
 /* 暗色主题悬浮按钮适配 */
-.dark-theme .fab-main-btn {
+.dark .fab-main-btn {
   background: var(--gradient-primary);
   box-shadow: var(--shadow-md);
 }
 
-.dark-theme .fab-main-btn:hover {
+.dark .fab-main-btn:hover {
   box-shadow: var(--shadow-lg);
 }
 
-.dark-theme .fab-main-btn-active {
+.dark .fab-main-btn-active {
   background: var(--gradient-cool);
 }
 
-.dark-theme .fab-menu-label {
+.dark .fab-menu-label {
   background: var(--glass-bg);
   color: var(--text-primary);
 }
 
-.dark-theme .fab-overlay-active {
+.dark .fab-overlay-active {
   background: var(--bg-overlay);
 }
 
-.dark-theme .info-card {
+.dark .info-card {
   border-color: rgba(255, 255, 255, 0.12);
   box-shadow: var(--shadow-xl);
 }
 
-.dark-theme .info-card:hover {
+.dark .info-card:hover {
   box-shadow: var(--shadow-2xl);
 }
 
 
 
-.dark-theme .card-chip {
+.dark .card-chip {
   background: var(--glass-border);
   border-color: var(--panel-border-soft);
   color: var(--text-primary);
 }
 
-.dark-theme .card-subtitle {
+.dark .card-subtitle {
   color: var(--text-secondary);
 }
 
-.dark-theme .card-cta {
+.dark .card-cta {
   color: var(--text-primary);
 }
 
-.dark-theme .card-wave {
+.dark .card-wave {
   box-shadow: var(--shadow-lg);
 }
 
 /* Remove gradient overrides for dark theme to maintain pure color look */
-.dark-theme .articles-card {
+.dark .articles-card {
   background-color: var(--accent-danger);
 }
 
-.dark-theme .gallery-card {
+.dark .gallery-card {
   background-color: var(--accent-success);
 }
 
-.dark-theme .host-card {
+.dark .host-card {
   background-color: var(--accent-primary);
 }
 
-.dark-theme .carousel-nav-btn {
+.dark .carousel-nav-btn {
   background: var(--glass-bg) !important;
   color: var(--text-primary) !important;
 }
 
-.dark-theme .carousel-nav-btn:hover {
+.dark .carousel-nav-btn:hover {
   background: var(--bg-tertiary) !important;
 }
 
-.dark-theme :deep(.swiper-pagination-bullet) {
+.dark :deep(.swiper-pagination-bullet) {
   background: var(--glass-border) !important;
 }
 
-.dark-theme :deep(.swiper-pagination-bullet-active) {
+.dark :deep(.swiper-pagination-bullet-active) {
   background: var(--text-inverse) !important;
 }
 
-.dark-theme .slide-card {
+.dark .slide-card {
   box-shadow: var(--shadow-xl);
 }
 
-.dark-theme .carousel-slide.active .slide-card {
+.dark .carousel-slide.active .slide-card {
   box-shadow: var(--shadow-2xl);
 }

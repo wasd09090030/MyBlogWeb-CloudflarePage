@@ -26,6 +26,9 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/theme-variables.css',
     '~/assets/css/tailwind.css',
+    // Nuxt UI v3 设计 token 入口（Phase 0 新增；必须晚于 tailwind.css，
+    // 因为 @nuxt/ui 内部消费 Tailwind 注入的 CSS 变量）
+    '~/assets/css/main.css',
     '~/assets/css/components/prose-theme.css',
     '~/assets/css/components/prose-custom.desktop.css',
     '~/assets/css/components/prose-custom.mobile.css',
@@ -51,7 +54,8 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@nuxt/fonts',
     '@vueuse/motion/nuxt',
-    '@bg-dev/nuxt-naiveui',
+    // Nuxt UI v3 — Phase 0 接入，Phase 5 卸 NaiveUI 后唯一组件库
+    '@nuxt/ui',
     '@nuxtjs/mdc',
     '@nuxtjs/seo',
     'nuxt-vitalizer'
@@ -166,14 +170,8 @@ export default defineNuxtConfig({
     }
   },
 
-  naiveui: {
-    colorModePreference: 'system',
-    iconSize: 18,
-    themeConfig: {}
-  },
-
   build: {
-    transpile: ['@vueuse/core', 'naive-ui']
+    transpile: ['@vueuse/core']
   },
 
   vite: {
@@ -181,7 +179,7 @@ export default defineNuxtConfig({
     worker: { format: 'es' },
       optimizeDeps: {
         include: [
-          'vue', 'keen-slider', 'naive-ui', 'katex', '@vueuse/core', '@vueuse/motion',
+          'vue', 'keen-slider', 'katex', '@vueuse/core', '@vueuse/motion',
           'remark-math', 'rehype-katex'
           // mermaid 已移出：代码层使用 await import('mermaid') 懒加载，不应预捆绑
         ],
@@ -217,8 +215,8 @@ export default defineNuxtConfig({
             if (id.includes('remark-') || id.includes('rehype-')) {
               return 'vendor-markdown-plugins'
             }
-            // UI 库（Naive UI 较大）
-            if (id.includes('node_modules/naive-ui')) {
+            // UI 库（Nuxt UI + Reka UI 底层）
+            if (id.includes('node_modules/@nuxt/ui') || id.includes('node_modules/reka-ui') || id.includes('node_modules/@internationalized')) {
               return 'vendor-ui'
             }
             // 轮播图库

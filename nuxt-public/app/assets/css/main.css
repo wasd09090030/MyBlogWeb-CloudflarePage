@@ -1,0 +1,26 @@
+/*
+ * main.css — Nuxt UI v3 集成入口
+ *
+ * 与 tailwind.css 的职责划分：
+ *   tailwind.css → 注入 Tailwind v4 引擎、@plugin typography、dark 变体、@layer base 兼容
+ *   main.css    → 注入 Nuxt UI 设计 token + 自定义 @theme 设计 token（Phase 4 补全）
+ *
+ * 加载顺序（nuxt.config.ts css:[] 数组）：tailwind.css 必须在 main.css 之前，
+ *   因为 @nuxt/ui 的源码 @import "tailwindcss" 引用了 Tailwind 注入的 CSS 变量。
+ */
+
+/* Nuxt UI v3 自身入口（内部会引用 Tailwind 注入的 --ui-* 变量） */
+@import '@nuxt/ui';
+
+/*
+ * Phase 4 自定义设计 token（从原 NaiveUI themeOverrides 迁出）
+ *
+ * 原 Dropdown.borderRadius = '12px' → 覆盖全局 --radius 变量
+ *   Nuxt UI 与 Tailwind v4 都消费 --radius-* 系列
+ *
+ * 注：primary/secondary 等颜色语义已在 app.config.ts 的 ui.colors 配置，
+ *   此处不重复定义。
+ */
+@theme {
+  --radius: 0.75rem;  /* 12px 等价，对齐原 Dropdown 圆角 */
+}

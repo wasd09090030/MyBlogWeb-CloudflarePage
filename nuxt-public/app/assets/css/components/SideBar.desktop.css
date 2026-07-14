@@ -19,7 +19,7 @@
 }
 
 :global(.dark) .desktop-sidebar .sidebar-content,
-.dark-theme .desktop-sidebar .sidebar-content {
+.dark .desktop-sidebar .sidebar-content {
   background: var(--panel-bg-soft);
   border-color: var(--bs-border-color-translucent);
   /* box-shadow removed */
@@ -32,7 +32,7 @@
   border-top: 1px solid var(--bs-border-color);
 }
 
-.dark-theme .sidebar-section + .sidebar-section {
+.dark .sidebar-section + .sidebar-section {
   border-top-color: var(--bs-border-color-translucent);
 }
 
@@ -69,7 +69,7 @@
 }
 
 :global(.dark) .category-card,
-.dark-theme .category-card {
+.dark .category-card {
   background: var(--panel-bg-soft);
   border-color: var(--bs-border-color-translucent);
   /* box-shadow removed */
@@ -89,7 +89,7 @@
 }
 
 :global(.dark) .category-icon,
-.dark-theme .category-icon {
+.dark .category-icon {
   background: var(--article-category-hover-border);
   border-color: var(--bs-border-color-translucent);
 }
@@ -114,12 +114,12 @@
 }
 
 :global(.dark) .category-label,
-.dark-theme .category-label {
+.dark .category-label {
   color: var(--text-muted);
 }
 
 :global(.dark) .category-count,
-.dark-theme .category-count {
+.dark .category-count {
   color: var(--text-primary);
 }
 
@@ -148,18 +148,18 @@
 }
 
 :global(.dark) .archive-item,
-.dark-theme .archive-item {
+.dark .archive-item {
   background-color: var(--panel-bg-soft);
   border: 2px solid var(--bs-border-color-translucent);
 }
 
 :global(.dark) .archive-month,
-.dark-theme .archive-month {
+.dark .archive-month {
   color: var(--text-primary);
 }
 
 :global(.dark) .archive-count,
-.dark-theme .archive-count {
+.dark .archive-count {
   color: var(--accent-primary);
 }
 
@@ -189,12 +189,12 @@
 }
 
 :global(.dark) .archive-month,
-.dark-theme .archive-month {
+.dark .archive-month {
   color: var(--text-muted);
 }
 
 :global(.dark) .archive-count,
-.dark-theme .archive-count {
+.dark .archive-count {
   color: var(--text-primary);
 }
 
@@ -224,7 +224,7 @@
 }
 
 :global(.dark) .personal-info-sidebar,
-.dark-theme .personal-info-sidebar {
+.dark .personal-info-sidebar {
   background-color: var(--bs-dark);
   border-color: var(--bs-border-color-translucent);
   box-shadow: -5px 0 20px var(--shadow-lg);
@@ -509,7 +509,7 @@
 
 /* 暗色主题适配 */
 :global(.dark) .quote-wrapper,
-.dark-theme .quote-wrapper {
+.dark .quote-wrapper {
   background: var(--panel-bg-soft);
   border: 1px solid var(--panel-border-soft);
   box-shadow:
@@ -518,70 +518,70 @@
 }
 
 :global(.dark) .quote-wrapper:hover,
-.dark-theme .quote-wrapper:hover {
+.dark .quote-wrapper:hover {
   box-shadow:
     var(--shadow-xl),
     var(--shadow-md);
 }
 
 :global(.dark) .quote-wrapper::before,
-.dark-theme .quote-wrapper::before {
+.dark .quote-wrapper::before {
   background: var(--gradient-primary);
 }
 
 :global(.dark) .quote-header,
-.dark-theme .quote-header {
+.dark .quote-header {
   border-bottom: 1px solid var(--panel-border-soft);
 }
 
 :global(.dark) .quote-title,
-.dark-theme .quote-title {
+.dark .quote-title {
   color: var(--text-primary);
 }
 
 :global(.dark) .quote-title i,
-.dark-theme .quote-title i {
+.dark .quote-title i {
   color: var(--accent-warning);
 }
 
 :global(.dark) .quote-refresh-btn,
-.dark-theme .quote-refresh-btn {
+.dark .quote-refresh-btn {
   color: var(--text-muted);
 }
 
 :global(.dark) .quote-refresh-btn:hover,
-.dark-theme .quote-refresh-btn:hover {
+.dark .quote-refresh-btn:hover {
   background: var(--article-category-hover-bg);
   color: var(--accent-primary);
 }
 
 :global(.dark) .quote-mark,
-.dark-theme .quote-mark {
+.dark .quote-mark {
   color: var(--accent-primary);
 }
 
 :global(.dark) .quote-text,
-.dark-theme .quote-text {
+.dark .quote-text {
   color: var(--text-primary);
 }
 
 :global(.dark) .quote-author,
-.dark-theme .quote-author {
+.dark .quote-author {
   color: var(--text-muted);
 }
 
 :global(.dark) .quote-author::before,
-.dark-theme .quote-author::before {
+.dark .quote-author::before {
   color: var(--text-tertiary);
 }
 
 :global(.dark) .quote-decoration,
-.dark-theme .quote-decoration {
+.dark .quote-decoration {
   background: var(--gradient-primary);
 }
 
 :global(.dark) .dot,
-.dark-theme .dot {
+.dark .dot {
   background: var(--text-tertiary);
 }
 
@@ -666,7 +666,7 @@
   transform: translateX(5px);
 }
 
-.dark-theme .skill-item:hover {
+.dark .skill-item:hover {
   background-color: var(--bs-gray-800);
 }
 
@@ -803,15 +803,15 @@
 }
 
 /* 深色主题适配 */
-.dark-theme .contact-icon {
+.dark .contact-icon {
   box-shadow: var(--shadow-lg);
 }
 
-.dark-theme .email-icon:hover {
+.dark .email-icon:hover {
   box-shadow: var(--shadow-xl);
 }
 
-.dark-theme .github-icon:hover {
+.dark .github-icon:hover {
   box-shadow: var(--shadow-xl);
 }
 
@@ -914,11 +914,11 @@
   background: var(--bs-primary);
 }
 
-.dark-theme .personal-info-sidebar::-webkit-scrollbar-track {
+.dark .personal-info-sidebar::-webkit-scrollbar-track {
   background: var(--bs-gray-800);
 }
 
-.dark-theme .personal-info-sidebar::-webkit-scrollbar-thumb {
+.dark .personal-info-sidebar::-webkit-scrollbar-thumb {
   background: var(--bs-gray-600);
 }
 

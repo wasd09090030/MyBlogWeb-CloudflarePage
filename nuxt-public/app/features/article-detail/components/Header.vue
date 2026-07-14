@@ -6,9 +6,9 @@
     
     <!-- 元信息 -->
     <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mb-6">
-      <n-tag :type="getCategoryTagType(article.category)" round size="small">
+      <UBadge :color="getCategoryTagType(article.category)" variant="subtle" size="md">
         {{ getCategoryName(article.category) }}
-      </n-tag>
+      </UBadge>
       <span class="flex items-center gap-1">
         <Icon name="heroicons:calendar" size="sm" />
         {{ formatDate(article.createdAt) }}
@@ -31,12 +31,9 @@
     </div>
 
     <!-- 返回按钮 -->
-    <n-button @click="() => $emit('go-back')" quaternary strong secondary type="success">
-      <template #icon>
-        <Icon name="heroicons:arrow-left" size="sm" />
-      </template>
+    <UButton color="success" variant="ghost" leading-icon="heroicons:arrow-left" @click="() => $emit('go-back')">
       返回
-    </n-button>
+    </UButton>
   </header>
 </template>
 

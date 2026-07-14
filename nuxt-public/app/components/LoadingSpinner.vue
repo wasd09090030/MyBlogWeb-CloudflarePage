@@ -2,7 +2,7 @@
   <StateLoading :message="text">
     <div class="loading-spinner" :class="sizeClass">
       <div class="spinner-container">
-        <n-spin :size="spinSize" />
+        <UProgress :indeterminate="true" animation="carousel" :size="progressSize" color="primary" />
         <p v-if="text" class="loading-text mt-3">{{ text }}</p>
       </div>
     </div>
@@ -30,10 +30,11 @@ const props = defineProps({
 })
 
 const sizeClass = computed(() => `loading-spinner-${props.size}`)
-const spinSize = computed(() => {
-  if (props.size === 'small') return 'small'
-  if (props.size === 'large') return 'large'
-  return 'medium'
+// Nuxt UI Progress size 映射：small→xs, medium→md, large→xl
+const progressSize = computed(() => {
+  if (props.size === 'small') return 'xs'
+  if (props.size === 'large') return 'xl'
+  return 'md'
 })
 </script>
 

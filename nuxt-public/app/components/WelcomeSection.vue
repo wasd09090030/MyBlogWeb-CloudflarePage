@@ -314,13 +314,13 @@ const getArticlePath = (article) => {
 }
 
 /* 深色模式适配 */
-:global(.dark-theme) .explore-btn {
+:global(.dark) .explore-btn {
   background: rgba(30, 30, 30, 0.8);
   border-color: rgba(255, 255, 255, 0.1);
   color: #e0e0e0;
 }
 
-:global(.dark-theme) .explore-btn:hover {
+:global(.dark) .explore-btn:hover {
   background: rgba(40, 40, 40, 0.95);
   color: #818cf8;
 }

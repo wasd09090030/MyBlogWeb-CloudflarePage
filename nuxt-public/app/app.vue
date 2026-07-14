@@ -1,11 +1,13 @@
 <template>
   <NuxtLoadingIndicator color="var(--accent-success)" :height="3" :duration="2000" :throttle="200" />
-  <NuxtLayout>
-    <NuxtPage :keepalive="shouldKeepAlive" :page-key="getPageKey" :transition="{
-      name: 'page',
-      mode: 'out-in'
-    }" />
-  </NuxtLayout>
+  <UApp>
+    <NuxtLayout>
+      <NuxtPage :keepalive="shouldKeepAlive" :page-key="getPageKey" :transition="{
+        name: 'page',
+        mode: 'out-in'
+      }" />
+    </NuxtLayout>
+  </UApp>
 </template>
 
 <script setup>

@@ -110,12 +110,12 @@ MyBlogWeb-CloudflarePage/
 
 ## 技术栈
 
-**前端**: Nuxt 4 + Vue 3 (Composition API) + Nuxt UI v3（`nuxt-public/` 静态站已迁移完成）+ NaiveUI（`nuxt/` SSR 站，迁移排队中）+ TailwindCSS + MDC
+**前端**: Nuxt 4 + Vue 3 (Composition API) + Nuxt UI v4（`nuxt-public/` 静态站已迁移完成）+ NaiveUI（`nuxt/` SSR 站，迁移排队中）+ TailwindCSS + MDC
 **后端**: ASP.NET Core 8.0 + Entity Framework Core + SQLite
 **基础设施**: Cloudflare Pages + Cloudflare Worker + Nginx + PM2
 **CI/CD**: GitHub Actions（双目标构建）
 
-> **关于 `nuxt-public/` UI 库迁移**：本项目静态站 (`nuxt-public/`) 已从 NaiveUI 完整迁移到 **Nuxt UI v3**（基于 Reka UI + Tailwind Variants）。
+> **关于 `nuxt-public/` UI 库迁移**：本项目静态站 (`nuxt-public/`) 已从 NaiveUI 完整迁移到 **Nuxt UI v4**（基于 Reka UI + Tailwind Variants）。
 > 主题系统统一到 `@nuxtjs/color-mode`（`<html>.dark` / `.light`），所有 NaiveUI 组件与 `n-config-provider` 主题层已移除。
 > 迁移详情与回滚指引见 [`openspec/changes/nuxt-ui-migration/`](./openspec/changes/nuxt-ui-migration/)。
 

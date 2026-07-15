@@ -1,76 +1,79 @@
 <template>
-  <div class="article-list-page" ref="articleListContainer">
-    <ArticleListCategoryBar :view-mode="effectiveViewMode" @update:view-mode="setViewMode" />
+  <UPage class="article-list-page" :ui="{ root: 'lg:gap-0', center: 'min-w-0' }">
+    <ContentPageBody width="wide" spacing="none" :padded="false">
+      <div ref="articleListContainer">
+        <ArticleListCategoryBar :view-mode="effectiveViewMode" @update:view-mode="setViewMode" />
 
-    <UAlert
-      v-if="error"
-      color="error"
-      variant="soft"
-      title="加载失败"
-      class="mb-4"
-      :description="`加载或操作文章失败：${error.message}`"
-    />
+        <UAlert
+          v-if="error"
+          color="error"
+          variant="soft"
+          title="加载失败"
+          class="mb-4"
+          :description="`加载或操作文章失败：${error.message}`"
+        />
 
-    <UAlert
-      v-if="route.query.search || route.query.category"
-      color="info"
-      variant="soft"
-      class="mb-4"
-      close
-      @close="clearSearch"
-    >
-      <template #title>
-        <div class="d-flex flex-wrap align-items-center gap-3">
-          <span v-if="route.query.search">搜索结果："{{ route.query.search }}"</span>
-          <span v-if="route.query.category">分类筛选：{{ getCategoryName(route.query.category) }}</span>
-        </div>
-      </template>
-    </UAlert>
+        <UAlert
+          v-if="route.query.search || route.query.category"
+          color="info"
+          variant="soft"
+          class="mb-4"
+          close
+          @close="clearSearch"
+        >
+          <template #title>
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <span v-if="route.query.search">搜索结果："{{ route.query.search }}"</span>
+              <span v-if="route.query.category">分类筛选：{{ getCategoryName(route.query.category) }}</span>
+            </div>
+          </template>
+        </UAlert>
 
-    <LazySkeletonLoader
-      v-if="loading && useSkeletonLoader"
-      :count="4"
-    />
-    <LazyLoadingSpinner
-      v-else-if="loading"
-      :text="loadingText"
-      size="medium"
-    />
+        <LazySkeletonLoader
+          v-if="loading && useSkeletonLoader"
+          :count="4"
+        />
+        <LazyLoadingSpinner
+          v-else-if="loading"
+          :text="loadingText"
+          size="medium"
+        />
 
-    <TransitionGroup
-      v-else-if="listContext.articles.length"
-      tag="div"
-      name="layout-fade"
-      :class="articlesContainerClasses"
-    >
-      <ArticleListArticleCard
-        v-for="(article, index) in listContext.articles"
-        :key="article.id"
-        :article="article"
-        :index="index"
-        :is-reverse="isListView && (listContext.indexOffset + index + 1) % 2 === 0"
-        :view-mode="effectiveViewMode"
-        :route-query="currentRouteQuery"
-      />
-    </TransitionGroup>
+        <TransitionGroup
+          v-else-if="listContext.articles.length"
+          tag="div"
+          name="layout-fade"
+          :class="articlesContainerClasses"
+        >
+          <ArticleListArticleCard
+            v-for="(article, index) in listContext.articles"
+            :key="article.id"
+            :article="article"
+            :index="index"
+            :is-reverse="isListView && (listContext.indexOffset + index + 1) % 2 === 0"
+            :view-mode="effectiveViewMode"
+            :route-query="currentRouteQuery"
+          />
+        </TransitionGroup>
 
-    <StateEmpty
-      v-else
-      icon="heroicons:document-text"
-      :description="listContext.emptyText"
-      class="my-5"
-    />
+        <StateEmpty
+          v-else
+          icon="heroicons:document-text"
+          :description="listContext.emptyText"
+          class="my-5"
+        />
 
-    <ArticleListArticlePagination
-      :current-page="paginationPage"
-      :total-pages="listContext.totalPages"
-      :total-count="listContext.totalCount"
-      :articles-per-page="articlesPerPage"
-      @update:page="updatePaginationPage"
-    />
-  </div>
+        <ArticleListArticlePagination
+          :current-page="paginationPage"
+          :total-pages="listContext.totalPages"
+          :total-count="listContext.totalCount"
+          :articles-per-page="articlesPerPage"
+          @update:page="updatePaginationPage"
+        />
+      </div>
+    </ContentPageBody>
+  </UPage>
 </template>
-
 <script setup>
 import { useArticlesFeature } from '~/features/article-list/composables/useArticlesFeature'
 import ArticleListCategoryBar from '~/features/article-list/components/CategoryBar.vue'
@@ -80,6 +83,7 @@ import { getCategoryName } from '~/features/article-list/utils/formatters'
 import { buildPageNumbers, syncPageFromQuery } from '~/features/article-list/utils/pagination'
 import { updatePageState, triggerViewSwitchAnimation } from '~/features/article-list/utils/navigation'
 import StateEmpty from '~/shared/ui/StateEmpty.vue'
+import ContentPageBody from '~/shared/ui/ContentPageBody.vue'
 
 const route = useRoute()
 const viewMode = ref('list')

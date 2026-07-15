@@ -2,6 +2,9 @@
   "name": "myblog-nuxt-public",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "dev": "nuxt dev",
     "generate": "nuxt generate",
@@ -11,9 +14,9 @@
   },
   "dependencies": {
     "@fontsource/playfair-display": "^5.2.8",
-    "@nuxt/fonts": "^0.8.0",
+    "@nuxt/fonts": "^0.14.0",
     "@nuxt/icon": "^2.2.1",
-    "@nuxt/ui": "^3.3.7",
+    "@nuxt/ui": "^4.9.0",
     "@nuxtjs/mdc": "^0.19.2",
     "@nuxtjs/seo": "^3.0.0",
     "@tailwindcss/typography": "^0.5.19",

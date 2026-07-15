@@ -26,7 +26,7 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/theme-variables.css',
     '~/assets/css/tailwind.css',
-    // Nuxt UI v3 设计 token 入口（Phase 0 新增；必须晚于 tailwind.css，
+    // Nuxt UI v4 设计 token 入口（Phase 0 新增；必须晚于 tailwind.css，
     // 因为 @nuxt/ui 内部消费 Tailwind 注入的 CSS 变量）
     '~/assets/css/main.css',
     '~/assets/css/components/prose-theme.css',
@@ -54,7 +54,7 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@nuxt/fonts',
     '@vueuse/motion/nuxt',
-    // Nuxt UI v3 — Phase 0 接入，Phase 5 卸 NaiveUI 后唯一组件库
+    // Nuxt UI v4 — Phase 0 接入，Phase 5 卸 NaiveUI 后唯一组件库
     '@nuxt/ui',
     '@nuxtjs/mdc',
     '@nuxtjs/seo',
@@ -215,17 +215,13 @@ export default defineNuxtConfig({
             if (id.includes('remark-') || id.includes('rehype-')) {
               return 'vendor-markdown-plugins'
             }
-            // UI 库（Nuxt UI + Reka UI 底层）
-            if (id.includes('node_modules/@nuxt/ui') || id.includes('node_modules/reka-ui') || id.includes('node_modules/@internationalized')) {
+            // UI 库及其核心依赖；Nuxt UI v4 依赖 VueUse，必须保持在同一 chunk 以避免循环依赖。
+            if (id.includes('node_modules/@nuxt/ui') || id.includes('node_modules/reka-ui') || id.includes('node_modules/@internationalized') || id.includes('node_modules/@vueuse')) {
               return 'vendor-ui'
             }
             // 轮播图库
             if (id.includes('node_modules/keen-slider')) {
               return 'vendor-slider'
-            }
-            // VueUse 工具库
-            if (id.includes('node_modules/@vueuse')) {
-              return 'vendor-vueuse'
             }
           }
         }

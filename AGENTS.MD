@@ -1,9 +1,9 @@
 ## 开发环境
 
-Windows WSL2，Node.js 18+，.NET 8 SDK，VS Code
+Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 ## 1. 项目概览
 本仓库是全栈博客系统，采用混合架构：
-- 静态博客前端：`nuxt-public/`（Nuxt 4，SSG 静态生成，部署到 Cloudflare Pages；组件库：**Nuxt UI v3 ✅ 已从 NaiveUI 迁移完成**——见 `openspec/changes/nuxt-ui-migration/`）
+- 静态博客前端：`nuxt-public/`（Nuxt 4，SSG 静态生成，部署到 Cloudflare Pages；组件库：**Nuxt UI v4 ✅ 已从 NaiveUI 迁移完成**——见 `openspec/changes/nuxt-ui-migration/`）
 - 动态 SSR 前端：`nuxt/`（Nuxt 4，SSR 服务端渲染，部署到云服务器；组件库：**NaiveUI**，迁移排队中）
 - 后端：`backend-dotnet/BlogApi/`（.NET 8 Web API）
 - 路由分发：`cloudflare-worker/`（Cloudflare Worker，统一域名路由）

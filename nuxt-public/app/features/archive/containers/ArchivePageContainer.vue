@@ -1,65 +1,70 @@
 <template>
-  <div class="archive-page limit-max-width">
-    <div class="archive-body">
-      <!-- 左侧 65%：主内容区/时间线 -->
-      <div class="archive-main">
-        <StateLoading v-if="loading" message="探索记忆坐标中..." class="py-12" />
+  <UPage
+    class="archive-page"
+    :ui="{
+      root: 'lg:gap-14',
+      center: 'min-w-0',
+      right: 'order-last'
+    }"
+  >
+    <ContentPageBody width="full" spacing="none" :padded="false" class="archive-main">
+      <StateLoading v-if="loading" message="探索记忆坐标中..." class="py-12" />
 
-        <UAlert
-          v-else-if="error"
-          color="error"
-          variant="soft"
-          title="数据读取失败"
-          class="mb-8"
-          :description="error.message"
+      <UAlert
+        v-else-if="error"
+        color="error"
+        variant="soft"
+        title="数据读取失败"
+        class="mb-8"
+        :description="error.message"
+      />
+
+      <template v-else>
+        <!-- MD3 风格的筛选气泡 -->
+        <div v-if="selectedTag" class="md3-filter-chip">
+          <span class="filter-text">包含 <strong>#{{ selectedTag }}</strong> 的快照 ({{ filteredArticles.length }})</span>
+          <button class="md3-icon-btn" @click="selectedTag = null" aria-label="清除筛选">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z"/></svg>
+          </button>
+        </div>
+
+        <StateEmpty
+          v-if="timelineGroups.length === 0"
+          icon="heroicons:inbox"
+          description="此处空空如也，尚未有记录"
+          class="my-16"
         />
 
-        <template v-else>
-          <!-- MD3 风格的筛选气泡 -->
-          <div v-if="selectedTag" class="md3-filter-chip">
-            <span class="filter-text">包含 <strong>#{{ selectedTag }}</strong> 的快照 ({{ filteredArticles.length }})</span>
-            <button class="md3-icon-btn" @click="selectedTag = null" aria-label="清除筛选">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z"/></svg>
-            </button>
-          </div>
-
-          <StateEmpty
-            v-if="timelineGroups.length === 0"
-            icon="heroicons:inbox"
-            description="此处空空如也，尚未有记录"
-            class="my-16"
-          />
-
-          <!-- MD3 极简风格时间线 -->
-          <div v-else class="md3-timeline">
-            <div v-for="group in timelineGroups" :key="group.month" class="timeline-group">
-              <h2 class="timeline-month">{{ group.month }}</h2>
-              <div class="timeline-list">
-                <NuxtLink
-                  v-for="article in group.articles"
-                  :key="article.id"
-                  :to="getArticlePath(article)"
-                  class="timeline-item"
-                >
-                  <!-- 轨道圆点 -->
-                  <div class="timeline-track">
-                    <div class="timeline-dot-wrapper">
-                      <div class="timeline-dot"></div>
-                    </div>
+        <!-- MD3 极简风格时间线 -->
+        <div v-else class="md3-timeline">
+          <div v-for="group in timelineGroups" :key="group.month" class="timeline-group">
+            <h2 class="timeline-month">{{ group.month }}</h2>
+            <div class="timeline-list">
+              <NuxtLink
+                v-for="article in group.articles"
+                :key="article.id"
+                :to="getArticlePath(article)"
+                class="timeline-item"
+              >
+                <!-- 轨道圆点 -->
+                <div class="timeline-track">
+                  <div class="timeline-dot-wrapper">
+                    <div class="timeline-dot"></div>
                   </div>
-                  <!-- 日期（左）+ 标题（右）行内布局 -->
-                  <div class="timeline-content">
-                    <time class="article-date">{{ formatDateShort(article.createdAt) }}</time>
-                    <span class="article-title">{{ article.title }}</span>
-                  </div>
-                </NuxtLink>
-              </div>
+                </div>
+                <!-- 日期（左）+ 标题（右）行内布局 -->
+                <div class="timeline-content">
+                  <time class="article-date">{{ formatDateShort(article.createdAt) }}</time>
+                  <span class="article-title">{{ article.title }}</span>
+                </div>
+              </NuxtLink>
             </div>
           </div>
-        </template>
-      </div>
+        </div>
+      </template>
+    </ContentPageBody>
 
-      <!-- 右侧 35%：Tag 面板 -->
+    <template #right>
       <aside class="archive-sidebar">
         <div class="md3-card tag-cloud-panel">
           <div class="panel-header">
@@ -75,10 +80,9 @@
           />
         </div>
       </aside>
-    </div>
-  </div>
+    </template>
+  </UPage>
 </template>
-
 <script setup lang="ts">
 import { useArticlesFeature } from '~/features/article-list/composables/useArticlesFeature'
 import { computeTagStats, groupArticlesByMonth } from '~/features/archive/utils/archive'
@@ -86,6 +90,7 @@ import { formatDateShort, getArticlePath } from '~/features/archive/utils/format
 import StateLoading from '~/shared/ui/StateLoading.vue'
 import StateEmpty from '~/shared/ui/StateEmpty.vue'
 import ArchiveTagCloud from '~/shared/ui/ArchiveTagCloud.vue'
+import ContentPageBody from '~/shared/ui/ContentPageBody.vue'
 
 const { getAllArticles } = useArticlesFeature()
 
@@ -139,9 +144,10 @@ onMounted(fetchArticles)
   --archive-card-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
   --archive-chip-dismiss-bg: rgba(0, 0, 0, 0.08);
   min-height: 100vh;
-  padding: 2rem 1.5rem 5rem;
   max-width: 1080px;
-  margin: 0 auto;
+  margin: 2rem auto 5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
   color: var(--text-primary);
 }
 
@@ -159,19 +165,11 @@ onMounted(fetchArticles)
   --archive-chip-dismiss-bg: rgba(255, 255, 255, 0.1);
 }
 
-.archive-body {
-  display: flex;
-  gap: 3.5rem;
-  align-items: flex-start;
-}
-
 .archive-main {
-  flex: 0 0 62%;
   min-width: 0;
 }
 
 .archive-sidebar {
-  flex: 0 0 calc(38% - 3.5rem);
   position: sticky;
   top: 6rem; /* 根据全局顶部导航高度预留 */
 }
@@ -416,20 +414,18 @@ onMounted(fetchArticles)
 
 /* 响应式 */
 @media (max-width: 860px) {
-  .archive-body {
-    flex-direction: column-reverse;
-    gap: 2.5rem;
-  }
   .archive-main,
   .archive-sidebar {
-    flex: 0 0 100%;
     width: 100%;
   }
   .archive-sidebar {
     position: static;
   }
   .archive-page {
-    padding: 1.25rem 1rem 3rem;
+    margin-top: 1.25rem;
+    margin-bottom: 3rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
   .timeline-month {
     font-size: 1rem;

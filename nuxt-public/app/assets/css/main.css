@@ -1,5 +1,5 @@
 /*
- * main.css — Nuxt UI v3 集成入口
+ * main.css — Nuxt UI v4 集成入口
  *
  * 与 tailwind.css 的职责划分：
  *   tailwind.css → 注入 Tailwind v4 引擎、@plugin typography、dark 变体、@layer base 兼容
@@ -9,7 +9,7 @@
  *   因为 @nuxt/ui 的源码 @import "tailwindcss" 引用了 Tailwind 注入的 CSS 变量。
  */
 
-/* Nuxt UI v3 自身入口（内部会引用 Tailwind 注入的 --ui-* 变量） */
+/* Nuxt UI v4 自身入口（内部会引用 Tailwind 注入的 --ui-* 变量） */
 @import '@nuxt/ui';
 
 /*

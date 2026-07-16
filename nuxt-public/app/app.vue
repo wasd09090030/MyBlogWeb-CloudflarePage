@@ -60,9 +60,9 @@ router.afterEach((to, from) => {
 <style>
 /*
  * 全局样式重置已移除：Tailwind v4 的 preflight（@layer base）已提供等价重置，
- * 且工具类/typography 规则均运行在原生 CSS @layer 中——任何未分层的声明（包括这里曾有的
+ * 且 Tailwind 工具类运行在原生 CSS @layer 中——任何未分层的声明（包括这里曾有的
  * `* { margin: 0; padding: 0; box-sizing: border-box; }`）都会无条件压过已分层规则，
- * 无论选择器优先级如何。之前正是这条规则清零了 .mb-8、.prose p 等一切 margin/padding。
+ * 无论选择器优先级如何。之前正是这条规则清零了 .mb-8 等一切 margin/padding。
  */
 
 html {

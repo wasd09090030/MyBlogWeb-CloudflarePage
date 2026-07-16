@@ -2,7 +2,7 @@
  * main.css — Nuxt UI v4 集成入口
  *
  * 与 tailwind.css 的职责划分：
- *   tailwind.css → 注入 Tailwind v4 引擎、@plugin typography、dark 变体、@layer base 兼容
+ *   tailwind.css → 注入 Tailwind v4 引擎、dark 变体、@layer base 兼容
  *   main.css    → 注入 Nuxt UI 设计 token + 自定义 @theme 设计 token（Phase 4 补全）
  *
  * 加载顺序（nuxt.config.ts css:[] 数组）：tailwind.css 必须在 main.css 之前，

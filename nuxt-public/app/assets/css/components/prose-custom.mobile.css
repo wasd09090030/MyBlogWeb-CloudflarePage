@@ -1,5 +1,41 @@
-/* ========== 移动端规则 ==========
- * 当前 prose-custom 没有 viewport-conditional 样式;
- * 此文件保留为配对文件,后续如需移动端 prose 覆盖(如减小标题字号、
- * 缩小代码块 padding 等),在此文件内用 @media (max-width: <576/768/992>px) 块添加。
- */
+/* 文章特殊内容兜底 - 移动端覆盖。全部规则必须位于允许的 max-width 断点内。 */
+
+@media (max-width: 768px) {
+  .markdown-renderer > .article-prose {
+    max-width: none;
+  }
+
+  .article-prose {
+    overflow-wrap: anywhere;
+  }
+
+  .article-prose--lg,
+  .article-prose--xl,
+  .article-prose--2xl {
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  .article-prose .katex-display {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .article-prose--legacy h1 {
+    font-size: 1.875rem;
+  }
+
+  .article-prose--legacy h2 {
+    font-size: 1.5rem;
+  }
+
+  .article-prose--legacy h3 {
+    font-size: 1.25rem;
+  }
+
+  .article-prose--legacy pre,
+  .article-prose--legacy th,
+  .article-prose--legacy td {
+    padding: 0.75rem;
+  }
+}

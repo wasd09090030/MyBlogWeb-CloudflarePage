@@ -61,6 +61,11 @@ export default defineNuxtConfig({
     'nuxt-vitalizer'
   ],
 
+  ui: {
+    // Nuxt UI v4 Prose：让 @nuxtjs/mdc 渲染标准 Markdown 元素时使用 Prose 组件。
+    prose: true
+  },
+
   vitalizer: {
     disablePrefetchLinks: 'dynamicImports',
     disablePreloadLinks: true,
@@ -322,7 +327,7 @@ export default defineNuxtConfig({
     // 关闭动态 speculation rules patch，避免控制台持续告警。
     crossOriginPrefetch: false,
     // Tailwind v4 使用真实 @layer 分层输出；Nuxt 默认内联的组件 CSS 副本会丢失 @layer 包裹，
-    // 未分层声明必然压过分层声明（CSS Cascade Layers 规则），导致 .prose 排版规则被内联的
+    // 未分层声明必然压过分层声明（CSS Cascade Layers 规则），导致文章排版规则被内联的
     // preflight 重置覆盖（列表 padding/margin 归零）。关闭内联以保持分层语义正确。
     inlineSSRStyles: false,
   },

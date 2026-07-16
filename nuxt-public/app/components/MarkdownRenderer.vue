@@ -44,7 +44,7 @@
     <!-- 回退：直接渲染 HTML（兼容旧数据） -->
     <article
       v-else-if="htmlContent"
-      :class="proseClasses"
+      :class="legacyProseClasses"
       v-html="htmlContent"
     />
 
@@ -125,12 +125,17 @@ const htmlContent = computed(() => {
 
 const proseClasses = computed(() => {
   return [
-    'prose',
-    `prose-${props.size}`,
-    'prose-pink',
+    'article-prose',
+    `article-prose--${props.size}`,
     'max-w-none',
-    'dark:prose-invert',
     props.customClass
+  ].filter(Boolean).join(' ')
+})
+
+const legacyProseClasses = computed(() => {
+  return [
+    proseClasses.value,
+    'article-prose--legacy'
   ].filter(Boolean).join(' ')
 })
 
@@ -290,7 +295,8 @@ async function renderMermaidDiagrams() {
         container.className = 'mermaid-diagram my-6 flex justify-center overflow-x-auto p-4 bg-white dark:bg-gray-800 rounded-xl shadow-xs border border-gray-200 dark:border-gray-700'
         container.innerHTML = svg
         
-        preElement.replaceWith(container)
+        const replacementTarget = preElement.closest('.article-code-block') || preElement
+        replacementTarget.replaceWith(container)
       } catch (err) {
         console.error('Mermaid 渲染失败:', err)
         // 标记为已处理（避免重复尝试）
@@ -305,7 +311,8 @@ async function renderMermaidDiagrams() {
             <pre class="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-sm overflow-x-auto">${code}</pre>
           </details>
         `
-        preElement.replaceWith(errorContainer)
+        const replacementTarget = preElement.closest('.article-code-block') || preElement
+        replacementTarget.replaceWith(errorContainer)
       }
     }
     return mermaidBlocks.length
@@ -483,18 +490,18 @@ onUnmounted(() => {
 
 <style>
 /* MDC 组件统一块级显示，避免行内拼接 */
-.markdown-renderer .prose .alert-mdc,
-.markdown-renderer .prose .tabs-mdc,
-.markdown-renderer .prose .collapse-mdc,
-.markdown-renderer .prose .code-playground-mdc,
-.markdown-renderer .prose .link-card-wrapper,
-.markdown-renderer .prose .image-comparison-mdc,
-.markdown-renderer .prose .web-embed-mdc,
-.markdown-renderer .prose .star-rating-mdc,
-.markdown-renderer .prose .steps-mdc,
-.markdown-renderer .prose .github-card-mdc,
-.markdown-renderer .prose .image-enhanced-mdc,
-.markdown-renderer .prose .related-articles-mdc {
+.markdown-renderer .article-prose .alert-mdc,
+.markdown-renderer .article-prose .tabs-mdc,
+.markdown-renderer .article-prose .collapse-mdc,
+.markdown-renderer .article-prose .code-playground-mdc,
+.markdown-renderer .article-prose .link-card-wrapper,
+.markdown-renderer .article-prose .image-comparison-mdc,
+.markdown-renderer .article-prose .web-embed-mdc,
+.markdown-renderer .article-prose .star-rating-mdc,
+.markdown-renderer .article-prose .steps-mdc,
+.markdown-renderer .article-prose .github-card-mdc,
+.markdown-renderer .article-prose .image-enhanced-mdc,
+.markdown-renderer .article-prose .related-articles-mdc {
   display: block;
 }
 

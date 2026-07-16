@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-@plugin '@tailwindcss/typography';
+@source '../../app.config.ts';
 
 /* 暗色模式沿用 class 策略（useTheme 在 <html> 上切换 .dark），对齐 v3 的 darkMode: 'class' */
 @custom-variant dark (&:is(.dark *));

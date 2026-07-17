@@ -20,9 +20,6 @@
           <NuxtLink to="/gallery" class="nav-link">
             <Icon name="heroicons:photo" size="sm" class="me-1" />画廊
           </NuxtLink>
-          <a href="/tools" target="_blank" rel="noopener noreferrer" class="nav-link">
-            <Icon name="heroicons:wrench-screwdriver" size="sm" class="me-1" />工具箱
-          </a>
           <div
             class="nav-more-wrapper"
             @mouseenter="showMoreMenu = true"
@@ -37,9 +34,6 @@
                 <NuxtLink to="/archive" class="nav-more-item" role="menuitem">
                   <Icon name="heroicons:book-open" size="xs" class="me-1" />归档
                 </NuxtLink>
-                <a href="/mania" target="_blank" rel="noopener noreferrer" class="nav-more-item" role="menuitem">
-                  <Icon name="heroicons:musical-note" size="xs" class="me-1" />音游
-                </a>
                 <NuxtLink to="/about" class="nav-more-item" role="menuitem">
                   <Icon name="heroicons:user-circle" size="xs" class="me-1" />关于站长
                 </NuxtLink>
@@ -81,15 +75,9 @@
             <NuxtLink to="/gallery" class="drawer-nav-item" @click="showMobileMenu = false">
               <Icon name="heroicons:photo" size="sm" />画廊
             </NuxtLink>
-            <a href="/tools" target="_blank" rel="noopener noreferrer" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="heroicons:wrench-screwdriver" size="sm" />工具箱
-            </a>
             <NuxtLink to="/archive" class="drawer-nav-item" @click="showMobileMenu = false">
               <Icon name="heroicons:book-open" size="sm" />归档
             </NuxtLink>
-            <a href="/mania" target="_blank" rel="noopener noreferrer" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="heroicons:musical-note" size="sm" />音游
-            </a>
             <NuxtLink to="/about" class="drawer-nav-item" @click="showMobileMenu = false">
               <Icon name="heroicons:user-circle" size="sm" />关于站长
             </NuxtLink>

@@ -150,12 +150,6 @@
                 </template>
                 触发 Pages 重构发布
               </n-button>
-              <n-button block quaternary class="justify-start" @click="$router.push('/admin/beatmaps')">
-                <template #icon>
-                  <Icon name="musical-note" size="md" class="text-purple-500" />
-                </template>
-                管理谱面
-              </n-button>
               <n-button block quaternary class="justify-start" @click="$router.push('/admin/imagebed')">
                 <template #icon>
                   <Icon name="images" size="md" class="text-gray-500" />

@@ -92,7 +92,6 @@ const menuItems = [
   { path: '/admin', label: '仪表板', icon: 'squares-2x2' },
   { path: '/admin/articles', label: '文章管理', icon: 'file-earmark-text' },
   { path: '/admin/comments', label: '评论管理', icon: 'chat-dots' },
-  { path: '/admin/beatmaps', label: '谱面管理', icon: 'musical-note' },
   { path: '/admin/gallery', label: '画廊管理', icon: 'images' },
   { path: '/admin/imagebed', label: '图床管理', icon: 'images' },
   { path: '/admin/password', label: '修改密码', icon: 'key' }

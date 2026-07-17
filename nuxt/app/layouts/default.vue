@@ -19,9 +19,6 @@
               <a href="/gallery" class="nav-link">
                 <Icon name="images" size="sm" class="me-1" />画廊
               </a>
-              <NuxtLink to="/tools" class="nav-link">
-                <Icon name="wrench-screwdriver" size="sm" class="me-1" />工具箱
-              </NuxtLink>
               <div
                 class="nav-more-wrapper"
                 @mouseenter="showMoreMenu = true"
@@ -36,9 +33,6 @@
                     <a href="/tutorials" class="nav-more-item" role="menuitem">
                       <Icon name="book" size="xs" class="me-1" />教程
                     </a>
-                    <NuxtLink to="/mania" class="nav-more-item" role="menuitem">
-                      <Icon name="musical-note" size="xs" class="me-1" />音游
-                    </NuxtLink>
                     <a href="/about" class="nav-more-item" role="menuitem">
                       <Icon name="person-circle" size="xs" class="me-1" />关于站长
                     </a>
@@ -254,11 +248,6 @@ const mobileMenuOptions = computed(() => [
     icon: () => h(resolveComponent('Icon'), { name: 'images', size: 'sm' })
   },
   {
-    label: '工具箱',
-    key: 'tools',
-    icon: () => h(resolveComponent('Icon'), { name: 'puzzle-piece', size: 'sm' })
-  },
-  {
     label: '其他',
     key: 'other',
     icon: () => h(resolveComponent('Icon'), { name: 'grid-3x3-gap', size: 'sm' }),
@@ -267,11 +256,6 @@ const mobileMenuOptions = computed(() => [
         label: '教程',
         key: 'tutorials',
         icon: () => h(resolveComponent('Icon'), { name: 'book', size: 'sm' })
-      },
-      {
-        label: '音游',
-        key: 'mania',
-        icon: () => h(resolveComponent('Icon'), { name: 'musical-note', size: 'sm' })
       },
       {
         label: '关于站长',
@@ -296,12 +280,6 @@ const handleMobileMenuSelect = (key) => {
   const pagesRoutes = { home: '/', gallery: '/gallery', tutorials: '/tutorials', about: '/about' }
   if (pagesRoutes[key]) {
     window.location.href = pagesRoutes[key]
-    return
-  }
-  // 本项目内路由 → SPA 导航
-  const localRoutes = { tools: '/tools', mania: '/mania' }
-  if (localRoutes[key]) {
-    router.push(localRoutes[key])
   }
 }
 
@@ -330,9 +308,7 @@ const isGalleryRoute = computed(() => route.path === '/gallery')
 const isArticleDetailRoute = computed(() => route.path.startsWith('/article/'))
 const isAboutRoute = computed(() => route.path === '/about')
 const isTutorialsRoute = computed(() => route.path === '/tutorials')
-const isToolsRoute = computed(() => route.path.startsWith('/tools'))
-const isManiaRoute = computed(() => route.path.startsWith('/mania'))
-const showSidebar = computed(() => !isGalleryRoute.value && !isArticleDetailRoute.value && !isAboutRoute.value && !isToolsRoute.value && !isTutorialsRoute.value && !isManiaRoute.value)
+const showSidebar = computed(() => !isGalleryRoute.value && !isArticleDetailRoute.value && !isAboutRoute.value && !isTutorialsRoute.value)
 
 onMounted(() => {
   isHydrated.value = true

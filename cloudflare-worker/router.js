@@ -3,7 +3,7 @@
  *
  * 同一域名下，根据路径将请求分发到：
  * - Cloudflare Pages（静态博客）
- * - 云服务器（动态 SSR：admin/tools/mania）
+ * - 云服务器（动态 SSR：admin）
  */
 
 // ===== 配置 =====
@@ -11,7 +11,7 @@ const PAGES_ORIGIN = 'https://myblogweb-cloudflarepage.pages.dev'  // Cloudflare
 const SERVER_ORIGIN = 'https://server.wasd09090030.top'
 
 // 需要转发到云服务器的路径前缀
-const SERVER_ROUTES = ['/admin', '/tools', '/mania', '/api', '/images', '/_ssr']
+const SERVER_ROUTES = ['/admin', '/api', '/images', '/_ssr']
 
 // ===== Worker =====
 export default {

@@ -15,13 +15,11 @@
            │   ├── /tutorials        教程列表
            │   └── /about            关于页面
            │
-           └── 动态路由 → 云服务器 Nginx → Nuxt SSR（nuxt/）
-               ├── /admin/*          管理后台
-               ├── /tools/*          工具箱
-               ├── /mania/*          音游功能
-               ├── /api/*            → .NET 后端 (port 5000)
-               ├── /images/*         图片资源
-               └── /_ssr/*           SSR 静态资源
+          └── 动态路由 → 云服务器 Nginx → Nuxt SSR（nuxt/）
+              ├── /admin/*          管理后台
+              ├── /api/*            → .NET 后端 (port 5000)
+              ├── /images/*         图片资源
+              └── /_ssr/*           SSR 静态资源
 ```
 
 ## 域名架构
@@ -63,7 +61,7 @@ MyBlogWeb-CloudflarePage/
 │   │   │   └── ...                # 其他公共模块
 │   │   ├── shared/                # 共享层
 │   │   ├── layouts/               # 布局（default/admin/blank）
-│   │   ├── pages/                 # 路由（admin/tools/mania + 公共页面）
+│   │   ├── pages/                 # 路由入口（admin + 公共页面）
 │   │   ├── stores/                # Pinia 状态管理
 │   │   └── middleware/            # 路由中间件（认证等）
 │   ├── nuxt.config.ts             # SSR 配置（buildAssetsDir: '/_ssr/'）
@@ -95,7 +93,7 @@ MyBlogWeb-CloudflarePage/
 |---|---|---|
 | **部署位置** | Cloudflare Pages（CDN） | 云服务器（PM2 + Nginx） |
 | **渲染方式** | 构建时静态生成（SSG） | 服务端渲染（SSR） |
-| **负责页面** | 首页、文章、画廊、教程、关于 | 管理后台、工具箱、音游 |
+| **负责页面** | 首页、文章、画廊、教程、关于 | 管理后台 |
 | **数据获取** | 构建时从 API 拉取，写入静态 HTML | 运行时实时请求 API |
 | **资源路径** | `/_nuxt/`（默认） | `/_ssr/`（避免冲突） |
 | **SEO** | sitemap.xml、robots.txt | sitemap 已禁用，robots 禁止索引 |
@@ -104,7 +102,6 @@ MyBlogWeb-CloudflarePage/
 
 ### 跨项目导航
 
-- nuxt-public 中访问 `/tools`、`/mania` 使用 `<a>` 标签（全页面跳转到 SSR）
 - nuxt 中访问 `/`、`/gallery`、`/tutorials`、`/about` 使用 `<a>` 标签（全页面跳转到 Pages）
 - 同项目内部导航使用 `NuxtLink`（SPA 路由）
 

@@ -13,7 +13,7 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 | | nuxt-public/（静态站） | nuxt/（SSR 动态站） |
 |---|---|---|
 | 部署位置 | Cloudflare Pages（CDN） | 云服务器（PM2 + Nginx） |
-| 负责页面 | `/` 首页、`/article/*` 文章、`/gallery` 画廊、`/tutorials` 教程、`/about` 关于 | `/admin/*` 管理后台、`/tools/*` 工具箱、`/mania/*` 音游 |
+| 负责页面 | `/` 首页、`/article/*` 文章、`/gallery` 画廊、`/tutorials` 教程、`/about` 关于 | `/admin/*` 管理后台 |
 | 渲染方式 | 构建时静态生成（SSG） | 运行时服务端渲染（SSR） |
 | 资源路径 | `/_nuxt/`（默认） | `/_ssr/`（避免冲突） |
 | SEO | sitemap.xml + robots.txt | sitemap 禁用，robots Disallow: / |
@@ -43,7 +43,7 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 	- `home/`、`tutorials/`
 - `shared/`：跨功能共享层（`api/` `cache/` `errors/` `types/` `ui/`）
 - `layouts/`：布局层（`default.vue` / `admin.vue` / `blank.vue`）
-- `pages/`：路由入口层（admin/tools/mania + 公共页面）
+- `pages/`：路由入口层（admin + 公共页面）
 - `components/`：通用组件（逐步收敛）
 - `stores/`：Pinia 状态管理
 - `middleware/`：路由中间件（认证等）
@@ -55,7 +55,7 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 
 ### 2.4 路由分发（`cloudflare-worker/`）
 - `router.js`：根据路径前缀分发请求到 Pages 或云服务器
-- `SERVER_ROUTES`: `/admin`, `/tools`, `/mania`, `/api`, `/images`, `/_ssr`
+- `SERVER_ROUTES`: `/admin`, `/api`, `/images`, `/_ssr`
 
 ## 3. 开发命令
 

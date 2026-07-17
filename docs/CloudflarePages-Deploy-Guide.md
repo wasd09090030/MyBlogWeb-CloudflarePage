@@ -153,59 +153,12 @@ jobs:
 | 教程页 | ✅ 已迁移 | — | — |
 | 评论系统 | ✅ 已迁移 | 客户端运行时调用后端 API | — |
 | 搜索功能 | ✅ 已迁移 | Web Worker 客户端搜索 | — |
-| **工具箱** | ❌ 未迁移 | 纯前端，可直接复制 | 高 |
-| **Mania 音游** | ❌ 未迁移 | 纯前端，可直接复制 | 中 |
 | **后台管理** | ❌ 不迁移 | 保留在原 nuxt/ 部署 | — |
 | **图床管理** | ❌ 不迁移 | 保留在原 nuxt/ 部署 | — |
 
-### 3.2 迁移工具箱页面
+> 2026-07-17 更新：原计划迁移的工具箱与 Mania 音游功能经评估后整体下线（参见 `openspec/changes/remove-mania-and-tools-pages/`），不再迁入静态站。
 
-工具箱页面（base64 转换、图片处理、密码生成等）是纯前端功能，不依赖后端 API，可以直接迁入：
-
-```bash
-# 1. 复制页面
-cp -r nuxt/app/pages/tools nuxt-public/app/pages/
-
-# 2. 复制依赖的组件（如果有）
-# ImageProcessor.vue 和 MarkdownConverter.vue 需要检查依赖
-
-# 3. 添加导航链接
-# 在 nuxt-public/app/layouts/default.vue 的导航中添加工具箱链接
-```
-
-注意事项：
-- 工具箱页面应配置为 **客户端渲染**（不需要 SSG），在 `nuxt.config.ts` 中添加：
-  ```ts
-  routeRules: {
-    '/tools/**': { ssr: false }  // 工具页纯客户端渲染
-  }
-  ```
-- 检查是否依赖 naive-ui 组件，如有需替换
-- **`nuxt-public/` 默认组件库已迁移到 Nuxt UI v3**（截至 2026-07-13，见 `openspec/changes/nuxt-ui-migration/`）。迁移工具箱/音游页面到静态站时，**新增组件请直接使用 Nuxt UI（`<UButton>`/`<UCard>`/`<UInput>` 等），不要引入新的 NaiveUI 实例**。若确实需要 NaiveUI 组件，建议留在 `nuxt/`（SSR）或评估替代方案。
-
-### 3.3 迁移 Mania 音游
-
-```bash
-# 1. 复制页面和组件
-cp -r nuxt/app/pages/mania nuxt-public/app/pages/
-cp -r nuxt/app/components/mania nuxt-public/app/components/
-
-# 2. 复制游戏资源
-cp -r nuxt/public/assets/textures nuxt-public/public/assets/
-cp -r nuxt/public/pointer nuxt-public/public/
-
-# 3. 添加 pixi.js 依赖
-cd nuxt-public && npm install pixi.js
-```
-
-同样配置为客户端渲染：
-```ts
-routeRules: {
-  '/mania/**': { ssr: false }
-}
-```
-
-### 3.4 后台管理保持独立
+### 3.2 后台管理保持独立
 
 后台管理（`/admin/*`）不应迁入 Cloudflare Pages，原因：
 - 需要认证状态（Pinia auth store）
@@ -234,7 +187,7 @@ routeRules: {
     │
     ├── blog.wasd09090030.top (Cloudflare Pages)
     │   ├── 首页、文章、画廊、教程、关于 (静态 HTML)
-    │   ├── 工具箱、音游 (客户端渲染，可选迁入)
+    │   ├── 后台管理 (保留在原 nuxt/ 部署)
     │   └── 客户端 JS → 调用后端 API (评论、搜索等)
     │
     └── wasd09090030.top (云服务器)

@@ -12,8 +12,6 @@ wasd09090030.top (Cloudflare Worker 路由分发)
 ├── /about               → Cloudflare Pages
 │
 ├── /admin/*             → 云服务器 (nuxt 动态 SSR)
-├── /tools/*             → 云服务器
-├── /mania/*             → 云服务器
 │
 └── backend.wasd09090030.top → 云服务器 (.NET 后端 API)
 ```
@@ -71,12 +69,10 @@ wasd09090030.top (Cloudflare Worker 路由分发)
 两个项目的 `layouts/default.vue` 使用相同的导航菜单：
 
 ```
-首页 (/)  |  画廊 (/gallery)  |  教程 (/tutorials)  |  工具箱 (/tools)  |  关于 (/about)
+首页 (/)  |  画廊 (/gallery)  |  教程 (/tutorials)  |  关于 (/about)
 ```
 
-由于都在同一域名下，NuxtLink 和 `<a>` 标签都能正常跳转：
-- 从 `/tools`（云服务器）点击"首页" → 浏览器请求 `/` → Worker 分发到 Pages
-- 从 `/`（Pages）点击"工具箱" → 浏览器请求 `/tools` → Worker 分发到云服务器
+由于都在同一域名下，NuxtLink 和 `<a>` 标签都能正常跳转。
 
 > 跨项目跳转会触发完整页面加载（非 SPA 导航），这是正常的。
 > 同项目内的跳转仍然是 SPA 导航，体验流畅。
@@ -86,7 +82,7 @@ wasd09090030.top (Cloudflare Worker 路由分发)
 | 场景 | 操作 | 影响范围 |
 |------|------|----------|
 | 发布新文章 | 触发 Pages 重建 | 仅静态站更新，云服务器不受影响 |
-| 修改工具箱代码 | 推送 nuxt/ 并重启服务器 | 仅动态站更新，Pages 不受影响 |
+| 修改 admin 后台代码 | 推送 nuxt/ 并重启服务器 | 仅动态站更新，Pages 不受影响 |
 | 修改 Worker 路由规则 | `wrangler deploy` | 仅路由层更新，两个站点不受影响 |
 | 后端 API 更新 | 重启 .NET 服务 | 两个前端都不需要重新部署 |
 
@@ -120,7 +116,7 @@ server {
     server_name wasd09090030.top;
 
     # 动态路由 → 本地 Nuxt SSR
-    location ~ ^/(admin|tools|mania) {
+    location ~ ^/(admin) {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

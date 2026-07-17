@@ -2,14 +2,14 @@
 # 混合架构 Nginx 配置 — Nuxt SSR 动态站
 #
 # 职责：处理 Cloudflare Worker 转发过来的动态路由请求
-#       /admin/*, /tools/*, /mania/* → Nuxt SSR (port 3000)
+#       /admin/* → Nuxt SSR (port 3000)
 #       /api/* → .NET 后端 (port 5000)
 #
 # 静态博客页面（首页、文章、画廊、教程、关于）由 Cloudflare Pages 提供
 #
 # 架构：
 #   用户 → Cloudflare Worker (wasd09090030.top)
-#         ├── /admin, /tools, /mania, /api → 本服务器
+#         ├── /admin, /api → 本服务器
 #         └── 其余路由 → Cloudflare Pages (静态)
 # ============================================================
 
@@ -154,7 +154,7 @@ server
     }
 
     # 所有请求代理到 Nuxt SSR 服务器
-    # Worker 只会转发 /admin/*, /tools/*, /mania/* 到这里
+    # Worker 只会转发 /admin/* 到这里
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host:$server_port;

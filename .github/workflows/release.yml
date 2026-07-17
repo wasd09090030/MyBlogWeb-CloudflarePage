@@ -24,7 +24,7 @@ permissions:
 jobs:
   # ============================================================
   # Nuxt SSR 动态站构建（部署到云服务器）
-  # 处理 /admin, /tools, /mania 等动态路由
+  # 处理 /admin 等动态路由
   # ============================================================
   build-nuxt-ssr:
     if: >-
@@ -80,7 +80,7 @@ jobs:
             ## 🚀 Release ${{ github.ref_name }}
 
             ### 📦 Nuxt SSR（动态站 — 云服务器）
-            处理路由：`/admin/*`, `/tools/*`, `/mania/*`
+            处理路由：`/admin/*`
 
             - **Commit**: `${{ github.sha }}`
             - **构建时间**: ${{ job.status }}
@@ -92,7 +92,7 @@ jobs:
 
             ### 🌐 架构说明
             - 静态页面（首页/文章/画廊/教程/关于）由 Cloudflare Pages 提供
-            - 动态页面（后台/工具箱/音游）由此 SSR 服务提供
+            - 动态页面（后台）由此 SSR 服务提供
             - Cloudflare Worker 统一路由分发
           files: |
             nuxt-build.tar.gz

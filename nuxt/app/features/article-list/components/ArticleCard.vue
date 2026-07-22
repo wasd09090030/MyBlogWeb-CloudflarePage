@@ -12,8 +12,8 @@
     <!-- 封面图片区域 -->
     <div class="article-image-section">
       <img
-        v-if="article.coverImage && article.coverImage !== 'null'"
-        :src="article.coverImage"
+        v-if="coverImageUrl"
+        :src="coverImageUrl"
         :alt="article.title"
         class="article-image lazy-image"
         style="height: 300px; aspect-ratio: 16/9; object-fit: cover; width: 100%;"
@@ -93,6 +93,11 @@ const props = defineProps({
 const isListView = computed(() => props.viewMode === 'list')
 const isGridView = computed(() => props.viewMode === 'grid')
 const isPriority = computed(() => props.index < 3)
+const coverImageUrl = computed(() => {
+  const thumbnailUrl = props.article?.thumbnailUrl
+  const coverImage = props.article?.coverImage
+  return thumbnailUrl || (coverImage && coverImage !== 'null' ? coverImage : '')
+})
 
 const articleExcerpt = computed(() => getExcerpt(props.article.contentMarkdown || props.article.content))
 

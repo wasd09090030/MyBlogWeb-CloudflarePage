@@ -21,7 +21,7 @@
             />
             <img
               :ref="(el) => setCardImageElement(article, el)"
-              :src="article.coverImage"
+              :src="getArticleImageUrl(article)"
               :alt="article.title"
               class="card-image"
               loading="lazy"
@@ -136,9 +136,14 @@ const articles = computed(() => {
 })
 
 const getImageKey = (article) => String(article?.id ?? article?.slug ?? article?.title ?? '')
-const hasCoverImage = (article) => {
+const getArticleImageUrl = (article) => {
+  const thumbnailUrl = article?.thumbnailUrl
   const coverImage = article?.coverImage
-  if (!coverImage || coverImage === 'null') return false
+  return thumbnailUrl || (coverImage && coverImage !== 'null' ? coverImage : '')
+}
+const hasCoverImage = (article) => {
+  const imageUrl = getArticleImageUrl(article)
+  if (!imageUrl) return false
   return !imageErrorMap.value[getImageKey(article)]
 }
 const isCardImageLoaded = (article) => Boolean(imageLoadedMap.value[getImageKey(article)])

@@ -35,8 +35,8 @@
           >
             <div class="card-image-wrapper">
               <img
-                v-if="article.coverImage && article.coverImage !== 'null'"
-                :src="article.coverImage"
+                v-if="getArticleImageUrl(article)"
+                :src="getArticleImageUrl(article)"
                 :alt="article.title"
                 class="card-img"
                 loading="lazy"
@@ -108,6 +108,12 @@ import StateLoading from '~/shared/ui/StateLoading.vue'
 const articleListContainer = ref(null)
 const articles = ref([])
 const error = ref(null)
+
+const getArticleImageUrl = (article) => {
+  const thumbnailUrl = article?.thumbnailUrl
+  const coverImage = article?.coverImage
+  return thumbnailUrl || (coverImage && coverImage !== 'null' ? coverImage : '')
+}
 const loading = ref(true)
 const { getAllArticles } = useArticlesFeature()
 

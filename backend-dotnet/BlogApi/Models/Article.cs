@@ -21,6 +21,8 @@ namespace BlogApi.Models
         public string Content { get; set; } = string.Empty;
         public string? ContentMarkdown { get; set; }
         public string? CoverImage { get; set; }
+        public int? CoverImageAssetId { get; set; }
+        public ImageAsset? CoverImageAsset { get; set; }
         public ArticleCategory Category { get; set; } = ArticleCategory.Other;
         
         /// <summary>

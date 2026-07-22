@@ -7,7 +7,7 @@
     <ImageLoadingPlaceholder :show="!imageLoaded" />
     <img
       ref="coverImageEl"
-      :src="article.coverImage"
+      :src="coverImageUrl"
       :alt="article.title"
       class="w-full h-full object-cover"
       loading="eager"
@@ -39,9 +39,13 @@ const coverImageEl = ref(null)
 const coverContainerStyle = computed(() => ({
   aspectRatio: containerAspectRatio.value
 }))
-const hasCoverImage = computed(() => {
+const coverImageUrl = computed(() => {
+  const thumbnailUrl = props.article?.thumbnailUrl
   const coverImage = props.article?.coverImage
-  return Boolean(coverImage && coverImage !== 'null' && !imageErrored.value)
+  return thumbnailUrl || (coverImage && coverImage !== 'null' ? coverImage : '')
+})
+const hasCoverImage = computed(() => {
+  return Boolean(coverImageUrl.value && !imageErrored.value)
 })
 
 function handleImageLoad(event) {
@@ -83,7 +87,7 @@ onMounted(() => {
 })
 
 watch(
-  () => props.article?.coverImage,
+  () => coverImageUrl.value,
   async () => {
     imageLoaded.value = false
     imageErrored.value = false

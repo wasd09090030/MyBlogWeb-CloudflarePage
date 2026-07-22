@@ -15,7 +15,7 @@
         <ImageLoadingPlaceholder :show="!imageLoaded" />
         <img
           ref="imageElement"
-          :src="article.thumbnailUrl || article.coverImage"
+          :src="coverImageUrl"
           :alt="article.title"
           class="article-image lazy-image"
           :class="{ 'lazy-loaded': imageLoaded }"
@@ -101,9 +101,13 @@ const isPriority = computed(() => props.index < 3)
 const imageElement = ref(null)
 const imageLoaded = ref(false)
 const imageErrored = ref(false)
-const hasCoverImage = computed(() => {
+const coverImageUrl = computed(() => {
+  const thumbnailUrl = props.article?.thumbnailUrl
   const coverImage = props.article?.coverImage
-  return Boolean(coverImage && coverImage !== 'null' && !imageErrored.value)
+  return thumbnailUrl || (coverImage && coverImage !== 'null' ? coverImage : '')
+})
+const hasCoverImage = computed(() => {
+  return Boolean(coverImageUrl.value && !imageErrored.value)
 })
 const normalizedTags = computed(() => {
   if (!Array.isArray(props.article?.tags)) return []
@@ -199,7 +203,7 @@ const syncImageLoadState = () => {
 }
 
 watch(
-  () => props.article?.coverImage,
+  () => coverImageUrl.value,
   () => {
     imageLoaded.value = false
     imageErrored.value = false

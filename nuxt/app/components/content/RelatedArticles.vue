@@ -18,8 +18,8 @@
         <!-- 封面图片 -->
         <div class="relative aspect-video overflow-hidden bg-gray-100 dark:bg-gray-700">
           <img
-            v-if="article.coverImage && article.coverImage !== 'null'"
-            :src="article.coverImage"
+            v-if="getArticleImageUrl(article)"
+            :src="getArticleImageUrl(article)"
             :alt="article.title"
             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
@@ -128,6 +128,12 @@ const articles = computed(() => {
   // 限制数量
   return filtered.slice(0, props.count)
 })
+
+const getArticleImageUrl = (article) => {
+  const thumbnailUrl = article?.thumbnailUrl
+  const coverImage = article?.coverImage
+  return thumbnailUrl || (coverImage && coverImage !== 'null' ? coverImage : '')
+}
 
 // 获取文章 URL（包含 slug）
 function getArticleUrl(article) {

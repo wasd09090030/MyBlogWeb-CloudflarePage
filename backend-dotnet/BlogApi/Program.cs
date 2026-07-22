@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -38,6 +38,9 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<DeepSeekService>();
 builder.Services.AddScoped<ImagebedService>();
+builder.Services.AddScoped<ImageAssetUrlService>();
+builder.Services.AddScoped<ImageAssetResolveService>();
+builder.Services.AddScoped<ImageAssetBackfillService>();
 builder.Services.AddScoped<CfImageConfigService>();
 builder.Services.AddScoped<CloudflarePagesDeployService>();
 builder.Services.AddScoped<IBeatmapValidationService, BeatmapValidationService>();
@@ -45,6 +48,7 @@ builder.Services.AddScoped<IBeatmapParsingService, BeatmapParsingService>();
 builder.Services.AddScoped<IBeatmapMappingService, BeatmapMappingService>();
 builder.Services.AddScoped<IBeatmapPersistenceService, BeatmapPersistenceService>();
 builder.Services.AddScoped<BeatmapService>();
+builder.Services.AddScoped<DatabaseSchemaService>();
 
 // JWT 认证配置
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
@@ -115,6 +119,9 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
     dbContext.Database.EnsureCreated();
+
+    var schemaService = scope.ServiceProvider.GetRequiredService<DatabaseSchemaService>();
+    await schemaService.ApplyAsync();
 }
 
 // Configure the HTTP request pipeline

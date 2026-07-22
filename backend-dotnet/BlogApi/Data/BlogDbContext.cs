@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using BlogApi.Models;
 using System.Text.Json;
@@ -11,12 +11,36 @@ namespace BlogApi.Data
         {
         }
 
+        private static string ToImageAssetKindValue(ImageAssetKind kind)
+        {
+            return kind switch
+            {
+                ImageAssetKind.ArticleCover => "article_cover",
+                ImageAssetKind.Gallery => "gallery",
+                ImageAssetKind.Beatmap => "beatmap",
+                _ => "other"
+            };
+        }
+
+        private static ImageAssetKind FromImageAssetKindValue(string? value)
+        {
+            return value?.Trim().ToLowerInvariant() switch
+            {
+                "article_cover" => ImageAssetKind.ArticleCover,
+                "articlecover" => ImageAssetKind.ArticleCover,
+                "gallery" => ImageAssetKind.Gallery,
+                "beatmap" => ImageAssetKind.Beatmap,
+                _ => ImageAssetKind.Other
+            };
+        }
+
         public DbSet<Article> Articles { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Like> Likes { get; set; }
         public DbSet<Gallery> Galleries { get; set; }
         public DbSet<ImagebedConfig> ImagebedConfigs { get; set; }
         public DbSet<CfImageConfig> CfImageConfigs { get; set; }
+        public DbSet<ImageAsset> ImageAssets { get; set; }
         public DbSet<BeatmapSet> BeatmapSets { get; set; }
         public DbSet<BeatmapDifficulty> BeatmapDifficulties { get; set; }
 
@@ -35,6 +59,11 @@ namespace BlogApi.Data
                 entity.Property(e => e.Content).HasColumnName("content").IsRequired();
                 entity.Property(e => e.ContentMarkdown).HasColumnName("contentMarkdown");
                 entity.Property(e => e.CoverImage).HasColumnName("coverImage");
+                entity.Property(e => e.CoverImageAssetId).HasColumnName("coverImageAssetId");
+                entity.HasOne(e => e.CoverImageAsset)
+                    .WithMany()
+                    .HasForeignKey(e => e.CoverImageAssetId)
+                    .OnDelete(DeleteBehavior.SetNull);
                 entity.Property(e => e.Category)
                     .HasColumnName("category")
                     .HasConversion(
@@ -42,7 +71,9 @@ namespace BlogApi.Data
                         v => string.IsNullOrEmpty(v) ? ArticleCategory.Other : 
                              Enum.Parse<ArticleCategory>(char.ToUpper(v[0]) + (v.Length > 1 ? v.Substring(1).ToLower() : ""), true) // 读取时首字母大写
                     )
-                    .HasDefaultValue(ArticleCategory.Other);
+                    .HasDefaultValue(ArticleCategory.Other)
+                    // 明确告诉 EF：Other 才是“未显式设置”的哨兵值，避免把 CLR 默认值 Study 当成未设置而触发警告。
+                    .HasSentinel(ArticleCategory.Other);
                 
                 // Tags 字段配置 - 存储为 JSON 字符串
                 entity.Property(e => e.Tags)
@@ -137,6 +168,31 @@ namespace BlogApi.Data
                 entity.Property(e => e.SignatureSecret);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            });
+
+            modelBuilder.Entity<ImageAsset>(entity =>
+            {
+                entity.ToTable("image_assets");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.PublicId).HasColumnName("publicId").HasMaxLength(64).IsRequired();
+                entity.Property(e => e.StorageKey).HasColumnName("storageKey").HasMaxLength(1024).IsRequired();
+                entity.Property(e => e.SourceUrl).HasColumnName("sourceUrl").HasMaxLength(2048);
+                entity.Property(e => e.ContentType).HasColumnName("contentType").HasMaxLength(128);
+                entity.Property(e => e.Version).HasColumnName("version").HasDefaultValue(1);
+                entity.Property(e => e.Kind)
+                    .HasColumnName("kind")
+                    .HasConversion(
+                        v => ToImageAssetKindValue(v),
+                        v => FromImageAssetKindValue(v)
+                    )
+                    .HasDefaultValue(ImageAssetKind.Other)
+                    // Other 是数据库默认值和 EF 哨兵值，避免 CLR 默认值 ArticleCover 触发插入警告。
+                    .HasSentinel(ImageAssetKind.Other);
+                entity.Property(e => e.IsActive).HasColumnName("isActive").HasDefaultValue(true);
+                entity.Property(e => e.CreatedAt).HasColumnName("createdAt").HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasColumnName("updatedAt").HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.HasIndex(e => e.PublicId).HasDatabaseName("IX_image_assets_publicId").IsUnique();
+                entity.HasIndex(e => e.StorageKey).HasDatabaseName("IX_image_assets_storageKey");
             });
 
             modelBuilder.Entity<BeatmapSet>(entity =>

@@ -8,7 +8,7 @@ import type {
   PagedArticleResult,
   UpdateArticlePayload
 } from '~/types/api'
-import { createApiClient, withApiError } from '~/shared/api/client'
+import { withApiError } from '~/shared/api/client'
 import { API_ENDPOINTS } from '~/shared/api/endpoints'
 import { toAppResult } from '~/shared/types/result'
 import type { AppResult } from '~/shared/types/result'
@@ -16,7 +16,6 @@ import type { AppResult } from '~/shared/types/result'
 type CategoryKey = ArticleCategory
 
 export const useAdminArticlesFeature = () => {
-  const api = createApiClient()
   const authStore = useAuthStore() as AuthFetchLike
 
   const categoryLabels: Record<string, string> = {
@@ -47,7 +46,8 @@ export const useAdminArticlesFeature = () => {
   ): Promise<ArticleSummary[] | ArticleDetail[] | PagedArticleResult> => {
     const { summary = false, page = 1, limit = 1000 } = options
     return await withApiError('AdminArticles', '获取文章列表', async () => {
-      return await api.get<ArticleSummary[] | ArticleDetail[] | PagedArticleResult>(API_ENDPOINTS.articles.list, {
+      return await authStore.authFetch<ArticleSummary[] | ArticleDetail[] | PagedArticleResult>(API_ENDPOINTS.articles.list, {
+        method: 'GET',
         params: { summary, page, limit }
       })
     })
@@ -55,7 +55,9 @@ export const useAdminArticlesFeature = () => {
 
   const getArticle = async (id: string | number): Promise<ArticleDetail> => {
     return await withApiError('AdminArticles', '获取文章', async () => {
-      return await api.get<ArticleDetail>(API_ENDPOINTS.articles.detail(id))
+      return await authStore.authFetch<ArticleDetail>(API_ENDPOINTS.articles.detail(id), {
+        method: 'GET'
+      })
     })
   }
 

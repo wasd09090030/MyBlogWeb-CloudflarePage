@@ -14,14 +14,22 @@ namespace BlogApi.Services
     public class ArticleService
     {
         private readonly BlogDbContext _context;
+        private readonly ImageAssetUrlService _imageAssetUrlService;
+        private readonly ImageAssetBackfillService _imageAssetBackfillService;
 
         /// <summary>
         /// 初始化 <see cref="ArticleService"/>。
         /// </summary>
         /// <param name="context">数据库上下文。</param>
-        public ArticleService(BlogDbContext context)
+        /// <param name="imageAssetUrlService">图片资产 URL 构建服务。</param>
+        public ArticleService(
+            BlogDbContext context,
+            ImageAssetUrlService imageAssetUrlService,
+            ImageAssetBackfillService imageAssetBackfillService)
         {
             _context = context;
+            _imageAssetUrlService = imageAssetUrlService;
+            _imageAssetBackfillService = imageAssetBackfillService;
         }
 
         /// <summary>
@@ -41,6 +49,8 @@ namespace BlogApi.Services
                 Content = htmlContent,
                 ContentMarkdown = dto.ContentMarkdown,
                 CoverImage = dto.CoverImage,
+                CoverImageAssetId = await _imageAssetBackfillService
+                    .GetOrCreateArticleCoverAssetIdAsync(dto.CoverImage),
                 Category = dto.Category,
                 Tags = dto.Tags ?? new List<string>(),
                 AiSummary = dto.AiSummary,
@@ -99,7 +109,8 @@ namespace BlogApi.Services
                     Id = a.Id,
                     Title = a.Title,
                     Slug = a.Slug,
-                    CoverImage = a.CoverImage,
+                    CoverImage = null,
+                    CoverImageAssetId = a.CoverImageAssetId,
                     Category = a.Category,
                     CreatedAt = a.CreatedAt,
                     UpdatedAt = a.UpdatedAt,
@@ -228,45 +239,121 @@ namespace BlogApi.Services
                 (a.ContentMarkdown != null && EF.Functions.Like(a.ContentMarkdown, $"%{keyword}%"))
             );
 
-            var results = await query
+            var articles = await query
                 .OrderByDescending(a => a.CreatedAt)
                 .Take(50) // 限制最多返回50条结果
-                .Select(a => new ArticleSummaryDto
-                {
-                    Id = a.Id,
-                    Title = a.Title,
-                    Slug = a.Slug,
-                    CoverImage = a.CoverImage,
-                    Category = a.Category,
-                    CreatedAt = a.CreatedAt,
-                    UpdatedAt = a.UpdatedAt,
-                    // 搜索结果仅返回摘要，避免把全文直接拉回列表页。
-                    Content = a.Content.Length > 240 ? a.Content.Substring(0, 240) : a.Content,
-                    ContentMarkdown = a.ContentMarkdown != null && a.ContentMarkdown.Length > 240
-                        ? a.ContentMarkdown.Substring(0, 200)
-                        : a.ContentMarkdown,
-                    Tags = a.Tags,
-                    AiSummary = a.AiSummary
-                })
                 .ToListAsync();
 
+            var results = articles.Select(ToSummaryDto).ToList();
             await ApplyThumbnailUrlsAsync(results);
             return results;
         }
 
         /// <summary>
-        /// 批量补齐文章摘要的缩略图地址。
-        /// 复用画廊的 <see cref="ThumbnailUrlBuilder"/>，与 <see cref="CfImageConfig"/> 全局配置保持一致。
+        /// 获取推荐文章摘要，供公共端相关推荐使用。
+        /// </summary>
+        public async Task<List<ArticleSummaryDto>> GetFeaturedSummaryAsync(int limit = 6)
+        {
+            var allIds = await _context.Articles
+                .Select(a => a.Id)
+                .ToListAsync();
+
+            if (allIds.Count == 0)
+            {
+                return new List<ArticleSummaryDto>();
+            }
+
+            var selectedIds = allIds
+                .OrderBy(_ => Random.Shared.Next())
+                .Take(Math.Min(Math.Max(limit, 0), allIds.Count))
+                .ToList();
+
+            var articles = await _context.Articles
+                .Where(a => selectedIds.Contains(a.Id))
+                .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
+
+            var summaries = articles.Select(ToSummaryDto).ToList();
+            await ApplyThumbnailUrlsAsync(summaries);
+            return summaries;
+        }
+
+        /// <summary>
+        /// 获取分类文章摘要，避免公共端分类页绕过永久缩略图链路。
+        /// </summary>
+        public async Task<List<ArticleSummaryDto>> GetByCategorySummaryAsync(ArticleCategory category)
+        {
+            var articles = await _context.Articles
+                .Where(a => a.Category == category)
+                .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
+
+            var summaries = articles.Select(ToSummaryDto).ToList();
+            await ApplyThumbnailUrlsAsync(summaries);
+            return summaries;
+        }
+
+        /// <summary>
+        /// 批量补齐文章摘要的永久缩略图地址。
+        /// 未完成资产回填的文章保持空缩略图，避免公共 SSG payload 重新引入短期签名 URL。
         /// </summary>
         private async Task ApplyThumbnailUrlsAsync(List<ArticleSummaryDto> summaries)
         {
             if (summaries.Count == 0) return;
-            var config = await _context.CfImageConfigs.AsNoTracking().FirstOrDefaultAsync();
-            foreach (var summary in summaries)
+
+            var assetIds = summaries
+                .Select(summary => summary.CoverImageAssetId)
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .Distinct()
+                .ToList();
+
+            if (assetIds.Count > 0)
             {
-                if (string.IsNullOrWhiteSpace(summary.CoverImage)) continue;
-                summary.ThumbnailUrl = ThumbnailUrlBuilder.BuildThumbnailUrl(summary.CoverImage, config);
+                var assets = await _context.ImageAssets
+                    .AsNoTracking()
+                    .Where(asset => assetIds.Contains(asset.Id) && asset.IsActive)
+                    .ToDictionaryAsync(asset => asset.Id);
+
+                foreach (var summary in summaries)
+                {
+                    if (!summary.CoverImageAssetId.HasValue ||
+                        !assets.TryGetValue(summary.CoverImageAssetId.Value, out var asset))
+                    {
+                        continue;
+                    }
+
+                    var thumbnailUrl = _imageAssetUrlService.BuildThumbnailUrl(asset);
+                    if (thumbnailUrl == null) continue;
+
+                    summary.CoverImageAssetPublicId = asset.PublicId;
+                    summary.ThumbnailUrl = thumbnailUrl;
+                }
             }
+        }
+
+        private static ArticleSummaryDto ToSummaryDto(Article article)
+        {
+            return new ArticleSummaryDto
+            {
+                Id = article.Id,
+                Title = article.Title,
+                Slug = article.Slug,
+                // Public summaries intentionally never expose the legacy/original image URL.
+                CoverImage = null,
+                CoverImageAssetId = article.CoverImageAssetId,
+                Category = article.Category,
+                CreatedAt = article.CreatedAt,
+                UpdatedAt = article.UpdatedAt,
+                Content = article.Content.Length > 240
+                    ? article.Content.Substring(0, 240)
+                    : article.Content,
+                ContentMarkdown = article.ContentMarkdown != null && article.ContentMarkdown.Length > 240
+                    ? article.ContentMarkdown.Substring(0, 200)
+                    : article.ContentMarkdown,
+                Tags = article.Tags,
+                AiSummary = article.AiSummary
+            };
         }
 
         /// <summary>
@@ -279,6 +366,48 @@ namespace BlogApi.Services
             return await _context.Articles
                 .Include(a => a.Comments)
                 .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        /// <summary>
+        /// 获取公共文章详情，隐藏旧原图 URL，仅返回永久缩略图。
+        /// </summary>
+        public async Task<ArticleDetailDto?> GetPublicDetailByIdAsync(int id)
+        {
+            var article = await _context.Articles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (article == null) return null;
+
+            var detail = ToDetailDto(article);
+            var thumbnailCarrier = new ArticleSummaryDto
+            {
+                CoverImageAssetId = detail.CoverImageAssetId
+            };
+            await ApplyThumbnailUrlsAsync(new List<ArticleSummaryDto> { thumbnailCarrier });
+            detail.CoverImageAssetPublicId = thumbnailCarrier.CoverImageAssetPublicId;
+            detail.ThumbnailUrl = thumbnailCarrier.ThumbnailUrl;
+
+            return detail;
+        }
+
+        private static ArticleDetailDto ToDetailDto(Article article)
+        {
+            return new ArticleDetailDto
+            {
+                Id = article.Id,
+                Title = article.Title,
+                Slug = article.Slug,
+                CoverImage = null,
+                CoverImageAssetId = article.CoverImageAssetId,
+                Category = article.Category,
+                CreatedAt = article.CreatedAt,
+                UpdatedAt = article.UpdatedAt,
+                Content = article.Content,
+                ContentMarkdown = article.ContentMarkdown,
+                Tags = article.Tags,
+                AiSummary = article.AiSummary
+            };
         }
 
         /// <summary>
@@ -314,7 +443,12 @@ namespace BlogApi.Services
                     article.Content = ResolveHtmlContent(null, dto.ContentMarkdown);
                 }
             }
-            if (dto.CoverImage != null) article.CoverImage = dto.CoverImage;
+            if (dto.CoverImage != null)
+            {
+                article.CoverImage = dto.CoverImage;
+                article.CoverImageAssetId = await _imageAssetBackfillService
+                    .GetOrCreateArticleCoverAssetIdAsync(dto.CoverImage);
+            }
             if (dto.Category.HasValue) article.Category = dto.Category.Value;
             if (dto.Tags != null) article.Tags = dto.Tags;
             if (dto.AiSummary != null) article.AiSummary = dto.AiSummary;

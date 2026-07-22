@@ -54,8 +54,10 @@ namespace BlogApi.Controllers
             [FromQuery] int? limit = null,
             [FromQuery] bool summary = false)
         {
-            // 优先级 1：summary=true 时直接走摘要接口（可叠加 category/page/limit）。
-            if (summary)
+            var isAuthenticated = User.Identity?.IsAuthenticated == true;
+
+            // 公共未认证列表始终走摘要形态，避免原始 coverImage 进入客户端或 SSG payload。
+            if (summary || !isAuthenticated)
             {
                 var summaries = await _articleService.GetAllSummaryAsync(category, page, limit);
                 return Ok(summaries);
@@ -87,10 +89,10 @@ namespace BlogApi.Controllers
         /// <param name="limit">返回数量上限。</param>
         /// <returns>推荐文章列表。</returns>
         [HttpGet("featured")]
-        public async Task<ActionResult<List<Article>>> GetFeatured([FromQuery] int limit = 6)
+        public async Task<ActionResult<List<ArticleSummaryDto>>> GetFeatured([FromQuery] int limit = 6)
         {
-            var articles = await _articleService.GetFeaturedAsync(limit);
-            return Ok(articles);
+            var summaries = await _articleService.GetFeaturedSummaryAsync(limit);
+            return Ok(summaries);
         }
 
         /// <summary>
@@ -117,10 +119,10 @@ namespace BlogApi.Controllers
         /// <param name="category">文章分类。</param>
         /// <returns>分类下文章列表。</returns>
         [HttpGet("category/{category}")]
-        public async Task<ActionResult<List<Article>>> GetByCategory(ArticleCategory category)
+        public async Task<ActionResult<List<ArticleSummaryDto>>> GetByCategory(ArticleCategory category)
         {
-            var articles = await _articleService.GetByCategoryAsync(category);
-            return Ok(articles);
+            var summaries = await _articleService.GetByCategorySummaryAsync(category);
+            return Ok(summaries);
         }
 
         /// <summary>
@@ -129,13 +131,19 @@ namespace BlogApi.Controllers
         /// <param name="id">文章 ID。</param>
         /// <returns>文章详情，不存在则返回 404。</returns>
         [HttpGet("{id}")]
-        public async Task<ActionResult<Article>> GetById(int id)
+        public async Task<ActionResult<object>> GetById(int id)
         {
-            var article = await _articleService.GetByIdAsync(id);
-            if (article == null)
-                return NotFound();
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var authenticatedArticle = await _articleService.GetByIdAsync(id);
+                return authenticatedArticle == null ? NotFound() : Ok(authenticatedArticle);
+            }
 
-            return Ok(article);
+            var article = await _articleService.GetByIdAsync(id);
+            if (article == null) return NotFound();
+
+            var publicDetail = await _articleService.GetPublicDetailByIdAsync(id);
+            return publicDetail == null ? NotFound() : Ok(publicDetail);
         }
 
         /// <summary>

@@ -141,6 +141,14 @@ export const useArticleDetailPage = async () => {
     return `${baseSiteUrl.value}/${value}`
   }
 
+  const getArticleImage = (value: unknown): string | undefined => {
+    const detail = value as { thumbnailUrl?: string; coverImage?: string } | null
+    const image = detail?.thumbnailUrl || (detail?.coverImage && detail.coverImage !== 'null'
+      ? detail.coverImage
+      : '')
+    return image || undefined
+  }
+
   let isRedirectingToCanonical = false
   const ensureCanonicalSlug = async () => {
     const slug = (article.value as { slug?: string } | null)?.slug
@@ -235,15 +243,15 @@ export const useArticleDetailPage = async () => {
       return detail?.aiSummary || getDescription(detail?.content || detail?.contentMarkdown)
     },
     ogImage: () => {
-      const image = (article.value as { coverImage?: string } | null)?.coverImage
-      return image && image !== 'null' ? image : undefined
+      const image = getArticleImage(article.value)
+      return image ? resolveUrl(image) : undefined
     },
     ogUrl: () => canonicalUrl.value || undefined,
     ogType: 'article',
     ogSiteName: 'WyrmKk',
     articlePublishedTime: () => (article.value as { createdAt?: string } | null)?.createdAt || undefined,
     articleModifiedTime: () => (article.value as { updatedAt?: string } | null)?.updatedAt || undefined,
-    articleAuthor: 'WyrmKk',
+    articleAuthor: ['WyrmKk'],
     articleTag: () => {
       const tags = (article.value as { tags?: string[] } | null)?.tags
       return tags?.length ? tags : undefined
@@ -255,8 +263,8 @@ export const useArticleDetailPage = async () => {
       return detail?.aiSummary || getDescription(detail?.content || detail?.contentMarkdown)
     },
     twitterImage: () => {
-      const image = (article.value as { coverImage?: string } | null)?.coverImage
-      return image && image !== 'null' ? image : undefined
+      const image = getArticleImage(article.value)
+      return image ? resolveUrl(image) : undefined
     }
   })
 
@@ -276,6 +284,7 @@ export const useArticleDetailPage = async () => {
       content?: string
       contentMarkdown?: string
       coverImage?: string
+      thumbnailUrl?: string
       createdAt?: string
       updatedAt?: string
       tags?: string[]
@@ -283,9 +292,9 @@ export const useArticleDetailPage = async () => {
 
     const title = detail.title || '文章详情'
     const description = detail.aiSummary || getDescription(detail.content || detail.contentMarkdown)
-    const imageUrl = resolveUrl(detail.coverImage && detail.coverImage !== 'null'
+    const imageUrl = resolveUrl(detail.thumbnailUrl || (detail.coverImage && detail.coverImage !== 'null'
       ? detail.coverImage
-      : '/og-default.svg')
+      : '/og-default.svg'))
     const articleUrl = canonicalUrl.value || resolveUrl(canonicalPath.value)
     const siteUrl = baseSiteUrl.value || resolveUrl('/')
 

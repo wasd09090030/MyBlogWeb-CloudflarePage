@@ -89,6 +89,9 @@ export type ArticleSummary = {
   title: string
   slug?: string | null
   coverImage?: string | null
+  coverImageAssetId?: number | null
+  coverImageAssetPublicId?: string | null
+  thumbnailUrl?: string | null
   category: ArticleCategory
   createdAt: string
   updatedAt: string

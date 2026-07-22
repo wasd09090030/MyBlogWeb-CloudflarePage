@@ -34,7 +34,7 @@
       <ArticleListArticleCard
         v-for="(article, index) in listContext.articles"
         :key="article.id"
-        v-memo="[article.id, article.title, article.coverImage, article.createdAt, article.category, listContext.currentPage, effectiveViewMode]"
+        v-memo="[article.id, article.title, article.thumbnailUrl, article.coverImage, article.createdAt, article.category, listContext.currentPage, effectiveViewMode]"
         :article="article"
         :index="index"
         :is-reverse="isListView && (listContext.indexOffset + index + 1) % 2 === 0"

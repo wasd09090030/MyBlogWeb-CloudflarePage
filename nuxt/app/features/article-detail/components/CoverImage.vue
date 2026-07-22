@@ -1,11 +1,11 @@
 <template>
   <div 
-    v-if="article.coverImage && article.coverImage !== 'null'"
+    v-if="coverImageUrl"
     class="w-full overflow-hidden"
     :style="coverContainerStyle"
   >
     <img
-      :src="article.coverImage"
+      :src="coverImageUrl"
       :alt="article.title"
 
       class="w-full h-full object-cover" 
@@ -20,7 +20,7 @@ import { ref, computed } from 'vue'
 // 1. 设置最小宽高比为 1.5 (即 3:2，对应高宽比 2:3)
 const containerAspectRatio = ref(1.5)
 
-defineProps({
+const props = defineProps({
   article: {
     type: Object,
     required: true
@@ -30,6 +30,11 @@ defineProps({
 const coverContainerStyle = computed(() => ({
   aspectRatio: containerAspectRatio.value
 }))
+const coverImageUrl = computed(() => {
+  const thumbnailUrl = props.article?.thumbnailUrl
+  const coverImage = props.article?.coverImage
+  return thumbnailUrl || (coverImage && coverImage !== 'null' ? coverImage : '')
+})
 
 function handleImageLoad(event) {
   const target = event?.target

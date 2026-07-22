@@ -32,6 +32,8 @@ namespace BlogApi.DTOs
         public string Title { get; set; } = string.Empty;
         public string? Slug { get; set; }
         public string? CoverImage { get; set; }
+        public int? CoverImageAssetId { get; set; }
+        public string? CoverImageAssetPublicId { get; set; }
         public string? ThumbnailUrl { get; set; }
         public ArticleCategory Category { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -54,6 +56,24 @@ namespace BlogApi.DTOs
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public int CommentCount { get; set; }
+        public List<string>? Tags { get; set; }
+        public string? AiSummary { get; set; }
+    }
+
+    public class ArticleDetailDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string? Slug { get; set; }
+        public string? CoverImage { get; set; }
+        public int? CoverImageAssetId { get; set; }
+        public string? CoverImageAssetPublicId { get; set; }
+        public string? ThumbnailUrl { get; set; }
+        public ArticleCategory Category { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string Content { get; set; } = string.Empty;
+        public string? ContentMarkdown { get; set; }
         public List<string>? Tags { get; set; }
         public string? AiSummary { get; set; }
     }

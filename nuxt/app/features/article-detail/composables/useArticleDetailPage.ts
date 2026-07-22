@@ -94,6 +94,14 @@ export const useArticleDetailPage = async () => {
     return `${baseSiteUrl.value}/${value}`
   }
 
+  const getArticleImage = (value: unknown): string | undefined => {
+    const detail = value as { thumbnailUrl?: string; coverImage?: string } | null
+    const image = detail?.thumbnailUrl || (detail?.coverImage && detail.coverImage !== 'null'
+      ? detail.coverImage
+      : '')
+    return image || undefined
+  }
+
   let isRedirectingToCanonical = false
   const ensureCanonicalSlug = async () => {
     const slug = (article.value as { slug?: string } | null)?.slug
@@ -174,14 +182,14 @@ export const useArticleDetailPage = async () => {
     ogTitle: () => (article.value as { title?: string } | null)?.title || '文章详情',
     ogDescription: () => (article.value as { aiSummary?: string; content?: string } | null)?.aiSummary || getDescription((article.value as { content?: string } | null)?.content),
     ogImage: () => {
-      const image = (article.value as { coverImage?: string } | null)?.coverImage
-      return image && image !== 'null' ? image : undefined
+      const image = getArticleImage(article.value)
+      return image ? resolveUrl(image) : undefined
     },
     ogUrl: () => canonicalUrl.value || undefined,
     ogType: 'article',
     twitterImage: () => {
-      const image = (article.value as { coverImage?: string } | null)?.coverImage
-      return image && image !== 'null' ? image : undefined
+      const image = getArticleImage(article.value)
+      return image ? resolveUrl(image) : undefined
     }
   })
 
@@ -197,15 +205,16 @@ export const useArticleDetailPage = async () => {
       aiSummary?: string
       content?: string
       coverImage?: string
+      thumbnailUrl?: string
       createdAt?: string
       updatedAt?: string
     }
 
     const title = detail.title || '文章详情'
     const description = detail.aiSummary || getDescription(detail.content)
-    const imageUrl = resolveUrl(detail.coverImage && detail.coverImage !== 'null'
+    const imageUrl = resolveUrl(detail.thumbnailUrl || (detail.coverImage && detail.coverImage !== 'null'
       ? detail.coverImage
-      : '/og-default.svg')
+      : '/og-default.svg'))
     const articleUrl = canonicalUrl.value || resolveUrl(canonicalPath.value)
     const siteUrl = baseSiteUrl.value || resolveUrl('/')
 

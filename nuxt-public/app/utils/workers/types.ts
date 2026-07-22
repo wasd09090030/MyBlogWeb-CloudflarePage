@@ -68,6 +68,8 @@ export type ArticleLike = {
   category?: string
   createdAt?: string | number | Date
   coverImage?: string | null
+  coverImageAssetId?: number | null
+  coverImageAssetPublicId?: string | null
   thumbnailUrl?: string | null
   [key: string]: unknown
 }

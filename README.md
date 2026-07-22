@@ -93,7 +93,7 @@ MyBlogWeb-CloudflarePage/
 |---|---|---|
 | **部署位置** | Cloudflare Pages（CDN） | 云服务器（PM2 + Nginx） |
 | **渲染方式** | 构建时静态生成（SSG） | 服务端渲染（SSR） |
-| **负责页面** | 首页、文章、画廊、教程、关于 | 管理后台 |
+| **负责页面** | 首页、文章、画廊、教程、关于 | **管理后台（仅此）** — 公共浏览职责已删除，详见 `openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/` |
 | **数据获取** | 构建时从 API 拉取，写入静态 HTML | 运行时实时请求 API |
 | **资源路径** | `/_nuxt/`（默认） | `/_ssr/`（避免冲突） |
 | **SEO** | sitemap.xml、robots.txt | sitemap 已禁用，robots 禁止索引 |
@@ -107,14 +107,15 @@ MyBlogWeb-CloudflarePage/
 
 ## 技术栈
 
-**前端**: Nuxt 4 + Vue 3 (Composition API) + Nuxt UI v4（`nuxt-public/` 静态站已迁移完成）+ NaiveUI（`nuxt/` SSR 站，迁移排队中）+ TailwindCSS + MDC
+**前端**: Nuxt 4 + Vue 3 (Composition API) + Nuxt UI v4（`nuxt-public/` 静态站已迁移完成）+ NaiveUI（`nuxt/` SSR 站，**UI 迁移延后**——Nuxt UI v3/v4 与 Tailwind v3 互斥，须先升级 Tailwind v3→v4）+ TailwindCSS + MDC
 **后端**: ASP.NET Core 8.0 + Entity Framework Core + SQLite
 **基础设施**: Cloudflare Pages + Cloudflare Worker + Nginx + PM2
 **CI/CD**: GitHub Actions（双目标构建）
 
-> **关于 `nuxt-public/` UI 库迁移**：本项目静态站 (`nuxt-public/`) 已从 NaiveUI 完整迁移到 **Nuxt UI v4**（基于 Reka UI + Tailwind Variants）。
-> 主题系统统一到 `@nuxtjs/color-mode`（`<html>.dark` / `.light`），所有 NaiveUI 组件与 `n-config-provider` 主题层已移除。
-> 迁移详情与回滚指引见 [`openspec/changes/nuxt-ui-migration/`](./openspec/changes/nuxt-ui-migration/)。
+> **关于 `nuxt/` 范围收缩**：本项目 SSR 站 (`nuxt/`) 已于 2026-07-22 完成**范围收缩**（路径 C）：删除 14+ 公共 features/pages/layouts/components/composables/utils/plugins 文件 + 清理 `nuxt.config.ts`（sitemap/prerender/公共 routeRules/@nuxtjs/seo/keen-slider）+ `package.json` 卸 3 个依赖 + 修复 `MarkdownRenderer.vue` 去除 worker 依赖。
+>
+> **关于 UI 库迁移**：`nuxt/` 暂**不**做 NaiveUI→NuxtUI 迁移（**路径 C 决策**）。原因：所有 Nuxt UI v3/v4 版本均强依赖 Tailwind v4（`@nuxt/ui@3.0.0` 与 `3.3.7` 都把 `@tailwindcss/vite@4.3.3` 作为传递依赖），与"tailwind 暂不同步"决策互斥。UI 迁移须**先**升级 Tailwind v3→v4（或与 Tailwind v4 升级联动做）。当前 `nuxt/` 仍保留 NaiveUI，技术债分裂留待后续 change 解决。
+> 范围收缩与计划中 UI 迁移的 OpenSpec 变更见 [`openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/`](./openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/)。
 
 ## 开发命令
 

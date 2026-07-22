@@ -102,7 +102,9 @@ import { useAdminImagebedPage } from '~/features/gallery-admin/composables/useAd
 
 definePageMeta({
   layout: 'admin',
-  middleware: ['admin-auth']
+  middleware: ['admin-auth'],
+  // Phase 2: 与 admin 其他页面一致，避免 SSR hydration mismatch
+  ssr: false
 })
 
 const {

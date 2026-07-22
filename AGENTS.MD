@@ -4,7 +4,7 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 ## 1. 项目概览
 本仓库是全栈博客系统，采用混合架构：
 - 静态博客前端：`nuxt-public/`（Nuxt 4，SSG 静态生成，部署到 Cloudflare Pages；组件库：**Nuxt UI v4 ✅ 已从 NaiveUI 迁移完成**——见 `openspec/changes/nuxt-ui-migration/`）
-- 动态 SSR 前端：`nuxt/`（Nuxt 4，SSR 服务端渲染，部署到云服务器；组件库：**NaiveUI**，迁移排队中）
+- 动态 SSR 前端：`nuxt/`（Nuxt 4，SSR 服务端渲染，部署到云服务器；组件库：**NaiveUI**，UI 迁移延后——`@nuxt/ui v3/v4` 与 Tailwind v3 互斥，须先升级 Tailwind v3→v4，详见 `.memory/progress/current.md`）
 - 后端：`backend-dotnet/BlogApi/`（.NET 8 Web API）
 - 路由分发：`cloudflare-worker/`（Cloudflare Worker，统一域名路由）
 
@@ -13,7 +13,7 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 | | nuxt-public/（静态站） | nuxt/（SSR 动态站） |
 |---|---|---|
 | 部署位置 | Cloudflare Pages（CDN） | 云服务器（PM2 + Nginx） |
-| 负责页面 | `/` 首页、`/article/*` 文章、`/gallery` 画廊、`/tutorials` 教程、`/about` 关于 | `/admin/*` 管理后台 |
+| 负责页面 | `/` 首页、`/article/*` 文章、`/gallery` 画廊、`/tutorials` 教程、`/about` 关于 | `/admin/*` 管理后台（仅此） |
 | 渲染方式 | 构建时静态生成（SSG） | 运行时服务端渲染（SSR） |
 | 资源路径 | `/_nuxt/`（默认） | `/_ssr/`（避免冲突） |
 | SEO | sitemap.xml + robots.txt | sitemap 禁用，robots Disallow: / |

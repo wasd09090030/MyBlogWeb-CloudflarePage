@@ -50,7 +50,6 @@ export default defineNuxtConfig({
     '~/assets/css/theme-variables.css',
     '~/assets/css/tailwind.css', // Tailwind CSS 入口文件
     'katex/dist/katex.min.css', // KaTeX 数学公式样式
-    'keen-slider/keen-slider.min.css',
     '~/assets/css/components/prose-custom.css', // 自定义 prose 样式
     '~/assets/css/layout.css', // 自定义布局工具类
     '~/assets/css/app.css',
@@ -315,7 +314,6 @@ export default defineNuxtConfig({
     }
   },
 
-
   // 应用配置
   app: {
     // 混合架构：SSR 资源路径改为 /_ssr/，避免与 Cloudflare Pages 的 /_nuxt/ 冲突
@@ -372,16 +370,24 @@ export default defineNuxtConfig({
 
   // 路由配置优化
   routeRules: {
-    // 静态资源使用强缓存（1年）
-    '/icon/**': { 
-      headers: { 
-        ...immutableAssetHeaders
-      } 
+    // SSR 项目已收缩为后台应用，根路径交给后台入口处理，避免纯 admin 路由中出现 / 404
+    '/': {
+      redirect: { to: '/admin', statusCode: 302 }
     },
-    '/Picture/**': { 
-      headers: { 
+    // 后台页面依赖客户端认证状态，统一走 CSR，避免未认证首屏 /admin -> /admin/login 的 hydration mismatch
+    '/admin/**': {
+      ssr: false
+    },
+    // 静态资源使用强缓存（1年）
+    '/icon/**': {
+      headers: {
         ...immutableAssetHeaders
-      } 
+      }
+    },
+    '/Picture/**': {
+      headers: {
+        ...immutableAssetHeaders
+      }
     },
     '/flower/**': {
       headers: {
@@ -394,39 +400,11 @@ export default defineNuxtConfig({
       }
     },
     // API路由配置
-    '/api/**': { 
+    '/api/**': {
       cors: true,
       headers: {
         'cache-control': 'no-cache, no-store, must-revalidate'
       }
-    },
-    // SSR 项目已收缩为后台应用，根路径交给后台入口处理，避免纯 admin 路由中出现 / 404
-    '/': {
-      redirect: { to: '/admin', statusCode: 302 }
-    },
-    // 后台页面依赖客户端认证状态，统一走 CSR，避免未认证首屏 /admin -> /admin/login 的 hydration mismatch
-    '/admin/**': {
-      ssr: false
-    },
-    // 🔥 文章页面 SWR 缓存（5分钟，后台可重验证 1 小时）
-    '/article/**': {
-      ssr: true,
-      headers: createSwrHeaders(300, 3600, true)
-    },
-    // 画廊页面 SWR 缓存（3分钟）
-    '/gallery': {
-      ssr: true,
-      headers: createSwrHeaders(180, 600)
-    },
-    // 关于页面较长缓存（10分钟）
-    '/about': {
-      ssr: true,
-      headers: createSwrHeaders(600, 1800)
-    },
-    // 教程页面 SWR 缓存
-    '/tutorials': {
-      ssr: true,
-      headers: createSwrHeaders(300, 3600)
     }
   },
 
@@ -446,13 +424,6 @@ export default defineNuxtConfig({
     },
     // 优化服务器输出
     minify: true,
-    // 仅预渲染首页，避免全站 crawl
-    prerender: {
-      crawlLinks: false,
-      routes: [],
-      // 忽略 payload.json 的 404 错误（SSR模式下正常）
-      failOnError: false
-    },
     // 服务端端存储缓存（增强版）
     storage: {
       cache: {

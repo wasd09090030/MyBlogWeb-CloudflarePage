@@ -2,6 +2,10 @@ name = "blog-router"
 main = "router.js"
 compatibility_date = "2026-01-01"
 
+[vars]
+IMAGE_ASSET_RESOLVE_URL = "https://server.wasd09090030.top/api/internal/image-assets"
+IMAGE_ORIGIN_BASE = "https://cfimg.wasd09090030.top/file"
+
 # 绑定自定义域名路由
 # 在 Cloudflare Dashboard 中配置：
 # Workers Routes → wasd09090030.top/* → blog-router
@@ -10,7 +14,6 @@ compatibility_date = "2026-01-01"
 # [assets]
 # binding = "ASSETS"
 
-# 生产环境所需变量：
-# IMAGE_ASSET_RESOLVE_URL = "https://server.wasd09090030.top/api/internal/image-assets"
-# IMAGE_ASSET_RESOLVE_TOKEN = "set as Worker secret, not plain var"
-# IMAGE_ORIGIN_BASE = "https://cfimg.wasd09090030.top/file"
+# 生产环境所需 Secret：
+# IMAGE_ASSET_RESOLVE_TOKEN 必须通过 Cloudflare Worker Secret 设置，
+# 值必须与后端 ImageAssets:ResolveToken 完全一致，不能写入 wrangler.toml。

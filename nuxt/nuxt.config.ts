@@ -71,7 +71,6 @@ export default defineNuxtConfig({
     '@nuxt/fonts', // Nuxt Fonts 模块
     '@bg-dev/nuxt-naiveui', // Naive UI 模块
     '@nuxtjs/mdc', // MDC Markdown 渲染模块
-    '@nuxtjs/seo', // Nuxt SEO 模块
     'nuxt-vitalizer' // Core Web Vitals LCP 优化
   ],
 
@@ -290,9 +289,9 @@ export default defineNuxtConfig({
     server: {
       warmup: {
         clientFiles: [
-          './pages/index.vue',
-          './components/SideBar.vue',
-          './layouts/default.vue'
+          './pages/admin/index.vue',
+          './pages/admin/login.vue',
+          './layouts/admin.vue'
         ]
       }
     }
@@ -316,38 +315,6 @@ export default defineNuxtConfig({
     }
   },
 
-  // 站点信息（供 SEO 模块使用）
-  site: {
-    url: siteUrl,
-    name: 'WyrmKk',
-    description: '分享技术、生活与创作的个人博客',
-    defaultLocale: 'zh-CN'
-  },
-
-  robots: {
-    // 使用 public/robots.txt，避免第三方注入非标准指令导致校验报错
-    robotsTxt: false,
-    disallow: !isProduction
-      ? ['/']
-      : ['/admin/**', '/api/**']
-  },
-
-  sitemap: {
-    enabled: false
-  },
-
-  schemaOrg: {
-    identity: {
-      type: 'Person',
-      name: 'WyrmKk',
-      url: siteUrl,
-      sameAs: [
-        process.env.NUXT_PUBLIC_TWITTER_URL || 'https://x.com/wyrmwyrm1',
-        process.env.NUXT_PUBLIC_GITHUB_URL || 'https://github.com/wasd09090030'
-      ].filter(Boolean)
-    },
-    reactive: true
-  },
 
   // 应用配置
   app: {
@@ -433,10 +400,13 @@ export default defineNuxtConfig({
         'cache-control': 'no-cache, no-store, must-revalidate'
       }
     },
-    // 首页 SWR 缓存（1分钟，后台可重验证 5 分钟）
+    // SSR 项目已收缩为后台应用，根路径交给后台入口处理，避免纯 admin 路由中出现 / 404
     '/': {
-      ssr: true,
-      headers: createSwrHeaders(60, 300)
+      redirect: { to: '/admin', statusCode: 302 }
+    },
+    // 后台页面依赖客户端认证状态，统一走 CSR，避免未认证首屏 /admin -> /admin/login 的 hydration mismatch
+    '/admin/**': {
+      ssr: false
     },
     // 🔥 文章页面 SWR 缓存（5分钟，后台可重验证 1 小时）
     '/article/**': {

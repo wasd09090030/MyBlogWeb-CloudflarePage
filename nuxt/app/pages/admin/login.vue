@@ -3,11 +3,25 @@
     <div class="w-full max-w-md">
       <n-card title="管理员登录" class="shadow-lg">
         <n-form ref="formRef" :model="formData" :rules="rules" @submit.prevent="login">
-          <n-form-item label="管理员密码" path="password">
+          <input
+            class="sr-only"
+            type="text"
+            name="username"
+            autocomplete="username"
+            value="admin"
+            tabindex="-1"
+            aria-hidden="true"
+          />
+          <n-form-item label="管理员密码" path="password" :label-props="{ for: 'admin-password' }">
             <n-input
               v-model:value="formData.password"
               type="password"
               placeholder="请输入管理员密码"
+              :input-props="{
+                id: 'admin-password',
+                name: 'password',
+                autocomplete: 'current-password'
+              }"
               show-password-on="click"
               size="large"
               @keyup.enter="login"
@@ -26,9 +40,9 @@
             >
               登录
             </n-button>
-            <NuxtLink to="/" class="text-center text-primary hover:underline">
+            <a :href="siteUrl" class="text-center text-primary hover:underline">
               返回首页
-            </NuxtLink>
+            </a>
           </div>
         </n-form>
       </n-card>
@@ -44,6 +58,8 @@ definePageMeta({
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { public: publicConfig } = useRuntimeConfig()
+const siteUrl = publicConfig.siteUrl || '/'
 
 const formRef = ref(null)
 const formData = ref({

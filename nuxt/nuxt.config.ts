@@ -51,6 +51,7 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/theme-variables.css',
     '~/assets/css/tailwind.css', // Tailwind CSS 入口文件
+    '~/assets/css/main.css', // Nuxt UI 主题（@theme 块）
     'katex/dist/katex.min.css', // KaTeX 数学公式样式
     '~/assets/css/components/prose-custom.css', // 自定义 prose 样式
     '~/assets/css/layout.css', // 自定义布局工具类
@@ -70,9 +71,11 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxt/icon', // Nuxt Icon 模块
     '@nuxt/fonts', // Nuxt Fonts 模块
-    '@bg-dev/nuxt-naiveui', // Naive UI 模块
+    '@bg-dev/nuxt-naiveui', // Naive UI 模块（B.4 移除）
     '@nuxtjs/mdc', // MDC Markdown 渲染模块
-    'nuxt-vitalizer' // Core Web Vitals LCP 优化
+    'nuxt-vitalizer', // Core Web Vitals LCP 优化
+    '@nuxt/ui', // Nuxt UI v4
+    '@vueuse/motion/nuxt' // VueUse Motion 动效
   ],
 
   // LCP/SI 优化 - Nuxt Vitalizer

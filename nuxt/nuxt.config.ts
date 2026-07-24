@@ -1,3 +1,5 @@
+import tailwindcss from '@tailwindcss/vite'
+
 const isProduction = process.env.NODE_ENV === 'production'
 const enableSourceMap = process.env.NUXT_SOURCEMAP === 'true'
 const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://wasd09090030.top'
@@ -170,24 +172,7 @@ export default defineNuxtConfig({
     }
   },
 
-  // PostCSS 配置
-  postcss: {
-    plugins: {
-      tailwindcss: {},
-      autoprefixer: {},
-      // 生产环境CSS优化
-      ...(isProduction ? {
-        cssnano: {
-          preset: ['default', {
-            discardComments: { removeAll: true },
-            normalizeWhitespace: true,
-            minifyFontValues: true,
-            minifyGradients: true
-          }]
-        }
-      } : {})
-    }
-  },
+  // 集成 Tailwind CSS via Vite 插件（已替代 PostCSS 配置）
 
   // Nuxt Icon 配置
   icon: {
@@ -217,6 +202,7 @@ export default defineNuxtConfig({
 
   // Vite配置 - 深度优化
   vite: {
+    plugins: [tailwindcss()],
     // Web Worker 配置
     worker: {
       format: 'es'

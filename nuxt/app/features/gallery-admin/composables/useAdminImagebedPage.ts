@@ -1,8 +1,7 @@
 import { h } from 'vue'
 
 export function useAdminImagebedPage() {
-  const message = useMessage()
-  const dialog = useDialog()
+  const toast = useToast()
   const imagebedApi = useImagebed()
 
   const viewMode = ref('grid')
@@ -33,11 +32,6 @@ export function useAdminImagebedPage() {
     uploadFolder: ''
   })
 
-  const configRules = {
-    domain: { required: true, message: '请输入图床域名', trigger: 'blur' },
-    apiToken: { required: true, message: '请输入API Token', trigger: 'blur' }
-  }
-
   const isConfigured = computed(() => !!configForm.value.domain && !!configForm.value.apiToken)
 
   const pathSegments = computed(() => {
@@ -60,21 +54,22 @@ export function useAdminImagebedPage() {
   }
 
   const saveConfig = async () => {
-    configFormRef.value?.validate(async (errors: any) => {
-      if (!errors) {
-        savingConfig.value = true
-        try {
-          await imagebedApi.saveConfig(configForm.value)
-          showConfigModal.value = false
-          message.success('配置已保存')
-          fetchFileList()
-        } catch (error: any) {
-          message.error('保存配置失败: ' + error.message)
-        } finally {
-          savingConfig.value = false
-        }
-      }
-    })
+    if (!configForm.value.domain || !configForm.value.apiToken) {
+      toast.add({ title: '请输入图床域名和API Token', color: 'warning' })
+      return
+    }
+
+    savingConfig.value = true
+    try {
+      await imagebedApi.saveConfig(configForm.value)
+      showConfigModal.value = false
+      toast.add({ title: '配置已保存', color: 'success' })
+      fetchFileList()
+    } catch (error: any) {
+      toast.add({ title: '保存配置失败: ' + error.message, color: 'error' })
+    } finally {
+      savingConfig.value = false
+    }
   }
 
   const navigateTo = (path: string) => {
@@ -129,7 +124,7 @@ export function useAdminImagebedPage() {
       totalCount.value = result.totalCount || (files.length + folders.length)
     } catch (error: any) {
       console.error('List error:', error)
-      message.error(`获取列表失败: ${error.message}`)
+      toast.add({ title: `获取列表失败: ${error.message}`, color: 'error' })
     } finally {
       listLoading.value = false
     }
@@ -160,9 +155,9 @@ export function useAdminImagebedPage() {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
-      message.success('链接已复制')
+      toast.add({ title: '链接已复制', color: 'success' })
     } catch {
-      message.error('复制失败')
+      toast.add({ title: '复制失败', color: 'error' })
     }
   }
 
@@ -192,13 +187,13 @@ export function useAdminImagebedPage() {
       })
 
       if (result.success) {
-        message.success('文件夹删除成功')
+        toast.add({ title: '文件夹删除成功', color: 'success' })
         fetchFileList()
       } else {
         throw new Error(result.error || 'Delete failed')
       }
     } catch (error: any) {
-      message.error(`删除失败: ${error.message}`)
+      toast.add({ title: `删除失败: ${error.message}`, color: 'error' })
     }
   }
 
@@ -207,13 +202,13 @@ export function useAdminImagebedPage() {
   }
 
   const confirmBatchDelete = () => {
-    dialog.warning({
-      title: '批量删除',
-      content: `确定要删除选中的 ${selectedRowKeys.value.length} 个文件吗？`,
-      positiveText: '删除',
-      negativeText: '取消',
-      onPositiveClick: executeBatchDelete
-    })
+    if (selectedRowKeys.value.length === 0) {
+      toast.add({ title: '请先选择要删除的文件', color: 'warning' })
+      return
+    }
+    if (window.confirm(`确定要删除选中的 ${selectedRowKeys.value.length} 个文件吗？`)) {
+      executeBatchDelete()
+    }
   }
 
   const executeBatchDelete = async () => {
@@ -225,11 +220,11 @@ export function useAdminImagebedPage() {
         filePaths: selectedRowKeys.value
       })
 
-      message.success('删除完成')
+      toast.add({ title: '删除完成', color: 'success' })
       selectedRowKeys.value = []
       fetchFileList()
     } catch (error: any) {
-      message.error(`批量删除失败: ${error.message}`)
+      toast.add({ title: `批量删除失败: ${error.message}`, color: 'error' })
     } finally {
       listLoading.value = false
     }
@@ -244,13 +239,13 @@ export function useAdminImagebedPage() {
       })
 
       if (result.success) {
-        message.success('文件删除成功')
+        toast.add({ title: '文件删除成功', color: 'success' })
         fetchFileList()
       } else {
         throw new Error(result.error || 'Delete failed')
       }
     } catch (error: any) {
-      message.error(`删除失败: ${error.message}`)
+      toast.add({ title: `删除失败: ${error.message}`, color: 'error' })
     }
   }
 
@@ -293,73 +288,83 @@ export function useAdminImagebedPage() {
           src: result.src,
           uploadTime: new Date().toLocaleTimeString()
         })
-        message.success('上传成功')
+        toast.add({ title: '上传成功', color: 'success' })
         onFinish?.()
       }
     } catch (error: any) {
       console.error('Upload error:', error)
-      message.error(`上传失败: ${error.message}`)
+      toast.add({ title: `上传失败: ${error.message}`, color: 'error' })
       onError?.()
     }
   }
 
   const fileColumns = [
-    { type: 'selection' },
     {
-      title: '预览',
-      key: 'preview',
-      width: 60,
-      render: (row: any) => h('div', { class: 'w-10 h-10 rounded overflow-hidden bg-gray-100 flex items-center justify-center cursor-pointer', onClick: () => previewFile(row) }, [
-        h('img', { src: row.fullUrl, class: 'w-full h-full object-cover' })
+      id: 'preview',
+      header: '预览',
+      cell: ({ row }: any) => h('div', {
+        class: 'w-10 h-10 rounded overflow-hidden bg-gray-100 flex items-center justify-center cursor-pointer',
+        onClick: () => previewFile(row.original)
+      }, [
+        h('img', { src: row.original.fullUrl, class: 'w-full h-full object-cover' })
       ])
     },
     {
-      title: '文件名',
-      key: 'name',
-      ellipsis: { tooltip: true },
-      render: (row: any) => h('span', {
+      id: 'name',
+      header: '文件名',
+      cell: ({ row }: any) => h('span', {
         class: 'text-blue-500 cursor-pointer hover:underline',
-        title: row.name,
-        onClick: () => copyToClipboard(row.fullUrl)
-      }, row.displayName)
+        onClick: () => copyToClipboard(row.original.fullUrl)
+      }, row.original.displayName)
     },
-    { title: '大小', key: 'size', width: 100 },
-    { title: '上传时间', key: 'time', width: 180 },
+    { id: 'size', header: '大小', accessorKey: 'size' },
+    { id: 'time', header: '上传时间', accessorKey: 'time' },
     {
-      title: '操作',
-      key: 'actions',
-      width: 120,
-      render: (row: any) => h('div', { class: 'flex gap-2' }, [
-        h('n-button', { size: 'tiny', secondary: true, onClick: () => copyToClipboard(row.fullUrl) }, { default: () => '复制' }),
-        h('n-popconfirm', {
-          onPositiveClick: () => executeDeleteFromList(row)
-        }, {
-          trigger: () => h('n-button', { size: 'tiny', type: 'error', quaternary: true }, { default: () => '删除' }),
-          default: () => '确定删除吗？'
-        })
+      id: 'actions',
+      header: '操作',
+      cell: ({ row }: any) => h('div', { class: 'flex gap-2' }, [
+        h(resolveComponent('UButton'), {
+          size: 'xs',
+          variant: 'soft',
+          onClick: () => copyToClipboard(row.original.fullUrl)
+        }, () => '复制'),
+        h(resolveComponent('UButton'), {
+          size: 'xs',
+          variant: 'ghost',
+          color: 'error',
+          onClick: () => {
+            if (window.confirm('确定删除吗？')) {
+              executeDeleteFromList(row.original)
+            }
+          }
+        }, () => '删除')
       ])
     }
   ]
 
   const uploadedColumns = [
     {
-      title: '预览',
-      key: 'preview',
-      width: 60,
-      render: (row: any) => h('img', { src: row.url, class: 'w-10 h-10 object-cover rounded' })
+      id: 'preview',
+      header: '预览',
+      cell: ({ row }: any) => h('img', { src: row.original.url, class: 'w-10 h-10 object-cover rounded' })
     },
-    { title: '文件名', key: 'name', ellipsis: true },
+    { id: 'name', header: '文件名', accessorKey: 'name' },
     {
-      title: '链接',
-      key: 'url',
-      ellipsis: true,
-      render: (row: any) => h('span', { class: 'text-blue-500 cursor-pointer', onClick: () => copyToClipboard(row.url) }, row.url)
+      id: 'url',
+      header: '链接',
+      cell: ({ row }: any) => h('span', {
+        class: 'text-blue-500 cursor-pointer',
+        onClick: () => copyToClipboard(row.original.url)
+      }, row.original.url)
     },
     {
-      title: '操作',
-      key: 'actions',
-      width: 80,
-      render: (row: any) => h('n-button', { size: 'tiny', secondary: true, onClick: () => copyToClipboard(row.url) }, { default: () => '复制' })
+      id: 'actions',
+      header: '操作',
+      cell: ({ row }: any) => h(resolveComponent('UButton'), {
+        size: 'xs',
+        variant: 'soft',
+        onClick: () => copyToClipboard(row.original.url)
+      }, () => '复制')
     }
   ]
 
@@ -384,7 +389,6 @@ export function useAdminImagebedPage() {
     acceptTypes,
     configFormRef,
     configForm,
-    configRules,
     isConfigured,
     pathSegments,
     fileColumns,

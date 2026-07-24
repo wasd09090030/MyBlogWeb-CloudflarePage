@@ -1,4 +1,22 @@
 export default defineAppConfig({
+  ui: {
+    colors: {
+      // 沿用现有 admin primary 色（Bootstrap blue #0d6efd）
+      primary: 'blue',
+      // 与 nuxt-public 一致
+      neutral: 'slate'
+    },
+    icons: {
+      dynamicRounded: 'rounded-full'
+    },
+    button: {
+      defaultVariants: {
+        size: 'md'
+      }
+    },
+    // admin 不渲染 Markdown，prose 路径完全跳过
+    prose: false
+  },
   icon: {
     // 默认图标尺寸
     size: '1.25rem',

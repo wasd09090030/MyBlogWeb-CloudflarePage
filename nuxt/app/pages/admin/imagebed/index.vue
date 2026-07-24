@@ -3,22 +3,24 @@
     <div class="flex justify-between items-center mb-4 shrink-0">
       <div class="flex items-center gap-3">
         <h2 class="text-2xl font-bold text-gray-800 dark:text-white">图床管理</h2>
-        <n-tag v-if="!isConfigured" type="warning" round size="small">
+        <UBadge v-if="!isConfigured" color="warning" variant="subtle" size="sm">
+          <Icon name="exclamation-triangle" class="mr-1" />
           未配置
-          <template #icon><Icon name="exclamation-triangle" /></template>
-        </n-tag>
+        </UBadge>
       </div>
       <div class="flex gap-2">
-        <n-button @click="showConfigModal = true">
-          <template #icon><Icon name="cog-6-tooth" /></template>
+        <UButton variant="solid" color="neutral" @click="showConfigModal = true">
+          <template #leading>
+            <Icon name="cog-6-tooth" />
+          </template>
           设置
-        </n-button>
+        </UButton>
       </div>
     </div>
 
-    <n-card content-style="padding: 0; display: flex; flex-direction: column; height: 100%;" class="flex-1 overflow-hidden shadow-sm rounded-lg">
-      <n-tabs type="line" animated class="h-full flex flex-col" pane-class="h-full flex flex-col overflow-hidden p-0">
-        <n-tab-pane name="list" tab="媒体库" display-directive="show">
+    <UCard class="flex-1 overflow-hidden shadow-sm rounded-lg" :ui="{ body: 'p-0 flex flex-col h-full' }">
+      <UTabs :items="tabItems" value="list" class="h-full" :ui="{ content: 'h-full overflow-hidden p-0' }">
+        <template #list>
           <ImagebedFileArea
             :current-path="currentPath"
             :path-segments="pathSegments"
@@ -47,9 +49,9 @@
             :confirm-delete-folder="confirmDeleteFolder"
             :handle-page-change="handlePageChange"
           />
-        </n-tab-pane>
+        </template>
 
-        <n-tab-pane name="upload" tab="上传图片">
+        <template #upload>
           <ImagebedUploadArea
             :is-configured="isConfigured"
             :upload-ref="uploadRef"
@@ -63,27 +65,31 @@
             :on-copy-all-urls="copyAllUrls"
             :on-clear-uploaded="clearUploaded"
           />
-        </n-tab-pane>
-      </n-tabs>
-    </n-card>
+        </template>
+      </UTabs>
+    </UCard>
 
-    <n-modal v-model:show="showConfigModal" preset="dialog" title="图床配置" :show-icon="false">
-      <n-form ref="configFormRef" :model="configForm" :rules="configRules" label-placement="top" class="mt-4">
-        <n-form-item label="图床域名" path="domain">
-          <n-input v-model:value="configForm.domain" placeholder="https://cdn.example.com" />
-        </n-form-item>
-        <n-form-item label="API Token" path="apiToken">
-          <n-input v-model:value="configForm.apiToken" type="password" show-password-on="click" placeholder="Cloudflare R2 API Token" />
-        </n-form-item>
-        <n-form-item label="默认上传目录" path="uploadFolder">
-          <n-input v-model:value="configForm.uploadFolder" placeholder="可选 (如: static/images)" />
-        </n-form-item>
-      </n-form>
-      <template #action>
-        <n-button @click="showConfigModal = false">取消</n-button>
-        <n-button type="primary" @click="saveConfig" :loading="savingConfig">保存配置</n-button>
+    <UModal v-model:open="showConfigModal" :title="'图床配置'" :description="'配置 Cloudflare R2 图床参数'">
+      <template #body>
+        <UForm :state="configForm" :schema="configSchema" label-placement="top" class="mt-4">
+          <UFormField label="图床域名" name="domain">
+            <UInput v-model="configForm.domain" placeholder="https://cdn.example.com" />
+          </UFormField>
+          <UFormField label="API Token" name="apiToken">
+            <UInput v-model="configForm.apiToken" type="password" placeholder="Cloudflare R2 API Token" />
+          </UFormField>
+          <UFormField label="默认上传目录" name="uploadFolder">
+            <UInput v-model="configForm.uploadFolder" placeholder="可选 (如: static/images)" />
+          </UFormField>
+        </UForm>
       </template>
-    </n-modal>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton variant="ghost" color="neutral" @click="showConfigModal = false">取消</UButton>
+          <UButton color="primary" :loading="savingConfig" @click="saveConfig">保存配置</UButton>
+        </div>
+      </template>
+    </UModal>
 
     <ImagebedPreviewModal
       :show="showPreviewModal"
@@ -95,6 +101,7 @@
 </template>
 
 <script setup lang="ts">
+import * as v from 'valibot'
 import ImagebedFileArea from '~/features/gallery-admin/components/imagebed/ImagebedFileArea.vue'
 import ImagebedUploadArea from '~/features/gallery-admin/components/imagebed/ImagebedUploadArea.vue'
 import ImagebedPreviewModal from '~/features/gallery-admin/components/imagebed/ImagebedPreviewModal.vue'
@@ -106,6 +113,17 @@ definePageMeta({
   // Phase 2: 与 admin 其他页面一致，避免 SSR hydration mismatch
   ssr: false
 })
+
+const configSchema = v.object({
+  domain: v.pipe(v.string(), v.url('请输入有效的 URL')),
+  apiToken: v.pipe(v.string(), v.minLength(1, '请输入 API Token')),
+  uploadFolder: v.optional(v.string())
+})
+
+const tabItems = [
+  { value: 'list', label: '媒体库', slot: 'list' },
+  { value: 'upload', label: '上传图片', slot: 'upload' }
+]
 
 const {
   viewMode,

@@ -1,0 +1,18 @@
+@theme {
+  /* primary 色阶（Bootstrap blue 50-900） */
+  --color-primary-50: #e6f1fe;
+  --color-primary-100: #cce3fd;
+  --color-primary-200: #99c7fb;
+  --color-primary-300: #66abf9;
+  --color-primary-400: #338ff7;
+  --color-primary-500: #0d6efd;
+  --color-primary-600: #0a58ca;
+  --color-primary-700: #0842a0;
+  --color-primary-800: #052c6b;
+  --color-primary-900: #031639;
+
+  /* 圆角 token（与现有 .rounded-md/.rounded-lg 体系保持一致） */
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.75rem;
+}

@@ -10,7 +10,7 @@
       :show-file-list="false"
       class="mb-6"
     >
-      <n-upload-dragger class="!p-12 !rounded-xl !border-2 hover:!border-blue-500 !transition-colors group">
+      <n-upload-dragger class="p-12! rounded-xl! border-2! hover:border-blue-500! transition-colors! group">
         <div class="flex flex-col items-center gap-4">
           <div class="w-20 h-20 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
             <Icon name="cloud-arrow-up" size="4xl" />

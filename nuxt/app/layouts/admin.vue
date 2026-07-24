@@ -54,7 +54,7 @@
             v-for="item in menuItems"
             :key="item.path"
             :to="item.path"
-            class="flex-shrink-0 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap"
+            class="shrink-0 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap"
             :class="[
               isActive(item.path) 
                 ? 'bg-primary/10 text-primary' 

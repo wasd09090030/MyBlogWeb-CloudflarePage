@@ -71,7 +71,6 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxt/icon', // Nuxt Icon 模块
     '@nuxt/fonts', // Nuxt Fonts 模块
-    '@bg-dev/nuxt-naiveui', // Naive UI 模块（B.4 移除）
     '@nuxtjs/mdc', // MDC Markdown 渲染模块
     'nuxt-vitalizer', // Core Web Vitals LCP 优化
     '@nuxt/ui', // Nuxt UI v4
@@ -188,19 +187,14 @@ export default defineNuxtConfig({
     serverKnownCssClasses: ['nuxt-icon']
   },
 
-  // Naive UI 配置
-  naiveui: {
-    colorModePreference: 'system',
-    iconSize: 18,
-    themeConfig: {}
-  },
+  // Naive UI 配置已移除（B.1 起改用 @nuxt/ui）
 
   // 依赖配置
   build: {
     // 优化构建分析
     analyze: true,
     // 提升构建性能
-    transpile: ['@vueuse/core', 'naive-ui']
+    transpile: ['@vueuse/core']
   },
 
   // Vite配置 - 深度优化
@@ -214,7 +208,6 @@ export default defineNuxtConfig({
       include: [
         'vue',
         'keen-slider',
-        'naive-ui',
         'katex',
         '@vueuse/core',
         'mermaid',
@@ -256,7 +249,13 @@ export default defineNuxtConfig({
             if (id.includes('node_modules/mermaid')) {
               return 'vendor-markdown';
             }
-            // Vue/Naive UI 让 Nuxt 自动处理，避免初始化顺序问题
+            // UI 库及其核心依赖必须在同一 chunk 以避免循环依赖
+            if (id.includes('node_modules/@nuxt/ui')
+              || id.includes('node_modules/reka-ui')
+              || id.includes('node_modules/@internationalized')
+              || id.includes('node_modules/@vueuse')) {
+              return 'vendor-ui';
+            }
           }
         }
       },

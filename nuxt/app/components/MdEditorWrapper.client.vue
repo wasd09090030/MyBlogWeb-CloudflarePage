@@ -4,60 +4,36 @@
     <div class="mdc-toolbar bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-t-lg p-2">
       <div class="flex items-center gap-2 flex-wrap">
         <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 mr-2">MDC 组件:</span>
-        <n-button-group size="small">
-          <n-button @click="insertTemplate('alert')" quaternary title="插入 Alert 提示框">
-            💡 Alert
-          </n-button>
-          <n-button @click="insertTemplate('tabs')" quaternary title="插入 Tabs 标签页">
-            📑 Tabs
-          </n-button>
-          <n-button @click="insertTemplate('collapse')" quaternary title="插入 Collapse 折叠">
-            📦 Collapse
-          </n-button>
-          <n-button @click="insertTemplate('codePlayground')" quaternary title="插入代码演示">
-            💻 Code
-          </n-button>
-          <n-button @click="insertTemplate('linkCard')" quaternary title="插入链接卡片">
-            🔗 Link
-          </n-button>
-          <n-button @click="insertTemplate('imageComparison')" quaternary title="插入图片对比">
-            🖼️ Compare
-          </n-button>
-          <n-button @click="insertTemplate('webEmbed')" quaternary title="插入视频嵌入">
-            🎬 Video
-          </n-button>
-          <n-button @click="insertTemplate('starRating')" quaternary title="插入星级评分">
-            ⭐ Rating
-          </n-button>
-        </n-button-group>
-        <n-button-group size="small">
-          <n-button @click="insertTemplate('steps')" quaternary title="插入步骤条">
-            🔢 Steps
-          </n-button>
-          <n-button @click="insertTemplate('githubCard')" quaternary title="插入 GitHub 卡片">
-            🐙 GitHub
-          </n-button>
-          <n-button @click="insertTemplate('imageEnhanced')" quaternary title="插入增强图片">
-            🎨 Image+
-          </n-button>
-        </n-button-group>
-        <n-button-group size="small">
-          <n-button @click="insertTemplate('typeWriter')" quaternary title="插入打字机动画">
-            ⌨️ 打字机
-          </n-button>
-          <n-button @click="insertTemplate('spoiler')" quaternary title="插入剧透遮罩">
-            🙈 剧透
-          </n-button>
-        </n-button-group>
-        <n-button
-          quaternary
-          circle
+        <div class="flex items-center gap-1">
+          <UButton size="sm" variant="ghost" color="neutral" title="插入 Alert 提示框" @click="insertTemplate('alert')">💡 Alert</UButton>
+          <UButton size="sm" variant="ghost" color="neutral" title="插入 Tabs 标签页" @click="insertTemplate('tabs')">📑 Tabs</UButton>
+          <UButton size="sm" variant="ghost" color="neutral" title="插入 Collapse 折叠" @click="insertTemplate('collapse')">📦 Collapse</UButton>
+          <UButton size="sm" variant="ghost" color="neutral" title="插入代码演示" @click="insertTemplate('codePlayground')">💻 Code</UButton>
+          <UButton size="sm" variant="ghost" color="neutral" title="插入链接卡片" @click="insertTemplate('linkCard')">🔗 Link</UButton>
+          <UButton size="sm" variant="ghost" color="neutral" title="插入图片对比" @click="insertTemplate('imageComparison')">🖼️ Compare</UButton>
+          <UButton size="sm" variant="ghost" color="neutral" title="插入视频嵌入" @click="insertTemplate('webEmbed')">🎬 Video</UButton>
+          <UButton size="sm" variant="ghost" color="neutral" title="插入星级评分" @click="insertTemplate('starRating')">⭐ Rating</UButton>
+        </div>
+        <div class="flex items-center gap-1">
+          <UButton size="sm" variant="ghost" color="neutral" title="插入步骤条" @click="insertTemplate('steps')">🔢 Steps</UButton>
+          <UButton size="sm" variant="ghost" color="neutral" title="插入 GitHub 卡片" @click="insertTemplate('githubCard')">🐙 GitHub</UButton>
+          <UButton size="sm" variant="ghost" color="neutral" title="插入增强图片" @click="insertTemplate('imageEnhanced')">🎨 Image+</UButton>
+        </div>
+        <div class="flex items-center gap-1">
+          <UButton size="sm" variant="ghost" color="neutral" title="插入打字机动画" @click="insertTemplate('typeWriter')">⌨️ 打字机</UButton>
+          <UButton size="sm" variant="ghost" color="neutral" title="插入剧透遮罩" @click="insertTemplate('spoiler')">🙈 剧透</UButton>
+        </div>
+        <UButton
+          variant="ghost"
+          color="neutral"
+          icon
+          square
           title="查看 MDC 组件参数说明"
           class="mdc-help-trigger"
           @click="showMdcHelp = true"
         >
           ?
-        </n-button>
+        </UButton>
       </div>
     </div>
     
@@ -87,68 +63,69 @@
       placeholder="请输入文章内容...支持 Markdown 语法、HTML 标签和 MDC 组件"
     />
 
-    <n-modal
-      v-model:show="showMdcHelp"
-      preset="card"
-      title="MDC 组件说明"
-      :mask-closable="true"
-      style="width: min(1024px, 95vw);"
+    <UModal
+      v-model:open="showMdcHelp"
+      :title="'MDC 组件说明'"
+      :description="'查看各 MDC 组件的参数与示例'"
+      :ui="{ width: 'sm:max-w-[min(1024px,95vw)]' }"
     >
-      <div class="mdc-help-layout">
-        <aside class="mdc-help-sidebar">
-          <n-menu
-            :options="mdcHelpMenuOptions"
-            :value="activeDocKey"
-            @update:value="handleDocChange"
-          />
-        </aside>
+      <template #body>
+        <div class="mdc-help-layout">
+          <aside class="mdc-help-sidebar">
+            <UVerticalNavigation
+              :links="mdcHelpMenuOptions"
+              :model-value="activeDocKey"
+              @update:model-value="handleDocChange"
+            />
+          </aside>
 
-        <section v-if="activeDoc" class="mdc-help-content">
-          <h3 class="mdc-help-title">{{ activeDoc.label }}</h3>
-          <p class="mdc-help-description">{{ activeDoc.description }}</p>
+          <section v-if="activeDoc" class="mdc-help-content">
+            <h3 class="mdc-help-title">{{ activeDoc.label }}</h3>
+            <p class="mdc-help-description">{{ activeDoc.description }}</p>
 
-          <div class="mdc-help-block">
-            <div class="mdc-help-subtitle">使用语法</div>
-            <pre class="mdc-help-code">{{ activeDoc.syntax }}</pre>
-          </div>
-
-          <div class="mdc-help-block">
-            <div class="mdc-help-subtitle">参数说明</div>
-            <div class="mdc-help-table-wrapper">
-              <table class="mdc-help-table">
-                <thead>
-                  <tr>
-                    <th>参数</th>
-                    <th>类型</th>
-                    <th>默认值</th>
-                    <th>说明</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="param in activeDoc.params" :key="`${activeDoc.key}-${param.name}`">
-                    <td>{{ param.name }}</td>
-                    <td>{{ param.type }}</td>
-                    <td>{{ param.defaultValue }}</td>
-                    <td>{{ param.description }}</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div class="mdc-help-block">
+              <div class="mdc-help-subtitle">使用语法</div>
+              <pre class="mdc-help-code">{{ activeDoc.syntax }}</pre>
             </div>
-          </div>
 
-          <div class="mdc-help-block">
-            <div class="mdc-help-subtitle">示例</div>
-            <pre class="mdc-help-code">{{ activeDoc.example }}</pre>
-          </div>
-        </section>
-      </div>
+            <div class="mdc-help-block">
+              <div class="mdc-help-subtitle">参数说明</div>
+              <div class="mdc-help-table-wrapper">
+                <table class="mdc-help-table">
+                  <thead>
+                    <tr>
+                      <th>参数</th>
+                      <th>类型</th>
+                      <th>默认值</th>
+                      <th>说明</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="param in activeDoc.params" :key="`${activeDoc.key}-${param.name}`">
+                      <td>{{ param.name }}</td>
+                      <td>{{ param.type }}</td>
+                      <td>{{ param.defaultValue }}</td>
+                      <td>{{ param.description }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="mdc-help-block">
+              <div class="mdc-help-subtitle">示例</div>
+              <pre class="mdc-help-code">{{ activeDoc.example }}</pre>
+            </div>
+          </section>
+        </div>
+      </template>
 
       <template #footer>
         <div class="mdc-help-footer">
-          <n-button type="primary" @click="showMdcHelp = false">我知道了</n-button>
+          <UButton color="primary" @click="showMdcHelp = false">我知道了</UButton>
         </div>
       </template>
-    </n-modal>
+    </UModal>
   </div>
 </template>
 

@@ -1,10 +1,7 @@
 <template>
-  <n-config-provider :theme="isDarkMode ? darkTheme : null">
-    <n-message-provider>
-      <n-dialog-provider>
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-        <!-- 顶部导航栏 -->
-        <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
+  <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <!-- Logo 和标题 -->
@@ -23,8 +20,8 @@
               :to="item.path"
               class="nav-link px-3 py-2 rounded-md text-sm font-medium transition-colors"
               :class="[
-                isActive(item.path) 
-                  ? 'bg-primary/10 text-primary' 
+                isActive(item.path)
+                  ? 'bg-primary/10 text-primary'
                   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               ]"
             >
@@ -38,11 +35,11 @@
             <NuxtLink to="/" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
               <Icon name="home" size="md" />
             </NuxtLink>
-            <n-button quaternary circle @click="handleLogout">
-              <template #icon>
+            <UButton variant="ghost" color="neutral" square @click="handleLogout">
+              <template #leading>
                 <Icon name="arrow-left" size="md" />
               </template>
-            </n-button>
+            </UButton>
           </div>
         </div>
       </div>
@@ -56,8 +53,8 @@
             :to="item.path"
             class="shrink-0 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap"
             :class="[
-              isActive(item.path) 
-                ? 'bg-primary/10 text-primary' 
+              isActive(item.path)
+                ? 'bg-primary/10 text-primary'
                 : 'text-gray-600 dark:text-gray-300'
             ]"
           >
@@ -68,19 +65,14 @@
       </div>
     </header>
 
-        <!-- 主内容区 -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <slot />
-        </main>
-        </div>
-      </n-dialog-provider>
-    </n-message-provider>
-  </n-config-provider>
+    <!-- 主内容区 -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <slot />
+    </main>
+  </div>
 </template>
 
 <script setup>
-import { darkTheme } from 'naive-ui'
-
 // 主题状态
 const isDarkMode = useState('isDarkMode', () => false)
 

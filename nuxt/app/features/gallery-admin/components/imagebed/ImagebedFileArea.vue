@@ -45,11 +45,7 @@
               color="error"
               icon
               square
-              @click.stop="() => {
-                if (window.confirm(`确定删除文件夹 "${folder.displayName}" 及其所有内容吗？`)) {
-                  confirmDeleteFolder(folder.name)
-                }
-              }"
+              @click.stop="handleDeleteFolderClick(folder)"
             >
               <Icon name="trash" />
             </UButton>
@@ -90,11 +86,7 @@
               <Icon
                 name="trash"
                 class="cursor-pointer hover:text-red-500 transition-colors"
-                @click="() => {
-                  if (window.confirm('确定删除此文件吗？')) {
-                    executeDeleteFromList(file)
-                  }
-                }"
+                @click="handleDeleteFileClick(file)"
               />
             </div>
           </div>
@@ -118,11 +110,7 @@
                 variant="ghost"
                 color="error"
                 class="opacity-0 group-hover:opacity-100"
-                @click.stop="() => {
-                  if (window.confirm(`确定删除文件夹 "${folder.displayName}" 及其所有内容吗？`)) {
-                    confirmDeleteFolder(folder.name)
-                  }
-                }"
+                @click.stop="handleDeleteFolderClick(folder)"
               >
                 删除
               </UButton>
@@ -186,4 +174,20 @@ defineProps<{
   confirmDeleteFolder: (folderPath: string) => void
   handlePageChange: (page: number) => void
 }>()
+
+const emit = defineEmits<{
+  (e: 'select-folder', folder: any): void
+}>()
+
+const handleDeleteFolderClick = (folder: any) => {
+  if (window.confirm(`确定删除文件夹 "${folder.displayName}" 及其所有内容吗？`)) {
+    confirmDeleteFolder(folder.name)
+  }
+}
+
+const handleDeleteFileClick = (file: any) => {
+  if (window.confirm('确定删除此文件吗？')) {
+    executeDeleteFromList(file)
+  }
+}
 </script>

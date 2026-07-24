@@ -1,7 +1,7 @@
 <template>
-  <div class="space-y-8">
+  <div class="space-y-6">
     <!-- 顶部欢迎区 / 系统状态 -->
-    <header class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <header class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div class="space-y-1.5">
         <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">
           {{ greetingEyebrow }}
@@ -36,7 +36,7 @@
 
     <!-- 统计卡片：4 个一组 + 渐变底线作为 signature -->
     <section
-      class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
+      class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"
       aria-label="站点统计"
     >
       <NuxtLink
@@ -47,7 +47,7 @@
       >
         <UCard
           variant="subtle"
-          :ui="{ root: 'relative overflow-hidden ring ring-default/40 hover:ring-primary/40 transition-colors', body: 'p-5' }"
+          :ui="{ root: 'relative min-h-36 overflow-hidden bg-elevated/70 ring ring-default/60 shadow-sm hover:ring-primary/40 transition-colors', body: 'p-4' }"
         >
           <div class="flex items-start justify-between gap-4">
             <div class="space-y-2 min-w-0 flex-1">
@@ -57,7 +57,7 @@
               <USkeleton v-if="loading" class="h-8 w-20" />
               <p
                 v-else
-                class="font-display text-3xl font-semibold tabular-nums text-highlighted leading-none"
+                class="font-display text-3xl font-semibold tabular-nums text-highlighted leading-none tracking-normal"
               >
                 {{ stat.value }}
               </p>
@@ -82,11 +82,11 @@
     </section>
 
     <!-- 主内容区：最近文章 + 快捷操作 -->
-    <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <section class="grid grid-cols-1 xl:grid-cols-3 gap-4">
       <!-- 最近文章 -->
       <UCard
         variant="subtle"
-        :ui="{ root: 'xl:col-span-2 ring ring-default/40', header: 'flex items-center justify-between gap-2 px-5 pt-5', body: 'p-0' }"
+        :ui="{ root: 'xl:col-span-2 bg-elevated/70 ring ring-default/60 shadow-sm', header: 'flex items-center justify-between gap-2 px-5 pt-5', body: 'p-0' }"
       >
         <template #header>
           <div class="flex items-center gap-2">
@@ -140,7 +140,7 @@
       <div class="space-y-6">
         <UCard
           variant="subtle"
-          :ui="{ root: 'ring ring-default/40', header: 'px-5 pt-5', body: 'p-3' }"
+          :ui="{ root: 'bg-elevated/70 ring ring-default/60 shadow-sm', header: 'px-5 pt-5', body: 'p-3' }"
         >
           <template #header>
             <div class="flex items-center gap-2">
@@ -177,7 +177,7 @@
 
         <UCard
           variant="subtle"
-          :ui="{ root: 'ring ring-default/40', header: 'px-5 pt-5', body: 'p-5 space-y-3' }"
+          :ui="{ root: 'bg-elevated/70 ring ring-default/60 shadow-sm', header: 'px-5 pt-5', body: 'p-5 space-y-3' }"
         >
           <template #header>
             <div class="flex items-center gap-2">

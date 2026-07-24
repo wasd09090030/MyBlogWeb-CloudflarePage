@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@nuxt/ui";
 
 /* 暗色模式采用 .dark class 策略，与现有 useTheme 切换一致 */
 @custom-variant dark (&:where(.dark, .dark *));

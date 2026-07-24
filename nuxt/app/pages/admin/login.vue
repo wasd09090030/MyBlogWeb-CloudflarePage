@@ -22,30 +22,30 @@
       </div>
     </div>
 
-    <div class="relative z-10 w-full max-w-md">
+    <div class="relative z-10 w-full max-w-sm">
       <!-- 品牌行 -->
-      <div class="flex flex-col items-center gap-4 mb-8">
+      <div class="flex flex-col items-center gap-3 mb-6">
         <span
-          class="flex items-center justify-center size-14 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25 ring-1 ring-primary/30"
+          class="flex items-center justify-center size-12 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 ring-1 ring-primary/30"
         >
           <span class="font-display font-bold text-3xl leading-none tracking-tight">W</span>
         </span>
         <div class="text-center space-y-1">
-          <p class="font-display text-xl font-semibold text-highlighted tracking-tight">WyrmKk</p>
+          <p class="font-display text-lg font-semibold text-highlighted tracking-tight">WyrmKk</p>
           <p class="text-xs uppercase tracking-[0.22em] text-muted">Admin Console</p>
         </div>
       </div>
 
       <UCard
         :ui="{
-          root: 'ring ring-default backdrop-blur-md shadow-2xl shadow-primary/5 overflow-hidden',
-          header: 'px-8 pt-8 pb-0 border-0',
-          body: 'px-8 py-8 space-y-6'
+          root: 'bg-elevated/95 ring ring-default shadow-xl shadow-black/20 overflow-hidden',
+          header: 'px-7 pt-7 pb-0 border-0',
+          body: 'px-7 pt-6 pb-7'
         }"
       >
         <template #header>
           <div class="space-y-1.5">
-            <h1 class="font-display text-2xl font-semibold text-highlighted tracking-tight">
+            <h1 class="font-display text-xl font-semibold text-highlighted tracking-tight">
               管理员登录
             </h1>
             <p class="text-sm text-muted">输入管理员密码以继续访问后台</p>
@@ -56,7 +56,7 @@
           :state="formData"
           :schema="schema"
           @submit="login"
-          class="space-y-6"
+          class="space-y-0"
         >
           <input
             class="sr-only"
@@ -71,6 +71,7 @@
             label="管理员密码"
             name="password"
             required
+            class="space-y-2"
           >
             <UInput
               v-model="formData.password"
@@ -79,6 +80,7 @@
               autocomplete="current-password"
               autofocus
               size="lg"
+              :ui="{ base: 'h-11 text-sm' }"
               @keyup.enter="login"
             >
               <template #leading>
@@ -94,6 +96,7 @@
             variant="subtle"
             icon="i-lucide-circle-alert"
             closeable
+            class="mt-4"
             @close="error = ''"
           />
 
@@ -104,13 +107,14 @@
             size="lg"
             icon="i-lucide-log-in"
             :loading="isLoggingIn"
+            class="mt-6"
           >
             登录
           </UButton>
 
-          <USeparator />
+          <USeparator class="my-5" />
 
-          <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center justify-between gap-3 text-xs">
             <span class="inline-flex items-center gap-1.5 text-muted font-mono">
               <UIcon name="i-lucide-clock" class="size-3" />
               {{ sessionInfo }}
@@ -128,7 +132,7 @@
         </UForm>
       </UCard>
 
-      <p class="mt-8 text-center text-xs text-muted">
+      <p class="mt-6 text-center text-xs text-muted">
         © {{ new Date().getFullYear() }} WyrmKk · Powered by Nuxt
       </p>
     </div>

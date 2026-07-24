@@ -4,7 +4,7 @@
     <UDashboardSidebar
       collapsible
       resizable
-      :ui="{ footer: 'border-t border-default' }"
+      :ui="{ root: 'bg-elevated/40', footer: 'border-t border-default' }"
     >
       <template #header="{ collapsed }">
         <NuxtLink
@@ -69,7 +69,7 @@
       <template #header>
         <UDashboardNavbar
           :title="pageTitle"
-          :ui="{ root: 'border-b border-default' }"
+          :ui="{ root: 'border-b border-default bg-default/80 backdrop-blur-sm' }"
         >
           <template #leading>
             <UDashboardSidebarCollapse variant="subtle" color="neutral" />

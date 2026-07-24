@@ -4,6 +4,14 @@
 >
 > **公共浏览职责（首页/文章/画廊/教程/关于）由 `nuxt-public/` 静态站承担。**
 > 详细范围收缩变更见 [`openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/`](../../openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/)。
+> UI 迁移变更（NaiveUI → Nuxt UI v4）见 [`openspec/changes/nuxt-ssr-nuxt-ui-v4-migration/`](../../openspec/changes/nuxt-ssr-nuxt-ui-v4-migration/)。
+
+## 🚀 技术栈
+
+- Nuxt 4.3 + Vue 3.4
+- Tailwind CSS v4.x（via `@tailwindcss/vite`，2026-07-24 升级完成）
+- UI 库：**Nuxt UI v4**（admin-only，2026-07-24 迁移完成）；`@nuxt/ui@^4.9.0` + `valibot@^1.x` + `@vueuse/motion/nuxt@^2.x`
+- 范围：本目录仅承载 admin 后台，公开页由 `nuxt-public/` 静态站承载
 
 ## 🚀 快速开始
 

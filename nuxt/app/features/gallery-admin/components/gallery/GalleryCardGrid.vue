@@ -14,7 +14,7 @@
       @drop="handleDrop($event, gallery)"
       @dragend="handleDragEnd"
     >
-      <n-card :class="{ 'opacity-50': draggedGallery?.id === gallery.id }" hoverable>
+      <UCard :class="{ 'opacity-50': draggedGallery?.id === gallery.id }">
         <div v-if="sortBy === 'manual'" class="drag-handle absolute top-2 left-2 z-10 cursor-move opacity-60 hover:opacity-100">
           <Icon name="bars-3" size="md" class="text-white drop-shadow-lg" />
         </div>
@@ -28,21 +28,21 @@
           />
 
           <div class="image-overlay absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <n-button circle quaternary size="small" class="text-white" @click="editGallery(gallery)">
-              <Icon name="pencil-square" size="md" />
-            </n-button>
-            <n-button circle quaternary size="small" class="text-white" @click="toggleActive(gallery)">
-              <Icon :name="gallery.isActive ? 'eye' : 'eye'" size="md" />
-            </n-button>
-            <n-button circle quaternary size="small" class="text-red-400" @click="confirmDelete(gallery)">
-              <Icon name="trash" size="md" />
-            </n-button>
+            <UButton variant="ghost" color="primary" icon square size="sm" @click="editGallery(gallery)">
+              <Icon name="pencil-square" size="md" class="text-white" />
+            </UButton>
+            <UButton variant="ghost" color="primary" icon square size="sm" @click="toggleActive(gallery)">
+              <Icon :name="gallery.isActive ? 'eye' : 'eye'" size="md" class="text-white" />
+            </UButton>
+            <UButton variant="ghost" color="error" icon square size="sm" @click="confirmDelete(gallery)">
+              <Icon name="trash" size="md" class="text-red-400" />
+            </UButton>
           </div>
 
           <div class="absolute top-2 right-2">
-            <n-tag :type="gallery.isActive ? 'success' : 'default'" size="small">
+            <UBadge :color="gallery.isActive ? 'success' : 'neutral'" size="sm" variant="subtle">
               {{ gallery.isActive ? '显示' : '隐藏' }}
-            </n-tag>
+            </UBadge>
           </div>
         </div>
 
@@ -51,7 +51,7 @@
           <span class="text-center">{{ formatDimensions(gallery) }}</span>
           <span class="text-right">{{ formatDate(gallery.createdAt) }}</span>
         </div>
-      </n-card>
+      </UCard>
     </div>
   </div>
 </template>

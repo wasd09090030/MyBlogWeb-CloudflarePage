@@ -23,11 +23,13 @@
   "dependencies": {
     "@nuxt/fonts": "^0.8.0",
     "@nuxt/icon": "^2.2.1",
+    "@nuxt/ui": "^4.10.0",
     "@nuxtjs/mdc": "^0.19.2",
     "@pinia/nuxt": "^0.5.1",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.3.3",
     "@vueuse/core": "^14.1.0",
+    "@vueuse/motion": "^2.2.6",
     "browser-image-compression": "^2.0.2",
     "docx": "^9.5.1",
     "file-saver": "^2.0.5",
@@ -42,6 +44,7 @@
     "pinia": "^2.1.7",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
+    "valibot": "^1.4.2",
     "vue": "^3.4.21"
   },
   "devDependencies": {

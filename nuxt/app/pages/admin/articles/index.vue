@@ -1,107 +1,103 @@
 <template>
   <div class="article-manager">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">文章管理</h2>
-        <n-button type="primary" @click="createArticle">
-          <template #icon>
-            <Icon name="plus-circle" size="sm" />
-          </template>
-          新建文章
-        </n-button>
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-white">文章管理</h2>
+      <UButton color="primary" @click="createArticle">
+        <template #leading>
+          <Icon name="plus-circle" size="sm" />
+        </template>
+        新建文章
+      </UButton>
+    </div>
+
+    <!-- 搜索和筛选区域 -->
+    <UCard class="mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div>
+          <UInput
+            v-model="searchKeyword"
+            placeholder="输入标题关键词..."
+            :ui="{ base: 'w-full', leading: 'pl-9' }"
+            @keyup.enter="handleSearch"
+          >
+            <template #leading>
+              <Icon name="search" size="sm" class="text-gray-400" />
+            </template>
+          </UInput>
+        </div>
+        <div>
+          <USelect
+            v-model="selectedCategory"
+            placeholder="全部类别"
+            :items="categoryOptions"
+            value-key="value"
+            @update:model-value="handleFilterChange"
+          />
+        </div>
+        <div>
+          <USelect
+            v-model="pageSize"
+            :items="pageSizeOptions"
+            value-key="value"
+            @update:model-value="handlePageSizeChange"
+          />
+        </div>
+        <div class="text-right">
+          <UButton variant="ghost" color="neutral" @click="resetFilters">
+            <template #leading>
+              <Icon name="arrow-path" size="sm" />
+            </template>
+            重置筛选
+          </UButton>
+        </div>
+      </div>
+    </UCard>
+
+    <!-- 文章列表 -->
+    <UCard>
+      <div v-if="loading" class="flex justify-center py-12">
+        <USpinner />
+      </div>
+      <div v-else-if="filteredArticles.length === 0" class="text-center py-12 text-gray-400">
+        <Icon name="inbox" size="3xl" class="mb-3 opacity-50" />
+        <p>{{ searchKeyword || selectedCategory ? '没有找到符合条件的文章' : '暂无文章' }}</p>
       </div>
 
-      <!-- 搜索和筛选区域 -->
-      <n-card class="mb-4">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div>
-            <n-input
-              v-model:value="searchKeyword"
-              placeholder="输入标题关键词..."
-              clearable
-              @keyup.enter="handleSearch"
-            >
-              <template #prefix>
-                <Icon name="search" size="sm" class="text-gray-400" />
-              </template>
-            </n-input>
-          </div>
-          <div>
-            <n-select
-              v-model:value="selectedCategory"
-              placeholder="全部类别"
-              :options="categoryOptions"
-              clearable
-              @update:value="handleFilterChange"
-            />
-          </div>
-          <div>
-            <n-select
-              v-model:value="pageSize"
-              :options="pageSizeOptions"
-              @update:value="handlePageSizeChange"
-            />
-          </div>
-          <div class="text-right">
-            <n-button quaternary @click="resetFilters">
-              <template #icon>
-                <Icon name="arrow-path" size="sm" />
-              </template>
-              重置筛选
-            </n-button>
-          </div>
+      <template v-else>
+        <!-- 统计信息 -->
+        <div class="flex justify-between items-center mb-4 text-sm text-gray-500">
+          <span>共 {{ totalCount }} 篇文章，当前显示第 {{ currentPage }} 页</span>
+          <span>显示 {{ paginatedArticles.length }} 条</span>
         </div>
-      </n-card>
 
-      <!-- 文章列表 -->
-      <n-card>
-        <n-spin :show="loading">
-          <div v-if="!loading && filteredArticles.length === 0" class="text-center py-12 text-gray-400">
-            <Icon name="inbox" size="3xl" class="mb-3 opacity-50" />
-            <p>{{ searchKeyword || selectedCategory ? '没有找到符合条件的文章' : '暂无文章' }}</p>
-          </div>
+        <UTable :data="paginatedArticles" :columns="tableColumns" />
 
-          <template v-else>
-            <!-- 统计信息 -->
-            <div class="flex justify-between items-center mb-4 text-sm text-gray-500">
-              <span>共 {{ totalCount }} 篇文章，当前显示第 {{ currentPage }} 页</span>
-              <span>显示 {{ paginatedArticles.length }} 条</span>
-            </div>
+        <!-- 分页 -->
+        <div v-if="totalPages > 1" class="flex justify-center mt-4">
+          <UPagination
+            v-model:page="currentPage"
+            :total="totalCount"
+            :items-per-page="pageSize"
+            :sibling-count="2"
+            show-controls
+          />
+        </div>
+      </template>
+    </UCard>
 
-            <n-data-table
-              :columns="tableColumns"
-              :data="paginatedArticles"
-              :bordered="false"
-              size="small"
-            />
-
-            <!-- 分页 -->
-            <div v-if="totalPages > 1" class="flex justify-center mt-4">
-              <n-pagination
-                v-model:page="currentPage"
-                :page-count="totalPages"
-                :page-slot="5"
-                show-quick-jumper
-              />
-            </div>
-          </template>
-        </n-spin>
-      </n-card>
-
-      <!-- 删除确认对话框 -->
-      <n-modal v-model:show="showDeleteModal" preset="dialog" type="warning" title="确认删除">
-        <template #default>
-          <p>确定要删除文章《{{ articleToDelete?.title }}》吗？此操作不可恢复。</p>
-        </template>
-        <template #action>
-          <n-button @click="showDeleteModal = false">取消</n-button>
-          <n-button type="error" :loading="deletingArticle" @click="handleDelete">确认删除</n-button>
-        </template>
-      </n-modal>
-    </div>
+    <!-- 删除确认对话框 -->
+    <UModal v-model:open="showDeleteModal" :title="`确认删除《${articleToDelete?.title}》`" :description="'此操作不可恢复，请谨慎操作'">
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton variant="ghost" color="neutral" @click="showDeleteModal = false">取消</UButton>
+          <UButton color="error" :loading="deletingArticle" @click="handleDelete">确认删除</UButton>
+        </div>
+      </template>
+    </UModal>
+  </div>
 </template>
 
 <script setup>
-import { NButton, NTag, NSpace } from 'naive-ui'
 import { useAdminArticlesFeature } from '~/features/article-admin/composables/useAdminArticlesFeature'
 
 definePageMeta({
@@ -111,8 +107,8 @@ definePageMeta({
 })
 
 const router = useRouter()
-const message = useMessage()
-const { getArticles, deleteArticle, getCategoryLabel, getCategoryType } = useAdminArticlesFeature()
+const toast = useToast()
+const { getArticles, deleteArticle, getCategoryLabel } = useAdminArticlesFeature()
 
 const articles = ref([])
 const loading = ref(true)
@@ -140,6 +136,14 @@ const pageSizeOptions = [
   { label: '50条/页', value: 50 }
 ]
 
+const categoryColorMap = {
+  study: 'primary',
+  game: 'success',
+  work: 'warning',
+  resource: 'info',
+  other: 'neutral'
+}
+
 const formatDate = (dateString) => {
   if (!dateString) return '-'
   return new Date(dateString).toLocaleDateString('zh-CN')
@@ -152,55 +156,66 @@ const getArticlePath = (article) => {
   return article.slug ? `/article/${article.id}-${article.slug}` : `/article/${article.id}`
 }
 
-// 表格列配置
+// 表格列配置（UTable 语法）
 const tableColumns = [
   {
-    title: 'ID',
-    key: 'id',
-    width: 60,
-    render: (row) => h(NTag, { size: 'small' }, () => row.id)
+    id: 'id',
+    header: 'ID',
+    cell: ({ row }) => h(resolveComponent('UBadge'), { variant: 'subtle', size: 'sm' }, () => row.original.id)
   },
   {
-    title: '标题',
-    key: 'title',
-    ellipsis: { tooltip: true },
-    render: (row) => h('div', { class: 'flex items-center gap-2' }, [
-      h('span', row.title),
-      row.coverImage ? h(Icon, { name: 'image', size: 'sm', class: 'text-green-500' }) : null
+    id: 'title',
+    header: '标题',
+    cell: ({ row }) => h('div', { class: 'flex items-center gap-2' }, [
+      h('span', row.original.title),
+      row.original.coverImage ? h(resolveComponent('Icon'), { name: 'image', size: 'sm', class: 'text-green-500' }) : null
     ])
   },
   {
-    title: '类别',
-    key: 'category',
-    width: 100,
-    render: (row) => h(NTag, { type: getCategoryType(row.category), size: 'small' }, () => getCategoryLabel(row.category))
+    id: 'category',
+    header: '类别',
+    cell: ({ row }) => h(resolveComponent('UBadge'), {
+      variant: 'subtle',
+      color: categoryColorMap[row.original.category] || 'neutral'
+    }, () => getCategoryLabel(row.original.category))
   },
   {
-    title: '创建时间',
-    key: 'createdAt',
-    width: 120,
-    render: (row) => h('span', { class: 'text-sm text-gray-500' }, formatDate(row.createdAt))
+    id: 'createdAt',
+    header: '创建时间',
+    cell: ({ row }) => h('span', { class: 'text-sm text-gray-500' }, formatDate(row.original.createdAt))
   },
   {
-    title: '更新时间',
-    key: 'updatedAt',
-    width: 120,
-    render: (row) => h('span', { class: 'text-sm text-gray-500' }, formatDate(row.updatedAt))
+    id: 'updatedAt',
+    header: '更新时间',
+    cell: ({ row }) => h('span', { class: 'text-sm text-gray-500' }, formatDate(row.original.updatedAt))
   },
   {
-    title: '操作',
-    key: 'actions',
-    width: 140,
-    render: (row) => h(NSpace, { size: 'small' }, () => [
-      h(NButton, { size: 'small', quaternary: true, type: 'primary', onClick: () => goToEditPage(row) }, {
-        icon: () => h(resolveComponent('Icon'), { name: 'pencil-square', size: 'sm' })
+    id: 'actions',
+    header: '操作',
+    cell: ({ row }) => h('div', { class: 'flex items-center gap-1' }, [
+      h(resolveComponent('UButton'), {
+        size: 'sm',
+        variant: 'ghost',
+        color: 'primary',
+        onClick: () => goToEditPage(row.original)
+      }, {
+        default: () => h(resolveComponent('Icon'), { name: 'pencil-square', size: 'sm' })
       }),
-      h(NButton, { size: 'small', quaternary: true, type: 'error', onClick: () => confirmDelete(row) }, {
-        icon: () => h(resolveComponent('Icon'), { name: 'trash', size: 'sm' })
+      h(resolveComponent('UButton'), {
+        size: 'sm',
+        variant: 'ghost',
+        color: 'error',
+        onClick: () => confirmDelete(row.original)
+      }, {
+        default: () => h(resolveComponent('Icon'), { name: 'trash', size: 'sm' })
       }),
-      h('a', { href: getArticlePath(row), target: '_blank', class: 'inline-flex' }, [
-        h(NButton, { size: 'small', quaternary: true, type: 'info' }, {
-          icon: () => h(resolveComponent('Icon'), { name: 'eye', size: 'sm' })
+      h('a', { href: getArticlePath(row.original), target: '_blank' }, [
+        h(resolveComponent('UButton'), {
+          size: 'sm',
+          variant: 'ghost',
+          color: 'info'
+        }, {
+          default: () => h(resolveComponent('Icon'), { name: 'eye', size: 'sm' })
         })
       ])
     ])
@@ -210,16 +225,16 @@ const tableColumns = [
 // 筛选后的文章列表
 const filteredArticles = computed(() => {
   let result = [...articles.value]
-  
+
   if (searchKeyword.value.trim()) {
     const keyword = searchKeyword.value.toLowerCase().trim()
     result = result.filter(article => article.title.toLowerCase().includes(keyword))
   }
-  
+
   if (selectedCategory.value) {
     result = result.filter(article => article.category === selectedCategory.value)
   }
-  
+
   return result
 })
 
@@ -261,7 +276,7 @@ const fetchArticles = async () => {
     articles.value = result.data || result
   } catch (error) {
     console.error('获取文章列表失败:', error)
-    message.error('获取文章列表失败')
+    toast.add({ title: '获取文章列表失败', color: 'error' })
   } finally {
     loading.value = false
   }
@@ -287,10 +302,10 @@ const handleDelete = async () => {
     showDeleteModal.value = false
     articleToDelete.value = null
     fetchArticles()
-    message.success('文章已成功删除')
+    toast.add({ title: '文章已成功删除', color: 'success' })
   } catch (error) {
     console.error('删除文章失败:', error)
-    message.error('删除文章失败')
+    toast.add({ title: '删除文章失败', color: 'error' })
   } finally {
     deletingArticle.value = false
   }

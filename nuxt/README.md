@@ -65,8 +65,9 @@ NUXT_API_BASE_URL=http://127.0.0.1:5000/api
 
 - **框架**: Nuxt 4.3（SSR / node-server preset）
 - **运行时**: Vue 3.5 + Pinia 2
-- **UI 库**: NaiveUI 2.43（**UI 迁移延后**——详见根目录 `README.md` 与 `.memory/progress/current.md`）
-- **样式**: Tailwind v3.4（v3 保留，**v3→v4 升级与 Nuxt UI 迁移联动排期**）+ 手写 `theme-variables.css`
+- **UI 库**: NaiveUI 2.43（当前 admin-only UI 库；后续将通过独立 OpenSpec change `nuxt-ssr-nuxt-ui-v4-migration` 替换为 Nuxt UI v4）
+- **样式**: Tailwind CSS v4.x（via `@tailwindcss/vite`，2026-07-24 升级完成；无 PostCSS 链、无 JS 配置）+ 手写 `theme-variables.css`
+- **范围**: 本目录仅承载 admin 后台，公开页由 `nuxt-public/` 静态站承载
 - **Markdown**: `@nuxtjs/mdc` + `md-editor-v3` + KaTeX + Mermaid
 
 ## 📦 部署

@@ -15,6 +15,7 @@
 - **UI 演进路线（用户决策，2026-07-03）**：暂时保留 Naive UI（用户不喜欢其审美，属过渡方案）→ 稳定后调研引入 Nuxt UI v4 替换设计语言（独立 change）；Inspira UI 不依赖 Nuxt UI，Tailwind v4 就绪后可随时按需复制引入（需 motion-v + tw-animate-css）。
 - **nuxt/ 收缩为纯 admin 容器（2026-07-22 完成）**：`openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/` 路径 C（仅范围收缩，UI 迁移延后）。详见 `.memory/progress/current.md`。
 - **Nuxt UI v3/v4 与 Tailwind v3 互斥（2026-07-22 验证）**：`@nuxt/ui@3.0.0` 与 `3.3.7` 均把 `@tailwindcss/vite@4.3.3` 作为**传递依赖**拉入。Nuxt UI 迁移必须**先**升级 Tailwind v3→v4（或推迟到 v4 升级联动做）。用户"tailwind 暂不同步"决策直接导致 UI 迁移延后。
+- **nuxt/ Tailwind v4 升级（2026-07-24 完成）**：见 `openspec/changes/nuxt-ssr-tailwind-v4-upgrade/`。通过 `@tailwindcss/vite` 集成，无 PostCSS 链、无 JS 配置；admin 范围不含 typography 插件；暗色模式 `.dark` class 由 `@custom-variant dark` 暴露。Phase A 独立验证通过，下一步启动 Phase B（NaiveUI → Nuxt UI v4）。
 
 ## 当前进度
 

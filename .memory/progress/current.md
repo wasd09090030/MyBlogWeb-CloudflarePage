@@ -2,7 +2,7 @@
 最后更新：2026-07-22
 
 ## 当前阶段
-`nuxt/` 收缩为纯 admin 容器（路径 C）已完成并 build 验证通过。**工作区改动尚未提交**（等用户自行 commit）。下一阶段：观察稳定性 → 后续 change 评估 Nuxt UI v4 迁移（与 Tailwind v3→v4 同步）。
+Phase A（`nuxt/` Tailwind v3→v4 升级）已完成并验证通过。下一阶段：Phase B（`nuxt/` admin NaiveUI → Nuxt UI v4 迁移，独立 OpenSpec change `nuxt-ssr-nuxt-ui-v4-migration/`，见 spec `docs/superpowers/specs/2026-07-24-nuxt-ssr-nuxt-ui-v4-migration-design.md` §3.2）。
 
 ## 最近完成
 - `nuxt-shrink-to-pure-admin-and-nuxt-ui-v4`（change: `openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/`，**仅范围收缩子集**完成）：

@@ -1,8 +1,11 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
     <div class="w-full max-w-md">
-      <n-card title="管理员登录" class="shadow-lg">
-        <n-form ref="formRef" :model="formData" :rules="rules" @submit.prevent="login">
+      <UCard class="shadow-lg">
+        <template #header>
+          <h3 class="text-lg font-semibold">管理员登录</h3>
+        </template>
+        <UForm :state="formData" :schema="schema" @submit="login">
           <input
             class="sr-only"
             type="text"
@@ -12,45 +15,48 @@
             tabindex="-1"
             aria-hidden="true"
           />
-          <n-form-item label="管理员密码" path="password" :label-props="{ for: 'admin-password' }">
-            <n-input
-              v-model:value="formData.password"
+          <UFormField label="管理员密码" name="password">
+            <UInput
+              v-model="formData.password"
               type="password"
               placeholder="请输入管理员密码"
-              :input-props="{
-                id: 'admin-password',
-                name: 'password',
-                autocomplete: 'current-password'
-              }"
-              show-password-on="click"
-              size="large"
+              :ui="{ base: 'w-full' }"
               @keyup.enter="login"
             />
-          </n-form-item>
-          
-          <n-alert v-if="error" type="error" :title="error" class="mb-4" closable @close="error = ''" />
-          
+          </UFormField>
+
+          <UAlert
+            v-if="error"
+            :title="error"
+            color="error"
+            class="my-4"
+            closeable
+            @close="error = ''"
+          />
+
           <div class="flex flex-col gap-3">
-            <n-button
-              type="primary"
+            <UButton
+              type="submit"
+              color="primary"
               block
-              size="large"
+              size="lg"
               :loading="isLoggingIn"
-              @click="login"
             >
               登录
-            </n-button>
+            </UButton>
             <a :href="siteUrl" class="text-center text-primary hover:underline">
               返回首页
             </a>
           </div>
-        </n-form>
-      </n-card>
+        </UForm>
+      </UCard>
     </div>
   </div>
 </template>
 
 <script setup>
+import * as v from 'valibot'
+
 definePageMeta({
   ssr: false,
   layout: false
@@ -61,28 +67,23 @@ const authStore = useAuthStore()
 const { public: publicConfig } = useRuntimeConfig()
 const siteUrl = publicConfig.siteUrl || '/'
 
-const formRef = ref(null)
 const formData = ref({
   password: ''
 })
 const error = ref('')
 const isLoggingIn = ref(false)
 
-const rules = {
-  password: {
-    required: true,
-    message: '请输入密码',
-    trigger: 'blur'
-  }
-}
+const schema = v.object({
+  password: v.pipe(v.string(), v.minLength(1, '请输入密码'))
+})
 
 const login = async () => {
   isLoggingIn.value = true
   error.value = ''
-  
+
   try {
     const result = await authStore.login('admin', formData.value.password)
-    
+
     if (result.success) {
       router.push('/admin')
     } else {

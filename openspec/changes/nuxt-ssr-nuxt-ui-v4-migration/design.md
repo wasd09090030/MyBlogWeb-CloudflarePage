@@ -1,6 +1,7 @@
 # nuxt/ 后台 SSR 站 UI 库迁移：NaiveUI → Nuxt UI v4（admin-only）
 
-> **依赖**：本 change 必须在 OpenSpec change `nuxt-ssr-tailwind-v4-upgrade` 合并后才能启动。
+> **承接关系**：本 change 承接 `openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/` 的"路径 C：仅范围收缩"（已实施）。原 change 把 UI 迁移延后到 Tailwind v3→v4 升级联动，本 change 即为该 UI 迁移实施。
+> **依赖**：Tailwind v3→v4 升级由 OpenSpec change `nuxt-ssr-tailwind-v4-upgrade`（已 archive，2026-07-24, commit `6a9f3e5`）完成；本 change 基于 v4 基础设施。
 > **范围**：admin-only。`nuxt/` 仅承载 admin 后台，公开页由 `nuxt-public/` SSG 静态站承载。
 > 参考：nuxt-public 同类 change `archive/2026-07-14-nuxt-ui-migration` + `archive/2026-07-15-upgrade-nuxt-ui-v4-public`。
 
@@ -23,12 +24,29 @@
 | 表格 | `<n-data-table>` | `<UTable>` |
 | 消息提示 | `useMessage().success/error` | `useToast().add({ title, color })` |
 
-admin 范围（约 20 个文件）：
+admin 范围（24 个文件 / 约 261 处 NaiveUI 标签；实测 2026-07-24）：
 
-- `app/pages/admin/*` 6 个页面（`index`、`login`、`password`、`articles`、`comments`、`imagebed`；`gallery` 管理由 `features/gallery-admin/AdminGalleryPageContainer` 承载）
+- `app/pages/admin/*` 8 个页面：
+  - `app/pages/admin/index.vue`（dashboard）
+  - `app/pages/admin/login.vue`（form + valibot）
+  - `app/pages/admin/password.vue`（form + valibot）
+  - `app/pages/admin/articles/index.vue`（n-data-table → UTable + form + valibot + 删除模态）
+  - `app/pages/admin/articles/[id].vue`（编辑，n-button / n-form 等）
+  - `app/pages/admin/articles/create.vue`（新建，n-button / n-form 等）
+  - `app/pages/admin/comments/index.vue`（n-data-table → UTable）
+  - `app/pages/admin/gallery/index.vue`（n-data-table → UTable + 编辑模态；实际渲染由 `features/gallery-admin/AdminGalleryPageContainer` 承载）
+  - `app/pages/admin/imagebed/index.vue`（n-upload → UFileUpload + 预览模态 + 拖拽）
 - `app/features/article-admin/containers/AdminArticleEditorContainer.vue`（含 `MdEditorWrapper.client.vue` 调用）
 - `app/features/gallery-admin/` 下 9 个文件（`composables/useAdminImagebedPage.ts`、`containers/AdminGalleryPageContainer.vue`、`components/imagebed/{ImagebedFileArea,ImagebedPreviewModal,ImagebedToolbar,ImagebedUploadArea}.vue`、`components/gallery/{GalleryCardGrid,GalleryEditModal,GalleryFilterBar}.vue`）
 - `app/layouts/admin.vue`、`app/layouts/blank.vue`
+
+**豁免清单**（本次不迁，与 design 范围一致）：
+- `app/components/content/{CodePlayground,LinkCard,StarRating,Steps}.vue`（内容组件，使用 NaiveUI）— 4 文件
+- `app/components/MdEditorWrapper.client.vue`（md-editor-v3 包装，admin 文章编辑器）— Nuxt UI 无等价富文本编辑器；`.client.vue` 后缀不进入 SSR bundle
+- `app/components/MarkdownRenderer.vue`（admin 文章编辑器 MDC 预览依赖，proposal §Impact 明确保留）— 2 处 NaiveUI 仅作 props 透传使用
+- `app/shared/ui/StateLoading.vue`（1 处 NaiveUI）— admin 通用 loading 容器，按 content 豁免同类处理
+- `server/` Nitro API 路由
+- `tsconfig.*.strict.phaseN.json` 渐进 TS strict 计划
 
 ## Goals / Non-Goals
 

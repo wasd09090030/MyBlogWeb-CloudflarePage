@@ -1,15 +1,16 @@
 # nuxt/ 后台 SSR 站 UI 库迁移：NaiveUI → Nuxt UI v4（admin-only）
 
-> **依赖**：必须等 OpenSpec change `nuxt-ssr-tailwind-v4-upgrade` 合并后才能启动本 change。
+> **承接关系**：本 change 承接 `openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/` 的"路径 C：仅范围收缩"（已实施）。原 change 把 UI 迁移延后到 Tailwind v3→v4 升级联动，本 change 即为该 UI 迁移实施。
+> **依赖**：Tailwind v3→v4 升级由 OpenSpec change `nuxt-ssr-tailwind-v4-upgrade`（已 archive，2026-07-24, commit `6a9f3e5`）完成；本 change 基于 v4 基础设施。
 > **范围**：admin-only。`nuxt/` 仅承载 admin 后台，公开页由 `nuxt-public/` SSG 静态站承载。
 
 ## Why
 
 `nuxt/`（NUXTSSR 后台站）当前以 NaiveUI 2.43.2 + `@bg-dev/nuxt-naiveui` 作为 Vue 组件库，仅服务于 **admin 后台**（login、articles、comments、gallery、imagebed、password）。`nuxt-public/` 已是 SSG 静态站且非常成熟，公开页（首页、画廊、文章、教程）由 `nuxt-public/` 承载，`nuxt/` 不再重复实现。
 
-> **2026-07-17 同步**：原 admin 后台 7 个页面包含 `beatmaps`（谱面管理）。该页面已由 change `remove-mania-and-tools-pages` 一并删除（mania 公开页下线后失去 `/mania/{id}` 跳转目标），admin 范围变 6 个页面。
+> **2026-07-17 同步**：原 admin 后台 7 个页面包含 `beatmaps`（谱面管理）。该页面已由 change `remove-mania-and-tools-pages` 一并删除（mania 公开页下线后失去 `/mania/{id}` 跳转目标），admin 范围变 6 个页面；后续 `articles/` 子目录新增 `[id].vue` 与 `create.vue`，实际页面文件数 8 个。
 
-NaiveUI 在 admin 后台 6 个页面（index、login、password、articles、comments、imagebed；gallery 管理由 `features/gallery-admin/` 承载）与 `features/article-admin/`、`features/gallery-admin/` 中广泛使用：`<n-form>` 表单校验、`<n-modal>`/`<n-drawer>` 弹窗抽屉、`<n-data-table>` 表格、`<n-upload>` 上传、`<n-button>` 按钮等。NaiveUI 的企业中性风格与 Tailwind v4 + 自定义设计 token 风格割裂；`n-config-provider :theme-overrides` 的主题机制与项目里已统一的 CSS 变量体系重复维护。
+NaiveUI 在 admin 后台 8 个页面文件（含 `articles/{index,[id],create}.vue`）与 `features/article-admin/`、`features/gallery-admin/` 中广泛使用：`<n-form>` 表单校验、`<n-modal>`/`<n-drawer>` 弹窗抽屉、`<n-data-table>` 表格、`<n-upload>` 上传、`<n-button>` 按钮等。NaiveUI 的企业中性风格与 Tailwind v4 + 自定义设计 token 风格割裂；`n-config-provider :theme-overrides` 的主题机制与项目里已统一的 CSS 变量体系重复维护。
 
 `nuxt-public/` 已完成 NaiveUI → Nuxt UI v3 → Nuxt UI v4 的迁移（OpenSpec changes `archive/2026-07-14-nuxt-ui-migration` 与 `archive/2026-07-15-upgrade-nuxt-ui-v4-public`）。`nuxt/` 后台站作为同一项目的另一个 Nuxt 4 应用，技术栈与基础设施完全对齐，可以直接复用其经验，且因 admin-only 范围工作量大幅缩减。
 

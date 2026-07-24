@@ -1,28 +1,26 @@
 <template>
-  <div class="gallery-manager">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-white">画廊管理</h2>
-      <div class="flex gap-2">
-        <UButton color="warning" :loading="isRefreshingDimensions" @click="refreshAllDimensions">
-          <template #leading>
-            <Icon name="arrow-path" size="sm" />
-          </template>
+  <div class="gallery-manager space-y-6">
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div class="space-y-1.5">
+        <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">媒体</p>
+        <h1 class="font-display text-2xl font-semibold text-highlighted tracking-tight">画廊管理</h1>
+        <p class="text-sm text-muted">组织与管理博客中展示的图片集合。</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <UButton variant="ghost" color="neutral" icon="heroicons:arrow-left" size="sm" to="/admin">
+          返回仪表板
+        </UButton>
+        <UButton color="warning" variant="soft" icon="heroicons:arrow-path" :loading="isRefreshingDimensions" @click="refreshAllDimensions">
           刷新宽高
         </UButton>
-        <UButton color="success" @click="showBatchImportModal = true">
-          <template #leading>
-            <Icon name="arrow-up-tray" size="sm" />
-          </template>
+        <UButton color="success" icon="heroicons:arrow-up-tray" @click="showBatchImportModal = true">
           批量导入
         </UButton>
-        <UButton color="primary" @click="showCreateModal">
-          <template #leading>
-            <Icon name="plus-circle" size="sm" />
-          </template>
+        <UButton color="primary" icon="heroicons:plus" @click="showCreateModal">
           添加图片
         </UButton>
       </div>
-    </div>
+    </header>
 
     <UCard class="mb-4">
       <div class="flex items-center justify-between mb-4">

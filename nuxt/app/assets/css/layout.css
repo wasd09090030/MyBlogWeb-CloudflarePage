@@ -194,8 +194,7 @@
 .text-start { text-align: left !important; }
 .text-end { text-align: right !important; }
 
-.text-muted { color: var(--text-muted) !important; }
-.text-primary { color: var(--primary-color) !important; }
+.text-primary { color: var(--ui-primary) !important; }
 .text-secondary { color: var(--text-secondary) !important; }
 .text-success { color: var(--accent-success) !important; }
 .text-danger { color: var(--accent-danger) !important; }
@@ -231,7 +230,6 @@
 
 .shadow-sm { box-shadow: var(--shadow-sm) !important; }
 .shadow { box-shadow: var(--shadow-md) !important; }
-.shadow-lg { box-shadow: var(--shadow-lg) !important; }
 .shadow-none { box-shadow: none !important; }
 
 .w-25 { width: 25% !important; }
@@ -273,7 +271,6 @@
 .bg-white { background-color: var(--bg-primary) !important; }
 .bg-light { background-color: var(--bg-secondary) !important; }
 .bg-dark { background-color: var(--bg-tertiary) !important; }
-.bg-primary { background-color: var(--primary-color) !important; }
 
 .card {
   position: relative;
@@ -300,7 +297,7 @@
   margin-bottom: 0;
 }
 
-/* ==================== 列表�?==================== */
+/* ==================== 列表�?==================== */
 .list-unstyled {
   padding-left: 0;
   list-style: none;

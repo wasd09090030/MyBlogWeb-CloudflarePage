@@ -3,7 +3,7 @@
     :open="show"
     @update:open="onUpdateShow"
     :title="isEdit ? '编辑图片' : '添加图片'"
-    :ui="{ width: 'sm:max-w-lg' }"
+    :ui="{ content: 'sm:max-w-lg' }"
   >
     <template #body>
       <UForm :state="galleryForm">

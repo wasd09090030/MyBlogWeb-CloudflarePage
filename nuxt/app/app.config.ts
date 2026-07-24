@@ -1,9 +1,9 @@
 export default defineAppConfig({
   ui: {
     colors: {
-      // 沿用现有 admin primary 色（Bootstrap blue #0d6efd）
-      primary: 'blue',
-      // 与 nuxt-public 一致
+      // 品牌主色：emerald（呼应 WyrmKk 的龙/蛇意象 + 区别于默认蓝）
+      primary: 'emerald',
+      // 中性色：保持 slate，与现有着色系统兼容
       neutral: 'slate'
     },
     icons: {
@@ -11,11 +11,11 @@ export default defineAppConfig({
     },
     button: {
       defaultVariants: {
-        size: 'md'
+        size: 'md',
+        color: 'primary'
       }
     },
-    // admin 不渲染 Markdown，prose 路径完全跳过
-    prose: false
+    // admin 不渲染 Markdown；不覆盖 Nuxt UI v4 的 prose 配置对象。
   },
   icon: {
     // 默认图标尺寸
@@ -43,13 +43,13 @@ export default defineAppConfig({
       'arrow-right': 'heroicons:arrow-right',
       'arrow-down': 'heroicons:arrow-down',
       'arrow-up': 'heroicons:arrow-up',
-      
+
       // 主题相关
       'sun': 'heroicons:sun',
       'sun-fill': 'heroicons:sun-solid',
       'moon': 'heroicons:moon',
       'moon-fill': 'heroicons:moon-solid',
-      
+
       // 文件/文档相关
       'folder': 'heroicons:folder',
       'folder-open': 'heroicons:folder-open',
@@ -74,13 +74,13 @@ export default defineAppConfig({
       'clipboard': 'heroicons:clipboard-document',
       'clipboard-document': 'heroicons:clipboard-document',
       'clipboard-document-list': 'heroicons:clipboard-document-list',
-      
+
       // 布局/视图相关
       'squares-2x2': 'heroicons:squares-2x2',
       'grid': 'heroicons:squares-2x2',
       'grid-3x3-gap': 'heroicons:squares-2x2',
       'grid-3x3-gap-fill': 'heroicons:squares-2x2-solid',
-      
+
       // 图片相关
       'photo': 'heroicons:photo',
       'images': 'heroicons:photo',
@@ -96,7 +96,7 @@ export default defineAppConfig({
       'cloud-upload': 'heroicons:cloud-arrow-up',
       'cloud-arrow-up': 'heroicons:cloud-arrow-up',
       'sparkles': 'heroicons:sparkles',
-      
+
       // 交互相关
       'heart': 'heroicons:heart',
       'heart-fill': 'heroicons:heart-solid',
@@ -116,11 +116,11 @@ export default defineAppConfig({
       'play': 'heroicons:play',
       'terminal': 'heroicons:command-line',
       'command-line': 'heroicons:command-line',
-      
+
       // 用户相关
       'user-circle': 'heroicons:user-circle',
       'person-circle': 'heroicons:user-circle',
-      
+
       // 链接/代码相关
       'link': 'heroicons:link',
       'link-45deg': 'heroicons:link',
@@ -131,7 +131,7 @@ export default defineAppConfig({
       'code-bracket-square': 'heroicons:code-bracket-square',
       'code-square': 'heroicons:code-bracket-square',
       'journal-code': 'heroicons:code-bracket-square',
-      
+
       // 技术相关
       'cpu-chip': 'heroicons:cpu-chip',
       'robot': 'heroicons:cpu-chip',
@@ -150,11 +150,11 @@ export default defineAppConfig({
       'database': 'heroicons:circle-stack',
       'device-phone-mobile': 'heroicons:device-phone-mobile',
       'phone': 'heroicons:device-phone-mobile',
-      
+
       // 图表/数据相关
       'chart-bar': 'heroicons:chart-bar',
       'activity': 'heroicons:chart-bar',
-      
+
       // 其他常用
       'arrow-top-right-on-square': 'heroicons:arrow-top-right-on-square',
       'box-arrow-up-right': 'heroicons:arrow-top-right-on-square',
@@ -213,7 +213,7 @@ export default defineAppConfig({
       'arrow-path-rounded-square': 'heroicons:arrow-path-rounded-square',
       'hand-thumb-up': 'heroicons:hand-thumb-up',
       'cloud-arrow-down': 'heroicons:cloud-arrow-down',
-      
+
       // 文件树专用图标
       'folder-outline': 'heroicons:folder',
       'mdi:folder': 'heroicons:folder',

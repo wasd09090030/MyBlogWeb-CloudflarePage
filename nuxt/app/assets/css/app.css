@@ -1,8 +1,8 @@
 /* 自定义鼠标指针样式 */
 body {
   cursor: url('/pointer/default.cur'), auto;
-  min-height: 100vh;
-  background-color: var(--bg-secondary);
+  /* admin 改用 UDashboardPanel 自带的 --ui-bg，避免与全局变量冲突 */
+  background-color: transparent;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -31,7 +31,7 @@ input[type="reset"],
 :root.dark body,
 :root.dark-theme body,
 :root[data-theme="dark"] body {
-  background-color: var(--bg-tertiary);
+  background-color: transparent;
 }
 
 /* 全局样式 */

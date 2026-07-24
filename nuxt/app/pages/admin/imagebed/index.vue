@@ -1,24 +1,60 @@
 <template>
-  <div class="imagebed-manager h-[calc(100vh-6rem)] flex flex-col">
-    <div class="flex justify-between items-center mb-4 shrink-0">
-      <div class="flex items-center gap-3">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">图床管理</h2>
-        <UBadge v-if="!isConfigured" color="warning" variant="subtle" size="sm">
-          <Icon name="exclamation-triangle" class="mr-1" />
-          未配置
-        </UBadge>
+  <div class="flex flex-col h-[calc(100vh-9rem)] gap-6">
+    <!-- 页面标题 -->
+    <header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between shrink-0">
+      <div class="space-y-1.5">
+        <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">媒体</p>
+        <div class="flex items-center gap-3">
+          <h1 class="font-display text-2xl font-semibold text-highlighted tracking-tight">图床管理</h1>
+          <UBadge
+            v-if="!isConfigured"
+            color="warning"
+            variant="subtle"
+            size="sm"
+          >
+            <Icon name="heroicons:exclamation-triangle" class="mr-1" />
+            未配置
+          </UBadge>
+          <UBadge
+            v-else
+            color="success"
+            variant="subtle"
+            size="sm"
+          >
+            <Icon name="heroicons:check-circle" class="mr-1" />
+            已就绪
+          </UBadge>
+        </div>
+        <p class="text-sm text-muted">
+          浏览、上传与管理 Cloudflare R2 上的图片资源。
+        </p>
       </div>
-      <div class="flex gap-2">
-        <UButton variant="solid" color="neutral" @click="showConfigModal = true">
-          <template #leading>
-            <Icon name="cog-6-tooth" />
-          </template>
+      <div class="flex items-center gap-2">
+        <UButton
+          variant="ghost"
+          color="neutral"
+          icon="heroicons:arrow-left"
+          size="sm"
+          to="/admin"
+        >
+          返回仪表板
+        </UButton>
+        <UButton
+          variant="soft"
+          color="neutral"
+          icon="heroicons:cog-6-tooth"
+          @click="showConfigModal = true"
+        >
           设置
         </UButton>
       </div>
-    </div>
+    </header>
 
-    <UCard class="flex-1 overflow-hidden shadow-sm rounded-lg" :ui="{ body: 'p-0 flex flex-col h-full' }">
+    <UCard
+      variant="subtle"
+      class="flex-1 overflow-hidden"
+      :ui="{ root: 'ring ring-default/40 flex flex-col overflow-hidden', body: 'p-0 flex flex-col h-full' }"
+    >
       <UTabs :items="tabItems" value="list" class="h-full" :ui="{ content: 'h-full overflow-hidden p-0' }">
         <template #list>
           <ImagebedFileArea
@@ -146,7 +182,6 @@ const {
   acceptTypes,
   configFormRef,
   configForm,
-  configRules,
   isConfigured,
   pathSegments,
   fileColumns,

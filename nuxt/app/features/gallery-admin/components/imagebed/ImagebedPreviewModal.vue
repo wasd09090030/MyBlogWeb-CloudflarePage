@@ -2,7 +2,7 @@
   <UModal
     :open="show"
     @update:open="onUpdateShow"
-    :ui="{ width: 'sm:max-w-[95vw]', background: 'bg-transparent dark:bg-transparent', divide: '', ring: '' }"
+    :ui="{ content: 'sm:max-w-[95vw] bg-transparent dark:bg-transparent' }"
   >
     <template #content>
       <div class="relative flex flex-col items-center p-4">

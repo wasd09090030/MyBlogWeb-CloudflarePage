@@ -1,36 +1,55 @@
 <template>
-  <div class="max-w-lg mx-auto">
-    <UCard>
-      <template #header>
-        <h3 class="text-lg font-semibold">修改管理员密码</h3>
-      </template>
-      <UForm :state="formData" :schema="schema" @submit="changePassword">
-        <UFormField label="当前密码" name="currentPassword">
+  <div class="max-w-xl mx-auto space-y-6">
+    <!-- 页面标题 -->
+    <header class="space-y-1.5">
+      <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">账号</p>
+      <h1 class="font-display text-2xl font-semibold text-highlighted tracking-tight">修改密码</h1>
+      <p class="text-sm text-muted">
+        建议使用至少 6 位字符，并避免与最近使用过的密码重复。
+      </p>
+    </header>
+
+    <UCard
+      variant="subtle"
+      :ui="{ root: 'ring ring-default/40', body: 'p-6 sm:p-8' }"
+    >
+      <UForm :state="formData" :schema="schema" @submit="changePassword" class="space-y-5">
+        <UFormField label="当前密码" name="currentPassword" required>
           <UInput
             v-model="formData.currentPassword"
             type="password"
             placeholder="请输入当前密码"
             show-password-on="click"
+            autocomplete="current-password"
             :ui="{ base: 'w-full' }"
           />
         </UFormField>
 
-        <UFormField label="新密码" name="newPassword">
+        <USeparator />
+
+        <UFormField
+          label="新密码"
+          name="newPassword"
+          required
+          help="至少 6 位，建议同时包含字母与数字"
+        >
           <UInput
             v-model="formData.newPassword"
             type="password"
-            placeholder="请输入新密码（至少6位）"
+            placeholder="请输入新密码"
             show-password-on="click"
+            autocomplete="new-password"
             :ui="{ base: 'w-full' }"
           />
         </UFormField>
 
-        <UFormField label="确认新密码" name="confirmPassword">
+        <UFormField label="确认新密码" name="confirmPassword" required>
           <UInput
             v-model="formData.confirmPassword"
             type="password"
             placeholder="请再次输入新密码"
             show-password-on="click"
+            autocomplete="new-password"
             :ui="{ base: 'w-full' }"
           />
         </UFormField>
@@ -39,7 +58,8 @@
           v-if="error"
           :title="error"
           color="error"
-          class="my-4"
+          variant="subtle"
+          icon="heroicons:exclamation-circle"
           closeable
           @close="error = ''"
         />
@@ -47,25 +67,52 @@
           v-if="success"
           :title="success"
           color="success"
-          class="my-4"
+          variant="subtle"
+          icon="heroicons:check-circle"
           closeable
           @close="success = ''"
         />
 
-        <UButton
-          type="submit"
-          color="primary"
-          block
-          :loading="isChanging"
-        >
-          修改密码
-        </UButton>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <UButton
+            type="button"
+            variant="ghost"
+            color="neutral"
+            :disabled="isChanging"
+            @click="resetForm"
+          >
+            清空
+          </UButton>
+          <UButton
+            type="submit"
+            color="primary"
+            icon="heroicons:shield-check"
+            :loading="isChanging"
+          >
+            更新密码
+          </UButton>
+        </div>
       </UForm>
+    </UCard>
+
+    <UCard
+      variant="subtle"
+      :ui="{ root: 'ring ring-default/40', body: 'p-5 sm:p-6' }"
+    >
+      <div class="flex gap-3">
+        <UIcon name="heroicons:information-circle" class="size-5 text-primary shrink-0 mt-0.5" />
+        <div class="text-sm text-toned space-y-1">
+          <p class="font-medium text-highlighted">修改密码后您仍保持登录状态</p>
+          <p class="text-muted">
+            旧密码将立即失效，但当前会话不会被强制登出。请妥善保管新密码。
+          </p>
+        </div>
+      </div>
     </UCard>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import * as v from 'valibot'
 
 definePageMeta({
@@ -87,15 +134,20 @@ const isChanging = ref(false)
 
 const schema = v.object({
   currentPassword: v.pipe(v.string(), v.minLength(1, '请输入当前密码')),
-  newPassword: v.pipe(v.string(), v.minLength(6, '密码长度至少6位')),
+  newPassword: v.pipe(v.string(), v.minLength(6, '密码长度至少 6 位')),
   confirmPassword: v.pipe(v.string(), v.minLength(1, '请确认新密码'))
 })
+
+const resetForm = () => {
+  formData.value = { currentPassword: '', newPassword: '', confirmPassword: '' }
+  error.value = ''
+  success.value = ''
+}
 
 const changePassword = async () => {
   error.value = ''
   success.value = ''
 
-  // 额外验证
   if (formData.value.newPassword !== formData.value.confirmPassword) {
     error.value = '两次输入的新密码不一致'
     return
@@ -116,12 +168,7 @@ const changePassword = async () => {
 
     if (result.success) {
       success.value = result.message || '密码修改成功'
-      // 清空表单
-      formData.value = {
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }
+      resetForm()
     } else {
       error.value = result.message
     }

@@ -1,42 +1,33 @@
 <template>
-  <div class="article-editor">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
-        {{ isEdit ? '编辑文章' : '创建文章' }}
-      </h2>
-      <div class="flex gap-2">
-        <UButton variant="ghost" color="neutral" @click="goBack">
-          <template #leading>
-            <Icon name="arrow-left" size="sm" />
-          </template>
+  <div class="article-editor space-y-6">
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div class="space-y-1.5">
+        <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">内容</p>
+        <h1 class="font-display text-2xl font-semibold text-highlighted tracking-tight">
+          {{ isEdit ? '编辑文章' : '创建文章' }}
+        </h1>
+        <p class="text-sm text-muted">
+          {{ isEdit ? '修改已发布的文章内容' : '撰写并发布一篇新文章' }}
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <UButton variant="ghost" color="neutral" icon="heroicons:arrow-left" @click="goBack">
           返回
         </UButton>
-        <UButton variant="soft" color="neutral" @click="saveDraft">
-          <template #leading>
-            <Icon name="bookmark" size="sm" />
-          </template>
+        <UButton variant="soft" color="neutral" icon="heroicons:bookmark" @click="saveDraft">
           保存草稿
         </UButton>
-        <UButton variant="ghost" color="neutral" :disabled="!hasDraft" @click="restoreDraft">
-          <template #leading>
-            <Icon name="arrow-path" size="sm" />
-          </template>
+        <UButton variant="ghost" color="neutral" icon="heroicons:arrow-path" :disabled="!hasDraft" @click="restoreDraft">
           恢复草稿
         </UButton>
-        <UButton variant="ghost" color="neutral" :disabled="!hasDraft" @click="clearDraft">
-          <template #leading>
-            <Icon name="x-mark" size="sm" />
-          </template>
+        <UButton variant="ghost" color="neutral" icon="heroicons:x-mark" :disabled="!hasDraft" @click="clearDraft">
           清除草稿
         </UButton>
-        <UButton color="primary" :loading="isSaving" @click="saveArticle">
-          <template #leading>
-            <Icon name="save" size="sm" />
-          </template>
+        <UButton color="primary" icon="heroicons:check" :loading="isSaving" @click="saveArticle">
           保存文章
         </UButton>
       </div>
-    </div>
+    </header>
 
     <div v-if="loading" class="flex justify-center py-12">
       <USpinner />

@@ -1,6 +1,11 @@
 <template>
   <UApp>
-    <NuxtLoadingIndicator color="var(--accent-success)" :height="3" :duration="2000" :throttle="200" />
+    <NuxtLoadingIndicator
+      color="var(--ui-primary)"
+      :height="2"
+      :duration="2000"
+      :throttle="200"
+    />
     <NuxtLayout>
       <NuxtPage :keepalive="shouldKeepAlive" :page-key="getPageKey" :transition="{
         name: 'page',
@@ -31,11 +36,18 @@ useSeoMeta({
   robots: 'noindex, nofollow'
 })
 
-// 应用全局配置
+// 应用全局配置：admin 默认深色模式，并在 hydration 前同步设置以避免闪烁
 useHead({
   htmlAttrs: {
-    lang: 'zh-CN'
+    lang: 'zh-CN',
+    class: 'dark'
   },
+  script: [
+    {
+      // 在 hydration 前同步设置深色模式，避免闪烁
+      innerHTML: `(function(){try{var s=localStorage.getItem('nuxt-color-mode');var m=(s==='light'||s==='dark')?s:'dark';if(m==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){document.documentElement.classList.add('dark');}})();`
+    }
+  ],
   meta: [
     { name: 'format-detection', content: 'telephone=no' }
   ]
@@ -68,8 +80,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
-  color: var(--text-primary);
-  background: var(--bg-secondary);
+  /* admin 由 Nuxt UI 提供 token，全局 body 不再硬编码颜色 */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 

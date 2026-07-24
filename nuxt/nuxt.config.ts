@@ -180,7 +180,8 @@ export default defineNuxtConfig({
   icon: {
     // 修改 API 前缀，避免与 /api/ 冲突
     serverBundle: {
-      collections: ['heroicons', 'mdi']
+      // Nuxt UI v4 默认使用 lucide 图标，必须包含；保留 heroicons/mdi 以兼容旧别名
+      collections: ['heroicons', 'mdi', 'lucide']
     },
     // 自定义图标 API 路径前缀（不使用 /api/ 以避免与后端 API 冲突）
     provider: 'server',

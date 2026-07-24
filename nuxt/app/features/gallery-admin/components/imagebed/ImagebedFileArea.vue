@@ -61,7 +61,7 @@
           <div class="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity" :class="{ 'opacity-100': selectedRowKeys.includes(file.name) }">
             <UCheckbox
               :model-value="selectedRowKeys.includes(file.name)"
-              @update:model-value="toggleSelection(file.name, $event)"
+              @update:model-value="toggleSelection(file.name, $event === true)"
               class="bg-white rounded-sm"
             />
           </div>
@@ -146,7 +146,7 @@
 <script setup lang="ts">
 import ImagebedToolbar from './ImagebedToolbar.vue'
 
-defineProps<{
+const props = defineProps<{
   currentPath: string
   pathSegments: string[]
   searchKeyword: string
@@ -181,13 +181,13 @@ const emit = defineEmits<{
 
 const handleDeleteFolderClick = (folder: any) => {
   if (window.confirm(`确定删除文件夹 "${folder.displayName}" 及其所有内容吗？`)) {
-    confirmDeleteFolder(folder.name)
+    props.confirmDeleteFolder(folder.name)
   }
 }
 
 const handleDeleteFileClick = (file: any) => {
   if (window.confirm('确定删除此文件吗？')) {
-    executeDeleteFromList(file)
+    void props.executeDeleteFromList(file)
   }
 }
 </script>

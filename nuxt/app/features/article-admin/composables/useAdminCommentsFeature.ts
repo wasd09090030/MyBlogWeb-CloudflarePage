@@ -38,13 +38,13 @@ export const useAdminCommentsFeature = () => {
     })
   }
 
-  const getStatusType = (status: CommentStatus | string): string => {
-    const types: Record<string, string> = {
+  const getStatusType = (status: CommentStatus | string): 'warning' | 'success' | 'error' | 'neutral' => {
+    const types: Record<string, 'warning' | 'success' | 'error' | 'neutral'> = {
       pending: 'warning',
       approved: 'success',
       rejected: 'error'
     }
-    return types[status] || 'default'
+    return types[status] || 'neutral'
   }
 
   const getStatusText = (status: CommentStatus | string): string => {

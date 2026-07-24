@@ -47,7 +47,7 @@ function tokenize(text: string) {
   const tokens = new Set<string>()
   const lower = text.toLowerCase()
 
-  const words = lower.match(/[a-z0-9]+/g) || []
+  const words: string[] = lower.match(/[a-z0-9]+/g) ?? []
   words.forEach((w) => {
     if (w.length >= 2) tokens.add(w)
   })

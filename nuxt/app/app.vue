@@ -1,11 +1,18 @@
 <template>
-  <NuxtLoadingIndicator color="var(--accent-success)" :height="3" :duration="2000" :throttle="200" />
-  <NuxtLayout>
-    <NuxtPage :keepalive="shouldKeepAlive" :page-key="getPageKey" :transition="{
-      name: 'page',
-      mode: 'out-in'
-    }" />
-  </NuxtLayout>
+  <UApp>
+    <NuxtLoadingIndicator
+      color="var(--ui-primary)"
+      :height="2"
+      :duration="2000"
+      :throttle="200"
+    />
+    <NuxtLayout>
+      <NuxtPage :keepalive="shouldKeepAlive" :page-key="getPageKey" :transition="{
+        name: 'page',
+        mode: 'out-in'
+      }" />
+    </NuxtLayout>
+  </UApp>
 </template>
 
 <script setup>
@@ -13,50 +20,34 @@
 const route = useRoute()
 
 // 判断是否启用 keepalive - admin 页面禁用以避免布局切换冲突
-const shouldKeepAlive = computed(() => {
-  return !route.path.startsWith('/admin')
-})
+// 收缩为纯 admin 后所有页面都是 admin，统一禁用 keepalive
+const shouldKeepAlive = false
 
-// 获取页面 key - 对于首页使用固定 key 以启用缓存
-const getPageKey = (route) => {
-  // admin 页面不需要缓存 key
-  if (route.path.startsWith('/admin')) {
-    return route.fullPath
-  }
+// 获取页面 key - admin 页面用 fullPath
+const getPageKey = (route) => route.fullPath
 
-  // 对于首页（index 页面），使用固定的 key 以便缓存
-  if (route.name === 'index') {
-    return 'index-page'
-  }
-
-  // 对于其他页面，使用完整路径作为 key
-  return route.fullPath
-}
-
-const defaultDescription = '分享技术、生活与创作的个人博客'
+const defaultDescription = 'WyrmKk 个人博客管理系统'
 
 useSeoMeta({
   title: 'WyrmKk',
   titleTemplate: '%s · WyrmKk',
   description: defaultDescription,
-  keywords: '博客,技术,前端,后端,Vue,JavaScript,Python,动漫资源',
   author: 'WASD09090030',
-  ogType: 'website',
-  ogSiteName: 'WyrmKk',
-  ogTitle: 'WyrmKk - 个人网站',
-  ogDescription: defaultDescription,
-  ogImage: '/og-default.svg',
-  twitterCard: 'summary_large_image',
-  twitterTitle: 'WyrmKk - 个人技术博客',
-  twitterDescription: defaultDescription,
-  twitterImage: '/og-default.svg'
+  robots: 'noindex, nofollow'
 })
 
-// 应用全局配置
+// 应用全局配置：admin 默认深色模式，并在 hydration 前同步设置以避免闪烁
 useHead({
   htmlAttrs: {
-    lang: 'zh-CN'
+    lang: 'zh-CN',
+    class: 'dark'
   },
+  script: [
+    {
+      // 在 hydration 前同步设置深色模式，避免闪烁
+      innerHTML: `(function(){try{var s=localStorage.getItem('nuxt-color-mode');var m=(s==='light'||s==='dark')?s:'dark';if(m==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');}catch(e){document.documentElement.classList.add('dark');}})();`
+    }
+  ],
   meta: [
     { name: 'format-detection', content: 'telephone=no' }
   ]
@@ -68,20 +59,6 @@ if (import.meta.client) {
   // 立即初始化，不等待 onMounted
   authStore.initialize()
 }
-
-// 添加路由守卫，处理从 gallery 页面离开时恢复滚动
-const router = useRouter()
-router.afterEach((to, from) => {
-  // 当从 gallery 路由离开时，确保恢复 body 滚动
-  if (from.name === 'gallery' && to.name !== 'gallery') {
-    document.body.style.overflow = ''
-    document.body.style.removeProperty('overflow')
-    // 清理可能遗留的标记
-    if (window.__galleryOriginalOverflow !== undefined) {
-      delete window.__galleryOriginalOverflow
-    }
-  }
-})
 </script>
 
 <style>
@@ -103,8 +80,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
-  color: var(--text-primary);
-  background: var(--bg-secondary);
+  /* admin 由 Nuxt UI 提供 token，全局 body 不再硬编码颜色 */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 

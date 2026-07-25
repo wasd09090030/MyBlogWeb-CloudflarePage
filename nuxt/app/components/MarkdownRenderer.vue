@@ -58,10 +58,6 @@
 <script setup>
 import { parseMarkdown } from '@nuxtjs/mdc/runtime'
 import mdcHighlighter from '#mdc-highlighter'
-import { useMarkdownWorker } from '~/composables/useMarkdownWorker'
-
-// Worker 预处理（TOC 提取、Mermaid 检测等在 Worker 线程执行）
-const { preprocessMarkdown } = useMarkdownWorker()
 
 const props = defineProps({
   markdown: {
@@ -300,28 +296,19 @@ const parseContent = async () => {
   error.value = null
 
   try {
-    // 🔥 并行执行：Worker 预处理 + 主线程 Markdown 解析
-    // Worker 线程：TOC 提取、Mermaid 检测、文本统计（不阻塞主线程）
-    // 主线程：parseMarkdown AST 生成（必须在主线程）
-    const [preprocessed, result] = await Promise.all([
-      preprocessMarkdown(props.markdown).catch(() => null),
-      parseMarkdown(props.markdown, markdownParseOptions)
-    ])
+    // admin 编辑器预览：单线程 parseMarkdown 足够（无 worker 加速依赖）
+    const result = await parseMarkdown(props.markdown, markdownParseOptions)
 
     ast.value = result
 
-    // Worker 预处理的 TOC 通常比 parseMarkdown 更快就绪
-    // 优先使用 parseMarkdown 的 TOC（更准确），降级到 Worker 版本
     if (result.toc) {
       emit('toc-ready', result.toc)
-    } else if (preprocessed?.toc) {
-      // Worker 提取的快速 TOC 作为后备
-      emit('toc-ready', { links: preprocessed.toc })
+    } else {
+      emit('toc-ready', { links: [] })
     }
 
-    // 使用 Worker 的 Mermaid 检测结果决定是否需要渲染
-    const hasMermaid = preprocessed?.codeBlocks?.hasMermaid
-      ?? props.markdown?.includes('```mermaid')
+    // 检测 markdown 中是否包含 mermaid 代码块
+    const hasMermaid = props.markdown?.includes('```mermaid')
 
     if (hasMermaid) {
       // 使用 requestIdleCallback 延迟渲染 Mermaid，避免阻塞主线程

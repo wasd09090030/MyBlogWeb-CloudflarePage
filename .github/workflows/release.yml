@@ -15,6 +15,7 @@ on:
         type: choice
         options:
           - nuxt-ssr
+          - nuxt-admin
           - nuxt-public
           - both
 
@@ -22,6 +23,36 @@ permissions:
   contents: write
 
 jobs:
+  build-nuxt-admin:
+    if: >-
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
+      github.event.inputs.target == 'nuxt-admin' ||
+      github.event.inputs.target == 'both'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: nuxt-admin/package-lock.json
+      - name: Install dependencies
+        working-directory: ./nuxt-admin
+        run: npm ci
+      - name: Build Nuxt admin
+        working-directory: ./nuxt-admin
+        env:
+          NODE_ENV: production
+          NUXT_API_BASE_URL: http://127.0.0.1:5000/api
+          NUXT_PUBLIC_ADMIN_ORIGIN: https://wasd09090030.top
+        run: npm run build
+      - name: Package admin artifact
+        run: tar -czf nuxt-admin-build.tar.gz -C nuxt-admin .output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuxt-admin-build
+          path: nuxt-admin-build.tar.gz
+
   # ============================================================
   # Nuxt SSR 动态站构建（部署到云服务器）
   # 处理 /admin 等动态路由

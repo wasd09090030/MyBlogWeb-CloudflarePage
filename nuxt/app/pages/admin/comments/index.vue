@@ -1,169 +1,179 @@
 <template>
-  <div class="comment-manager">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">评论管理</h2>
-        <n-button-group>
-          <n-button
-            :type="currentTab === 'pending' ? 'primary' : 'default'"
-            @click="currentTab = 'pending'"
-          >
-            待审核
-            <n-badge :value="pendingCount" :max="99" class="ml-2" type="warning" />
-          </n-button>
-          <n-button
-            :type="currentTab === 'all' ? 'primary' : 'default'"
-            @click="currentTab = 'all'"
-          >
-            全部评论
-          </n-button>
-        </n-button-group>
+  <div class="space-y-6">
+    <!-- 页面标题 + 标签 -->
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div class="space-y-1.5">
+        <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">互动</p>
+        <h1 class="font-display text-2xl font-semibold text-highlighted tracking-tight">评论管理</h1>
+        <p class="text-sm text-muted">
+          <span v-if="!loading" class="font-mono text-highlighted">{{ comments.length }}</span>
+          <span v-else>—</span>
+          条 · 当前查看
+          <span class="text-highlighted">{{ currentTab === 'pending' ? '待审核' : '全部' }}</span>
+        </p>
       </div>
 
-      <!-- 加载状态 -->
-      <n-spin :show="loading">
-        <div v-if="!loading && comments.length === 0" class="text-center py-16 text-gray-400">
-          <Icon name="chat-dots" size="3xl" class="mb-3 opacity-50" />
-          <p>{{ currentTab === 'pending' ? '暂无待审核评论' : '暂无评论' }}</p>
-        </div>
+      <UTabs
+        v-model="currentTab"
+        :items="tabItems"
+        color="primary"
+        variant="pill"
+        size="sm"
+        :ui="{ list: 'bg-elevated/40 ring ring-default/40' }"
+      />
+    </header>
 
-        <!-- 评论列表 -->
-        <div v-else class="space-y-4">
-          <n-card v-for="comment in comments" :key="comment.id" class="comment-card">
-            <div class="flex flex-col lg:flex-row lg:justify-between gap-4">
-              <!-- 评论信息 -->
-              <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2">
-                  <Icon name="person-circle" size="md" class="text-gray-400" />
-                  <span class="font-semibold text-gray-800 dark:text-white">{{ comment.author }}</span>
-                  <n-tag :type="getStatusType(comment.status)" size="small">
-                    {{ getStatusText(comment.status) }}
-                  </n-tag>
-                </div>
-
-                <p class="text-gray-700 dark:text-gray-300 mb-3">{{ comment.content }}</p>
-
-                <div class="flex flex-wrap gap-4 text-sm text-gray-500">
-                  <span class="flex items-center gap-1">
-                    <Icon name="calendar" size="xs" />
-                    {{ formatDate(comment.createdAt) }}
-                  </span>
-                  <span v-if="comment.email" class="flex items-center gap-1">
-                    <Icon name="mail" size="xs" />
-                    {{ comment.email }}
-                  </span>
-                  <span v-if="comment.website" class="flex items-center gap-1">
-                    <Icon name="link" size="xs" />
-                    <a :href="comment.website" target="_blank" class="hover:text-primary">
-                      {{ comment.website }}
-                    </a>
-                  </span>
-                  <span v-if="comment.userIp" class="flex items-center gap-1">
-                    <Icon name="map-pin" size="xs" />
-                    IP: {{ comment.userIp }}
-                  </span>
-                </div>
-
-                <div v-if="comment.article" class="mt-2">
-                  <n-tag type="info" size="small">
-                    <Icon name="file-earmark-text" size="xs" class="mr-1" />
-                    文章: {{ comment.article.title }}
-                  </n-tag>
-                </div>
-              </div>
-
-              <!-- 操作按钮 -->
-              <div class="flex flex-col gap-2 lg:items-end">
-                <n-button-group v-if="comment.status === 'pending'">
-                  <n-button
-                    type="success"
-                    size="small"
-                    :disabled="updating"
-                    @click="handleUpdateStatus(comment.id, 'approved')"
-                  >
-                    <template #icon>
-                      <Icon name="check-circle" size="sm" />
-                    </template>
-                    通过
-                  </n-button>
-                  <n-button
-                    type="warning"
-                    size="small"
-                    :disabled="updating"
-                    @click="handleUpdateStatus(comment.id, 'rejected')"
-                  >
-                    <template #icon>
-                      <Icon name="x-mark" size="sm" />
-                    </template>
-                    拒绝
-                  </n-button>
-                </n-button-group>
-
-                <n-button-group v-else>
-                  <n-button
-                    v-if="comment.status === 'approved'"
-                    type="warning"
-                    size="small"
-                    :disabled="updating"
-                    @click="handleUpdateStatus(comment.id, 'rejected')"
-                  >
-                    <template #icon>
-                      <Icon name="eye" size="sm" />
-                    </template>
-                    隐藏
-                  </n-button>
-                  <n-button
-                    v-if="comment.status === 'rejected'"
-                    type="success"
-                    size="small"
-                    :disabled="updating"
-                    @click="handleUpdateStatus(comment.id, 'approved')"
-                  >
-                    <template #icon>
-                      <Icon name="eye" size="sm" />
-                    </template>
-                    显示
-                  </n-button>
-                </n-button-group>
-
-                <n-button
-                  type="error"
-                  size="small"
-                  :disabled="updating"
-                  @click="confirmDelete(comment)"
-                >
-                  <template #icon>
-                    <Icon name="trash" size="sm" />
-                  </template>
-                  删除
-                </n-button>
-
-                <div class="text-sm text-gray-400 flex items-center gap-1">
-                  <Icon name="heart" size="xs" class="text-red-400" :solid="true" />
-                  {{ comment.likes }} 个赞
-                </div>
-              </div>
-            </div>
-          </n-card>
-        </div>
-      </n-spin>
-
-      <!-- 删除确认对话框 -->
-      <n-modal v-model:show="showDeleteModal" preset="dialog" type="warning" title="确认删除">
-        <template #default>
-          <p>确定要删除这条评论吗？此操作不可撤销。</p>
-          <n-card v-if="commentToDelete" size="small" class="mt-3">
-            <strong>{{ commentToDelete.author }}</strong>: {{ commentToDelete.content }}
-          </n-card>
-        </template>
-        <template #action>
-          <n-button @click="showDeleteModal = false">取消</n-button>
-          <n-button type="error" :loading="deleting" @click="handleDelete">确认删除</n-button>
-        </template>
-      </n-modal>
+    <!-- 列表 -->
+    <div v-if="loading" class="flex items-center justify-center py-20">
+      <UIcon name="heroicons:arrow-path" class="size-5 text-muted animate-spin" />
     </div>
+
+    <div v-else-if="comments.length === 0" class="px-6 py-20 text-center ring ring-default/40 rounded-xl bg-elevated/20">
+      <div class="inline-flex items-center justify-center size-12 rounded-full bg-elevated/60 mb-3">
+        <Icon name="heroicons:chat-bubble-oval-left" size="md" class="text-muted" />
+      </div>
+      <p class="text-sm text-muted">
+        {{ currentTab === 'pending' ? '暂无待审核评论' : '暂无评论' }}
+      </p>
+    </div>
+
+    <div v-else class="space-y-3">
+      <UCard
+        v-for="comment in comments"
+        :key="comment.id"
+        variant="subtle"
+        :ui="{ root: 'ring ring-default/40 hover:ring-primary/30 transition-colors', body: 'p-5' }"
+      >
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <!-- 评论主体 -->
+          <div class="flex-1 min-w-0 space-y-3">
+            <!-- 作者行 -->
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span class="flex shrink-0 items-center justify-center size-7 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                {{ comment.author?.charAt(0)?.toUpperCase() || '?' }}
+              </span>
+              <span class="font-medium text-highlighted">{{ comment.author }}</span>
+              <UBadge :color="getStatusType(comment.status)" variant="subtle" size="sm">
+                {{ getStatusText(comment.status) }}
+              </UBadge>
+              <span class="text-xs text-muted font-mono">#{{ comment.id }}</span>
+            </div>
+
+            <!-- 评论内容 -->
+            <blockquote class="border-l-2 border-primary/40 pl-4 text-sm text-toned leading-relaxed">
+              {{ comment.content }}
+            </blockquote>
+
+            <!-- 元信息 -->
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
+              <span class="inline-flex items-center gap-1">
+                <Icon name="heroicons:clock" size="xs" />
+                {{ formatDate(comment.createdAt) }}
+              </span>
+              <span v-if="comment.email" class="inline-flex items-center gap-1">
+                <Icon name="heroicons:envelope" size="xs" />
+                <span class="font-mono">{{ comment.email }}</span>
+              </span>
+              <span v-if="comment.website" class="inline-flex items-center gap-1">
+                <Icon name="heroicons:link" size="xs" />
+                <a :href="comment.website" target="_blank" rel="noopener" class="hover:text-primary truncate max-w-[16rem]">
+                  {{ comment.website }}
+                </a>
+              </span>
+              <span v-if="comment.userIp" class="inline-flex items-center gap-1">
+                <Icon name="heroicons:map-pin" size="xs" />
+                <span class="font-mono">IP · {{ comment.userIp }}</span>
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <Icon name="heroicons:heart" size="xs" class="text-rose-500" />
+                {{ comment.likes }}
+              </span>
+            </div>
+
+            <UBadge v-if="comment.article" color="info" variant="subtle" size="sm">
+              <Icon name="heroicons:document-text" size="xs" class="mr-1" />
+              {{ comment.article.title }}
+            </UBadge>
+          </div>
+
+          <!-- 操作 -->
+          <div class="flex flex-wrap items-center gap-1.5 lg:flex-col lg:items-stretch lg:w-32">
+            <UButton
+              v-if="comment.status === 'pending'"
+              color="success"
+              variant="soft"
+              size="sm"
+              icon="heroicons:check"
+              :disabled="updating"
+              block
+              @click="handleUpdateStatus(comment.id, 'approved')"
+            >
+              通过
+            </UButton>
+            <UButton
+              v-else-if="comment.status === 'approved'"
+              color="warning"
+              variant="soft"
+              size="sm"
+              icon="heroicons:eye-slash"
+              :disabled="updating"
+              block
+              @click="handleUpdateStatus(comment.id, 'rejected')"
+            >
+              隐藏
+            </UButton>
+            <UButton
+              v-else
+              color="primary"
+              variant="soft"
+              size="sm"
+              icon="heroicons:eye"
+              :disabled="updating"
+              block
+              @click="handleUpdateStatus(comment.id, 'approved')"
+            >
+              显示
+            </UButton>
+            <UButton
+              color="error"
+              variant="ghost"
+              size="sm"
+              icon="heroicons:trash"
+              :disabled="updating"
+              block
+              @click="confirmDelete(comment)"
+            >
+              删除
+            </UButton>
+          </div>
+        </div>
+      </UCard>
+    </div>
+
+    <!-- 删除确认 -->
+    <UModal
+      v-model:open="showDeleteModal"
+      :title="'确认删除评论'"
+      :description="'此操作不可撤销。'"
+    >
+      <template #body>
+        <p class="mb-3 text-sm text-muted">确定要删除这条评论吗？</p>
+        <div v-if="commentToDelete" class="rounded-lg border border-default bg-elevated/40 p-3 text-sm">
+          <p class="font-medium text-highlighted">{{ commentToDelete.author }}</p>
+          <p class="mt-1 text-toned">{{ commentToDelete.content }}</p>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton variant="ghost" color="neutral" @click="showDeleteModal = false">取消</UButton>
+          <UButton color="error" :loading="deleting" @click="handleDelete">确认删除</UButton>
+        </div>
+      </template>
+    </UModal>
+  </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useAdminCommentsFeature } from '~/features/article-admin/composables/useAdminCommentsFeature'
 
 definePageMeta({
@@ -172,8 +182,15 @@ definePageMeta({
   middleware: 'admin-auth'
 })
 
-const message = useMessage()
-const { getAllComments, getPendingComments, updateCommentStatus, deleteComment, getStatusType, getStatusText } = useAdminCommentsFeature()
+const toast = useToast()
+const {
+  getAllComments,
+  getPendingComments,
+  updateCommentStatus,
+  deleteComment,
+  getStatusType,
+  getStatusText
+} = useAdminCommentsFeature()
 
 const comments = ref([])
 const loading = ref(true)
@@ -183,9 +200,10 @@ const currentTab = ref('pending')
 const commentToDelete = ref(null)
 const showDeleteModal = ref(false)
 
-const pendingCount = computed(() => {
-  return comments.value.filter(comment => comment.status === 'pending').length
-})
+const tabItems = [
+  { label: '待审核', value: 'pending' },
+  { label: '全部评论', value: 'all' }
+]
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleString('zh-CN')
@@ -194,14 +212,12 @@ const formatDate = (dateString) => {
 const fetchComments = async () => {
   loading.value = true
   try {
-    if (currentTab.value === 'pending') {
-      comments.value = await getPendingComments()
-    } else {
-      comments.value = await getAllComments()
-    }
+    comments.value = currentTab.value === 'pending'
+      ? await getPendingComments()
+      : await getAllComments()
   } catch (error) {
     console.error('获取评论失败:', error)
-    message.error('获取评论失败')
+    toast.add({ title: '获取评论失败', color: 'error' })
   } finally {
     loading.value = false
   }
@@ -212,10 +228,10 @@ const handleUpdateStatus = async (commentId, status) => {
   try {
     await updateCommentStatus(commentId, status)
     await fetchComments()
-    message.success('评论状态已更新')
+    toast.add({ title: '评论状态已更新', color: 'success' })
   } catch (error) {
     console.error('更新评论状态失败:', error)
-    message.error('更新评论状态失败')
+    toast.add({ title: '更新评论状态失败', color: 'error' })
   } finally {
     updating.value = false
   }
@@ -228,37 +244,22 @@ const confirmDelete = (comment) => {
 
 const handleDelete = async () => {
   if (!commentToDelete.value) return
-
   deleting.value = true
   try {
     await deleteComment(commentToDelete.value.id)
     showDeleteModal.value = false
     commentToDelete.value = null
     await fetchComments()
-    message.success('评论已删除')
+    toast.add({ title: '评论已删除', color: 'success' })
   } catch (error) {
     console.error('删除评论失败:', error)
-    message.error('删除评论失败')
+    toast.add({ title: '删除评论失败', color: 'error' })
   } finally {
     deleting.value = false
   }
 }
 
-watch(currentTab, () => {
-  fetchComments()
-})
+watch(currentTab, () => fetchComments())
 
-onMounted(() => {
-  fetchComments()
-})
+onMounted(() => fetchComments())
 </script>
-
-<style scoped>
-.comment-card {
-  transition: transform 0.2s ease;
-}
-
-.comment-card:hover {
-  transform: translateY(-2px);
-}
-</style>

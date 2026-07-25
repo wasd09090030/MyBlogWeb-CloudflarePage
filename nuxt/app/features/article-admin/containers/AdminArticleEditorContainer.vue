@@ -1,203 +1,213 @@
 <template>
-  <div class="article-editor">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
-        {{ isEdit ? '编辑文章' : '创建文章' }}
-      </h2>
-      <div class="flex gap-2">
-        <n-button quaternary @click="goBack">
-          <template #icon>
-            <Icon name="arrow-left" size="sm" />
-          </template>
-          返回
-        </n-button>
-        <n-button tertiary @click="saveDraft">
-          <template #icon>
-            <Icon name="bookmark" size="sm" />
-          </template>
-          保存草稿
-        </n-button>
-        <n-button quaternary :disabled="!hasDraft" @click="restoreDraft">
-          <template #icon>
-            <Icon name="arrow-path" size="sm" />
-          </template>
-          恢复草稿
-        </n-button>
-        <n-button quaternary :disabled="!hasDraft" @click="clearDraft">
-          <template #icon>
-            <Icon name="x-mark" size="sm" />
-          </template>
-          清除草稿
-        </n-button>
-        <n-button type="primary" :loading="isSaving" @click="saveArticle">
-          <template #icon>
-            <Icon name="save" size="sm" />
-          </template>
-          保存文章
-        </n-button>
+  <div class="article-editor space-y-4">
+    <AdminPageHeader
+      eyebrow="Content library"
+      :title="isEdit ? '编辑文章' : '创建文章'"
+      :description="isEdit ? '修改已发布文章的内容与元数据' : '撰写、预览并发布一篇新文章'"
+    >
+      <template #actions>
+        <UButton variant="ghost" color="neutral" icon="heroicons:arrow-left" aria-label="返回文章列表" @click="goBack" />
+        <UButton variant="soft" color="neutral" icon="heroicons:bookmark" @click="saveDraft">保存草稿</UButton>
+        <UButton color="primary" icon="heroicons:check" :loading="isSaving" @click="saveArticle">保存文章</UButton>
+      </template>
+    </AdminPageHeader>
+    <header class="hidden">
+      <div class="space-y-1.5">
+        <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">内容</p>
+        <h1 class="font-display text-2xl font-semibold text-highlighted tracking-tight">
+          {{ isEdit ? '编辑文章' : '创建文章' }}
+        </h1>
+        <p class="text-sm text-muted">
+          {{ isEdit ? '修改已发布的文章内容' : '撰写并发布一篇新文章' }}
+        </p>
       </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <UButton variant="ghost" color="neutral" icon="heroicons:arrow-left" @click="goBack">
+          返回
+        </UButton>
+        <UButton variant="soft" color="neutral" icon="heroicons:bookmark" @click="saveDraft">
+          保存草稿
+        </UButton>
+        <UButton variant="ghost" color="neutral" icon="heroicons:arrow-path" :disabled="!hasDraft" @click="restoreDraft">
+          恢复草稿
+        </UButton>
+        <UButton variant="ghost" color="neutral" icon="heroicons:x-mark" :disabled="!hasDraft" @click="clearDraft">
+          清除草稿
+        </UButton>
+        <UButton color="primary" icon="heroicons:check" :loading="isSaving" @click="saveArticle">
+          保存文章
+        </UButton>
+      </div>
+    </header>
+
+    <div v-if="loading" class="flex justify-center py-12">
+      <USpinner />
     </div>
 
-    <n-spin :show="loading">
-      <div class="editor-layout">
-        <div class="editor-sidebar">
-          <n-card title="文章设置" class="sticky top-20">
-            <n-form-item label="文章标题" required>
-              <n-input
-                v-model:value="articleForm.title"
-                placeholder="输入文章标题..."
+    <div v-else class="editor-layout">
+      <div class="editor-sidebar">
+        <UCard class="sticky top-20">
+          <template #header>
+            <h3 class="text-lg font-semibold">文章设置</h3>
+          </template>
+
+          <UFormField label="文章标题" name="title" required>
+            <UInput
+              v-model="articleForm.title"
+              placeholder="输入文章标题..."
+            />
+          </UFormField>
+
+          <UFormField label="文章 Slug（英文）" name="slug">
+            <div class="w-full">
+              <UInput
+                v-model="articleForm.slug"
+                placeholder="可留空自动生成，例如: nuxt-seo-guide"
               />
-            </n-form-item>
-
-            <n-form-item label="文章 Slug（英文）">
-              <div class="w-full">
-                <n-input
-                  v-model:value="articleForm.slug"
-                  placeholder="可留空自动生成，例如: nuxt-seo-guide"
-                />
-                <p class="text-xs text-gray-500 mt-1">留空时后台会自动生成英文 slug</p>
-              </div>
-            </n-form-item>
-
-            <n-form-item label="文章类别">
-              <n-select
-                v-model:value="articleForm.category"
-                :options="categoryOptions"
-              />
-            </n-form-item>
-
-            <n-form-item label="封面图片">
-              <n-input
-                v-model:value="articleForm.coverImage"
-                placeholder="https://example.com/image.jpg"
-              />
-            </n-form-item>
-
-            <div v-if="articleForm.coverImage" class="mb-4">
-              <div class="cover-preview rounded-lg overflow-hidden border dark:border-gray-700">
-                <img
-                  :src="articleForm.coverImage"
-                  alt="封面图预览"
-                  class="w-full h-40 object-cover"
-                  @error="handleImageError"
-                  @load="handleImageLoad"
-                />
-              </div>
-              <p v-if="!isValidImageUrl" class="text-yellow-500 text-sm mt-1">
-                <Icon name="exclamation-circle" size="xs" />
-                图片预览加载失败
-              </p>
+              <p class="text-xs text-gray-500 mt-1">留空时后台会自动生成英文 slug</p>
             </div>
+          </UFormField>
 
-            <n-form-item label="文章标签">
-              <div class="w-full">
-                <n-dynamic-tags v-model:value="articleForm.tags" />
-                <div class="mt-2 text-sm text-gray-500">
-                  常用标签：
-                  <n-tag
-                    v-for="tag in suggestedTags"
-                    :key="tag"
-                    size="small"
-                    class="cursor-pointer mr-1 mb-1"
-                    @click="addSuggestedTag(tag)"
-                  >
-                    {{ tag }}
-                  </n-tag>
-                </div>
-              </div>
-            </n-form-item>
+          <UFormField label="文章类别" name="category">
+            <USelect
+              v-model="articleForm.category"
+              :items="categoryOptions"
+              value-key="value"
+            />
+          </UFormField>
 
-            <n-form-item label="AI 概要">
-              <div class="w-full">
-                <div class="flex gap-2 mb-2">
-                  <n-button
-                    size="small"
-                    type="info"
-                    :loading="isGeneratingAi"
-                    :disabled="!articleForm.contentMarkdown"
-                    @click="generateAiSummary"
-                  >
-                    <template #icon>
-                      <Icon name="bolt" size="xs" />
-                    </template>
-                    {{ isGeneratingAi ? '生成中...' : '生成概要' }}
-                  </n-button>
-                  <n-button
-                    size="small"
-                    quaternary
-                    :disabled="!articleForm.aiSummary"
-                    @click="articleForm.aiSummary = ''"
-                  >
-                    <Icon name="x-mark" size="xs" />
-                  </n-button>
-                </div>
-                <n-input
-                  v-model:value="articleForm.aiSummary"
-                  type="textarea"
-                  :rows="3"
-                  placeholder="点击上方按钮使用 AI 生成概要，或手动输入..."
-                />
-              </div>
-            </n-form-item>
+          <UFormField label="封面图片" name="coverImage">
+            <UInput
+              v-model="articleForm.coverImage"
+              placeholder="https://example.com/image.jpg"
+            />
+          </UFormField>
 
-            <div class="stats-info pt-4 border-t dark:border-gray-700">
-              <div class="flex justify-between text-sm text-gray-500 mb-2">
-                <span>字数统计</span>
-                <span>{{ contentStats.chars }} 字符</span>
-              </div>
-              <div class="flex justify-between text-sm text-gray-500 mb-2">
-                <span>行数</span>
-                <span>{{ contentStats.lines }} 行</span>
-              </div>
-              <div class="flex justify-between text-sm text-gray-500">
-                <span>预计阅读</span>
-                <span>{{ contentStats.readTime }} 分钟</span>
+          <div v-if="articleForm.coverImage" class="mb-4">
+            <div class="cover-preview overflow-hidden rounded-lg border border-default">
+              <img
+                :src="articleForm.coverImage"
+                alt="封面图预览"
+                class="w-full h-40 object-cover"
+                @error="handleImageError"
+                @load="handleImageLoad"
+              />
+            </div>
+            <p v-if="!isValidImageUrl" class="mt-1 text-sm text-warning">
+              <Icon name="exclamation-circle" size="xs" />
+              图片预览加载失败
+            </p>
+          </div>
+
+          <UFormField label="文章标签" name="tags">
+            <div class="w-full">
+              <UInputTags v-model="articleForm.tags" />
+              <div class="mt-2 text-sm text-gray-500">
+                常用标签：
+                <UBadge
+                  v-for="tag in suggestedTags"
+                  :key="tag"
+                  variant="subtle"
+                  size="sm"
+                  class="cursor-pointer mr-1 mb-1"
+                  @click="addSuggestedTag(tag)"
+                >
+                  {{ tag }}
+                </UBadge>
               </div>
             </div>
-          </n-card>
-        </div>
+          </UFormField>
 
-        <div class="editor-main">
-          <n-card>
-            <template #header>
-              <div class="flex justify-between items-center">
-                <span>
-                  <Icon name="file-earmark-text" size="md" class="mr-2" />
-                  内容编辑
-                </span>
-                <n-tag size="small" type="info">
-                  支持 Markdown 语法和 HTML 标签
-                </n-tag>
+          <UFormField label="AI 概要" name="aiSummary">
+            <div class="w-full">
+              <div class="flex gap-2 mb-2">
+                <UButton
+                  size="sm"
+                  color="info"
+                  :loading="isGeneratingAi"
+                  :disabled="!articleForm.contentMarkdown"
+                  @click="generateAiSummary"
+                >
+                  <template #leading>
+                    <Icon name="bolt" size="xs" />
+                  </template>
+                  {{ isGeneratingAi ? '生成中...' : '生成概要' }}
+                </UButton>
+                <UButton
+                  size="sm"
+                  variant="ghost"
+                  color="neutral"
+                  :disabled="!articleForm.aiSummary"
+                  @click="articleForm.aiSummary = ''"
+                >
+                  <Icon name="x-mark" size="xs" />
+                </UButton>
               </div>
-            </template>
-
-            <ClientOnly>
-              <MdEditorWrapper
-                v-model="articleForm.contentMarkdown"
-                :height="editorHeight"
-                @save="handleSave"
-                @html-change="handleHtmlChange"
+              <UTextarea
+                v-model="articleForm.aiSummary"
+                :rows="3"
+                placeholder="点击上方按钮使用 AI 生成概要，或手动输入..."
               />
+            </div>
+          </UFormField>
 
-              <n-divider class="my-4" />
-
-              <div class="mdc-preview-panel">
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-sm font-medium text-gray-700 dark:text-gray-200">MDC 实时预览</span>
-                  <n-tag size="small" type="success">Nuxt MDC</n-tag>
-                </div>
-                <div class="mdc-preview-body">
-                  <MarkdownRenderer
-                    :markdown="articleForm.contentMarkdown"
-                    size="base"
-                  />
-                </div>
-              </div>
-            </ClientOnly>
-          </n-card>
-        </div>
+          <div class="stats-info border-t border-default pt-4">
+            <div class="flex justify-between text-sm text-gray-500 mb-2">
+              <span>字数统计</span>
+              <span>{{ contentStats.chars }} 字符</span>
+            </div>
+            <div class="flex justify-between text-sm text-gray-500 mb-2">
+              <span>行数</span>
+              <span>{{ contentStats.lines }} 行</span>
+            </div>
+            <div class="flex justify-between text-sm text-gray-500">
+              <span>预计阅读</span>
+              <span>{{ contentStats.readTime }} 分钟</span>
+            </div>
+          </div>
+        </UCard>
       </div>
-    </n-spin>
+
+      <div class="editor-main">
+        <UCard>
+          <template #header>
+            <div class="flex justify-between items-center">
+              <span class="flex items-center">
+                <Icon name="file-earmark-text" size="md" class="mr-2" />
+                内容编辑
+              </span>
+              <UBadge size="sm" color="info" variant="subtle">
+                支持 Markdown 语法和 HTML 标签
+              </UBadge>
+            </div>
+          </template>
+
+          <ClientOnly>
+            <MdEditorWrapper
+              v-model="articleForm.contentMarkdown"
+              :height="editorHeight"
+              @save="handleSave"
+              @html-change="handleHtmlChange"
+            />
+
+            <USeparator class="my-4" />
+
+            <div class="mdc-preview-panel">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">MDC 实时预览</span>
+                <UBadge size="sm" color="success" variant="subtle">Nuxt MDC</UBadge>
+              </div>
+              <div class="mdc-preview-body">
+                <MarkdownRenderer
+                  :markdown="articleForm.contentMarkdown"
+                  size="base"
+                />
+              </div>
+            </div>
+          </ClientOnly>
+        </UCard>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -207,7 +217,7 @@ import { mapErrorToUserMessage } from '~/shared/errors'
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
+const toast = useToast()
 const { getArticle, createArticle, updateArticle, generateAiSummary: generateAiSummaryApi } = useAdminArticlesFeature()
 
 const currentArticleId = computed(() => {
@@ -309,12 +319,12 @@ const saveDraft = ({ silent = false } = {}) => {
     localStorage.setItem(currentDraftKey.value, JSON.stringify(getDraftPayload()))
     hasDraft.value = true
     if (!silent) {
-      message.success('草稿已保存到本地浏览器')
+      toast.add({ title: '草稿已保存到本地浏览器', color: 'success' })
     }
   } catch (error) {
     console.error('保存本地草稿失败:', error)
     if (!silent) {
-      message.error('保存草稿失败，请检查浏览器存储空间')
+      toast.add({ title: '保存草稿失败，请检查浏览器存储空间', color: 'error' })
     }
   }
 }
@@ -329,7 +339,7 @@ const restoreDraft = ({ silent = false } = {}) => {
     if (!rawDraft) {
       hasDraft.value = false
       if (!silent) {
-        message.warning('当前没有可恢复的本地草稿')
+        toast.add({ title: '当前没有可恢复的本地草稿', color: 'warning' })
       }
       return
     }
@@ -347,13 +357,13 @@ const restoreDraft = ({ silent = false } = {}) => {
 
     hasDraft.value = true
     if (!silent) {
-      message.success('已恢复本地草稿')
+      toast.add({ title: '已恢复本地草稿', color: 'success' })
     }
   } catch (error) {
     console.error('恢复本地草稿失败:', error)
     hasDraft.value = false
     if (!silent) {
-      message.error('草稿数据损坏，恢复失败')
+      toast.add({ title: '草稿数据损坏，恢复失败', color: 'error' })
     }
   }
 }
@@ -367,12 +377,12 @@ const clearDraft = ({ silent = false } = {}) => {
     localStorage.removeItem(currentDraftKey.value)
     hasDraft.value = false
     if (!silent) {
-      message.success('本地草稿已清除')
+      toast.add({ title: '本地草稿已清除', color: 'success' })
     }
   } catch (error) {
     console.error('清除本地草稿失败:', error)
     if (!silent) {
-      message.error('清除草稿失败')
+      toast.add({ title: '清除草稿失败', color: 'error' })
     }
   }
 }
@@ -418,7 +428,7 @@ const fetchArticle = async (id) => {
     }
   } catch (error) {
     console.error('获取文章失败:', error)
-    message.error(mapErrorToUserMessage(error, '获取文章失败'))
+    toast.add({ title: mapErrorToUserMessage(error, '获取文章失败'), color: 'error' })
     goBack()
   } finally {
     loading.value = false
@@ -427,12 +437,12 @@ const fetchArticle = async (id) => {
 
 const saveArticle = async () => {
   if (!articleForm.value.title?.trim()) {
-    message.warning('请输入文章标题')
+    toast.add({ title: '请输入文章标题', color: 'warning' })
     return
   }
 
   if (!articleForm.value.contentMarkdown?.trim()) {
-    message.warning('请输入文章内容')
+    toast.add({ title: '请输入文章内容', color: 'warning' })
     return
   }
 
@@ -452,17 +462,17 @@ const saveArticle = async () => {
 
     if (isEdit.value) {
       await updateArticle(currentArticleId.value, payload)
-      message.success('文章已成功更新！')
+      toast.add({ title: '文章已成功更新！', color: 'success' })
     } else {
       await createArticle(payload)
-      message.success('文章已成功创建！')
+      toast.add({ title: '文章已成功创建！', color: 'success' })
     }
 
     clearDraft({ silent: true })
     router.push('/admin/articles')
   } catch (error) {
     console.error('保存文章失败:', error)
-    message.error(mapErrorToUserMessage(error, '保存文章失败'))
+    toast.add({ title: mapErrorToUserMessage(error, '保存文章失败'), color: 'error' })
   } finally {
     isSaving.value = false
   }
@@ -478,7 +488,7 @@ const addSuggestedTag = (tag) => {
 // 这样可以把历史兼容与后端端点变化控制在 service/composable 一处。
 const generateAiSummary = async () => {
   if (!articleForm.value.contentMarkdown) {
-    message.warning('请先输入文章内容')
+    toast.add({ title: '请先输入文章内容', color: 'warning' })
     return
   }
 
@@ -492,10 +502,10 @@ const generateAiSummary = async () => {
 
     articleForm.value.aiSummary = response.summary || ''
     articleForm.value.slug = response.slug || ''
-    message.success('AI 概要生成成功')
+    toast.add({ title: 'AI 概要生成成功', color: 'success' })
   } catch (error) {
     console.error('生成 AI 概要失败:', error)
-    message.error(mapErrorToUserMessage(error, '生成 AI 概要失败'))
+    toast.add({ title: mapErrorToUserMessage(error, '生成 AI 概要失败'), color: 'error' })
   } finally {
     isGeneratingAi.value = false
   }
@@ -558,7 +568,7 @@ watch(currentDraftKey, () => {
 <style scoped>
 .editor-layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 1.5rem;
   align-items: start;
 }

@@ -1,3 +1,5 @@
+import tailwindcss from '@tailwindcss/vite'
+
 const isProduction = process.env.NODE_ENV === 'production'
 const enableSourceMap = process.env.NUXT_SOURCEMAP === 'true'
 const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://wasd09090030.top'
@@ -49,8 +51,8 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/theme-variables.css',
     '~/assets/css/tailwind.css', // Tailwind CSS 入口文件
+    '~/assets/css/main.css', // Nuxt UI 主题（@theme 块）
     'katex/dist/katex.min.css', // KaTeX 数学公式样式
-    'keen-slider/keen-slider.min.css',
     '~/assets/css/components/prose-custom.css', // 自定义 prose 样式
     '~/assets/css/layout.css', // 自定义布局工具类
     '~/assets/css/app.css',
@@ -69,10 +71,10 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxt/icon', // Nuxt Icon 模块
     '@nuxt/fonts', // Nuxt Fonts 模块
-    '@bg-dev/nuxt-naiveui', // Naive UI 模块
     '@nuxtjs/mdc', // MDC Markdown 渲染模块
-    '@nuxtjs/seo', // Nuxt SEO 模块
-    'nuxt-vitalizer' // Core Web Vitals LCP 优化
+    'nuxt-vitalizer', // Core Web Vitals LCP 优化
+    '@nuxt/ui', // Nuxt UI v4
+    '@vueuse/motion/nuxt' // VueUse Motion 动效
   ],
 
   // LCP/SI 优化 - Nuxt Vitalizer
@@ -172,53 +174,33 @@ export default defineNuxtConfig({
     }
   },
 
-  // PostCSS 配置
-  postcss: {
-    plugins: {
-      tailwindcss: {},
-      autoprefixer: {},
-      // 生产环境CSS优化
-      ...(isProduction ? {
-        cssnano: {
-          preset: ['default', {
-            discardComments: { removeAll: true },
-            normalizeWhitespace: true,
-            minifyFontValues: true,
-            minifyGradients: true
-          }]
-        }
-      } : {})
-    }
-  },
+  // 集成 Tailwind CSS via Vite 插件（已替代 PostCSS 配置）
 
   // Nuxt Icon 配置
   icon: {
     // 修改 API 前缀，避免与 /api/ 冲突
     serverBundle: {
-      collections: ['heroicons', 'mdi']
+      // Nuxt UI v4 默认使用 lucide 图标，必须包含；保留 heroicons/mdi 以兼容旧别名
+      collections: ['heroicons', 'mdi', 'lucide']
     },
     // 自定义图标 API 路径前缀（不使用 /api/ 以避免与后端 API 冲突）
     provider: 'server',
     serverKnownCssClasses: ['nuxt-icon']
   },
 
-  // Naive UI 配置
-  naiveui: {
-    colorModePreference: 'system',
-    iconSize: 18,
-    themeConfig: {}
-  },
+  // Naive UI 配置已移除（B.1 起改用 @nuxt/ui）
 
   // 依赖配置
   build: {
     // 优化构建分析
     analyze: true,
     // 提升构建性能
-    transpile: ['@vueuse/core', 'naive-ui']
+    transpile: ['@vueuse/core']
   },
 
   // Vite配置 - 深度优化
   vite: {
+    plugins: [tailwindcss()],
     // Web Worker 配置
     worker: {
       format: 'es'
@@ -227,7 +209,6 @@ export default defineNuxtConfig({
       include: [
         'vue',
         'keen-slider',
-        'naive-ui',
         'katex',
         '@vueuse/core',
         'mermaid',
@@ -269,7 +250,13 @@ export default defineNuxtConfig({
             if (id.includes('node_modules/mermaid')) {
               return 'vendor-markdown';
             }
-            // Vue/Naive UI 让 Nuxt 自动处理，避免初始化顺序问题
+            // UI 库及其核心依赖必须在同一 chunk 以避免循环依赖
+            if (id.includes('node_modules/@nuxt/ui')
+              || id.includes('node_modules/reka-ui')
+              || id.includes('node_modules/@internationalized')
+              || id.includes('node_modules/@vueuse')) {
+              return 'vendor-ui';
+            }
           }
         }
       },
@@ -290,9 +277,9 @@ export default defineNuxtConfig({
     server: {
       warmup: {
         clientFiles: [
-          './pages/index.vue',
-          './components/SideBar.vue',
-          './layouts/default.vue'
+          './pages/admin/index.vue',
+          './pages/admin/login.vue',
+          './layouts/admin.vue'
         ]
       }
     }
@@ -314,39 +301,6 @@ export default defineNuxtConfig({
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL
         || (isProduction ? 'https://wasd09090030.top' : 'http://localhost:3000')
     }
-  },
-
-  // 站点信息（供 SEO 模块使用）
-  site: {
-    url: siteUrl,
-    name: 'WyrmKk',
-    description: '分享技术、生活与创作的个人博客',
-    defaultLocale: 'zh-CN'
-  },
-
-  robots: {
-    // 使用 public/robots.txt，避免第三方注入非标准指令导致校验报错
-    robotsTxt: false,
-    disallow: !isProduction
-      ? ['/']
-      : ['/admin/**', '/api/**']
-  },
-
-  sitemap: {
-    enabled: false
-  },
-
-  schemaOrg: {
-    identity: {
-      type: 'Person',
-      name: 'WyrmKk',
-      url: siteUrl,
-      sameAs: [
-        process.env.NUXT_PUBLIC_TWITTER_URL || 'https://x.com/wyrmwyrm1',
-        process.env.NUXT_PUBLIC_GITHUB_URL || 'https://github.com/wasd09090030'
-      ].filter(Boolean)
-    },
-    reactive: true
   },
 
   // 应用配置
@@ -405,16 +359,24 @@ export default defineNuxtConfig({
 
   // 路由配置优化
   routeRules: {
-    // 静态资源使用强缓存（1年）
-    '/icon/**': { 
-      headers: { 
-        ...immutableAssetHeaders
-      } 
+    // SSR 项目已收缩为后台应用，根路径交给后台入口处理，避免纯 admin 路由中出现 / 404
+    '/': {
+      redirect: { to: '/admin', statusCode: 302 }
     },
-    '/Picture/**': { 
-      headers: { 
+    // 后台页面依赖客户端认证状态，统一走 CSR，避免未认证首屏 /admin -> /admin/login 的 hydration mismatch
+    '/admin/**': {
+      ssr: false
+    },
+    // 静态资源使用强缓存（1年）
+    '/icon/**': {
+      headers: {
         ...immutableAssetHeaders
-      } 
+      }
+    },
+    '/Picture/**': {
+      headers: {
+        ...immutableAssetHeaders
+      }
     },
     '/flower/**': {
       headers: {
@@ -427,36 +389,11 @@ export default defineNuxtConfig({
       }
     },
     // API路由配置
-    '/api/**': { 
+    '/api/**': {
       cors: true,
       headers: {
         'cache-control': 'no-cache, no-store, must-revalidate'
       }
-    },
-    // 首页 SWR 缓存（1分钟，后台可重验证 5 分钟）
-    '/': {
-      ssr: true,
-      headers: createSwrHeaders(60, 300)
-    },
-    // 🔥 文章页面 SWR 缓存（5分钟，后台可重验证 1 小时）
-    '/article/**': {
-      ssr: true,
-      headers: createSwrHeaders(300, 3600, true)
-    },
-    // 画廊页面 SWR 缓存（3分钟）
-    '/gallery': {
-      ssr: true,
-      headers: createSwrHeaders(180, 600)
-    },
-    // 关于页面较长缓存（10分钟）
-    '/about': {
-      ssr: true,
-      headers: createSwrHeaders(600, 1800)
-    },
-    // 教程页面 SWR 缓存
-    '/tutorials': {
-      ssr: true,
-      headers: createSwrHeaders(300, 3600)
     }
   },
 
@@ -476,13 +413,6 @@ export default defineNuxtConfig({
     },
     // 优化服务器输出
     minify: true,
-    // 仅预渲染首页，避免全站 crawl
-    prerender: {
-      crawlLinks: false,
-      routes: [],
-      // 忽略 payload.json 的 404 错误（SSR模式下正常）
-      failOnError: false
-    },
     // 服务端端存储缓存（增强版）
     storage: {
       cache: {

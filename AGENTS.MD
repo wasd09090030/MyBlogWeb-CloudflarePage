@@ -4,16 +4,17 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 ## 1. 项目概览
 本仓库是全栈博客系统，采用混合架构：
 - 静态博客前端：`nuxt-public/`（Nuxt 4，SSG 静态生成，部署到 Cloudflare Pages；组件库：**Nuxt UI v4 ✅ 已从 NaiveUI 迁移完成**——见 `openspec/changes/nuxt-ui-migration/`）
-- 动态 SSR 前端：`nuxt/`（Nuxt 4，SSR 服务端渲染，部署到云服务器；组件库：**NaiveUI**，迁移排队中）
+- 动态 SSR 管理后台：`nuxt-admin/`（Nuxt 4 SSR，部署到云服务器；组件库：**Nuxt UI v4**；负责 `/admin/*`）
+- 旧动态 SSR 项目：`nuxt/`（冻结，仅作回滚与历史参考；禁止新增功能）
 - 后端：`backend-dotnet/BlogApi/`（.NET 8 Web API）
 - 路由分发：`cloudflare-worker/`（Cloudflare Worker，统一域名路由）
 
 ### 两个前端项目职责划分
 
-| | nuxt-public/（静态站） | nuxt/（SSR 动态站） |
+| | nuxt-public/（静态站） | nuxt-admin/（SSR 管理后台） |
 |---|---|---|
 | 部署位置 | Cloudflare Pages（CDN） | 云服务器（PM2 + Nginx） |
-| 负责页面 | `/` 首页、`/article/*` 文章、`/gallery` 画廊、`/tutorials` 教程、`/about` 关于 | `/admin/*` 管理后台 |
+| 负责页面 | `/` 首页、`/article/*` 文章、`/gallery` 画廊、`/tutorials` 教程、`/about` 关于 | `/admin/*` 管理后台（仅此） |
 | 渲染方式 | 构建时静态生成（SSG） | 运行时服务端渲染（SSR） |
 | 资源路径 | `/_nuxt/`（默认） | `/_ssr/`（避免冲突） |
 | SEO | sitemap.xml + robots.txt | sitemap 禁用，robots Disallow: / |
@@ -23,7 +24,7 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 - 同项目内部导航：使用 `NuxtLink`（SPA 路由）
 
 ## 核心行为
-1. 你的每一步操作，都需要调用 Sequential thinking mcp 服务思考问题。并反思自己上下文是否一致，如果发现冲突，立刻停止工作，向用户报告情况，等待反馈
+1. 你的每一步操作，都要反思自己上下文是否一致，如果发现冲突，立刻停止工作，向用户报告情况，等待反馈
 2. 记得调用 mcp router 的 fetch、context7 mcp等服务，你必须搜索最新的知识，禁止直接使用 LLM 内置过时知识库。避免造成时间滞后带来的错误.
 
 ## 2. 当前结构（按迁移后状态）
@@ -36,18 +37,12 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 - `pages/`：路由入口层
 - `components/`：通用组件（MarkdownRenderer、CommentSection 等）
 
-### 2.2 动态 SSR 前端（`nuxt/app/`）
-- `features/`：业务主层（推荐新增功能优先放这里）
-	- `article-list/`、`article-detail/`、`article-admin/`
-	- `gallery-public/`、`gallery-admin/`
-	- `home/`、`tutorials/`
-- `shared/`：跨功能共享层（`api/` `cache/` `errors/` `types/` `ui/`）
-- `layouts/`：布局层（`default.vue` / `admin.vue` / `blank.vue`）
-- `pages/`：路由入口层（admin + 公共页面）
-- `components/`：通用组件（逐步收敛）
-- `stores/`：Pinia 状态管理
-- `middleware/`：路由中间件（认证等）
-- `utils/`：通用工具与 worker 相关逻辑
+### 2.2 动态 SSR 管理后台（`nuxt-admin/`）
+- `app/pages/admin/`：管理后台路由入口
+- `app/components/`：布局、编辑器、预览与本地 MDC 组件
+- `app/composables/`：认证、BFF 请求和业务状态
+- `server/routes/admin/api/`：同源 Cookie BFF
+- `server/utils/`：后端 API 与 Cookie 转发工具
 
 ### 2.3 后端（`backend-dotnet/BlogApi/`）
 - `Controllers/`、`Services/`、`Models/`、`DTOs/`、`Data/`
@@ -64,7 +59,7 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 - 本地开发：`npm run dev`
 - 静态生成：`npm run generate`
 
-### 3.2 动态 SSR 前端（在 `nuxt/`）
+### 3.2 动态 SSR 管理后台（在 `nuxt-admin/`）
 - 安装依赖：`npm install`
 - 本地开发：`npm run dev`
 - 生产构建：`npm run build`
@@ -96,16 +91,14 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 - 受 change `extract-mobile-styles` 约束（详见 `openspec/changes/archive/2026-06-.../`）
 
 ## 5. 配置与样式注意事项
-- Tailwind 扫描需覆盖：`app/features/**/*.{js,vue,ts}`（已纳入）
-- `NuxtLoadingIndicator` 已全局启用，避免在业务跳转里重复手动 `start/finish`
-- `nuxt-vitalizer` 当前保留入口样式（`disableStylesheets: false`），避免 admin 样式缺失
-- SSR 项目 `buildAssetsDir` 为 `/_ssr/`，与 Pages 的 `/_nuxt/` 隔离
-- `nuxt.config.ts` 的 `css: []` 数组中保持 `*.desktop.css` 在 `*.mobile.css` 之前
+- Nuxt Admin 使用 Nuxt UI v4 与 Tailwind CSS v4；不要引入 Naive UI。
+- SSR 项目 `buildAssetsDir` 为 `/_ssr/`，与 Pages 的 `/_nuxt/` 隔离。
+- 浏览器到后端的受保护请求必须经由 `/admin/api/*` BFF，保持 SSR Cookie 方案。
 
 ## 6. 关键配置文件
 - `nuxt-public/nuxt.config.ts`：静态生成配置，含 `prerender:routes` hook
-- `nuxt/nuxt.config.ts`：SSR 配置，含 `buildAssetsDir: '/_ssr/'`
-- `nuxt/NuxtNginx.txt`：Nginx 配置参考（server.wasd09090030.top）
+- `nuxt-admin/nuxt.config.ts`：活动 SSR 管理后台配置，含 `buildAssetsDir: '/_ssr/'`
+- `nuxt-admin/DEPLOYMENT.md`：当前后台的 PM2、Nginx 与回滚说明
 - `cloudflare-worker/router.js`：Worker 路由分发
 - `.github/workflows/release.yml`：CI/CD 双目标构建
 
@@ -135,4 +128,4 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 4. 前端改动后优先做定点验证（目标页面回归），避免无关的全量验证开销。
 5. 非任务范围文件不改动；如发现潜在问题，在 PR 说明中列为后续项。
 6. 修改 nuxt-public/ 时注意：这是静态站，不支持运行时 API 调用（客户端 fetch 除外）。
-7. 修改 nuxt/ 时注意：资源路径为 `/_ssr/`，不是默认的 `/_nuxt/`。
+7. 修改 nuxt-admin/ 时注意：资源路径为 `/_ssr/`，不是默认的 `/_nuxt/`；`nuxt/` 不得新增功能。

@@ -1,51 +1,125 @@
 <template>
-  <div class="max-w-lg mx-auto">
-      <n-card title="修改管理员密码">
-        <n-form ref="formRef" :model="formData" :rules="rules" @submit.prevent="changePassword">
-          <n-form-item label="当前密码" path="currentPassword">
-            <n-input
-              v-model:value="formData.currentPassword"
-              type="password"
-              placeholder="请输入当前密码"
-              show-password-on="click"
-            />
-          </n-form-item>
+  <div class="max-w-xl mx-auto space-y-6">
+    <!-- 页面标题 -->
+    <AdminPageHeader
+      eyebrow="Account"
+      title="账户安全"
+      description="使用独立且足够强的密码，避免与最近使用的密码重复。"
+    />
+    <header class="hidden">
+      <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">账号</p>
+      <h1 class="font-display text-2xl font-semibold text-highlighted tracking-tight">修改密码</h1>
+      <p class="text-sm text-muted">
+        建议使用至少 6 位字符，并避免与最近使用过的密码重复。
+      </p>
+    </header>
 
-          <n-form-item label="新密码" path="newPassword">
-            <n-input
-              v-model:value="formData.newPassword"
-              type="password"
-              placeholder="请输入新密码（至少6位）"
-              show-password-on="click"
-            />
-          </n-form-item>
+    <UCard
+      variant="subtle"
+      :ui="{ root: 'ring ring-default/40', body: 'p-6 sm:p-8' }"
+    >
+      <UForm :state="formData" :schema="schema" @submit="changePassword" class="space-y-5">
+        <UFormField label="当前密码" name="currentPassword" required>
+          <UInput
+            v-model="formData.currentPassword"
+            type="password"
+            placeholder="请输入当前密码"
+            show-password-on="click"
+            autocomplete="current-password"
+            :ui="{ base: 'w-full' }"
+          />
+        </UFormField>
 
-          <n-form-item label="确认新密码" path="confirmPassword">
-            <n-input
-              v-model:value="formData.confirmPassword"
-              type="password"
-              placeholder="请再次输入新密码"
-              show-password-on="click"
-            />
-          </n-form-item>
+        <USeparator />
 
-          <n-alert v-if="error" type="error" :title="error" class="mb-4" closable @close="error = ''" />
-          <n-alert v-if="success" type="success" :title="success" class="mb-4" closable @close="success = ''" />
+        <UFormField
+          label="新密码"
+          name="newPassword"
+          required
+          help="至少 6 位，建议同时包含字母与数字"
+        >
+          <UInput
+            v-model="formData.newPassword"
+            type="password"
+            placeholder="请输入新密码"
+            show-password-on="click"
+            autocomplete="new-password"
+            :ui="{ base: 'w-full' }"
+          />
+        </UFormField>
 
-          <n-button
-            type="primary"
-            block
-            :loading="isChanging"
-            @click="changePassword"
+        <UFormField label="确认新密码" name="confirmPassword" required>
+          <UInput
+            v-model="formData.confirmPassword"
+            type="password"
+            placeholder="请再次输入新密码"
+            show-password-on="click"
+            autocomplete="new-password"
+            :ui="{ base: 'w-full' }"
+          />
+        </UFormField>
+
+        <UAlert
+          v-if="error"
+          :title="error"
+          color="error"
+          variant="subtle"
+          icon="heroicons:exclamation-circle"
+          closeable
+          @close="error = ''"
+        />
+        <UAlert
+          v-if="success"
+          :title="success"
+          color="success"
+          variant="subtle"
+          icon="heroicons:check-circle"
+          closeable
+          @close="success = ''"
+        />
+
+        <AdminActionBar>
+          <UButton
+            type="button"
+            variant="ghost"
+            color="neutral"
+            :disabled="isChanging"
+            @click="resetForm"
           >
-            修改密码
-          </n-button>
-        </n-form>
-      </n-card>
-    </div>
+            清空
+          </UButton>
+          <UButton
+            type="submit"
+            color="primary"
+            icon="heroicons:shield-check"
+            :loading="isChanging"
+          >
+            更新密码
+          </UButton>
+        </AdminActionBar>
+      </UForm>
+    </UCard>
+
+    <UCard
+      variant="subtle"
+      :ui="{ root: 'ring ring-default/40', body: 'p-5 sm:p-6' }"
+    >
+      <div class="flex gap-3">
+        <UIcon name="heroicons:information-circle" class="size-5 text-primary shrink-0 mt-0.5" />
+        <div class="text-sm text-toned space-y-1">
+          <p class="font-medium text-highlighted">修改密码后您仍保持登录状态</p>
+          <p class="text-muted">
+            旧密码将立即失效，但当前会话不会被强制登出。请妥善保管新密码。
+          </p>
+        </div>
+      </div>
+    </UCard>
+  </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import * as v from 'valibot'
+
 definePageMeta({
   ssr: false,
   layout: 'admin',
@@ -54,7 +128,6 @@ definePageMeta({
 
 const authStore = useAuthStore()
 
-const formRef = ref(null)
 const formData = ref({
   currentPassword: '',
   newPassword: '',
@@ -64,38 +137,24 @@ const error = ref('')
 const success = ref('')
 const isChanging = ref(false)
 
-const validatePasswordSame = (rule, value) => {
-  return value === formData.value.newPassword
-}
+const schema = v.object({
+  currentPassword: v.pipe(v.string(), v.minLength(1, '请输入当前密码')),
+  newPassword: v.pipe(v.string(), v.minLength(6, '密码长度至少 6 位')),
+  confirmPassword: v.pipe(v.string(), v.minLength(1, '请确认新密码'))
+})
 
-const rules = {
-  currentPassword: {
-    required: true,
-    message: '请输入当前密码',
-    trigger: 'blur'
-  },
-  newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码长度至少6位', trigger: 'blur' }
-  ],
-  confirmPassword: [
-    { required: true, message: '请确认新密码', trigger: 'blur' },
-    { validator: validatePasswordSame, message: '两次输入的密码不一致', trigger: 'blur' }
-  ]
+const resetForm = () => {
+  formData.value = { currentPassword: '', newPassword: '', confirmPassword: '' }
+  error.value = ''
+  success.value = ''
 }
 
 const changePassword = async () => {
   error.value = ''
   success.value = ''
 
-  // 额外验证
   if (formData.value.newPassword !== formData.value.confirmPassword) {
     error.value = '两次输入的新密码不一致'
-    return
-  }
-
-  if (formData.value.newPassword.length < 6) {
-    error.value = '新密码长度至少6位'
     return
   }
 
@@ -114,12 +173,7 @@ const changePassword = async () => {
 
     if (result.success) {
       success.value = result.message || '密码修改成功'
-      // 清空表单
-      formData.value = {
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }
+      resetForm()
     } else {
       error.value = result.message
     }

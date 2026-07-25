@@ -321,14 +321,6 @@
   --welcome-badge-text: #e2e8f0;
 }
 
-/* ==================== 全局过渡 (Global Transitions) ==================== */
-* {
-  transition: background-color 0.3s ease,
-              color 0.3s ease,
-              border-color 0.3s ease,
-              box-shadow 0.3s ease;
-}
-
 /* 移除特定元素的过渡 */
 *:where(
   .no-transition,
@@ -359,7 +351,6 @@
 /* ==================== 辅助类 (Utility Classes) ==================== */
 
 /* 背景色辅助类 */
-.bg-primary { background-color: var(--bg-primary) !important; }
 .bg-secondary { background-color: var(--bg-secondary) !important; }
 .bg-tertiary { background-color: var(--bg-tertiary) !important; }
 
@@ -374,7 +365,6 @@
 /* 阴影辅助类 */
 .shadow-sm { box-shadow: var(--shadow-sm) !important; }
 .shadow-md { box-shadow: var(--shadow-md) !important; }
-.shadow-lg { box-shadow: var(--shadow-lg) !important; }
 
 /* 毛玻璃效果 */
 .glass-effect {

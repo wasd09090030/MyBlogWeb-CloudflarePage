@@ -1,7 +1,17 @@
 <template>
   <div class="space-y-6">
     <!-- 顶部欢迎区 / 系统状态 -->
-    <header class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <AdminPageHeader
+      :eyebrow="greetingEyebrow"
+      :title="`${greeting}，管理员`"
+      :description="`这是 ${formattedDate} 的后台快照。`"
+    >
+      <template #actions>
+        <UButton variant="soft" color="neutral" icon="heroicons:cloud-arrow-down" :loading="isTriggeringPagesDeploy" @click="triggerPagesDeployHook">触发 Pages 重构</UButton>
+        <UButton color="primary" icon="heroicons:plus" @click="createArticle">新建文章</UButton>
+      </template>
+    </AdminPageHeader>
+    <header class="hidden">
       <div class="space-y-1.5">
         <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">
           {{ greetingEyebrow }}

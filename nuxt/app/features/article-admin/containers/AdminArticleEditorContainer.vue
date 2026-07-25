@@ -1,6 +1,17 @@
 <template>
-  <div class="article-editor space-y-6">
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+  <div class="article-editor space-y-4">
+    <AdminPageHeader
+      eyebrow="Content library"
+      :title="isEdit ? '编辑文章' : '创建文章'"
+      :description="isEdit ? '修改已发布文章的内容与元数据' : '撰写、预览并发布一篇新文章'"
+    >
+      <template #actions>
+        <UButton variant="ghost" color="neutral" icon="heroicons:arrow-left" aria-label="返回文章列表" @click="goBack" />
+        <UButton variant="soft" color="neutral" icon="heroicons:bookmark" @click="saveDraft">保存草稿</UButton>
+        <UButton color="primary" icon="heroicons:check" :loading="isSaving" @click="saveArticle">保存文章</UButton>
+      </template>
+    </AdminPageHeader>
+    <header class="hidden">
       <div class="space-y-1.5">
         <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">内容</p>
         <h1 class="font-display text-2xl font-semibold text-highlighted tracking-tight">
@@ -73,7 +84,7 @@
           </UFormField>
 
           <div v-if="articleForm.coverImage" class="mb-4">
-            <div class="cover-preview rounded-lg overflow-hidden border dark:border-gray-700">
+            <div class="cover-preview overflow-hidden rounded-lg border border-default">
               <img
                 :src="articleForm.coverImage"
                 alt="封面图预览"
@@ -82,7 +93,7 @@
                 @load="handleImageLoad"
               />
             </div>
-            <p v-if="!isValidImageUrl" class="text-yellow-500 text-sm mt-1">
+            <p v-if="!isValidImageUrl" class="mt-1 text-sm text-warning">
               <Icon name="exclamation-circle" size="xs" />
               图片预览加载失败
             </p>
@@ -140,7 +151,7 @@
             </div>
           </UFormField>
 
-          <div class="stats-info pt-4 border-t dark:border-gray-700">
+          <div class="stats-info border-t border-default pt-4">
             <div class="flex justify-between text-sm text-gray-500 mb-2">
               <span>字数统计</span>
               <span>{{ contentStats.chars }} 字符</span>
@@ -557,7 +568,7 @@ watch(currentDraftKey, () => {
 <style scoped>
 .editor-layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 1.5rem;
   align-items: start;
 }

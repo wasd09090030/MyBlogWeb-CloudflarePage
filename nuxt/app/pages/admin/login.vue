@@ -3,7 +3,7 @@
     <!-- 签名背景：双层径向 emerald 光晕 + 巨型半透明 monogram -->
     <div
       aria-hidden="true"
-      class="pointer-events-none absolute inset-0 z-0"
+      class="hidden"
     >
       <div
         class="absolute inset-0"
@@ -153,7 +153,7 @@ const isDark = computed(() => colorMode.value === 'dark')
 // admin 后台默认深色模式（设计本就是为深色调优）
 onMounted(() => {
   if (colorMode.preference === 'system') {
-    colorMode.preference = 'dark'
+    colorMode.preference = 'light'
   }
 })
 

@@ -4,7 +4,7 @@
     <UDashboardSidebar
       collapsible
       resizable
-      :ui="{ root: 'bg-elevated/40', footer: 'border-t border-default' }"
+      :ui="{ root: 'bg-elevated/80 dark:bg-primary-950/35', footer: 'border-t border-default' }"
     >
       <template #header="{ collapsed }">
         <NuxtLink
@@ -141,7 +141,7 @@ const colorMode = useColorMode()
 // admin 后台默认深色模式（设计本就是为深色调优）
 onMounted(() => {
   if (colorMode.preference === 'system') {
-    colorMode.preference = 'dark'
+    colorMode.preference = 'light'
   }
 })
 

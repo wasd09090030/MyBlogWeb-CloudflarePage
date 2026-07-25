@@ -100,25 +100,25 @@ nuxt-public 的样式管线 SHALL 使用 Tailwind CSS 4.x，并通过 `@tailwind
 
 ### Requirement: 浏览器支持底线
 
-`nuxt/` SHALL 维持 Safari 16.4+ / Chrome 111+ / Firefox 128+ 浏览器支持底线（与 nuxt-public 一致）。
+活动管理后台 `nuxt-admin/` SHALL 维持 Safari 16.4+ / Chrome 111+ / Firefox 128+ 浏览器支持底线（与 nuxt-public 一致）。
 
 #### Scenario: 浏览器基线
 
 - **WHEN** CI 或 README 文档记录浏览器支持
 - **THEN** 上述三个浏览器及其以上版本被明确列出
 
-### Requirement: NaiveUI 暂留待后续 change
+### Requirement: 活动后台不使用 NaiveUI
 
-本 change 仅升级 Tailwind，不替换 NaiveUI。`nuxt/` SHALL 仍保留 `naive-ui`、`@bg-dev/nuxt-naiveui` 依赖；`nuxt.config.ts` SHALL 仍包含 `naiveui` 配置块与 `build.transpile: ['naive-ui']`、`vite.optimizeDeps.include: ['naive-ui']`。NaiveUI 清理由后续 `nuxt-ssr-nuxt-ui-v4-migration` change 处理。
+`nuxt-admin/` SHALL 使用 Nuxt UI v4 和 Tailwind v4，且不得包含 NaiveUI 运行时依赖或组件用法。冻结的 `nuxt/` 可保留历史 NaiveUI 代码，仅作回滚参考。
 
-#### Scenario: NaiveUI 残留
+#### Scenario: 活动后台依赖审计
 
-- **WHEN** 在 `nuxt/` grep `naive-ui` 或 admin 范围内的 `<n-` 组件
-- **THEN** 仍命中（admin 后台约 20 个文件含 `<n-*>`，待后续 change 替换）
+- **WHEN** 在 `nuxt-admin/` 检查 `package.json` 和 `app/` 源码
+- **THEN** 不命中 `naive-ui`、`<n-`、`useMessage` 或 `useDialog`
 
 ### Requirement: CSS 审计脚本持续通过
 
-`nuxt/package.json` 的 `css:audit` 与 `css:imports:audit` 脚本 SHALL 在 Phase A 完成后保持 0 violation。
+`nuxt/` 的 CSS 审计脚本仅约束冻结项目的回滚可用性，不得作为 `nuxt-admin/` 的新功能实现约束。
 
 #### Scenario: 硬约束保持
 
@@ -135,4 +135,3 @@ nuxt-public 的样式管线 SHALL 使用 Tailwind CSS 4.x，并通过 `@tailwind
 
 - **WHEN** Phase A 完成后检查 `nuxt/app/` 目录
 - **THEN** 上述剩余公开页文件全部保留存在；除前置 change 已删的外，未被本次 change 删除
-

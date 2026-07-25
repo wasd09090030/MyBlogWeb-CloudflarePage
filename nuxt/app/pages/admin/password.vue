@@ -1,7 +1,12 @@
 <template>
   <div class="max-w-xl mx-auto space-y-6">
     <!-- 页面标题 -->
-    <header class="space-y-1.5">
+    <AdminPageHeader
+      eyebrow="Account"
+      title="账户安全"
+      description="使用独立且足够强的密码，避免与最近使用的密码重复。"
+    />
+    <header class="hidden">
       <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">账号</p>
       <h1 class="font-display text-2xl font-semibold text-highlighted tracking-tight">修改密码</h1>
       <p class="text-sm text-muted">
@@ -73,7 +78,7 @@
           @close="success = ''"
         />
 
-        <div class="flex items-center justify-end gap-2 pt-2">
+        <AdminActionBar>
           <UButton
             type="button"
             variant="ghost"
@@ -91,7 +96,7 @@
           >
             更新密码
           </UButton>
-        </div>
+        </AdminActionBar>
       </UForm>
     </UCard>
 

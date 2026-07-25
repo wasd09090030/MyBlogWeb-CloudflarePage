@@ -15,6 +15,20 @@ export default defineAppConfig({
         color: 'primary'
       }
     },
+    table: {
+      slots: {
+        th: 'h-9 px-3 text-xs font-semibold uppercase tracking-wide text-muted',
+        td: 'px-3 py-2 text-sm align-middle'
+      }
+    },
+    card: {
+      slots: {
+        root: 'rounded-lg',
+        header: 'px-4 py-3',
+        body: 'p-4',
+        footer: 'px-4 py-3'
+      }
+    },
     // admin 不渲染 Markdown；不覆盖 Nuxt UI v4 的 prose 配置对象。
   },
   icon: {

@@ -1,0 +1,37 @@
+{
+  "name": "myblog-nuxt-admin",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.10.4",
+    "@codemirror/lang-markdown": "^6.5.1",
+    "@codemirror/state": "^6.7.1",
+    "@codemirror/view": "^6.43.6",
+    "@nuxt/icon": "^2.2.1",
+    "@nuxt/ui": "^4.10.0",
+    "@nuxtjs/mdc": "^0.19.2",
+    "@tailwindcss/vite": "^4.3.3",
+    "katex": "^0.16.47",
+    "mermaid": "^11.16.0",
+    "nuxt": "^4.3.0",
+    "valibot": "^1.4.2",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "^1.2.119",
+    "@types/node": "^24.0.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.0",
+    "vue-tsc": "^3.0.0"
+  }
+}

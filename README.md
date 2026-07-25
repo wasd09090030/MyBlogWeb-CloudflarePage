@@ -1,221 +1,49 @@
-# 个人博客系统 (MyBlogWeb)
+# MyBlogWeb
 
-现代化全栈个人博客系统，采用 **混合架构**：静态博客（Cloudflare Pages）+ 动态应用（SSR 云服务器）+ .NET 8 后端 API，通过 Cloudflare Worker 统一域名路由。
+个人博客的混合部署项目。
 
-## 架构总览
+## 当前架构
 
-```
-用户访问 wasd09090030.top / www.wasd09090030.top
-                    ↓
-          Cloudflare Worker（路由分发）
-           ├── 静态路由 → Cloudflare Pages（nuxt-public/）
-           │   ├── /                 首页
-           │   ├── /article/*        文章详情
-           │   ├── /gallery          图片画廊
-           │   ├── /tutorials        教程列表
-           │   └── /about            关于页面
-           │
-          └── 动态路由 → 云服务器 Nginx → Nuxt SSR（nuxt/）
-              ├── /admin/*          管理后台
-              ├── /api/*            → .NET 后端 (port 5000)
-              ├── /images/*         图片资源
-              └── /_ssr/*           SSR 静态资源
-```
+| 项目 | 职责 | 部署方式 |
+| --- | --- | --- |
+| `nuxt-public/` | 公开博客：主页、文章、画廊、教程和关于页 | Nuxt 4 SSG，Cloudflare Pages |
+| `nuxt-admin/` | `/admin/*` 管理后台 | Nuxt 4 SSR + Nuxt UI v4，云服务器 |
+| `backend-dotnet/BlogApi/` | 博客 API | ASP.NET Core 8 |
+| `cloudflare-worker/` | 统一域名的路由分发 | Cloudflare Worker |
+| `nuxt/` | 旧 SSR 管理后台，仅用于回滚和历史参考 | 已冻结，不再新增功能 |
 
-## 域名架构
+`cloudflare-worker/router.js` 将 `/admin/*`、`/api/*`、`/images/*` 和 `/_ssr/*` 转发至云服务器。公开站资源使用 `/_nuxt/`；管理后台资源使用 `/_ssr/`，避免冲突。
 
-| 域名 | 用途 | 指向 |
-|------|------|------|
-| `wasd09090030.top` | 用户访问主域名 | Cloudflare Worker |
-| `www.wasd09090030.top` | 同上（别名） | Cloudflare Worker |
-| `server.wasd09090030.top` | 云服务器（Worker 内部转发） | 云服务器 IP |
-| `backend.wasd09090030.top` | 后端 API（构建时 & 客户端） | 云服务器 IP |
+## 开发
 
-- `server.wasd09090030.top` 不面向用户，robots.txt 已设置 `Disallow: /`
-- Cloudflare Pages 使用默认域名，无需自定义域名（通过 `env.ASSETS` 内部调用）
-
-## 项目结构
-
-```
-MyBlogWeb-CloudflarePage/
-├── nuxt-public/                    # 静态博客（Cloudflare Pages）
-│   ├── app/
-│   │   ├── features/              # 业务模块
-│   │   │   ├── article-list/      # 文章列表
-│   │   │   ├── article-detail/    # 文章详情
-│   │   │   ├── gallery-public/    # 画廊展示
-│   │   │   ├── home/              # 首页
-│   │   │   └── tutorials/         # 教程
-│   │   ├── shared/                # 共享层（api/cache/errors/types/ui）
-│   │   ├── layouts/               # 布局（default/blank）
-│   │   ├── pages/                 # 路由入口
-│   │   └── components/            # 通用组件
-│   ├── nuxt.config.ts             # 静态生成配置（nitro.preset: 'static'）
-│   └── .env.production            # 生产环境变量
-│
-├── nuxt/                           # 动态 SSR 应用（云服务器）
-│   ├── app/
-│   │   ├── features/              # 业务模块（含 admin 相关）
-│   │   │   ├── article-admin/     # 文章管理
-│   │   │   ├── gallery-admin/     # 画廊管理
-│   │   │   └── ...                # 其他公共模块
-│   │   ├── shared/                # 共享层
-│   │   ├── layouts/               # 布局（default/admin/blank）
-│   │   ├── pages/                 # 路由入口（admin + 公共页面）
-│   │   ├── stores/                # Pinia 状态管理
-│   │   └── middleware/            # 路由中间件（认证等）
-│   ├── nuxt.config.ts             # SSR 配置（buildAssetsDir: '/_ssr/'）
-│   ├── NuxtNginx.txt              # Nginx 配置参考
-│   └── ecosystem.config.js        # PM2 部署配置
-│
-├── cloudflare-worker/
-│   ├── router.js                  # Worker 路由分发逻辑
-│   └── wrangler.toml              # Worker 部署配置
-│
-├── backend-dotnet/BlogApi/         # .NET 8 后端 API
-│   ├── Controllers/               # API 控制器
-│   ├── Services/                  # 业务逻辑
-│   ├── Models/                    # 数据模型
-│   ├── DTOs/                      # 数据传输对象
-│   └── Data/                      # 数据库上下文（SQLite）
-│
-├── .github/workflows/
-│   └── release.yml                # CI/CD（支持 SSR/静态站独立构建）
-│
-└── docs/
-    ├── CloudflarePages-Deploy-Guide.md
-    └── Hybrid-Architecture.md
-```
-
-## 两个前端项目对比
-
-| | nuxt-public/（静态站） | nuxt/（SSR 动态站） |
-|---|---|---|
-| **部署位置** | Cloudflare Pages（CDN） | 云服务器（PM2 + Nginx） |
-| **渲染方式** | 构建时静态生成（SSG） | 服务端渲染（SSR） |
-| **负责页面** | 首页、文章、画廊、教程、关于 | **管理后台（仅此）** — 公共浏览职责已删除，详见 `openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/` |
-| **数据获取** | 构建时从 API 拉取，写入静态 HTML | 运行时实时请求 API |
-| **资源路径** | `/_nuxt/`（默认） | `/_ssr/`（避免冲突） |
-| **SEO** | sitemap.xml、robots.txt | sitemap 已禁用，robots 禁止索引 |
-| **更新方式** | 重新 generate + 部署到 Pages | 重新 build + 重启 PM2 |
-| **互不影响** | 重新部署不影响 SSR 站 | 重新部署不影响静态站 |
-
-### 跨项目导航
-
-- nuxt 中访问 `/`、`/gallery`、`/tutorials`、`/about` 使用 `<a>` 标签（全页面跳转到 Pages）
-- 同项目内部导航使用 `NuxtLink`（SPA 路由）
-
-## 技术栈
-
-**前端**: Nuxt 4 + Vue 3 (Composition API) + Nuxt UI v4（`nuxt-public/` 静态站已迁移完成）+ NaiveUI（`nuxt/` SSR 站，**UI 迁移延后**——Nuxt UI v3/v4 与 Tailwind v3 互斥，须先升级 Tailwind v3→v4）+ TailwindCSS + MDC
-**后端**: ASP.NET Core 8.0 + Entity Framework Core + SQLite
-**基础设施**: Cloudflare Pages + Cloudflare Worker + Nginx + PM2
-**CI/CD**: GitHub Actions（双目标构建）
-
-> **关于 `nuxt/` 范围收缩**：本项目 SSR 站 (`nuxt/`) 已于 2026-07-22 完成**范围收缩**（路径 C）：删除 14+ 公共 features/pages/layouts/components/composables/utils/plugins 文件 + 清理 `nuxt.config.ts`（sitemap/prerender/公共 routeRules/@nuxtjs/seo/keen-slider）+ `package.json` 卸 3 个依赖 + 修复 `MarkdownRenderer.vue` 去除 worker 依赖。
->
-> **关于 UI 库迁移**：`nuxt/` 暂**不**做 NaiveUI→NuxtUI 迁移（**路径 C 决策**）。原因：所有 Nuxt UI v3/v4 版本均强依赖 Tailwind v4（`@nuxt/ui@3.0.0` 与 `3.3.7` 都把 `@tailwindcss/vite@4.3.3` 作为传递依赖），与"tailwind 暂不同步"决策互斥。UI 迁移须**先**升级 Tailwind v3→v4（或与 Tailwind v4 升级联动做）。当前 `nuxt/` 仍保留 NaiveUI，技术债分裂留待后续 change 解决。
-> 范围收缩与计划中 UI 迁移的 OpenSpec 变更见 [`openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/`](./openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/)。
-
-## 开发命令
-
-### nuxt-public/（静态站）
-
-```bash
+```powershell
+# 公开站
 cd nuxt-public
 npm install
-npm run dev          # 本地开发
-npm run generate     # 静态生成（构建时拉取 API 数据）
-```
+npm run dev
 
-### nuxt/（SSR 动态站）
-
-```bash
-cd nuxt
+# 管理后台
+cd ../nuxt-admin
 npm install
-npm run dev          # 本地开发
-npm run build        # 生产构建
-npm run preview      # 预览构建结果
+npm run dev
+npm run typecheck
+npm run build
+
+# 后端
+cd ../backend-dotnet/BlogApi
+dotnet run
 ```
 
-### 后端
-
-```bash
-cd backend-dotnet/BlogApi
-dotnet run                              # 开发运行
-dotnet publish -c Release -o ./publish  # 生产发布
-```
+本地管理后台默认访问 `http://localhost:3000/admin/login`。开发环境中，`NUXT_API_BASE_URL` 应指向后端的 `http://127.0.0.1:5000/api`；浏览器只通过同源的 `/admin/api/*` BFF 请求，并由 SSR 层转发 Cookie 会话。
 
 ## 部署
 
-### 静态站（Cloudflare Pages）
+管理后台构建产物为 `nuxt-admin/.output`。将其部署到云服务器后，由 PM2 启动 `nuxt-admin/ecosystem.config.cjs`，并让 Nginx 将 `/admin/*` 代理到管理后台端口。完整步骤见 [nuxt-admin/README.md](nuxt-admin/README.md) 与 [nuxt-admin/DEPLOYMENT.md](nuxt-admin/DEPLOYMENT.md)。
 
-1. Cloudflare Pages 连接 GitHub 仓库，构建命令：
-   - 构建命令: `cd nuxt-public && npm install && npm run generate`
-   - 输出目录: `nuxt-public/.output/public`
-2. 或通过 GitHub Actions 手动触发 `nuxt-public` 构建
-
-### SSR 动态站（云服务器）
-
-1. 推送 tag（`v*.*.*`）自动触发构建，下载 `nuxt-build.tar.gz`
-2. 解压后用 PM2 启动: `pm2 start ecosystem.config.js --env production`
-3. Nginx 配置参考 `nuxt/NuxtNginx.txt`
-
-### Worker 部署
-
-```bash
-cd cloudflare-worker
-npx wrangler deploy
-```
-
-### GitHub Actions 构建目标
-
-通过 `workflow_dispatch` 手动触发，可选：
-- `nuxt-ssr` — 仅构建 SSR 动态站
-- `nuxt-public` — 仅构建静态站并部署到 Pages
-- `both` — 同时构建两者
-
-## 环境变量
-
-### nuxt-public/.env.production
-
-```env
-NUXT_PUBLIC_API_BASE_URL=https://backend.wasd09090030.top/api
-NUXT_API_BASE_URL=https://backend.wasd09090030.top/api
-NUXT_PUBLIC_SITE_URL=https://wasd09090030.top
-```
-
-### nuxt/ 生产环境
-
-```env
-NUXT_PUBLIC_API_BASE_URL=/api
-NUXT_API_BASE_URL=http://127.0.0.1:5000/api
-NUXT_PUBLIC_SITE_URL=https://wasd09090030.top
-```
-
-## 关键配置说明
-
-- **SSR 资源路径**: `nuxt/nuxt.config.ts` 中 `app.buildAssetsDir: '/_ssr/'`，避免与 Pages 的 `/_nuxt/` 冲突
-- **预渲染路由**: `nuxt-public/nuxt.config.ts` 的 `prerender:routes` hook 在构建时从 API 获取所有文章 ID + slug，生成 `/article/{id}-{slug}` 路由
-- **Nginx 重定向**: `server.wasd09090030.top` 上的公共路由（`/`、`/article/*`、`/gallery` 等）会 301 到 `wasd09090030.top`
-- **Worker 路由**: `cloudflare-worker/router.js` 中 `SERVER_ROUTES` 定义哪些路径转发到云服务器
-
-## 编码规范
-
-- Vue/Nuxt: 2 空格缩进，组件 PascalCase，组合式函数 `useXxx`
-- C#: 4 空格缩进，PascalCase 公开成员，camelCase 局部变量
-- 样式: Tailwind + 组件样式文件（`assets/css/components/*.styles.css`）
-- 新增前端业务代码优先进入 `features/*`
+GitHub Actions 的 `nuxt-admin` 目标构建当前后台。保留 `nuxt-ssr` 目标仅用于在迁移后的短期回滚窗口构建冻结的旧项目，不能作为新功能的发布目标。
 
 ## 相关文档
 
+- [混合架构](docs/Hybrid-Architecture.md)
 - [Cloudflare Pages 部署指南](docs/CloudflarePages-Deploy-Guide.md)
-- [混合架构说明](docs/Hybrid-Architecture.md)
-- [API 接口文档](API_INTERFACE_DOCUMENTATION.md)
-- [图床实现说明](IMAGEBED_IMPLEMENTATION.md)
-- [MDC 组件指南](MDC_COMPONENTS_GUIDE.md)
-
----
-
-**开发者**: WyrmKk
-**最后更新**: 2026-02-25
+- [管理后台 Markdown 编辑器记录](doc/2026-07-25_admin-markdown-editor.md)

@@ -1,7 +1,17 @@
 <template>
   <div class="space-y-6">
     <!-- 页面标题区 -->
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <AdminPageHeader
+      eyebrow="Content library"
+      title="文章管理"
+      :meta="loading ? '正在加载' : `${totalCount} 篇 · 第 ${currentPage} / ${Math.max(1, totalPages)} 页`"
+    >
+      <template #actions>
+        <UButton to="/admin" variant="ghost" color="neutral" icon="heroicons:arrow-left" aria-label="返回仪表盘" />
+        <UButton color="primary" icon="heroicons:plus" @click="createArticle">新建文章</UButton>
+      </template>
+    </AdminPageHeader>
+    <header class="hidden">
       <div class="space-y-1.5">
         <p class="text-xs uppercase tracking-[0.18em] text-muted font-medium">内容</p>
         <h1 class="font-display text-2xl font-semibold text-highlighted tracking-tight">文章管理</h1>
@@ -32,10 +42,8 @@
     </header>
 
     <!-- 工具栏：搜索 / 筛选 / 分页大小 -->
-    <UDashboardToolbar
-      :ui="{ root: 'rounded-lg ring ring-default/40 bg-elevated/30' }"
-    >
-      <template #left>
+    <AdminToolbar>
+      <template>
         <UInput
           v-model="searchKeyword"
           icon="heroicons:magnifying-glass"
@@ -52,7 +60,7 @@
           @update:model-value="handleFilterChange"
         />
       </template>
-      <template #right>
+      <template #actions>
         <USelectMenu
           v-model="pageSize"
           :items="pageSizeOptions"
@@ -70,7 +78,7 @@
           重置
         </UButton>
       </template>
-    </UDashboardToolbar>
+    </AdminToolbar>
 
     <!-- 列表区 -->
     <UCard

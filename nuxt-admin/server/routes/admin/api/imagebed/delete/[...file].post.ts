@@ -1,8 +1,8 @@
-import { imagebedConfig, imagebedUrl } from '~~/server/utils/imagebed'
+import { deleteMedia } from '~~/server/domain/media'
+import { requireAdminSession } from '~~/server/domain/auth'
 import { assertSafeMutation } from '~~/server/utils/request-security'
 export default defineEventHandler(async (event) => {
   assertSafeMutation(event)
-  const config = await imagebedConfig(event)
-  const file = getRouterParam(event, 'file') || ''
-  return await $fetch(imagebedUrl(config, `api/manage/delete/${encodeURIComponent(file)}`), { headers: { authorization: `Bearer ${config.apiToken}` } })
+  await requireAdminSession(event)
+  return await deleteMedia(event, getRouterParam(event, 'file') || '')
 })

@@ -1,19 +1,13 @@
 name = "blog-router"
 main = "router.js"
-compatibility_date = "2026-01-01"
+compatibility_date = "2026-07-28"
 
 [vars]
-IMAGE_ASSET_RESOLVE_URL = "https://server.wasd09090030.top/api/internal/image-assets"
-IMAGE_ORIGIN_BASE = "https://cfimg.wasd09090030.top/file"
+PAGES_ORIGIN = "https://myblogweb-cloudflarepage.pages.dev"
 
-# 绑定自定义域名路由
-# 在 Cloudflare Dashboard 中配置：
-# Workers Routes → wasd09090030.top/* → blog-router
+[[services]]
+binding = "BLOG_ADMIN"
+service = "blog-admin"
 
-# 如果使用 Pages 绑定方式（推荐），在 Pages 项目中配置 Functions：
-# [assets]
-# binding = "ASSETS"
-
-# 生产环境所需 Secret：
-# IMAGE_ASSET_RESOLVE_TOKEN 必须通过 Cloudflare Worker Secret 设置，
-# 值必须与后端 ImageAssets:ResolveToken 完全一致，不能写入 wrangler.toml。
+# Workers Routes should bind this Worker to the public hostname.
+# Deploy blog-admin before deploying this Worker so the Service Binding resolves.

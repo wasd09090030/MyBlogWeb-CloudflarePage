@@ -1,214 +1,60 @@
-# Cloudflare Pages 部署指南
+# Cloudflare Pages Deployment Guide
 
-## 一、首次部署
+The public site remains a Nuxt 4 SSG project on Cloudflare Pages. Runtime data and admin operations are served by the `blog-admin` Worker, so Pages never needs a direct connection to the old .NET API.
 
-### 1.1 Cloudflare Dashboard 创建项目
+## Pages project
 
-1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/) → Workers & Pages → Create
-2. 选择 **Connect to Git** → 授权 GitHub → 选择 `MyBlogWeb-CloudflarePage` 仓库
-3. 配置构建设置：
+Create or reuse a Pages project with:
 
-| 配置项 | 值 |
-|--------|-----|
+| Setting | Value |
+| --- | --- |
 | Production branch | `main` |
-| Root directory (advanced) | `nuxt-public` |
+| Root directory | `nuxt-public` |
 | Build command | `npm ci && npm run generate` |
-| Build output directory | `.output/public` |
+| Output directory | `.output/public` |
+| Node version | `20` or newer |
 
-4. 添加环境变量（Production + Preview 都配）：
+For builds, set:
 
-| 变量名 | 值 |
-|--------|-----|
-| `NUXT_PUBLIC_API_BASE_URL` | `https://backend.wasd09090030.top/api` |
-| `NUXT_API_BASE_URL` | `https://backend.wasd09090030.top/api` |
-| `NUXT_PUBLIC_SITE_URL` | `https://blog.wasd09090030.top` |
-| `NODE_VERSION` | `18` |
+| Variable | Value |
+| --- | --- |
+| `NUXT_PUBLIC_API_BASE_URL` | `/api` |
+| `NUXT_API_BASE_URL` | `https://wasd09090030.top/api` |
+| `NUXT_PUBLIC_SITE_URL` | `https://wasd09090030.top` |
 
-5. 点击 **Save and Deploy**，等待首次构建完成
+The browser uses relative `/api`; `NUXT_API_BASE_URL` is used only while SSG fetches article routes and content. The `blog-router` Worker must be active before a production build that reads live D1 data.
 
-### 1.2 绑定自定义域名
+## Manual deployment
 
-1. Pages 项目 → Custom domains → Add domain
-2. 输入 `blog.wasd09090030.top`
-3. Cloudflare 会自动配置 DNS CNAME 记录和 SSL 证书
-
----
-
-## 二、触发重新构建 + 部署
-
-### 2.1 代码推送自动触发
-
-推送到 `main` 分支时，Cloudflare Pages 自动触发构建：
-
-```bash
-git add nuxt-public/
-git commit -m "update: 修改前端代码"
-git push origin main
-```
-
-> 注意：只有 `nuxt-public/` 目录下的变更才需要重新部署。Cloudflare Pages 目前不支持路径过滤，每次 push 都会触发构建。
-
-### 2.2 Deploy Hook（后端发布文章后自动触发）
-
-这是最关键的场景：后端发布/更新/删除文章后，需要触发前端重新构建以更新静态页面。
-
-**创建 Deploy Hook：**
-
-1. Pages 项目 → Settings → Builds & deployments → Deploy hooks
-2. 点击 **Add deploy hook**
-3. 名称填 `backend-article-update`，分支选 `main`
-4. 复制生成的 Webhook URL（格式：`https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/xxx`）
-
-**后端调用方式：**
-
-在 .NET 后端的文章 CRUD 操作完成后，发送 POST 请求触发重建：
-
-```csharp
-// 在 ArticlesController 的 Create/Update/Delete 方法末尾调用
-private async Task TriggerCloudflarePagesRebuild()
-{
-    using var http = new HttpClient();
-    await http.PostAsync("你的_DEPLOY_HOOK_URL", null);
-}
-```
-
-或者用 curl 手动触发：
-
-```bash
-curl -X POST "你的_DEPLOY_HOOK_URL"
-```
-
-### 2.3 手动触发
-
-- **Dashboard**：Pages 项目 → Deployments → 点击最近一次部署的 **Retry deployment**
-- **Wrangler CLI**：
-
-```bash
+```powershell
 cd nuxt-public
+npm ci
+$env:NUXT_PUBLIC_API_BASE_URL='/api'
+$env:NUXT_API_BASE_URL='https://wasd09090030.top/api'
+$env:NUXT_PUBLIC_SITE_URL='https://wasd09090030.top'
 npm run generate
-npx wrangler pages deploy .output/public --project-name=你的项目名
+npx wrangler pages deploy .output/public --project-name myblogweb-cloudflarepage
 ```
 
-### 2.4 GitHub Actions 自动化（可选）
+## Background rebuilds
 
-在 `.github/workflows/pages-public.yml` 中配置定时或手动触发：
+Pages Deploy Hooks remain supported for content changes. Configure the hook URL as the Worker secret `PAGES_DEPLOY_HOOK_URL` (or configure the scoped Cloudflare API fallback). The admin operation `POST /admin/api/ops/pages/deploy-hook` can be called after an article mutation and does not expose the hook URL to the browser.
 
-```yaml
-name: Deploy Public Site
+The release workflow also supports a full ordered deployment:
 
-on:
-  # 代码变更触发
-  push:
-    branches: [main]
-    paths: ['nuxt-public/**']
-  # 手动触发
-  workflow_dispatch:
-  # 定时重建（每天凌晨 3 点，保持文章数据最新）
-  schedule:
-    - cron: '0 19 * * *'  # UTC 19:00 = 北京时间 03:00
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: npm
-          cache-dependency-path: nuxt-public/package-lock.json
-      - run: npm ci
-        working-directory: nuxt-public
-      - run: npm run generate
-        working-directory: nuxt-public
-        env:
-          NUXT_PUBLIC_API_BASE_URL: https://backend.wasd09090030.top/api
-          NUXT_API_BASE_URL: https://backend.wasd09090030.top/api
-          NUXT_PUBLIC_SITE_URL: https://blog.wasd09090030.top
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy nuxt-public/.output/public --project-name=你的项目名
+```text
+D1 migrations -> blog-admin Worker -> blog-router Worker -> Pages artifact
 ```
 
-需要在 GitHub 仓库 Settings → Secrets 中添加：
-- `CLOUDFLARE_API_TOKEN`：Cloudflare API Token（需要 Pages 编辑权限）
-- `CLOUDFLARE_ACCOUNT_ID`：Cloudflare 账户 ID
+See [nuxt-admin/DEPLOYMENT.md](../nuxt-admin/DEPLOYMENT.md) for the complete cutover and smoke-test checklist.
 
----
+## Domain routing
 
-## 三、原 Nuxt 应用功能兼容方案
+Attach the public hostname to the front-door `blog-router` Worker. It sends `/admin`, `/api`, `/images`, and `/_ssr` through the `BLOG_ADMIN` Service Binding and forwards all other paths to the Pages origin. Keep Pages' `/_nuxt/` asset path separate from the admin Worker's `/_ssr/` path.
 
-当前 `nuxt-public/` 只包含前台公开页面。以下是将原 `nuxt/` 中其他功能逐步迁入的方案：
+## Troubleshooting
 
-### 3.1 功能分类与迁移策略
-
-| 功能 | 当前状态 | 迁移策略 | 优先级 |
-|------|----------|----------|--------|
-| 首页 + 文章列表 | ✅ 已迁移 | — | — |
-| 文章详情页 | ✅ 已迁移 | — | — |
-| 画廊 | ✅ 已迁移 | — | — |
-| 关于页 | ✅ 已迁移 | — | — |
-| 教程页 | ✅ 已迁移 | — | — |
-| 评论系统 | ✅ 已迁移 | 客户端运行时调用后端 API | — |
-| 搜索功能 | ✅ 已迁移 | Web Worker 客户端搜索 | — |
-| **后台管理** | ❌ 不迁移 | 保留在原 nuxt/ 部署 | — |
-| **图床管理** | ❌ 不迁移 | 保留在原 nuxt/ 部署 | — |
-
-> 2026-07-17 更新：原计划迁移的工具箱与 Mania 音游功能经评估后整体下线（参见 `openspec/changes/remove-mania-and-tools-pages/`），不再迁入静态站。
-
-### 3.2 后台管理保持独立
-
-后台管理（`/admin/*`）不应迁入 Cloudflare Pages，原因：
-- 需要认证状态（Pinia auth store）
-- 依赖 naive-ui 完整组件库
-- 需要实时数据，不适合静态化
-- 安全考虑：管理接口不应暴露在 CDN 上
-
-**推荐方案**：后台管理继续使用原 `nuxt/` 项目，部署在云服务器上，通过 `admin.wasd09090030.top` 或 `wasd09090030.top/admin` 访问。
-
-### 3.5 客户端动态功能说明
-
-以下功能在静态页面中通过客户端 JS 运行，无需特殊处理：
-
-- **评论提交/加载**：页面加载后客户端调用 `https://backend.wasd09090030.top/api` 获取评论
-- **文章搜索**：Web Worker 在客户端执行全文搜索
-- **主题切换**：localStorage 存储，纯客户端
-- **画廊交互**：Slider、缩放拖拽等均为客户端行为
-- **分页/筛选**：客户端路由导航，Nuxt 会自动 fetch 对应的 payload
-
----
-
-## 四、架构总览
-
-```
-用户浏览器
-    │
-    ├── blog.wasd09090030.top (Cloudflare Pages)
-    │   ├── 首页、文章、画廊、教程、关于 (静态 HTML)
-    │   ├── 后台管理 (保留在原 nuxt/ 部署)
-    │   └── 客户端 JS → 调用后端 API (评论、搜索等)
-    │
-    └── wasd09090030.top (云服务器)
-        ├── /admin/* (后台管理，SSR)
-        └── 后端 API (backend.wasd09090030.top)
-            └── .NET 后端 (80 端口)
-```
-
-## 五、常见问题
-
-### Q: 发布新文章后前端没更新？
-A: 静态站点需要重新构建。使用 Deploy Hook 或手动触发重建。
-
-### Q: 构建失败怎么排查？
-A: Cloudflare Pages → Deployments → 点击失败的部署查看构建日志。常见原因：
-- 后端 API 不可达（构建时需要拉取文章数据）
-- Node.js 版本不匹配
-- 依赖安装失败
-
-### Q: 文章页面 SEO 效果如何？
-A: 每篇文章都是完整的静态 HTML，包含标题、描述、Open Graph、Schema.org 结构化数据，对搜索引擎非常友好。
-
-### Q: Cloudflare Pages 免费额度够用吗？
-A: 免费计划包含每月 500 次构建、无限带宽、无限请求。对于博客完全够用。
+- SSG cannot load articles: verify `NUXT_API_BASE_URL`, Worker routing, D1 migrations, and the `blog-admin` binding.
+- A published article is not visible: trigger the Pages Deploy Hook and inspect the Pages deployment log.
+- Admin assets return 404: verify the Worker build preserved `buildAssetsDir: '/_ssr/'` and that the router sends `/_ssr/*` to `blog-admin`.
+- Do not reintroduce `backend.wasd09090030.top` or a PM2 process into the production request path; the old backend is a rollback-only reference.

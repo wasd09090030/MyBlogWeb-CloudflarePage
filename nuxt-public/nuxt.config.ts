@@ -6,7 +6,8 @@ import { buildArticleRoute, fetchAllArticleRoutes, toIsoLastmod } from './build/
 const isProduction = process.env.NODE_ENV === 'production'
 const enableSourceMap = process.env.NUXT_SOURCEMAP === 'true'
 const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://wasd09090030.top'
-const apiBase = process.env.NUXT_PUBLIC_API_BASE_URL || 'https://backend.wasd09090030.top/api'
+// SSG fetches use the deployed Worker URL; browser runtime requests stay same-origin.
+const apiBase = process.env.NUXT_API_BASE_URL || process.env.NUXT_PUBLIC_API_BASE_URL || 'https://wasd09090030.top/api'
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-09',
@@ -243,7 +244,7 @@ export default defineNuxtConfig({
     // 静态生成时,构建阶段的服务端 API 地址
     apiBaseServer: process.env.NUXT_API_BASE_URL || apiBase,
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE_URL || apiBase,
+      apiBase: process.env.NUXT_PUBLIC_API_BASE_URL || '/api',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || siteUrl
     }
   },
@@ -308,9 +309,8 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/icon/Myfavicon.ico' },
         { rel: 'dns-prefetch', href: 'https://cfimg.wasd09090030.top' },
-        { rel: 'dns-prefetch', href: 'https://backend.wasd09090030.top' },
         { rel: 'preconnect', href: 'https://cfimg.wasd09090030.top', crossorigin: 'anonymous' },
-        { rel: 'preconnect', href: 'https://backend.wasd09090030.top', crossorigin: 'anonymous' }
+        { rel: 'preconnect', href: 'https://wasd09090030.top', crossorigin: 'anonymous' }
       ]
     }
   },

@@ -11,25 +11,29 @@ npm run typecheck
 npm run build
 ```
 
-本地入口为 `http://localhost:3000/admin/login`。后端默认在 `http://127.0.0.1:5000` 运行。
+本地入口为 `http://localhost:3000/admin/login`。使用 Wrangler 本地运行时，D1 和 R2 绑定来自 `wrangler.toml`，变量来自 `.dev.vars`。
 
 ## 环境变量
 
 ```env
-NUXT_API_BASE_URL=http://127.0.0.1:5000/api
 NUXT_PUBLIC_ADMIN_ORIGIN=http://localhost:3000
+ADMIN_ORIGIN=http://localhost:3000
+PUBLIC_ASSET_ORIGIN=http://localhost:8787/file
+SESSION_PEPPER=replace-with-a-long-random-secret
+ADMIN_RESET_TOKEN=replace-before-bootstrap
 ```
 
-生产环境将 `NUXT_PUBLIC_ADMIN_ORIGIN` 设为公开站域名，例如 `https://wasd09090030.top`。
+生产环境将 `ADMIN_ORIGIN`、`NUXT_PUBLIC_ADMIN_ORIGIN` 和 `PUBLIC_ASSET_ORIGIN` 设为正式域名，并通过 `wrangler secret put` 设置 `SESSION_PEPPER`、`ADMIN_RESET_TOKEN`，以及可选的 `DEEPSEEK_API_KEY` 和 Pages 部署凭据。
 
-浏览器请求始终发往同源 `/admin/api/*`。Nitro BFF 在服务器端转发到 `NUXT_API_BASE_URL`，并透传认证 Cookie；前端不会直接调用后端登录或受保护 API。
+浏览器请求始终发往同源 `/admin/api/*`。Nitro BFF 在 Worker 内直接调用 D1/R2 域服务，并通过 opaque session Cookie 完成认证；前端不会直接暴露数据库或提供商凭据。
 
 ## 部署
 
-构建产生 `.output/`。将其部署到云服务器，由 `ecosystem.config.cjs` 通过 PM2 启动。Nginx 必须：
+生产构建使用 Nitro `cloudflare_module` preset，产物通过 Wrangler 部署到 `blog-admin` Worker：
 
-- 将 `/admin/*` 代理到 Nuxt Admin；
-- 提供 `/_ssr/*` 静态资源；
-- 不缓存登录、会话和其他 `/admin/*` 响应。
+```powershell
+npm run db:migrate:remote
+npm run deploy:worker
+```
 
-Cloudflare Worker 已将 `/admin/*`、`/api/*`、`/images/*` 与 `/_ssr/*` 路由到云服务器。详细的发布与回滚检查清单见 [DEPLOYMENT.md](DEPLOYMENT.md)。
+前门 `blog-router` 通过 Service Binding 把 `/admin/*`、`/api/*`、`/images/*` 和 `/_ssr/*` 交给 `blog-admin`，其余请求交给 Pages。详细的环境变量、迁移、切换、冒烟和回滚检查清单见 [DEPLOYMENT.md](DEPLOYMENT.md)。

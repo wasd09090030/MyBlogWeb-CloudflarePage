@@ -12,5 +12,5 @@ export function resolveApiBaseURL(): string {
     return apiBase
   }
 
-  return 'https://backend.wasd09090030.top/api'
+  return '/api'
 }

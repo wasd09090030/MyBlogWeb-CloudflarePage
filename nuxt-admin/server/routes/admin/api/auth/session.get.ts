@@ -1,3 +1,11 @@
-import { verifySession } from '~~/server/utils/backend'
+import { getCurrentSession } from '~~/server/domain/auth'
 
-export default defineEventHandler(async (event) => ({ authenticated: await verifySession(event) }))
+export default defineEventHandler(async (event) => {
+  const session = await getCurrentSession(event)
+  return {
+    authenticated: Boolean(session && !session.mustReset),
+    username: session?.username,
+    expiresAt: session?.expiresAt,
+    mustReset: session?.mustReset === true
+  }
+})

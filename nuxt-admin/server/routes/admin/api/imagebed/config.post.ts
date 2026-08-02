@@ -1,9 +1,9 @@
-import { backendFetch, requireAccessToken } from '~~/server/utils/backend'
+import { saveImagebedConfig } from '~~/server/domain/config'
+import { requireAdminSession } from '~~/server/domain/auth'
 import { assertSafeMutation } from '~~/server/utils/request-security'
 export default defineEventHandler(async (event) => {
   assertSafeMutation(event)
-  const token = await requireAccessToken(event)
+  await requireAdminSession(event)
   const body = await readBody(event)
-  await backendFetch('imagebed/config', { method: 'POST', body, headers: { authorization: `Bearer ${token}` } })
-  return { success: true }
+  return await saveImagebedConfig(event, body)
 })

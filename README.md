@@ -7,12 +7,12 @@
 | 项目 | 职责 | 部署方式 |
 | --- | --- | --- |
 | `nuxt-public/` | 公开博客：主页、文章、画廊、教程和关于页 | Nuxt 4 SSG，Cloudflare Pages |
-| `nuxt-admin/` | `/admin/*` 管理后台 | Nuxt 4 SSR + Nuxt UI v4，云服务器 |
-| `backend-dotnet/BlogApi/` | 博客 API | ASP.NET Core 8 |
+| `nuxt-admin/` | `/admin/*` 管理后台、同源 API、认证与运维接口 | Nuxt 4 SSR，Cloudflare Workers Paid + D1 + R2 |
+| `backend-dotnet/BlogApi/` | 历史数据迁移源与回滚参考 | ASP.NET Core 8（只读保留，不再作为运行时依赖） |
 | `cloudflare-worker/` | 统一域名的路由分发 | Cloudflare Worker |
 | `nuxt/` | 旧 SSR 管理后台，仅用于回滚和历史参考 | 已冻结，不再新增功能 |
 
-`cloudflare-worker/router.js` 将 `/admin/*`、`/api/*`、`/images/*` 和 `/_ssr/*` 转发至云服务器。公开站资源使用 `/_nuxt/`；管理后台资源使用 `/_ssr/`，避免冲突。
+`cloudflare-worker/router.js` 通过 Service Binding 将 `/admin/*`、`/api/*`、`/images/*` 和 `/_ssr/*` 转发至 `blog-admin` Worker；其他路径转发至 Cloudflare Pages。公开站资源使用 `/_nuxt/`；管理后台资源使用 `/_ssr/`，避免冲突。
 
 ## 开发
 
@@ -29,18 +29,19 @@ npm run dev
 npm run typecheck
 npm run build
 
-# 后端
-cd ../backend-dotnet/BlogApi
-dotnet run
+# Cloudflare 本地运行（需要 Wrangler）
+cd ../nuxt-admin
+npm run db:migrate:local
+npx wrangler dev --config wrangler.toml
 ```
 
-本地管理后台默认访问 `http://localhost:3000/admin/login`。开发环境中，`NUXT_API_BASE_URL` 应指向后端的 `http://127.0.0.1:5000/api`；浏览器只通过同源的 `/admin/api/*` BFF 请求，并由 SSR 层转发 Cookie 会话。
+本地管理后台默认访问 `http://localhost:3000/admin/login`。浏览器只通过同源的 `/admin/api/*` BFF 请求；数据和会话由 Worker 直接访问 D1，媒体对象由 Worker 访问 R2。`.dev.vars.example` 和 `.env.example` 列出了本地变量模板。
 
 ## 部署
 
-管理后台构建产物为 `nuxt-admin/.output`。将其部署到云服务器后，由 PM2 启动 `nuxt-admin/ecosystem.config.cjs`，并让 Nginx 将 `/admin/*` 代理到管理后台端口。完整步骤见 [nuxt-admin/README.md](nuxt-admin/README.md) 与 [nuxt-admin/DEPLOYMENT.md](nuxt-admin/DEPLOYMENT.md)。
+管理后台通过 `nuxt-admin/wrangler.toml` 构建并部署为 `blog-admin` Worker。生产基线为 Workers Paid；D1 迁移必须先执行，R2 bucket 和 D1 database ID 需要在生产配置中替换占位符。完整步骤见 [nuxt-admin/README.md](nuxt-admin/README.md) 与 [nuxt-admin/DEPLOYMENT.md](nuxt-admin/DEPLOYMENT.md)。
 
-GitHub Actions 的 `nuxt-admin` 目标构建当前后台。保留 `nuxt-ssr` 目标仅用于在迁移后的短期回滚窗口构建冻结的旧项目，不能作为新功能的发布目标。
+GitHub Actions 按 `D1 migrations -> blog-admin -> blog-router -> Pages` 顺序发布。后台仍保留 Pages Deploy Hook/API，可在文章变更后触发公开站重新生成。旧 .NET API、旧 `nuxt/` 和 PM2 文件仅用于观察期回滚，不再参与正常流量。
 
 ## 相关文档
 

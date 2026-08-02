@@ -10,6 +10,12 @@
     "build": "nuxt build",
     "preview": "nuxt preview",
     "typecheck": "nuxt typecheck",
+    "db:export": "node scripts/sqlite-d1-export.mjs",
+    "db:import": "node scripts/sqlite-d1-import.mjs --config wrangler.toml",
+    "db:verify": "node scripts/sqlite-d1-verify.mjs",
+    "db:migrate:local": "wrangler d1 migrations apply blog-db --local --config wrangler.toml",
+    "db:migrate:remote": "wrangler d1 migrations apply blog-db --remote --config wrangler.toml",
+    "deploy:worker": "npm run build && wrangler deploy --config wrangler.toml",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
@@ -28,10 +34,13 @@
     "vue": "^3.4.21"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260801.1",
     "@iconify-json/lucide": "^1.2.119",
     "@types/node": "^24.0.0",
+    "nitro-cloudflare-dev": "^0.2.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.0",
-    "vue-tsc": "^3.0.0"
+    "vue-tsc": "^3.0.0",
+    "wrangler": "^4.118.0"
   }
 }

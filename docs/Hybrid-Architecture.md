@@ -1,39 +1,41 @@
-# 混合架构
+# Cloudflare Architecture
 
 ```text
 wasd09090030.top / www.wasd09090030.top
   |
-  +-- Cloudflare Worker
+  +-- blog-router Worker
         |
         +-- /, /article/*, /gallery, /tutorials, /about
         |     -> Cloudflare Pages (nuxt-public/)
         |
         +-- /admin/*, /api/*, /images/*, /_ssr/*
-              -> 云服务器
-                   +-- Nuxt Admin SSR (nuxt-admin/)
-                   +-- ASP.NET Core API (backend-dotnet/BlogApi/)
+              -> Service Binding: blog-admin Worker (nuxt-admin/)
+                    +-- D1: blog-db
+                    +-- R2: blog media bucket
 ```
 
-## 职责边界
+## Responsibilities
 
-`nuxt-public/` 负责公开内容，构建时生成静态产物并部署到 Cloudflare Pages。`nuxt-admin/` 只负责 `/admin/*`，运行在云服务器上，使用 Nuxt UI v4 和 SSR Cookie BFF。后端继续负责所有数据与鉴权 API。
+`nuxt-public/` is a static Nuxt 4 site deployed to Pages. `nuxt-admin/` is the only active `/admin/*` application and runs as a Nuxt 4 SSR Worker using Nuxt UI v4. Its server routes call D1 and R2 directly; the browser only sees same-origin BFF endpoints and opaque session cookies.
 
-旧 `nuxt/` 已冻结，仅保留回滚用途；它不再是发布或开发目标。
+`backend-dotnet/BlogApi/` and the old `nuxt/` project remain in the repository as read-only migration and rollback references. They are not required by the production request path and must not receive new features in this change.
 
-## 路由与资源
+## Routing and assets
 
-- 跨项目跳转使用普通 `<a>` 标签，避免两个 Nuxt 应用间错误地进行 SPA 路由。
-- 同一项目内使用 `NuxtLink`。
-- Pages 使用 `/_nuxt/` 资源目录；Nuxt Admin 使用 `/_ssr/`。
-- `/admin/*` 页面和 BFF 路由不应被 CDN 或 Nginx 缓存。
+- `blog-router` uses path-boundary matching for `/admin`, `/api`, `/images`, and `/_ssr`.
+- The router forwards those paths through the `BLOG_ADMIN` Service Binding and sends all other paths to Pages.
+- Pages uses `/_nuxt/`; the admin Worker uses `/_ssr/`.
+- Admin pages, sessions, and mutations are private/no-store. Public media URLs are served by the Worker with stable cache headers.
+- Cross-project navigation uses normal `<a>` links; same-project navigation uses `NuxtLink`.
 
-## 发布影响
+## Data and operations
 
-| 变更 | 操作 | 影响范围 |
+| Concern | Runtime owner | Storage/credential boundary |
 | --- | --- | --- |
-| 公开站内容或界面 | 构建并发布 `nuxt-public/` | Cloudflare Pages |
-| 管理后台 | 构建并发布 `nuxt-admin/.output`，重启 PM2 | 云服务器后台 |
-| Worker 规则 | `wrangler deploy` | 路由层 |
-| .NET API | 发布并重启 BlogApi | API 消费方 |
+| Articles, comments, likes, gallery, auth sessions | `blog-admin` Worker | D1 `BLOG_DB` |
+| Image upload/list/delete and stable image URLs | `blog-admin` Worker | R2 `BLOG_MEDIA` |
+| AI summaries | `blog-admin` Worker | `DEEPSEEK_API_KEY` secret |
+| Pages rebuild trigger | `blog-admin` Worker | Deploy Hook or scoped Cloudflare token |
+| Static public site | Cloudflare Pages | Build-time deployed `/api` URL |
 
-在 GitHub Actions 的手动触发中选择 `nuxt-admin` 构建当前后台。`nuxt-ssr` 仅保留用于冻结旧版本的回滚构建。
+GitHub Actions publishes in order: D1 migrations, `blog-admin`, `blog-router`, then the Pages artifact. This prevents the router from pointing at an un-migrated Worker and keeps SSG data reads on the deployed API.

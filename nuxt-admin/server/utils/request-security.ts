@@ -1,11 +1,12 @@
 import type { H3Event } from 'h3'
+import { getRequestOrigin } from '~~/server/utils/cloudflare'
 
 const unsafeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
 export function assertSafeMutation(event: H3Event) {
   if (!unsafeMethods.has(event.method.toUpperCase())) return
   const origin = getHeader(event, 'origin')
-  const expectedOrigin = useRuntimeConfig(event).public.adminOrigin
+  const expectedOrigin = getRequestOrigin(event)
   const requestOrigin = getRequestURL(event).origin
   const isLocalDevelopment = process.env.NODE_ENV !== 'production' && ['localhost', '127.0.0.1', '::1'].includes(getRequestHost(event).split(':')[0] || '')
   const originAllowed = origin

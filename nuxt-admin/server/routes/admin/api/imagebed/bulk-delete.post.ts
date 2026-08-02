@@ -1,12 +1,10 @@
-import { imagebedConfig, imagebedUrl } from '~~/server/utils/imagebed'
+import { bulkDeleteMedia } from '~~/server/domain/media'
+import { requireAdminSession } from '~~/server/domain/auth'
 import { assertSafeMutation } from '~~/server/utils/request-security'
 
 export default defineEventHandler(async (event) => {
   assertSafeMutation(event)
+  await requireAdminSession(event)
   const body = await readBody<{ files?: string[] }>(event)
-  const files = body.files?.filter(Boolean) || []
-  if (!files.length || files.length > 100) throw createError({ statusCode: 400, statusMessage: 'Select between 1 and 100 files' })
-  const config = await imagebedConfig(event)
-  const results = await Promise.allSettled(files.map(file => $fetch(imagebedUrl(config, `api/manage/delete/${encodeURIComponent(file)}`), { headers: { authorization: `Bearer ${config.apiToken}` } })))
-  return { deleted: results.filter(result => result.status === 'fulfilled').length, failed: results.filter(result => result.status === 'rejected').length }
+  return await bulkDeleteMedia(event, body.files)
 })

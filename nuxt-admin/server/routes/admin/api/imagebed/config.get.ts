@@ -1,5 +1,3 @@
-import { imagebedConfig } from '~~/server/utils/imagebed'
-export default defineEventHandler(async (event) => {
-  const config = await imagebedConfig(event)
-  return { domain: config.domain, uploadFolder: config.uploadFolder, configured: Boolean(config.domain && config.apiToken) }
-})
+import { getImagebedConfig } from '~~/server/domain/config'
+import { requireAdminSession } from '~~/server/domain/auth'
+export default defineEventHandler(async (event) => { await requireAdminSession(event); return await getImagebedConfig(event) })

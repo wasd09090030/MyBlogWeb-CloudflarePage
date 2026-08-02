@@ -1,13 +1,11 @@
-import { backendFetch, requireAccessToken } from '~~/server/utils/backend'
+import { triggerPagesDeploy } from '~~/server/domain/operations'
+import { requireAdminSession } from '~~/server/domain/auth'
 import { assertSafeMutation } from '~~/server/utils/request-security'
 
 type DeployResult = { success: boolean, message: string }
 
 export default defineEventHandler(async (event) => {
   assertSafeMutation(event)
-  const token = await requireAccessToken(event)
-  return await backendFetch<DeployResult>('/ops/pages/deploy-hook', {
-    method: 'POST',
-    headers: { authorization: `Bearer ${token}` }
-  })
+  await requireAdminSession(event)
+  return await triggerPagesDeploy(event)
 })

@@ -11,23 +11,40 @@ namespace BlogApi.Controllers
     public class GalleryController : ControllerBase
     {
         private readonly GalleryService _galleryService;
+        private readonly ImageAssetBackfillService _imageAssetBackfillService;
 
         /// <summary>
         /// 初始化画廊控制器，注入画廊业务服务。
         /// </summary>
-        public GalleryController(GalleryService galleryService)
+        public GalleryController(
+            GalleryService galleryService,
+            ImageAssetBackfillService imageAssetBackfillService)
         {
             _galleryService = galleryService;
+            _imageAssetBackfillService = imageAssetBackfillService;
         }
 
         /// <summary>
         /// 获取所有已激活的画廊图片（公开接口）。
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<List<Gallery>>> GetAllActive()
+        public async Task<ActionResult<List<PublicGalleryDto>>> GetAllActive()
         {
             var galleries = await _galleryService.GetAllActiveAsync();
-            return Ok(galleries);
+            return Ok(galleries.Select(ToPublicGalleryDto).ToList());
+        }
+
+        private static PublicGalleryDto ToPublicGalleryDto(Gallery gallery)
+        {
+            return new PublicGalleryDto
+            {
+                Id = gallery.Id,
+                ThumbnailUrl = gallery.ThumbnailUrl,
+                ImageWidth = gallery.ImageWidth,
+                ImageHeight = gallery.ImageHeight,
+                Tag = gallery.Tag,
+                CreatedAt = gallery.CreatedAt
+            };
         }
 
         /// <summary>
@@ -163,6 +180,13 @@ namespace BlogApi.Controllers
                 message = $"成功导入 {galleries.Count} 张图片",
                 data = galleries 
             });
+        }
+
+        [Authorize]
+        [HttpPost("backfill-image-assets")]
+        public async Task<ActionResult<GalleryImageAssetBackfillResultDto>> BackfillImageAssets()
+        {
+            return Ok(await _imageAssetBackfillService.BackfillGalleriesAsync());
         }
     }
 }

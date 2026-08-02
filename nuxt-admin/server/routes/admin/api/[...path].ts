@@ -3,7 +3,7 @@ import { assertSafeMutation } from '~~/server/utils/request-security'
 
 const allowed = [
   /^articles(?:\/\d+)?$/, /^comments\/admin\/(all|pending)$/, /^comments\/admin\/\d+\/status$/,
-  /^gallery(?:\/admin|\/refresh-dimensions|\/batch\/(sort-order|import)|\/\d+(?:\/(toggle-active|dimensions))?)?$/,
+  /^gallery(?:\/admin|\/backfill-image-assets|\/refresh-dimensions|\/batch\/(sort-order|import)|\/\d+(?:\/(toggle-active|dimensions))?)?$/,
   /^imagebed\/config$/, /^ai\/summary$/, /^auth\/change-password$/
 ]
 

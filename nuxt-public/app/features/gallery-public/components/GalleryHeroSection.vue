@@ -21,7 +21,7 @@
           <template v-if="hasImage(image, index)">
             <ImageLoadingPlaceholder :show="!isPreviewLoaded(image, index)" />
             <img
-              :src="image.thumbnailUrl || image.imageUrl"
+              :src="image.thumbnailUrl || ''"
               :alt="image.title || '画廊图片'"
               :class="[
                 'gallery-hero__preview-image',
@@ -54,7 +54,7 @@
           <template v-if="hasImage(featuredPreviewImage, 2)">
             <ImageLoadingPlaceholder :show="!isPreviewLoaded(featuredPreviewImage, 2)" />
             <img
-              :src="featuredPreviewImage.thumbnailUrl || featuredPreviewImage.imageUrl"
+              :src="featuredPreviewImage.thumbnailUrl || ''"
               :alt="featuredPreviewImage.title || '画廊图片'"
               class="gallery-hero__preview-image"
               loading="lazy"
@@ -122,11 +122,11 @@ const railPreviewImages = computed(() => props.previewImages.slice(0, 2))
 const featuredPreviewImage = computed(() => props.previewImages[2] ?? props.previewImages[0] ?? null)
 
 const getImageKey = (image, index) => getGalleryImageKey(image, index)
-const getPreviewImageUrl = (image) => image?.thumbnailUrl || image?.imageUrl || ''
+const getPreviewImageUrl = (image) => image?.thumbnailUrl || ''
 
 const hasImage = (image, index) => {
-  const imageUrl = getPreviewImageUrl(image)
-  if (!imageUrl) return false
+  const thumbnailUrl = getPreviewImageUrl(image)
+  if (!thumbnailUrl) return false
   return !previewErrorMap.value[getImageKey(image, index)]
 }
 
@@ -145,17 +145,7 @@ const handlePreviewLoad = (image, index, event) => {
   }
 }
 
-const handlePreviewError = (image, index, event) => {
-  const fallbackUrl = image?.imageUrl
-  const target = event?.target
-  if (fallbackUrl && target instanceof HTMLImageElement) {
-    const currentSrc = target.getAttribute('src') || ''
-    if (currentSrc !== fallbackUrl) {
-      target.src = fallbackUrl
-      return
-    }
-  }
-
+const handlePreviewError = (image, index) => {
   const imageKey = getImageKey(image, index)
   previewErrorMap.value[imageKey] = true
   previewLoadedMap.value[imageKey] = true
@@ -176,9 +166,9 @@ const getPreviewCardStyle = (image, index, options = {}) => {
   }
 
   if (options.useImageBackground) {
-    const imageUrl = getPreviewImageUrl(image)
-    if (imageUrl) {
-      style.backgroundImage = `url("${imageUrl}")`
+    const thumbnailUrl = getPreviewImageUrl(image)
+    if (thumbnailUrl) {
+      style.backgroundImage = `url("${thumbnailUrl}")`
       style.backgroundPosition = 'center'
       style.backgroundRepeat = 'no-repeat'
       style.backgroundSize = 'cover'

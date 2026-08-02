@@ -185,8 +185,8 @@ const imageErrorMap = ref({})
 const getImageKey = (image, index) => getGalleryImageKey(image, index)
 
 const hasImage = (image, index) => {
-  const imageUrl = image?.thumbnailUrl || image?.imageUrl
-  if (!imageUrl) return false
+  const thumbnailUrl = image?.thumbnailUrl
+  if (!thumbnailUrl) return false
   return !imageErrorMap.value[getImageKey(image, index)]
 }
 
@@ -196,17 +196,7 @@ const handleImageLoad = (image, index) => {
   imageLoadedMap.value[getImageKey(image, index)] = true
 }
 
-const handleImageError = (image, index, event) => {
-  const fallbackUrl = image?.imageUrl
-  const target = event?.target
-  if (fallbackUrl && target instanceof HTMLImageElement) {
-    const currentSrc = target.getAttribute('src') || ''
-    if (currentSrc !== fallbackUrl) {
-      target.src = fallbackUrl
-      return
-    }
-  }
-
+const handleImageError = (image, index) => {
   const imageKey = getImageKey(image, index)
   imageErrorMap.value[imageKey] = true
   imageLoadedMap.value[imageKey] = true
@@ -234,7 +224,7 @@ const GameTileImage = {
       return [
         h(ImageLoadingPlaceholder, { show: !isImageLoaded(image, index) }),
         h('img', {
-          src: image.thumbnailUrl || image.imageUrl,
+          src: image.thumbnailUrl || '',
           alt: image.title || '游戏截屏',
           class: 'game-tile__image',
           draggable: false,
@@ -271,7 +261,7 @@ const pickSkeleton = (count) => {
 
 const isFeaturedCandidate = (skeleton, monthKey, image, indexInMonth) => {
   if (skeleton === 'C') return false
-  const seed = `${skeleton}:${monthKey}:${image.id ?? image.imageUrl ?? indexInMonth}`
+  const seed = `${skeleton}:${monthKey}:${image.id ?? image.thumbnailUrl ?? indexInMonth}`
   return hashString(seed) % 100 < 8
 }
 

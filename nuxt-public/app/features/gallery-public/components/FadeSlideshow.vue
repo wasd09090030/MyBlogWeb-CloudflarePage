@@ -12,7 +12,7 @@
         >
           <template v-if="hasImage(gallery, index)">
             <img
-              :src="gallery.imageUrl"
+              :src="gallery.thumbnailUrl || ''"
               alt="画廊图片"
               class="fade-image"
               @error="handleImageError(gallery, index)"
@@ -38,10 +38,10 @@ const props = defineProps({
 defineEmits(['image-click'])
 const imageErrorMap = ref({})
 
-const getImageKey = (image, index) => String(image?.id ?? image?.imageUrl ?? index)
+const getImageKey = (image, index) => String(image?.id ?? image?.thumbnailUrl ?? index)
 const hasImage = (image, index) => {
-  const imageUrl = image?.imageUrl
-  if (!imageUrl) return false
+  const thumbnailUrl = image?.thumbnailUrl
+  if (!thumbnailUrl) return false
   return !imageErrorMap.value[getImageKey(image, index)]
 }
 const handleImageError = (image, index) => {
@@ -194,7 +194,7 @@ onUnmounted(() => {
 })
 
 watch(
-  () => props.images.map((image, index) => image?.id ?? image?.imageUrl ?? index),
+  () => props.images.map((image, index) => image?.id ?? image?.thumbnailUrl ?? index),
   () => {
     imageErrorMap.value = {}
   },

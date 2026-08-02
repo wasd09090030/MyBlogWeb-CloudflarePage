@@ -23,10 +23,10 @@
           <div class="item-content">
             <template v-if="hasImage(item, index)">
               <img
-                :src="item.thumbnailUrl || item.imageUrl"
+                :src="item.thumbnailUrl || ''"
                 class="carousel-image"
                 loading="lazy"
-                @error="handleImageError(item, index, $event)"
+                @error="handleImageError(item, index)"
               />
             </template>
             <div v-else class="carousel-fallback">
@@ -57,22 +57,13 @@ const props = defineProps({
 const emit = defineEmits(['image-click'])
 const imageErrorMap = ref({})
 
-const getImageKey = (image, index) => String(image?._uniqueKey ?? image?.id ?? image?.imageUrl ?? index)
+const getImageKey = (image, index) => String(image?._uniqueKey ?? image?.id ?? image?.thumbnailUrl ?? index)
 const hasImage = (image, index) => {
-  const imageUrl = image?.thumbnailUrl || image?.imageUrl
-  if (!imageUrl) return false
+  const thumbnailUrl = image?.thumbnailUrl
+  if (!thumbnailUrl) return false
   return !imageErrorMap.value[getImageKey(image, index)]
 }
-const handleImageError = (image, index, event) => {
-  const fallbackUrl = image?.imageUrl
-  const target = event?.target
-  if (fallbackUrl && target instanceof HTMLImageElement) {
-    const currentSrc = target.getAttribute('src') || ''
-    if (currentSrc !== fallbackUrl) {
-      target.src = fallbackUrl
-      return
-    }
-  }
+const handleImageError = (image, index) => {
   imageErrorMap.value[getImageKey(image, index)] = true
 }
 

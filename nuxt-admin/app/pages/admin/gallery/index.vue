@@ -14,6 +14,7 @@ const tagFilter = ref('all')
 const visibilityFilter = ref('all')
 const sortMode = ref('manual')
 const orderDirty = ref(false)
+const backfilling = ref(false)
 const tagOptions = [
   { label: 'Artwork', value: 'artwork' },
   { label: 'Game', value: 'game' }
@@ -88,6 +89,18 @@ async function saveOrder() {
   await refresh()
 }
 async function toggle(item: GalleryItem) { await api.patch(`gallery/${item.id}/toggle-active`); await refresh() }
+async function backfillImageAssets() {
+  backfilling.value = true
+  try {
+    const result = await api.post<{ updated: number; skipped: number }>('gallery/backfill-image-assets')
+    toast.add({ title: `已迁移 ${result.updated} 张，跳过 ${result.skipped} 张`, color: 'success' })
+    await refresh()
+  } catch {
+    toast.add({ title: '素材迁移失败，请稍后重试', color: 'error' })
+  } finally {
+    backfilling.value = false
+  }
+}
 async function remove(item: GalleryItem) { if (!confirm('删除该画廊项？')) return; await api.del(`gallery/${item.id}`); await refresh() }
 </script>
 
@@ -98,6 +111,7 @@ async function remove(item: GalleryItem) { if (!confirm('删除该画廊项？')
       <div class="flex flex-wrap gap-2"><UButton color="neutral" variant="soft" icon="i-lucide-ruler" @click="api.post('gallery/refresh-dimensions').then(() => refresh())">刷新尺寸</UButton><UButton v-if="orderDirty" color="neutral" variant="soft" icon="i-lucide-save" @click="saveOrder">保存手动排序</UButton><UButton color="neutral" variant="soft" icon="i-lucide-import" @click="importOpen = true">批量导入</UButton><UButton icon="i-lucide-plus" @click="edit()">添加图片</UButton></div>
     </div>
 
+    <div class="flex justify-end"><UButton color="neutral" variant="soft" icon="i-lucide-refresh-cw" :loading="backfilling" @click="backfillImageAssets">迁移永久缩略图</UButton></div>
     <UCard :ui="{ body: 'p-3 sm:p-3' }"><div class="flex flex-wrap items-center gap-3"><USelect v-model="tagFilter" :items="tagFilterOptions" class="w-36" /><USelect v-model="visibilityFilter" :items="visibilityOptions" class="w-36" /><USelect v-model="sortMode" :items="sortOptions" class="w-48" /><span class="ms-auto text-sm text-muted">显示 {{ visibleItems.length }} / {{ items?.length || 0 }} 项</span></div></UCard>
 
     <div v-if="visibleItems.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

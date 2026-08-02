@@ -15,17 +15,26 @@ namespace BlogApi.Services
         private readonly BlogDbContext _context;
         private readonly HttpClient _httpClient;
         private readonly ILogger<GalleryService> _logger;
+        private readonly ImageAssetBackfillService _imageAssetBackfillService;
+        private readonly ImageAssetUrlService _imageAssetUrlService;
 
         /// <summary>
         /// 初始化 <see cref="GalleryService"/>。
         /// 使用独立 HttpClient 读取远程图片头/流信息，避免阻塞主业务请求。
         /// </summary>
-        public GalleryService(BlogDbContext context, IHttpClientFactory httpClientFactory, ILogger<GalleryService> logger)
+        public GalleryService(
+            BlogDbContext context,
+            IHttpClientFactory httpClientFactory,
+            ILogger<GalleryService> logger,
+            ImageAssetBackfillService imageAssetBackfillService,
+            ImageAssetUrlService imageAssetUrlService)
         {
             _context = context;
             _httpClient = httpClientFactory.CreateClient();
             _httpClient.Timeout = TimeSpan.FromSeconds(10);
             _logger = logger;
+            _imageAssetBackfillService = imageAssetBackfillService;
+            _imageAssetUrlService = imageAssetUrlService;
         }
 
         /// <summary>
@@ -34,11 +43,12 @@ namespace BlogApi.Services
         public async Task<List<Gallery>> GetAllActiveAsync()
         {
             var galleries = await _context.Galleries
+                .Include(g => g.ImageAsset)
                 .Where(g => g.IsActive)
                 .OrderBy(g => g.SortOrder)
                 .ToListAsync();
 
-            await ApplyThumbnailUrlsAsync(galleries);
+            ApplyThumbnailUrls(galleries);
             return galleries;
         }
 
@@ -48,10 +58,11 @@ namespace BlogApi.Services
         public async Task<List<Gallery>> GetAllAsync()
         {
             var galleries = await _context.Galleries
+                .Include(g => g.ImageAsset)
                 .OrderBy(g => g.SortOrder)
                 .ToListAsync();
 
-            await ApplyThumbnailUrlsAsync(galleries);
+            ApplyThumbnailUrls(galleries);
             return galleries;
         }
 
@@ -60,10 +71,12 @@ namespace BlogApi.Services
         /// </summary>
         public async Task<Gallery?> GetByIdAsync(int id)
         {
-            var gallery = await _context.Galleries.FindAsync(id);
+            var gallery = await _context.Galleries
+                .Include(g => g.ImageAsset)
+                .FirstOrDefaultAsync(g => g.Id == id);
             if (gallery != null)
             {
-                await ApplyThumbnailUrlAsync(gallery);
+                ApplyThumbnailUrl(gallery);
             }
             return gallery;
         }
@@ -82,6 +95,8 @@ namespace BlogApi.Services
             var gallery = new Gallery
             {
                 ImageUrl = dto.ImageUrl.Trim(),
+                ImageAssetId = await _imageAssetBackfillService
+                    .GetOrCreateImageAssetIdAsync(dto.ImageUrl, ImageAssetKind.Gallery),
                 SortOrder = dto.SortOrder > 0 ? dto.SortOrder : maxSortOrder + 1,
                 IsActive = dto.IsActive,
                 Tag = string.IsNullOrWhiteSpace(dto.Tag) ? "artwork" : dto.Tag.Trim(),
@@ -95,30 +110,29 @@ namespace BlogApi.Services
 
             _context.Galleries.Add(gallery);
             await _context.SaveChangesAsync();
-            await ApplyThumbnailUrlAsync(gallery);
+            await LoadImageAssetAsync(gallery);
+            ApplyThumbnailUrl(gallery);
             return gallery;
         }
 
         /// <summary>
         /// 批量补齐缩略图地址。
         /// </summary>
-        private async Task ApplyThumbnailUrlsAsync(List<Gallery> galleries)
+        private void ApplyThumbnailUrls(List<Gallery> galleries)
         {
             if (galleries.Count == 0) return;
-            var config = await _context.CfImageConfigs.AsNoTracking().FirstOrDefaultAsync();
             foreach (var gallery in galleries)
             {
-                gallery.ThumbnailUrl = ThumbnailUrlBuilder.BuildThumbnailUrl(gallery.ImageUrl, config);
+                gallery.ThumbnailUrl = _imageAssetUrlService.BuildThumbnailUrl(gallery.ImageAsset);
             }
         }
 
         /// <summary>
         /// 补齐单条缩略图地址。
         /// </summary>
-        private async Task ApplyThumbnailUrlAsync(Gallery gallery)
+        private void ApplyThumbnailUrl(Gallery gallery)
         {
-            var config = await _context.CfImageConfigs.AsNoTracking().FirstOrDefaultAsync();
-            gallery.ThumbnailUrl = ThumbnailUrlBuilder.BuildThumbnailUrl(gallery.ImageUrl, config);
+            gallery.ThumbnailUrl = _imageAssetUrlService.BuildThumbnailUrl(gallery.ImageAsset);
         }
 
         /// <summary>
@@ -127,12 +141,16 @@ namespace BlogApi.Services
         /// </summary>
         public async Task<Gallery?> UpdateAsync(int id, UpdateGalleryDto dto)
         {
-            var gallery = await _context.Galleries.FindAsync(id);
+            var gallery = await _context.Galleries
+                .Include(g => g.ImageAsset)
+                .FirstOrDefaultAsync(g => g.Id == id);
             if (gallery == null) return null;
 
             if (dto.ImageUrl != null)
             {
                 gallery.ImageUrl = dto.ImageUrl.Trim();
+                gallery.ImageAssetId = await _imageAssetBackfillService
+                    .GetOrCreateImageAssetIdAsync(dto.ImageUrl, ImageAssetKind.Gallery);
                 var (width, height) = await TryFetchImageSizeAsync(gallery.ImageUrl);
                 gallery.ImageWidth = width;
                 gallery.ImageHeight = height;
@@ -148,7 +166,8 @@ namespace BlogApi.Services
             gallery.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            await ApplyThumbnailUrlAsync(gallery);
+            await LoadImageAssetAsync(gallery);
+            ApplyThumbnailUrl(gallery);
             return gallery;
         }
 
@@ -220,6 +239,8 @@ namespace BlogApi.Services
                 var gallery = new Gallery
                 {
                     ImageUrl = trimmedUrl,
+                    ImageAssetId = await _imageAssetBackfillService
+                        .GetOrCreateImageAssetIdAsync(trimmedUrl, ImageAssetKind.Gallery),
                     SortOrder = sortOrder++,
                     IsActive = dto.IsActive,
                     Tag = string.IsNullOrWhiteSpace(dto.Tag) ? "artwork" : dto.Tag.Trim(),
@@ -238,10 +259,26 @@ namespace BlogApi.Services
             {
                 _context.Galleries.AddRange(galleries);
                 await _context.SaveChangesAsync();
+                foreach (var gallery in galleries)
+                {
+                    await LoadImageAssetAsync(gallery);
+                }
             }
 
-            await ApplyThumbnailUrlsAsync(galleries);
+            ApplyThumbnailUrls(galleries);
             return galleries;
+        }
+
+        private async Task LoadImageAssetAsync(Gallery gallery)
+        {
+            if (!gallery.ImageAssetId.HasValue)
+            {
+                gallery.ImageAsset = null;
+                return;
+            }
+
+            gallery.ImageAsset = await _context.ImageAssets
+                .FirstOrDefaultAsync(asset => asset.Id == gallery.ImageAssetId.Value);
         }
 
         /// <summary>

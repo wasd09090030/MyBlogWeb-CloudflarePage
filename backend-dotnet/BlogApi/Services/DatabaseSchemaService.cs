@@ -61,6 +61,18 @@ namespace BlogApi.Services
                         "ALTER TABLE articles ADD COLUMN coverImageAssetId INTEGER NULL;",
                         cancellationToken);
                 }
+
+                if (!await TableExistsAsync("galleries", cancellationToken))
+                {
+                    throw new InvalidOperationException("Cannot apply gallery image asset schema upgrade because required table 'galleries' does not exist.");
+                }
+
+                if (!await ColumnExistsAsync("galleries", "imageAssetId", cancellationToken))
+                {
+                    await ExecuteNonQueryAsync(
+                        "ALTER TABLE galleries ADD COLUMN imageAssetId INTEGER NULL;",
+                        cancellationToken);
+                }
             }
             finally
             {

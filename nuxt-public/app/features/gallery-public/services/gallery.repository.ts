@@ -4,10 +4,11 @@ import { buildGalleryCacheKey } from '~/shared/cache/keys'
 
 export type GalleryItem = {
   id: number
-  title?: string
-  imageUrl?: string
+  thumbnailUrl?: string | null
+  imageWidth?: number | null
+  imageHeight?: number | null
   tag?: string
-  [key: string]: any
+  createdAt?: string
 }
 
 type NuxtDataContainer = {

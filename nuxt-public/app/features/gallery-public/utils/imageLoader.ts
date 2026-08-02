@@ -7,7 +7,7 @@ import type { Ref } from 'vue'
 import type { ImagePreloadProgress } from '~/utils/workers/types'
 
 type GalleryItem = {
-  imageUrl: string
+  thumbnailUrl?: string | null
   [key: string]: unknown
 }
 
@@ -43,21 +43,25 @@ export async function preloadAllImagesWithWorker(
 ): Promise<void> {
   if (galleries.length === 0) return
 
-  const imagesToPreload = galleries.slice(0, preloadCount)
+  const imagesToPreload = galleries
+    .filter((gallery) => Boolean(gallery.thumbnailUrl))
+    .slice(0, preloadCount)
+  const urls = imagesToPreload
+    .map((gallery) => gallery.thumbnailUrl)
+    .filter((url): url is string => Boolean(url))
 
-  loadingState.totalImagesToLoad.value = imagesToPreload.length
+  loadingState.totalImagesToLoad.value = urls.length
   loadingState.loadedImagesCount.value = 0
   loadingProgressRef.value = 0
 
   previewImagesRef.value = imagesToPreload
+  if (urls.length === 0) return
 
   const { useImagePreloadWorker } = await import('~/composables/useImagePreloadWorker')
   const { preloadImages, isAvailable } = useImagePreloadWorker()
 
   if (isAvailable()) {
     console.log('[Gallery] 使用 Web Worker 并行预加载图片')
-
-    const urls = imagesToPreload.map((g) => g.imageUrl)
 
     await preloadImages(urls, {
       concurrency: concurrencyLimit,
@@ -92,13 +96,19 @@ export async function preloadAllImages(
 ): Promise<void> {
   if (galleries.length === 0) return
 
-  const imagesToPreload = galleries.slice(0, preloadCount)
+  const imagesToPreload = galleries
+    .filter((gallery) => Boolean(gallery.thumbnailUrl))
+    .slice(0, preloadCount)
+  const urls = imagesToPreload
+    .map((gallery) => gallery.thumbnailUrl)
+    .filter((url): url is string => Boolean(url))
 
-  loadingState.totalImagesToLoad.value = imagesToPreload.length
+  loadingState.totalImagesToLoad.value = urls.length
   loadingState.loadedImagesCount.value = 0
   loadingProgressRef.value = 0
 
   previewImagesRef.value = imagesToPreload
+  if (urls.length === 0) return
 
   try {
     const chunks: GalleryItem[][] = []
@@ -108,7 +118,7 @@ export async function preloadAllImages(
 
     for (const chunk of chunks) {
       await Promise.allSettled(
-        chunk.map((gallery) => preloadImage(gallery.imageUrl, loadingState, loadingProgressRef))
+        chunk.map((gallery) => preloadImage(gallery.thumbnailUrl!, loadingState, loadingProgressRef))
       )
     }
 

@@ -1,6 +1,5 @@
 export type GalleryLike = {
   id?: string | number | null
-  imageUrl?: string | null
   thumbnailUrl?: string | null
   imageWidth?: number | string | null
   imageHeight?: number | string | null
@@ -42,7 +41,7 @@ const toFiniteNumber = (value: unknown): number | null => {
 
 export const getGalleryImageKey = (image: GalleryLike | null | undefined, index = 0): string => {
   if (image?.id != null) return String(image.id)
-  if (image?.imageUrl) return image.imageUrl
+  if (image?.thumbnailUrl) return image.thumbnailUrl
   return String(index)
 }
 

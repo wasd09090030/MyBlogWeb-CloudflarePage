@@ -9,6 +9,8 @@ namespace BlogApi.Models
         public string ImageUrl { get; set; } = string.Empty;
         [NotMapped]
         public string? ThumbnailUrl { get; set; }
+        public int? ImageAssetId { get; set; }
+        public ImageAsset? ImageAsset { get; set; }
         public int? ImageWidth { get; set; }
         public int? ImageHeight { get; set; }
         public int SortOrder { get; set; } = 0;

@@ -27,12 +27,12 @@
             <template v-if="hasImage(item)">
               <ImageLoadingPlaceholder :show="!isImageLoaded(item)" />
               <img
-                :src="item.thumbnailUrl || item.imageUrl"
+                :src="item.thumbnailUrl || ''"
                 :alt="item.title || '画廊图片'"
                 class="gallery-masonry__image"
                 loading="lazy"
                 @load="handleImageLoad(item, $event)"
-                @error="handleImageError(item, $event)"
+                @error="handleImageError(item)"
               />
             </template>
             <div v-else class="gallery-masonry__fallback">
@@ -112,8 +112,8 @@ const displayedImages = computed(() => shuffledImages.value.slice(0, displayedCo
 const getImageKey = (image, index = 0) => getGalleryImageKey(image, index)
 
 const hasImage = (image) => {
-  const imageUrl = image?.thumbnailUrl || image?.imageUrl
-  if (!imageUrl) return false
+  const thumbnailUrl = image?.thumbnailUrl
+  if (!thumbnailUrl) return false
   return !imageErrorMap.value[getImageKey(image)]
 }
 
@@ -188,17 +188,7 @@ const handleImageLoad = (image, event) => {
   }
 }
 
-const handleImageError = (image, event) => {
-  const fallbackUrl = image?.imageUrl
-  const target = event?.target
-  if (fallbackUrl && target instanceof HTMLImageElement) {
-    const currentSrc = target.getAttribute('src') || ''
-    if (currentSrc !== fallbackUrl) {
-      target.src = fallbackUrl
-      return
-    }
-  }
-
+const handleImageError = (image) => {
   const imageKey = getImageKey(image)
   imageErrorMap.value[imageKey] = true
   imageLoadedMap.value[imageKey] = true

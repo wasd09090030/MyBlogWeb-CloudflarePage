@@ -129,6 +129,11 @@ namespace BlogApi.Data
                 entity.ToTable("galleries");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.ImageUrl).IsRequired();
+                entity.Property(e => e.ImageAssetId).HasColumnName("imageAssetId");
+                entity.HasOne(e => e.ImageAsset)
+                    .WithMany()
+                    .HasForeignKey(e => e.ImageAssetId)
+                    .OnDelete(DeleteBehavior.SetNull);
                 entity.Property(e => e.ImageWidth);
                 entity.Property(e => e.ImageHeight);
                 entity.Property(e => e.SortOrder).HasDefaultValue(0);

@@ -31,6 +31,16 @@ namespace BlogApi.DTOs
         public DateTime UpdatedAt { get; set; }
     }
 
+    public class PublicGalleryDto
+    {
+        public int Id { get; set; }
+        public string? ThumbnailUrl { get; set; }
+        public int? ImageWidth { get; set; }
+        public int? ImageHeight { get; set; }
+        public string Tag { get; set; } = "artwork";
+        public DateTime CreatedAt { get; set; }
+    }
+
     public class GalleryDimensionsDto
     {
         public int Id { get; set; }
@@ -43,6 +53,13 @@ namespace BlogApi.DTOs
         public int Total { get; set; }
         public int Updated { get; set; }
         public int Failed { get; set; }
+    }
+
+    public class GalleryImageAssetBackfillResultDto
+    {
+        public int Total { get; set; }
+        public int Updated { get; set; }
+        public int Skipped { get; set; }
     }
 
     public class UpdateSortOrderDto

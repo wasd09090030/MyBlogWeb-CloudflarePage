@@ -11,11 +11,11 @@
       >
         <template v-if="hasImage(gallery)">
           <img
-            :src="gallery.thumbnailUrl || gallery.imageUrl"
+            :src="gallery.thumbnailUrl || ''"
             alt="画廊图片"
             class="accordion-image"
             loading="lazy"
-            @error="handleImageError(gallery, $event)"
+            @error="handleImageError(gallery)"
           />
         </template>
         <div v-else class="accordion-fallback">
@@ -41,22 +41,13 @@ defineEmits(['image-click'])
 const expandedIndex = ref(0)
 const imageErrorMap = ref({})
 
-const getImageKey = (image) => String(image?.id ?? image?.imageUrl ?? '')
+const getImageKey = (image) => String(image?.id ?? image?.thumbnailUrl ?? '')
 const hasImage = (image) => {
-  const imageUrl = image?.thumbnailUrl || image?.imageUrl
-  if (!imageUrl) return false
+  const thumbnailUrl = image?.thumbnailUrl
+  if (!thumbnailUrl) return false
   return !imageErrorMap.value[getImageKey(image)]
 }
-const handleImageError = (image, event) => {
-  const fallbackUrl = image?.imageUrl
-  const target = event?.target
-  if (fallbackUrl && target instanceof HTMLImageElement) {
-    const currentSrc = target.getAttribute('src') || ''
-    if (currentSrc !== fallbackUrl) {
-      target.src = fallbackUrl
-      return
-    }
-  }
+const handleImageError = (image) => {
   imageErrorMap.value[getImageKey(image)] = true
 }
 
@@ -66,7 +57,7 @@ const toggleAccordion = (index) => {
 }
 
 watch(
-  () => props.images.map(image => image?.id ?? image?.imageUrl),
+  () => props.images.map(image => image?.id ?? image?.thumbnailUrl),
   () => {
     imageErrorMap.value = {}
   },

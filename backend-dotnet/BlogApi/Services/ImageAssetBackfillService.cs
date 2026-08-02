@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using BlogApi.Data;
+using BlogApi.DTOs;
 using BlogApi.Models;
 
 namespace BlogApi.Services
@@ -26,11 +27,7 @@ namespace BlogApi.Services
             var count = 0;
             foreach (var article in articles)
             {
-                var coverImage = article.CoverImage!.Trim();
-                var storageKey = ExtractStorageKey(coverImage);
-                if (string.IsNullOrWhiteSpace(storageKey)) continue;
-
-                var assetId = await GetOrCreateArticleCoverAssetIdAsync(coverImage);
+                var assetId = await GetOrCreateArticleCoverAssetIdAsync(article.CoverImage);
                 if (!assetId.HasValue) continue;
 
                 article.CoverImageAssetId = assetId;
@@ -42,21 +39,55 @@ namespace BlogApi.Services
             return count;
         }
 
+        public async Task<GalleryImageAssetBackfillResultDto> BackfillGalleriesAsync()
+        {
+            var galleries = await _context.Galleries
+                .Where(g => g.ImageAssetId == null)
+                .ToListAsync();
+
+            var result = new GalleryImageAssetBackfillResultDto
+            {
+                Total = galleries.Count
+            };
+
+            foreach (var gallery in galleries)
+            {
+                var assetId = await GetOrCreateImageAssetIdAsync(gallery.ImageUrl, ImageAssetKind.Gallery);
+                if (!assetId.HasValue)
+                {
+                    result.Skipped++;
+                    continue;
+                }
+
+                gallery.ImageAssetId = assetId;
+                gallery.UpdatedAt = DateTime.UtcNow;
+                result.Updated++;
+            }
+
+            await _context.SaveChangesAsync();
+            return result;
+        }
+
         public async Task<int?> GetOrCreateArticleCoverAssetIdAsync(string? coverImage)
         {
-            if (string.IsNullOrWhiteSpace(coverImage))
+            return await GetOrCreateImageAssetIdAsync(coverImage, ImageAssetKind.ArticleCover);
+        }
+
+        public async Task<int?> GetOrCreateImageAssetIdAsync(string? imageUrl, ImageAssetKind kind)
+        {
+            if (string.IsNullOrWhiteSpace(imageUrl))
             {
                 return null;
             }
 
-            var normalizedCoverImage = coverImage.Trim();
-            var storageKey = ExtractStorageKey(normalizedCoverImage);
+            var normalizedImageUrl = imageUrl.Trim();
+            var storageKey = ExtractStorageKey(normalizedImageUrl);
             if (string.IsNullOrWhiteSpace(storageKey))
             {
                 return null;
             }
 
-            if (!IsAllowedArticleCoverSource(normalizedCoverImage, storageKey))
+            if (!IsAllowedImageSource(normalizedImageUrl, storageKey))
             {
                 return null;
             }
@@ -69,10 +100,10 @@ namespace BlogApi.Services
                 {
                     PublicId = publicId,
                     StorageKey = storageKey,
-                    SourceUrl = normalizedCoverImage.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-                        ? normalizedCoverImage
+                    SourceUrl = normalizedImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                        ? normalizedImageUrl
                         : null,
-                    Kind = ImageAssetKind.ArticleCover,
+                    Kind = kind,
                     ContentType = GuessContentType(storageKey),
                     Version = 1,
                     IsActive = true
@@ -97,9 +128,9 @@ namespace BlogApi.Services
             return coverImage.TrimStart('/');
         }
 
-        private bool IsAllowedArticleCoverSource(string coverImage, string storageKey)
+        private bool IsAllowedImageSource(string imageUrl, string storageKey)
         {
-            if (!Uri.TryCreate(coverImage, UriKind.Absolute, out var uri))
+            if (!Uri.TryCreate(imageUrl, UriKind.Absolute, out var uri))
             {
                 return IsValidStorageKey(storageKey);
             }

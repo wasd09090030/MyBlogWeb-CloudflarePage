@@ -1,6 +1,6 @@
-# Nuxt Admin Cloudflare Deployment
+# Cloudflare Free Deployment
 
-`nuxt-admin` is deployed as the `blog-admin` Cloudflare Worker. Production assumes a Workers Paid account, one D1 database, and the existing R2 media bucket. The .NET API and PM2/Nginx deployment are retained only as a read-only rollback reference during the observation window.
+`nuxt-admin` has two outputs: a static Admin SPA for the `myblog-admin` Pages project and a Free-plan `blog-api` Worker. The Worker owns D1, application login, public/admin APIs, Pages deployment operations, and the adapter for the independent image-host project. It does not bind R2, render SSR pages, or run the retired .NET service.
 
 ## Provisioning
 
@@ -8,57 +8,67 @@ From `nuxt-admin/`:
 
 ```powershell
 npx wrangler d1 create blog-db
-npx wrangler r2 bucket create <production-bucket-name>
 ```
 
-Copy the returned D1 `database_id` into `wrangler.toml`, and replace the R2 `bucket_name` with the production bucket. Do not commit those identifiers if the project keeps them private. The local placeholder `blog-media-dev` is valid for development only.
+Copy the returned `database_id` into `wrangler.toml` locally or through the deployment environment. Do not commit production identifiers or secrets. Create the two Pages projects separately (`myblog-admin` and `myblogweb-cloudflarepage`) and set their origins in `cloudflare-worker/wrangler.toml`.
 
-Set non-secret values in `wrangler.toml` and secrets with Wrangler:
+The Worker stores provider credentials only as secrets:
 
 ```powershell
+npx wrangler secret put IMAGE_API_TOKEN --config wrangler.toml
 npx wrangler secret put SESSION_PEPPER --config wrangler.toml
 npx wrangler secret put ADMIN_RESET_TOKEN --config wrangler.toml
-npx wrangler secret put DEEPSEEK_API_KEY --config wrangler.toml
 npx wrangler secret put PAGES_DEPLOY_HOOK_URL --config wrangler.toml
+npx wrangler secret put DEEPSEEK_API_KEY --config wrangler.toml
 ```
 
-`DEEPSEEK_API_KEY` is only needed when AI summaries are enabled. Use either `PAGES_DEPLOY_HOOK_URL` or the scoped Cloudflare API token/account variables for the Pages deployment operation. Never place provider tokens in D1 or client-side runtime configuration.
+`IMAGE_API_BASE_URL`, `PUBLIC_ASSET_ORIGIN`, and the imagebed domain are non-secret metadata. The image-host token must never be placed in D1, `wrangler.toml`, Pages output, or browser state. `DEEPSEEK_API_KEY` and the Pages fallback credentials are optional features.
+
+Before deploy, run the local gates:
+
+```powershell
+npm run check:free-config
+npm run check:image-api
+```
 
 ## Data cutover
 
-The export utility omits the legacy image-provider token and preserves IDs, timestamps, slugs, JSON fields, and R2 storage keys. D1 limits each SQL statement to 100 KB, so large article/beatmap text is emitted as short inserts followed by append updates.
+The export utility imports active blog/admin tables only: articles, comments, likes, galleries, image metadata, imagebed metadata, and administrator tables. It omits image bytes, provider tokens, `cf_image_configs`, and Beatmap data. Existing migration history is retained; `0003_remove_retired_tables.sql` removes the retired tables.
 
 ```powershell
 npm run db:export
 npm run db:migrate:local
-node scripts/sqlite-d1-import.mjs --input .data/d1-import.sql --database blog-db --config wrangler.toml --chunk-size 400000
-npx wrangler d1 execute blog-db --local --command "PRAGMA foreign_key_check; SELECT 'articles' AS table_name, COUNT(*) AS count FROM articles UNION ALL SELECT 'comments', COUNT(*) FROM comments UNION ALL SELECT 'galleries', COUNT(*) FROM galleries;" --config wrangler.toml
+npm run db:import
+$db = Get-ChildItem .wrangler/state/v3/d1/miniflare-D1DatabaseObject -Filter '*.sqlite' | Where-Object Name -ne 'metadata.sqlite' | Select-Object -First 1 -ExpandProperty FullName
+node scripts/sqlite-d1-verify.mjs --manifest .data/d1-import-manifest.json --sqlite $db
 ```
 
-For production, apply migrations first and use the same importer with `--remote` only after a backup/maintenance window has been approved:
+For production, apply migrations before importing during the maintenance window, then use `--remote`:
 
 ```powershell
 npm run db:migrate:remote
 node scripts/sqlite-d1-import.mjs --input .data/d1-import.sql --database blog-db --config wrangler.toml --remote --chunk-size 400000
 ```
 
-Validate row counts/checksums with `scripts/sqlite-d1-verify.mjs` against a D1 export before switching public traffic. Verify representative R2 objects using their `storage_key` and `/images/<public-id>` URL.
+Export a backup before the first production write. After import, validate row counts, checksums, slugs, foreign keys, gallery ordering, and representative external image URLs.
 
 ## Deploy order
 
-The release workflow enforces this sequence:
+The release workflow enforces this order:
 
-1. Apply D1 migrations.
-2. Build and deploy `blog-admin`.
-3. Deploy `blog-router` with the `BLOG_ADMIN` Service Binding.
-4. Generate and deploy the `nuxt-public` Pages artifact.
+1. Apply D1 migrations and run Free/image API checks.
+2. Build and deploy the `blog-api` Worker.
+3. Generate and deploy the Admin SPA from `.output/public/admin`.
+4. Deploy `blog-router` with the `BLOG_API` service binding.
+5. Generate and deploy the public Pages artifact.
 
-Manual commands for a single environment:
+Manual commands for the API and Admin Pages are:
 
 ```powershell
-npm run db:migrate:remote
-npm run deploy:worker
+npm run deploy:api
+npm run deploy:pages
 cd ../cloudflare-worker
+npm test
 npx wrangler deploy --config wrangler.toml
 cd ../nuxt-public
 $env:NUXT_PUBLIC_API_BASE_URL='/api'
@@ -67,26 +77,14 @@ npm run generate
 npx wrangler pages deploy .output/public --project-name myblogweb-cloudflarepage
 ```
 
-The public build uses relative `/api` in the browser and the deployed Worker URL only during SSG. The admin Worker keeps `/_ssr/` assets isolated from Pages' `/_nuxt/` assets and sends private/no-store headers for `/admin/**`.
+The Admin build uses `/admin/` as its base URL. The router strips `/admin` before fetching the Admin Pages origin, so browser requests such as `/admin/_nuxt/*` resolve to the Pages project's `/_nuxt/*` files. Deep Admin routes fall back to the SPA entry document; API and image paths never use that fallback.
 
-## Password bootstrap and reset
+## Password bootstrap and Free CPU canary
 
-After the first D1 import, run the one-time reset endpoint with the secret reset token. The endpoint creates or resets the administrator and forces a password change. Rotate or remove `ADMIN_RESET_TOKEN` immediately after use. The normal login, logout, password-change, session revocation, and expiration cleanup paths are all D1-backed.
-
-## Pages rebuild trigger
-
-The admin operation `POST /admin/api/ops/pages/deploy-hook` remains available. It calls the configured Pages Deploy Hook (or the scoped Cloudflare API fallback) after content mutations. This preserves the existing background-triggered Pages deployment workflow without restoring an independent backend.
+After the first import, use the reset endpoint with `ADMIN_RESET_TOKEN` to create the administrator, then rotate or remove that secret. Keep the configured PBKDF2 iteration count unchanged. Before cutover, run a real login/reset request against the Free Worker and record CPU time from Wrangler/Cloudflare logs. If the 210,000-iteration setting exceeds the Free invocation budget, stop the cutover and make an explicit security decision; do not silently weaken the hash.
 
 ## Smoke test and rollback
 
-Through the public hostname, verify:
+Through the public hostname, verify `/admin/login`, an authenticated Admin deep link, session/logout/password-change behavior, public article/gallery/comment APIs, gallery mutations, an image upload/list/delete cycle, and `/images/<public-id>` returning a validated external redirect. `/api/beatmaps/*` must return `410 BEATMAP_API_RETIRED`. Trigger one Pages deployment operation when its secret is enabled.
 
-- `/admin/login` and an authenticated deep link;
-- `/admin/api/auth/session`, logout, and password-change revocation;
-- public `/api/articles`, `/api/gallery`, and `/api/comments` contracts;
-- an article mutation, comment moderation, gallery ordering, and `/images/<public-id>` cache headers;
-- `/api/beatmaps/*` returns `410 BEATMAP_API_RETIRED`;
-- one AI summary request and one Pages deploy-hook request when those secrets are enabled;
-- a hashed `/_ssr/` asset and a static Pages page through `blog-router`.
-
-If the Worker cutover fails, disable the `blog-router` Service Binding route and restore the previous `nuxt`/API route during the observation window. Do not delete D1, R2, or the legacy source until counts, media URLs, sessions, and public regeneration have been verified in production.
+Before D1 receives production writes, rollback is a router change back to the previous origins. After writes begin, export/restore or reverse-sync D1 before switching back. Keep the legacy .NET and old Nuxt sources read-only during the observation window; do not delete them in this change.

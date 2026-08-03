@@ -1,15 +1,13 @@
-name = "blog-admin"
+name = "blog-api"
 main = ".output/server/index.mjs"
 compatibility_date = "2026-07-28"
 compatibility_flags = ["nodejs_compat"]
 
-# Workers Paid production baseline. Replace the placeholder resource IDs before deploy.
-[limits]
-cpu_ms = 30000
-
 [vars]
 ADMIN_ORIGIN = "https://wasd09090030.top"
-PUBLIC_ASSET_ORIGIN = "https://cfimg.wasd09090030.top/file"
+PUBLIC_SITE_ORIGIN = "https://wasd09090030.top"
+PUBLIC_ASSET_ORIGIN = "https://cfimg.wasd09090030.top"
+IMAGE_API_BASE_URL = "https://cfimg.wasd09090030.top"
 DEFAULT_UPLOAD_FOLDER = "uploads"
 PAGES_PROJECT_NAME = "myblogweb-cloudflarepage"
 
@@ -18,11 +16,6 @@ binding = "BLOG_DB"
 database_name = "blog-db"
 database_id = "REPLACE_WITH_D1_DATABASE_ID"
 migrations_dir = "migrations"
-
-[[r2_buckets]]
-binding = "BLOG_MEDIA"
-# Replace this legal local placeholder with the existing production bucket name before deploy.
-bucket_name = "blog-media-dev"
 
 # Optional: configure after the first production cutover for login abuse controls.
 # [[kv_namespaces]]

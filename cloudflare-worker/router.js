@@ -1,12 +1,12 @@
-const SERVER_PATHS = ['/admin', '/api', '/images', '/_ssr']
+const API_PATHS = ['/admin/api', '/api', '/images']
 
-function isServerPath(pathname) {
-  return SERVER_PATHS.some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`))
+function isPath(pathname, prefixes) {
+  return prefixes.some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
 
-function pagesOrigin(env) {
-  const configured = typeof env.PAGES_ORIGIN === 'string' ? env.PAGES_ORIGIN.trim() : ''
-  return configured || 'https://myblogweb-cloudflarepage.pages.dev'
+function originFrom(env, key, fallback) {
+  const configured = typeof env[key] === 'string' ? env[key].trim() : ''
+  return configured || fallback
 }
 
 function forwardRequest(request) {
@@ -16,21 +16,47 @@ function forwardRequest(request) {
   return new Request(request, { headers, redirect: 'manual' })
 }
 
+function pagesRequest(request, targetUrl) {
+  return new Request(targetUrl, {
+    method: request.method,
+    headers: request.headers,
+    body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
+    redirect: 'manual'
+  })
+}
+
+async function fetchAdminPages(request, env, url) {
+  const origin = originFrom(env, 'ADMIN_PAGES_ORIGIN', 'https://myblog-admin.pages.dev')
+  const relativePath = url.pathname.slice('/admin'.length) || '/'
+  const target = new URL(relativePath + url.search, origin)
+  let response = await fetch(pagesRequest(request, target))
+
+  const isAsset = relativePath.startsWith('/_nuxt/') || /\.[A-Za-z0-9]{1,12}$/.test(relativePath)
+  if (response.status === 404 && request.method === 'GET' && !isAsset) {
+    response = await fetch(pagesRequest(request, new URL('/', origin)))
+  }
+  return response
+}
+
+function publicPagesUrl(request, env) {
+  const url = new URL(request.url)
+  const origin = originFrom(env, 'PUBLIC_PAGES_ORIGIN', 'https://myblogweb-cloudflarepage.pages.dev')
+  return new URL(url.pathname + url.search, origin)
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
-    if (isServerPath(url.pathname)) {
-      if (!env.BLOG_ADMIN || typeof env.BLOG_ADMIN.fetch !== 'function') return new Response('Admin Worker binding is unavailable', { status: 503 })
-      return env.BLOG_ADMIN.fetch(forwardRequest(request))
+    if (isPath(url.pathname, API_PATHS)) {
+      if (!env.BLOG_API || typeof env.BLOG_API.fetch !== 'function') return new Response('blog-api binding is unavailable', { status: 503 })
+      return env.BLOG_API.fetch(forwardRequest(request))
     }
 
+    if (isPath(url.pathname, ['/admin'])) return await fetchAdminPages(request, env, url)
+
     if (env.ASSETS) return env.ASSETS.fetch(request)
-    const pagesUrl = new URL(url.pathname + url.search, pagesOrigin(env))
-    return fetch(new Request(pagesUrl, {
-      method: request.method,
-      headers: request.headers,
-      body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
-      redirect: 'manual'
-    }))
+    return fetch(pagesRequest(request, publicPagesUrl(request, env)))
   }
 }
+
+export { isPath, fetchAdminPages, publicPagesUrl }

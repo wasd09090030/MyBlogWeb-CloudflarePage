@@ -39,10 +39,6 @@ export function getCloudflareDatabase(event: H3Event): D1Database {
   return getCloudflareEnv(event).BLOG_DB
 }
 
-export function getCloudflareMedia(event: H3Event): R2Bucket {
-  return getCloudflareEnv(event).BLOG_MEDIA
-}
-
 export function getCloudflareContext(event: H3Event): ExecutionContext | undefined {
   return getCloudflareRuntime(event).context
 }
@@ -56,7 +52,8 @@ export function getRequiredSecret(event: H3Event, key: keyof BlogCloudflareEnv):
 }
 
 export function getRequestOrigin(event: H3Event): string {
-  const configured = getCloudflareEnv(event).ADMIN_ORIGIN?.trim()
+  const env = getCloudflareEnv(event)
+  const configured = env.PUBLIC_SITE_ORIGIN?.trim() || env.ADMIN_ORIGIN?.trim()
   return configured || getRequestURL(event).origin
 }
 

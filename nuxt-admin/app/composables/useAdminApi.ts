@@ -4,12 +4,11 @@ type GetOptions = { cache?: boolean, ttl?: number }
 const defaultCacheTtl = 30_000
 
 export function useAdminApi() {
-  const requestFetch = useRequestFetch()
-  // useState is scoped to the current Nuxt app/request and is serialized only into
-  // the private SSR response. It is never a shared server-side cache.
+  // The Admin is a static SPA. This state is browser-local and never contains
+  // credentials or server-rendered business data.
   const cacheEntries = useState<Record<string, CacheEntry>>('admin-api-cache', () => ({}))
   const request = async <T>(path: string, options: Record<string, unknown> = {}) => {
-    return await requestFetch<T>(`/admin/api/${path.replace(/^\//, '')}`, { credentials: 'include', cache: 'no-store', ...options } as any)
+    return await $fetch<T>(`/admin/api/${path.replace(/^\//, '')}`, { credentials: 'include', cache: 'no-store', ...options } as any)
   }
 
   const get = async <T>(path: string, options: GetOptions = {}) => {

@@ -52,8 +52,8 @@ const tableDefinitions = [
     source: 'galleries',
     target: 'galleries',
     primaryKey: 'id',
-    columns: ['id', 'imageUrl', 'imageAssetId', 'ImageWidth', 'ImageHeight', 'sortOrder', 'isActive', 'tag', 'createdAt', 'updatedAt'],
-    mapped: ['id', 'image_url', 'image_asset_id', 'image_width', 'image_height', 'sort_order', 'is_active', 'tag', 'created_at', 'updated_at']
+    columns: ['id', 'imageUrl', 'ImageWidth', 'ImageHeight', 'sortOrder', 'isActive', 'tag', 'createdAt', 'updatedAt'],
+    mapped: ['id', 'image_url', 'image_width', 'image_height', 'sort_order', 'is_active', 'tag', 'created_at', 'updated_at']
   },
   {
     source: 'imagebed_configs',
@@ -62,27 +62,6 @@ const tableDefinitions = [
     columns: ['Id', 'Domain', 'UploadFolder', 'CreatedAt', 'UpdatedAt'],
     mapped: ['id', 'domain', 'upload_folder', 'created_at', 'updated_at']
   },
-  {
-    source: 'cf_image_configs',
-    target: 'cf_image_configs',
-    primaryKey: 'Id',
-    columns: ['Id', 'IsEnabled', 'ZoneDomain', 'UseHttps', 'Fit', 'Width', 'Quality', 'Format', 'SignatureParam', 'UseWorker', 'WorkerBaseUrl', 'TokenTtlSeconds', 'CreatedAt', 'UpdatedAt'],
-    mapped: ['id', 'is_enabled', 'zone_domain', 'use_https', 'fit', 'width', 'quality', 'format', 'signature_param', 'use_worker', 'worker_base_url', 'token_ttl_seconds', 'created_at', 'updated_at']
-  },
-  {
-    source: 'beatmap_sets',
-    target: 'beatmap_sets',
-    primaryKey: 'id',
-    columns: ['id', 'storageKey', 'title', 'artist', 'creator', 'backgroundFile', 'audioFile', 'previewTime', 'createdAt'],
-    mapped: ['id', 'storage_key', 'title', 'artist', 'creator', 'background_file', 'audio_file', 'preview_time', 'created_at']
-  },
-  {
-    source: 'beatmap_difficulties',
-    target: 'beatmap_difficulties',
-    primaryKey: 'id',
-    columns: ['id', 'beatmapSetId', 'version', 'mode', 'columns', 'overallDifficulty', 'bpm', 'osuFileName', 'dataJson', 'noteCount', 'createdAt'],
-    mapped: ['id', 'beatmap_set_id', 'version', 'mode', 'columns', 'overall_difficulty', 'bpm', 'osu_file_name', 'data_json', 'note_count', 'created_at']
-  }
 ]
 
 function quoteIdentifier(value) {
@@ -226,8 +205,6 @@ const manifest = {
 }
 const articleIds = new Set(queryJson('SELECT id FROM articles').map(row => Number(row.id)))
 const imageAssetIds = new Set(queryJson('SELECT Id FROM image_assets').map(row => Number(row.Id)))
-const beatmapSetIds = new Set(queryJson('SELECT id FROM beatmap_sets').map(row => Number(row.id)))
-
 for (const definition of tableDefinitions) {
   if (!tableExists(definition.source)) {
     manifest.tables[definition.target] = { sourceTable: definition.source, skipped: true, sourceRows: 0, exportedRows: 0, skippedRows: 0, checksum: null }
@@ -251,17 +228,12 @@ for (const definition of tableDefinitions) {
     if (definition.target === 'articles' && row.cover_image_asset_id !== null && !imageAssetIds.has(Number(row.cover_image_asset_id))) {
       throw new Error(`Invalid articles.cover_image_asset_id ${row.cover_image_asset_id} for row ${row.id}`)
     }
-    if (definition.target === 'galleries' && row.image_asset_id !== null && !imageAssetIds.has(Number(row.image_asset_id))) {
-      throw new Error(`Invalid galleries.image_asset_id ${row.image_asset_id} for row ${row.id}`)
-    }
-    if (definition.target === 'beatmap_difficulties' && !beatmapSetIds.has(Number(row.beatmap_set_id))) {
-      throw new Error(`Invalid beatmap_difficulties.beatmap_set_id ${row.beatmap_set_id} for row ${row.id}`)
-    }
     rows.push(row)
   }
   const tableManifest = {
     sourceTable: definition.source,
     targetTable: definition.target,
+    columns: definition.mapped,
     sourceRows: sourceRows.length,
     exportedRows: rows.length,
     skippedRows,

@@ -8,14 +8,19 @@
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
+    "build:api": "node scripts/build-api.mjs",
+    "generate": "node scripts/generate-admin.mjs",
     "preview": "nuxt preview",
     "typecheck": "nuxt typecheck",
+    "check:free-config": "node scripts/check-free-worker-config.mjs",
+    "check:image-api": "node scripts/check-image-api-contract.mjs",
     "db:export": "node scripts/sqlite-d1-export.mjs",
     "db:import": "node scripts/sqlite-d1-import.mjs --config wrangler.toml",
     "db:verify": "node scripts/sqlite-d1-verify.mjs",
     "db:migrate:local": "wrangler d1 migrations apply blog-db --local --config wrangler.toml",
     "db:migrate:remote": "wrangler d1 migrations apply blog-db --remote --config wrangler.toml",
-    "deploy:worker": "npm run build && wrangler deploy --config wrangler.toml",
+    "deploy:api": "npm run build:api && wrangler deploy --config wrangler.toml",
+    "deploy:pages": "npm run generate && wrangler pages deploy .output/public/admin --project-name=myblog-admin",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {

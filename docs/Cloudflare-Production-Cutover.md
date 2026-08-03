@@ -3,14 +3,14 @@
 This runbook deploys the blog without a runtime dependency on the independent .NET API or PM2/Nginx. The release order is fixed:
 
 ```text
-D1 migrations -> blog-admin Worker -> blog-router Worker -> Pages
+D1 migrations -> blog-api Worker -> Admin Pages -> blog-router Worker -> Public Pages
 ```
 
 Do not switch traffic until every prerequisite and smoke test below is complete.
 
 ## 1. One deployment owner
 
-Use GitHub Actions as the production deployment owner. The repository workflow already deploys D1, `blog-admin`, `blog-router`, and Pages in dependency order.
+Use GitHub Actions as the production deployment owner. The repository workflow already deploys D1, the Free-plan `blog-api` Worker, Admin Pages, `blog-router`, and Public Pages in dependency order.
 
 In the Cloudflare dashboard, disconnect the Git build integration for the existing `blogworkermixed` Worker:
 
@@ -47,14 +47,14 @@ Create or reuse the production resources in the intended account:
 ```powershell
 cd nuxt-admin
 npx wrangler d1 create blog-db
-npx wrangler r2 bucket create <production-bucket-name>
 ```
 
-Update `nuxt-admin/wrangler.toml` with the returned D1 `database_id` and the existing production R2 bucket name. The committed `REPLACE_WITH_D1_DATABASE_ID` and `blog-media-dev` values are not deployable production settings.
+Update `nuxt-admin/wrangler.toml` with the returned D1 `database_id`. The Admin Worker must remain D1-only; the independent image-host project owns the R2 bucket and exposes its API separately. The committed `REPLACE_WITH_D1_DATABASE_ID` value is not a deployable production setting.
 
-Set runtime secrets against the `blog-admin` Worker. Enter each value interactively; never paste it into a source file.
+Set runtime secrets against the `blog-api` Worker. Enter each value interactively; never paste it into a source file.
 
 ```powershell
+npx wrangler secret put IMAGE_API_TOKEN --config wrangler.toml
 npx wrangler secret put SESSION_PEPPER --config wrangler.toml
 npx wrangler secret put ADMIN_RESET_TOKEN --config wrangler.toml
 npx wrangler secret put DEEPSEEK_API_KEY --config wrangler.toml
@@ -95,13 +95,14 @@ The importer intentionally splits large text fields because D1 limits an individ
 
 Push the reviewed commit to `main`, then run **Build and Release** from GitHub Actions. The workflow must show these successful jobs in order:
 
-1. `deploy-admin`: applies D1 migrations and deploys `blog-admin`.
-2. `deploy-router`: deploys `blog-router` with `BLOG_ADMIN -> blog-admin` Service Binding.
-3. `deploy-public`: generates and deploys the Pages artifact.
+1. `deploy-api`: applies D1 migrations and deploys `blog-api`.
+2. `deploy-admin-pages`: generates and deploys the Admin SPA to the Admin Pages project.
+3. `deploy-router`: deploys `blog-router` with `BLOG_API -> blog-api` Service Binding.
+4. `deploy-public`: generates and deploys the Public Pages artifact.
 
-Do not retry the router build before `blog-admin` exists. A router failure such as `Service binding 'BLOG_ADMIN' references Worker 'blog-admin' which was not found` is a downstream symptom of a failed or missing admin deployment.
+Do not retry the router build before `blog-api` exists. A router failure such as `Service binding 'BLOG_API' references Worker 'blog-api' which was not found` is a downstream symptom of a failed or missing API deployment.
 
-Bind the public hostname to `blog-router` after the first successful deployment, or update its route in the Cloudflare dashboard. `blog-router` sends `/admin`, `/api`, `/images`, and `/_ssr` to `blog-admin`; all other paths go to Pages.
+Bind the public hostname to `blog-router` after the first successful deployment, or update its route in the Cloudflare dashboard. `blog-router` sends `/admin/api`, `/api`, and `/images` to `blog-api`, maps static `/admin/*` requests to Admin Pages, and sends all other paths to Public Pages.
 
 ## 6. Production smoke test
 
@@ -122,7 +123,7 @@ Expected results:
 | `/admin/login` | `200` with private/no-store cache behavior |
 | Reset, login, session, logout | Success; logout invalidates the opaque session |
 | `/api/beatmaps/test` | `410` with `BEATMAP_API_RETIRED` |
-| `/images/<public-id>` | Existing R2 image and cache headers |
+| `/images/<public-id>` | `302` redirect to a validated external image-host URL |
 | Pages deploy operation | A new Pages deployment is recorded |
 
 A `404` from `/api/beatmaps/test` means the public hostname is still reaching an old deployment or old route. It is not a successful migration result.
@@ -132,7 +133,7 @@ A `404` from `/api/beatmaps/test` means the public hostname is still reaching an
 | Symptom | Cause | Action |
 | --- | --- | --- |
 | `CLOUDFLARE_API_TOKEN` is required | GitHub secret is missing, empty, or unavailable to that workflow | Create/repair the Actions secret and rerun from `deploy-admin` |
-| `BLOG_ADMIN` Worker was not found | `blog-admin` did not deploy | Fix the admin job first; do not retry router alone |
+| `BLOG_API` Worker was not found | `blog-api` did not deploy | Fix the API job first; do not retry router alone |
 | Worker name mismatch | Cloudflare Workers Builds is connected to a differently named Worker | Disconnect Builds or align all names before deploy |
 | D1 import is too big | A raw SQL statement exceeds D1's limit | Use `sqlite-d1-export.mjs` and `sqlite-d1-import.mjs` |
 | Admin mutation is 403 | Request Origin does not match `ADMIN_ORIGIN` | Verify the Worker variable and public hostname |

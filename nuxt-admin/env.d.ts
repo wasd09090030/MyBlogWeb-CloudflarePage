@@ -5,9 +5,11 @@ import type { CfProperties } from 'h3'
 declare global {
   interface BlogCloudflareEnv {
     BLOG_DB: D1Database
-    BLOG_MEDIA: R2Bucket
     ADMIN_ORIGIN?: string
+    PUBLIC_SITE_ORIGIN?: string
     PUBLIC_ASSET_ORIGIN?: string
+    IMAGE_API_BASE_URL?: string
+    IMAGE_API_TOKEN?: string
     DEFAULT_UPLOAD_FOLDER?: string
     PAGES_PROJECT_NAME?: string
     DEEPSEEK_API_KEY?: string

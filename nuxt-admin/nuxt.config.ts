@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite'
 const isProduction = process.env.NODE_ENV === 'production'
 
 export default defineNuxtConfig({
+  ssr: false,
   compatibilityDate: '2026-07-25',
   devtools: { enabled: !isProduction },
   modules: ['@nuxt/ui', '@nuxt/icon', '@nuxtjs/mdc', 'nitro-cloudflare-dev'],
@@ -17,7 +18,8 @@ export default defineNuxtConfig({
     }
   },
   app: {
-    buildAssetsDir: '/_ssr/',
+    baseURL: process.env.NUXT_APP_BASE_URL || '/admin/',
+    buildAssetsDir: '_nuxt/',
     head: {
       title: 'Admin',
       titleTemplate: '%s | WyrmKk',
@@ -25,8 +27,7 @@ export default defineNuxtConfig({
     }
   },
   routeRules: {
-    '/admin/**': { headers: { 'cache-control': 'private, no-store, max-age=0' } },
-    '/_ssr/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } }
+    '/admin/**': { headers: { 'cache-control': 'private, no-store, max-age=0' } }
   },
   nitro: { preset: 'cloudflare_module' },
   typescript: { strict: true }

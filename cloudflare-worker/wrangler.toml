@@ -3,11 +3,12 @@ main = "router.js"
 compatibility_date = "2026-07-28"
 
 [vars]
-PAGES_ORIGIN = "https://myblogweb-cloudflarepage.pages.dev"
+PUBLIC_PAGES_ORIGIN = "https://myblogweb-cloudflarepage.pages.dev"
+ADMIN_PAGES_ORIGIN = "https://myblog-admin.pages.dev"
 
 [[services]]
-binding = "BLOG_ADMIN"
-service = "blog-admin"
+binding = "BLOG_API"
+service = "blog-api"
 
 # Workers Routes should bind this Worker to the public hostname.
-# Deploy blog-admin before deploying this Worker so the Service Binding resolves.
+# Deploy blog-api and both Pages projects before deploying this Worker.

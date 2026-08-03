@@ -1,7 +1,6 @@
 import type { H3Event } from 'h3'
-import { assetUpsertStatement, buildAssetFileUrl, findImageAsset, resolveAssetReference, type ImageAssetRow } from './assets'
+import { assetUpsertStatement, resolveAssetReference } from './assets'
 import { batch, execute, getDb, nowIso, parseNonNegativeInt, parsePositiveInt, queryAll, queryFirst, requireId } from '~~/server/utils/d1'
-import { getCloudflareMedia } from '~~/server/utils/cloudflare'
 
 type GalleryRow = {
   id: number
@@ -246,29 +245,7 @@ export async function backfillGalleryAssets(event: H3Event) {
   return { total: rows.length, updated, skipped: rows.length - updated }
 }
 
-async function readDimensions(event: H3Event, row: { image_asset_id: number | null; image_url: string }) {
-  if (row.image_asset_id) {
-    const asset = await findImageAsset(event, (await queryFirst<{ public_id: string }>(getDb(event), 'SELECT public_id FROM image_assets WHERE id = ? LIMIT 1', row.image_asset_id))?.public_id || '')
-    if (asset) {
-      const object = await getCloudflareMedia(event).head(asset.storage_key)
-      const width = Number(object?.customMetadata?.width || 0)
-      const height = Number(object?.customMetadata?.height || 0)
-      if (width > 0 && height > 0) return { width, height }
-    }
-  }
-  return null
-}
-
 export async function refreshGalleryDimensions(event: H3Event) {
-  const rows = await queryAll<{ id: number; image_url: string; image_asset_id: number | null }>(getDb(event), 'SELECT id, image_url, image_asset_id FROM galleries ORDER BY id ASC LIMIT 2000')
-  const statements = []
-  let updated = 0
-  for (const row of rows) {
-    const dimensions = await readDimensions(event, row)
-    if (!dimensions) continue
-    statements.push({ sql: 'UPDATE galleries SET image_width = ?, image_height = ?, updated_at = ? WHERE id = ?', values: [dimensions.width, dimensions.height, nowIso(), row.id] })
-    updated += 1
-  }
-  if (statements.length) await batch(getDb(event), statements)
-  return { total: rows.length, updated, failed: rows.length - updated }
+  const total = await queryFirst<{ count: number }>(getDb(event), 'SELECT COUNT(*) AS count FROM galleries')
+  return { total: Number(total?.count || 0), updated: 0, failed: 0, message: 'Image dimensions are provider-managed and are not read by blog-api' }
 }

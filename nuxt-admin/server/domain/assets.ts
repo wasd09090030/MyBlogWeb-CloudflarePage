@@ -45,7 +45,7 @@ export function extractStorageKey(value: string): string | null {
   if (/^https?:\/\//i.test(trimmed)) {
     try {
       const url = new URL(trimmed)
-      let path = url.pathname.replace(/^\/+/, '')
+      let path = decodeURIComponent(url.pathname).replace(/^\/+/, '')
       if (path.toLowerCase().startsWith('file/')) path = path.slice(5)
       return isValidStorageKey(path) ? path : null
     } catch {
@@ -74,16 +74,13 @@ export async function resolveAssetReference(event: H3Event, imageUrl: string | n
 
   const env = getCloudflareEnv(event)
   if (/^https?:\/\//i.test(normalized)) {
-    const configured = env.PUBLIC_ASSET_ORIGIN?.trim()
-    if (configured) {
-      try {
-        const configuredUrl = new URL(configured)
-        const sourceUrl = new URL(normalized)
-        if (configuredUrl.host !== sourceUrl.host && !sourceUrl.pathname.toLowerCase().startsWith('/file/')) return null
-      } catch {
-        return null
-      }
-    }
+    try {
+      const sourceUrl = new URL(normalized)
+      const allowedHosts = [env.IMAGE_API_BASE_URL, env.PUBLIC_ASSET_ORIGIN].filter(Boolean).flatMap(value => {
+        try { return [new URL(value!).host] } catch { return [] }
+      })
+      if (allowedHosts.length && !allowedHosts.includes(sourceUrl.host)) return null
+    } catch { return null }
   }
 
   return {
@@ -157,6 +154,6 @@ export async function getOrCreateImageAssetId(event: H3Event, imageUrl: string |
 export async function buildAssetFileUrl(event: H3Event, asset: ImageAssetRow): Promise<string> {
   const env = getCloudflareEnv(event)
   const publicOrigin = env.PUBLIC_ASSET_ORIGIN?.trim()
-  if (publicOrigin) return `${publicOrigin.replace(/\/$/, '')}/${asset.storage_key.replace(/^\/+/, '')}`
+  if (publicOrigin) return `${publicOrigin.replace(/\/file\/?$/i, '').replace(/\/$/, '')}/file/${encodeURI(asset.storage_key.replace(/^\/+/, ''))}`
   return publicImageUrl(event, asset.public_id)
 }

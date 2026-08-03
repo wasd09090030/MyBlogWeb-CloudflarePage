@@ -1,38 +1,39 @@
 ## Why
 
-The administration runtime still depends on a Node-hosted Nuxt SSR process, a .NET API, local SQLite, a file-backed password, and process-local refresh-token state. That topology prevents the admin application from being fully hosted on Cloudflare and makes authentication state non-durable across edge isolates. The existing Cloudflare Pages public site and R2-backed media provide a suitable foundation for moving the admin runtime and relational data to Cloudflare now.
+The previous migration proposal targeted Workers Paid, an SSR Admin Worker, and an Admin-owned R2 bucket. That topology does not match the confirmed deployment constraint: the account must remain on the Workers Free plan, the Admin is used by one administrator, and media is owned by an independent image-host project backed by R2.
+
+The public site can remain static on Pages. The Admin can also be static, while a small Worker handles D1-backed API calls and proxies the independent image-host API. This removes SSR CPU cost, removes the Admin R2 binding, and keeps the existing same-origin browser contracts.
 
 ## What Changes
 
-- **BREAKING**: deploy `nuxt-admin/` as a Cloudflare Workers/Nitro `cloudflare_module` application instead of a Node server managed by PM2/Nginx.
-- Add a Cloudflare D1 database as the production source of truth for blog, comment, gallery, image metadata, configuration, administrator, and session data.
-- Reuse the existing R2 bucket for media objects and replace runtime dependence on the external imagebed API with Worker-controlled R2 operations.
-- Implement the public `/api/*` and administration `/admin/api/*` contracts inside the Cloudflare runtime, preserving response shapes used by `nuxt-public/` and `nuxt-admin/`.
-- Replace .NET JWT and process-local refresh tokens with D1-backed opaque admin sessions and a one-time administrator password reset using an edge-compatible password hash.
-- Change the existing front-door Worker to route server prefixes through a Service Binding to the new admin Worker while leaving public pages on Cloudflare Pages.
-- Preserve the administration operation that triggers public Pages deployment, implemented through a Worker secret and the Cloudflare API or the existing deployment integration.
-- Migrate existing SQLite data and preserve primary keys, article URLs, image asset identifiers, and existing R2 object keys.
-- Retire Beatmap API behavior and preserve or archive its historical data without migrating the unused upload/parser workflow.
-- Update CI/CD, local development bindings, migration commands, smoke tests, and rollback documentation for the Cloudflare-only runtime.
+- **BREAKING**: build `nuxt-admin/` as a static SPA and deploy it to a separate Cloudflare Pages project.
+- Add a `blog-api` Worker for public `/api/*`, administration `/admin/api/*`, authentication, D1 repositories, and Pages deployment operations.
+- Keep `blog-router` as the public hostname entry point; route Admin static paths to Admin Pages and API/media compatibility paths to `blog-api`.
+- Use D1 for articles, comments, likes, galleries, image metadata, administrator records, and durable sessions.
+- Keep image/file binaries outside this project. Proxy authenticated image upload/list/delete requests to the independent image-host API using a Worker Secret.
+- Preserve image `public_id`, `storage_key`, `source_url`, gallery records, and article cover references during SQLite import.
+- Remove Admin R2 bindings, `cf_image_configs`, Beatmap schema/import behavior, and image-byte proxying from the active runtime.
+- Preserve application username/password login with D1-backed opaque sessions and the existing same-origin cookie contract.
+- Update CI/CD, local bindings, migration commands, SPA fallback behavior, smoke tests, and rollback documentation for the Free plan.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `cloudflare-admin-runtime`: Cloudflare Worker hosting, bindings, service-boundary routing, and production deployment behavior for `nuxt-admin`.
-- `d1-blog-storage`: D1 schema, migrations, repositories, data import, and relational consistency rules for the blog domain.
-- `r2-media-storage`: R2-backed image/media upload, lookup, delivery, and thumbnail compatibility behavior.
-- `public-api-compatibility`: Same-origin public API routes that preserve the existing public site contract after the .NET API is retired.
+- `cloudflare-admin-runtime`: Free-plan API Worker, Admin Pages deployment, and service-boundary routing.
+- `d1-blog-storage`: D1 schema, migrations, repositories, and SQLite import for active blog/admin data.
+- `r2-media-storage`: image metadata and compatibility URL behavior backed by an independent image-host API; no Admin R2 binding.
+- `public-api-compatibility`: same-origin public API routes preserving the public site contract.
 
 ### Modified Capabilities
 
-- `nuxt-admin-ssr-host`: change the host from a Node SSR server to a Cloudflare Worker while preserving `/admin/*` SSR and `/_ssr/*` asset behavior.
-- `admin-bff-auth`: replace .NET token exchange and access/refresh cookies with D1-backed opaque sessions, edge-compatible password hashing, and the same-origin security contract.
-- `admin-workspace`: keep the current administration workflows while replacing imagebed and backend service dependencies with the Cloudflare domain services.
+- `nuxt-admin-ssr-host`: becomes a static SPA Pages host with isolated Admin asset paths.
+- `admin-bff-auth`: keeps application password login but moves all protected API handling to `blog-api`.
+- `admin-workspace`: keeps gallery and imagebed workflows while routing media operations through the external image-host API.
 
 ## Impact
 
-- Affects `nuxt-admin/`, `cloudflare-worker/`, `.github/workflows/release.yml`, `nuxt-public/` API build/runtime configuration, and new D1/R2 migration and binding files.
-- Retires runtime dependencies on `backend-dotnet/BlogApi/`, `blog.sqlite`, `admin-password.enc`, EF Core, ImageSharp, and the process-local refresh-token store.
-- Requires Cloudflare Workers Paid production plan, an existing R2 bucket name, D1 database identifiers, Worker service bindings, and secrets for session hashing, AI access, and Pages deployment.
-- Requires a maintenance-window data cutover. After new writes reach D1, rollback to SQLite is not an automatic lossless operation; the old backend remains read-only during an observation window.
+- Affects `nuxt-admin/`, `cloudflare-worker/`, `.github/workflows/release.yml`, `nuxt-public/` build variables, D1 migrations/import tools, and deployment documentation.
+- The active runtime no longer depends on PM2/Nginx, a Node SSR process, `backend-dotnet/BlogApi/`, an Admin R2 binding, or image-provider credentials in D1/Pages output.
+- Requires a second Admin Pages project, a Free `blog-api` Worker, a D1 database, `BLOG_API` service binding, and image-host API variables/secrets.
+- Requires a maintenance-window data cutover. Once D1 receives production writes, rollback requires an export/restore or reverse-sync decision.

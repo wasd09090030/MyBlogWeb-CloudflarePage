@@ -1,31 +1,23 @@
-# R2 Media Storage
+# External Image-Host Media
 
-## ADDED Requirements
+## MODIFIED Requirements
 
-### Requirement: Reuse existing object keys
-The media implementation SHALL reuse the confirmed existing R2 bucket and existing storage keys referenced by imported image assets. It SHALL not require copying unchanged objects merely to complete the database migration.
+### Requirement: Metadata-only image assets
+The Admin D1 schema SHALL preserve image `public_id`, `storage_key`, `source_url`, content type, version, kind, and active state, but SHALL not store image/file binaries or bind the Admin Worker to the image-host R2 bucket.
 
-#### Scenario: Existing cover remains readable
-- **WHEN** an imported article references an existing `storageKey`
-- **THEN** the Cloudflare image route can retrieve the corresponding object from the reused R2 bucket and return it with the expected content type
+#### Scenario: Imported cover remains addressable
+- **WHEN** a migrated article references an image asset
+- **THEN** the public API returns the stable external image URL and the compatibility image route can redirect to it
 
-### Requirement: Authenticated streaming writes
-R2 upload and delete operations SHALL require a valid admin session and SHALL stream request/response bodies without buffering large media files into D1 or an unbounded Worker object.
+### Requirement: Authenticated external API operations
+Image upload, list, and delete operations SHALL require a valid Admin session and SHALL call the independent image-host API with a Worker-only Bearer token. Upload bodies SHALL be streamed and provider responses SHALL be normalized to the existing Admin contract.
 
 #### Scenario: Unauthorized upload
-- **WHEN** an unauthenticated request posts a file to the admin upload route
-- **THEN** the Worker rejects it before writing any R2 object
+- **WHEN** an unauthenticated request posts a file to the Admin upload route
+- **THEN** the Worker rejects it before contacting the image-host API
 
-### Requirement: Stable public image resolution
-The Worker SHALL resolve stable public image IDs through D1 metadata and SHALL preserve the public `/images/*` URL contract, cache headers, and safe storage-key validation.
-
-#### Scenario: Invalid storage key
-- **WHEN** an image asset contains a storage key with a scheme or traversal segment
-- **THEN** the Worker rejects the resolution and does not fetch an arbitrary external URL or path
+### Requirement: Stable public resolution
+`/images/<public-id>` SHALL resolve an active D1 metadata row and redirect only to a validated external `source_url`. It SHALL not fetch arbitrary URLs or proxy image bytes.
 
 ### Requirement: Secret isolation
-Third-party imagebed credentials and Cloudflare API credentials SHALL be stored as Worker secrets or bindings and SHALL never be returned in API responses, committed to source, or copied into D1 as plaintext configuration.
-
-#### Scenario: Image configuration response
-- **WHEN** an authenticated administrator reads media configuration
-- **THEN** the response contains only non-secret display/configuration fields and no provider token
+The image-host token SHALL be a Worker Secret and SHALL never be stored in D1, Pages output, API responses, or client state.

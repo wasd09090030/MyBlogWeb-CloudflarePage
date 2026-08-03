@@ -1,31 +1,31 @@
 # Cloudflare Admin Runtime
 
-## ADDED Requirements
+## MODIFIED Requirements
 
-### Requirement: Cloudflare Worker admin host
-The production administration runtime SHALL be built from `nuxt-admin/` with Nitro's `cloudflare_module` preset and SHALL deploy as a Cloudflare Worker named by the deployment configuration. It SHALL NOT require PM2, Nginx, a Node server process, or a running .NET API for active administration workflows.
+### Requirement: Free API Worker and static Admin Pages
+The production active runtime SHALL deploy the Nuxt Admin SPA to a Cloudflare Pages project and SHALL deploy the server/API output as a Free Worker named by configuration. It SHALL not require SSR, PM2, Nginx, a Node process, Workers Paid, or a .NET API process.
 
-#### Scenario: Worker build output
-- **WHEN** the production admin build and deployment command are run
-- **THEN** the generated artifact is deployable with Wrangler and does not require `node .output/server/index.mjs` or PM2 at runtime
+#### Scenario: Static Admin build
+- **WHEN** the Admin build is generated
+- **THEN** `.output/public` contains a static SPA shell/assets and no protected business data
 
-### Requirement: Cloudflare binding access
-Server handlers SHALL access D1, R2, secrets, and optional KV through request-scoped Cloudflare bindings. Binding access SHALL be type-declared and SHALL work in local Wrangler development and the deployed Worker.
+#### Scenario: API Worker build
+- **WHEN** the API build is deployed with Wrangler
+- **THEN** the Worker can serve D1/API routes without an R2 binding or SSR page rendering
 
-#### Scenario: D1 binding is available to a server route
-- **WHEN** a server route runs under `wrangler dev` or the deployed Worker
-- **THEN** it can obtain the configured D1 binding from the Cloudflare request runtime without reading a global process-only value
+### Requirement: Request-scoped D1 and secret access
+Server handlers SHALL access D1 and secrets through request-scoped Cloudflare bindings. The active Admin runtime SHALL not require an R2 binding.
+
+#### Scenario: D1 binding is available
+- **WHEN** an API route runs under `wrangler dev` or the deployed Worker
+- **THEN** it can obtain the configured D1 binding without global process state
 
 ### Requirement: Service-bound front-door routing
-The existing front-door Worker SHALL route `/admin`, `/api`, `/images`, and `/_ssr` requests to the admin Worker through a Service Binding, while non-server paths continue to the public Cloudflare Pages origin.
+`blog-router` SHALL route `/admin/api/*`, `/api/*`, and `/images/*` to the `BLOG_API` Service Binding, `/admin/*` static requests to the Admin Pages origin, and all other paths to Public Pages.
 
-#### Scenario: Protected admin request reaches the bound Worker
-- **WHEN** the public domain receives `GET /admin/articles`
-- **THEN** `blog-router` forwards the original request to the bound admin Worker and does not send it to the retired server origin
+#### Scenario: Deep Admin bookmark
+- **WHEN** the public domain receives `GET /admin/gallery`
+- **THEN** the router fetches the Admin SPA entry and the browser can hydrate the gallery route
 
-### Requirement: Cloudflare deployment order and secrets
-Deployment automation SHALL apply D1 migrations before deploying the admin Worker, deploy the admin Worker before the router that references its Service Binding, and SHALL provision secrets outside source control.
-
-#### Scenario: First production deployment
-- **WHEN** the Cloudflare deployment workflow runs from a clean account
-- **THEN** the D1 schema exists before application traffic is enabled and the router deployment succeeds because its target Service Binding Worker already exists
+### Requirement: Ordered deployment and Free limits
+Deployment automation SHALL apply D1 migrations before `blog-api`, deploy Admin Pages and the router only after the API exists, and SHALL not configure a Paid CPU limit or commit secrets.

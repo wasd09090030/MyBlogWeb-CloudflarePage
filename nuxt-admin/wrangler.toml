@@ -3,6 +3,12 @@ main = ".output/server/index.mjs"
 compatibility_date = "2026-07-28"
 compatibility_flags = ["nodejs_compat"]
 
+[cache]
+enabled = true
+
+[images]
+binding = "IMAGES"
+
 [vars]
 ADMIN_ORIGIN = "https://wasd09090030.top"
 PUBLIC_SITE_ORIGIN = "https://wasd09090030.top"
@@ -14,7 +20,7 @@ PAGES_PROJECT_NAME = "myblogweb-cloudflarepage"
 [[d1_databases]]
 binding = "BLOG_DB"
 database_name = "blog-db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "126c95b1-c3b3-468c-9431-df69501510d3"
 migrations_dir = "migrations"
 
 # Optional: configure after the first production cutover for login abuse controls.

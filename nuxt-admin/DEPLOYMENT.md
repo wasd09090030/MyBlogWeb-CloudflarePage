@@ -24,11 +24,41 @@ npx wrangler secret put DEEPSEEK_API_KEY --config wrangler.toml
 
 `IMAGE_API_BASE_URL`, `PUBLIC_ASSET_ORIGIN`, and the imagebed domain are non-secret metadata. The image-host token must never be placed in D1, `wrangler.toml`, Pages output, or browser state. `DEEPSEEK_API_KEY` and the Pages fallback credentials are optional features.
 
+## Permanent thumbnail transformations
+
+`blog-api` binds Cloudflare Images as `env.IMAGES` for the stable
+`/images/thumb/{publicId}.webp` route. The Worker accepts only the D1-resolved
+image provider source, applies one fixed `640px` `scale-down` transformation,
+and returns WebP at quality `72` with a one-year immutable cache header. Client
+requests cannot choose dimensions, quality, format, or source URLs.
+
+The Images Free plan includes 5,000 unique transformations per calendar month
+for external/R2-backed images. The current registry has 361 active assets, so
+one fixed variant per asset remains within that allowance. Repeat requests for
+the same source and parameters in the same month are counted once. New
+transformations after the allowance return a non-leaking `503` and are not
+charged; cached variants continue to serve.
+
+The binding and Worker Cache are declared in `wrangler.toml`:
+
+```toml
+[cache]
+enabled = true
+
+[images]
+binding = "IMAGES"
+```
+
+Run `npm run check:image-transform` before deploying and verify one known
+thumbnail returns `image/webp`, a resized natural dimension, and
+`Cache-Control: public, max-age=31536000, immutable` after deployment.
+
 Before deploy, run the local gates:
 
 ```powershell
 npm run check:free-config
 npm run check:image-api
+npm run check:image-transform
 ```
 
 ## Data cutover
@@ -58,7 +88,7 @@ The release workflow enforces this order:
 
 1. Apply D1 migrations and run Free/image API checks.
 2. Build and deploy the `blog-api` Worker.
-3. Generate and deploy the Admin SPA from `.output/public/admin`.
+3. Generate and deploy the Admin SPA from `.output/public`.
 4. Deploy `blog-router` with the `BLOG_API` service binding.
 5. Generate and deploy the public Pages artifact.
 
@@ -77,11 +107,11 @@ npm run generate
 npx wrangler pages deploy .output/public --project-name myblogweb-cloudflarepage
 ```
 
-The Admin build uses `/admin/` as its base URL. The router strips `/admin` before fetching the Admin Pages origin, so browser requests such as `/admin/_nuxt/*` resolve to the Pages project's `/_nuxt/*` files. Deep Admin routes fall back to the SPA entry document; API and image paths never use that fallback.
+The Admin SPA keeps `/admin/*` as its page routes and emits assets under `/admin/_nuxt/`. The router forwards that path unchanged to the Admin Pages origin, whose artifact is deployed from `.output/public`. Deep Admin routes fall back to the SPA entry document; API and image paths never use that fallback.
 
 ## Password bootstrap and Free CPU canary
 
-After the first import, use the reset endpoint with `ADMIN_RESET_TOKEN` to create the administrator, then rotate or remove that secret. Keep the configured PBKDF2 iteration count unchanged. Before cutover, run a real login/reset request against the Free Worker and record CPU time from Wrangler/Cloudflare logs. If the 210,000-iteration setting exceeds the Free invocation budget, stop the cutover and make an explicit security decision; do not silently weaken the hash.
+After the first import, use the reset endpoint with `ADMIN_RESET_TOKEN` to create the administrator, then rotate or remove that secret. The Free-plan deployment uses 100,000 PBKDF2-SHA-256 iterations: the original 210,000-iteration setting failed the production canary under the Free 10 ms CPU limit, while 100,000 completed successfully. This is an explicit security trade-off for the Free plan, not an automatic fallback; keep the verifier minimum at 100,000 and raise the work factor only after moving the Worker to a plan with sufficient CPU.
 
 ## Smoke test and rollback
 

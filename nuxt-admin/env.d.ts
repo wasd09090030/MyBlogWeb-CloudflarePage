@@ -22,6 +22,7 @@ declare global {
     SESSION_TTL_SECONDS?: string | number
     ADMIN_RESET_TOKEN?: string
     ADMIN_RATE_LIMIT?: KVNamespace
+    IMAGES?: ImagesBinding
   }
 
   interface CloudflareEnv extends BlogCloudflareEnv {}

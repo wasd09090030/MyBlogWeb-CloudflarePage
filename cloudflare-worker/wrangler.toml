@@ -4,7 +4,7 @@ compatibility_date = "2026-07-28"
 
 [vars]
 PUBLIC_PAGES_ORIGIN = "https://myblogweb-cloudflarepage.pages.dev"
-ADMIN_PAGES_ORIGIN = "https://myblog-admin.pages.dev"
+ADMIN_PAGES_ORIGIN = "https://myblog-admin-8n8.pages.dev"
 
 [[services]]
 binding = "BLOG_API"

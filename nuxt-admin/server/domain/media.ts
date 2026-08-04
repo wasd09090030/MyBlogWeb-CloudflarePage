@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3'
 import { readMultipartFormData } from 'h3'
 import { batch, execute, getDb, nowIso, parseNonNegativeInt, parsePositiveInt } from '~~/server/utils/d1'
-import { getCloudflareEnv, getCloudflareRuntime } from '~~/server/utils/cloudflare'
+import { getCloudflareEnv } from '~~/server/utils/cloudflare'
 import { extractStorageKey, findImageAsset, isValidPublicId, isValidStorageKey, assetUpsertStatement } from './assets'
 import { sha256Id } from '~~/server/utils/asset-id'
 import { getImagebedConfig } from './config'
@@ -46,12 +46,8 @@ async function readUploadInput(event: H3Event): Promise<UploadInput> {
   if (contentLength > MAX_UPLOAD_BYTES) throw createError({ statusCode: 413, statusMessage: 'Image upload is limited to 50 MB' })
   const fileName = getHeader(event, 'x-file-name') || 'upload.bin'
   if (contentType.toLowerCase().startsWith('multipart/form-data')) {
-    let runtimeRequest: Request | undefined
-    try { runtimeRequest = getCloudflareRuntime(event).request }
-    catch { runtimeRequest = undefined }
-    if (runtimeRequest?.body) {
-      return { body: runtimeRequest.body as BodyInit, contentType, fileName, fileType: getHeader(event, 'x-file-type') || null }
-    }
+    // Nitro has already consumed the incoming Cloudflare Request body before
+    // this handler runs, so forwarding runtimeRequest.body would fail.
     const parts = await readMultipartFormData(event)
     const file = parts?.find(part => part.name === 'file' && part.data)
     if (!file?.data?.length) throw createError({ statusCode: 400, statusMessage: 'A file field is required' })

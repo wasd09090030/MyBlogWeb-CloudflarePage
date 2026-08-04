@@ -18,8 +18,8 @@ export default defineNuxtConfig({
     }
   },
   app: {
-    baseURL: process.env.NUXT_APP_BASE_URL || '/admin/',
-    buildAssetsDir: '_nuxt/',
+    baseURL: process.env.NUXT_APP_BASE_URL || '/',
+    buildAssetsDir: process.env.NUXT_BUILD_ASSETS_DIR || '_nuxt/',
     head: {
       title: 'Admin',
       titleTemplate: '%s | WyrmKk',

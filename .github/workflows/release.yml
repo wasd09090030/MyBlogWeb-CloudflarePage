@@ -43,6 +43,7 @@ jobs:
       - run: npm ci
       - run: npm run check:free-config
       - run: npm run check:image-api
+      - run: npm run check:image-transform
       - name: Apply D1 migrations
         run: npx wrangler d1 migrations apply "$BLOG_DB_NAME" --remote --config wrangler.toml
       - name: Build blog-api Worker

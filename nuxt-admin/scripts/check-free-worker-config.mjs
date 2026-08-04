@@ -12,7 +12,7 @@ if (/\[limits\]|cpu_ms|\[\[r2_buckets\]\]|BLOG_MEDIA/.test(wrangler)) failures.p
 if (!/binding\s*=\s*["']BLOG_DB["']/m.test(wrangler)) failures.push('wrangler.toml must declare the BLOG_DB D1 binding')
 if (/IMAGE_API_TOKEN\s*=/.test(wrangler)) failures.push('IMAGE_API_TOKEN must be a Worker Secret, not a committed variable')
 if (!packageJson.scripts?.generate || !packageJson.scripts?.['build:api']) failures.push('package.json must expose generate and build:api scripts')
-if (!/\.output\/public\/admin/.test(packageJson.scripts?.['deploy:pages'] || '')) failures.push('Admin Pages deployment must use .output/public/admin')
+if (!/\.output\/public(?:\/admin)?(?:\s|$)/.test(packageJson.scripts?.['deploy:pages'] || '')) failures.push('Admin Pages deployment must use .output/public or .output/public/admin')
 
 if (failures.length) {
   console.error(JSON.stringify({ ok: false, failures }, null, 2))

@@ -14,13 +14,17 @@
     "typecheck": "nuxt typecheck",
     "check:free-config": "node scripts/check-free-worker-config.mjs",
     "check:image-api": "node scripts/check-image-api-contract.mjs",
+    "check:image-transform": "node scripts/check-image-transform-contract.mjs",
     "db:export": "node scripts/sqlite-d1-export.mjs",
     "db:import": "node scripts/sqlite-d1-import.mjs --config wrangler.toml",
     "db:verify": "node scripts/sqlite-d1-verify.mjs",
+    "db:backfill:assets": "node scripts/backfill-image-assets.mjs --host cfimg.wasd09090030.top",
+    "db:backfill:assets:apply": "node scripts/backfill-image-assets.mjs --host cfimg.wasd09090030.top --apply",
+    "db:verify:assets": "node scripts/verify-image-asset-backfill.mjs --host cfimg.wasd09090030.top",
     "db:migrate:local": "wrangler d1 migrations apply blog-db --local --config wrangler.toml",
     "db:migrate:remote": "wrangler d1 migrations apply blog-db --remote --config wrangler.toml",
     "deploy:api": "npm run build:api && wrangler deploy --config wrangler.toml",
-    "deploy:pages": "npm run generate && wrangler pages deploy .output/public/admin --project-name=myblog-admin",
+    "deploy:pages": "npm run generate && wrangler pages deploy .output/public --project-name=myblog-admin",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {

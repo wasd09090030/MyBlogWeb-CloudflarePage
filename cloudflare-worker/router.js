@@ -17,9 +17,12 @@ function forwardRequest(request) {
 }
 
 function pagesRequest(request, targetUrl) {
+  const headers = new Headers(request.headers)
+  // Pages must receive the target Pages hostname, not the public router hostname.
+  headers.delete('host')
   return new Request(targetUrl, {
     method: request.method,
-    headers: request.headers,
+    headers,
     body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
     redirect: 'manual'
   })
@@ -27,11 +30,10 @@ function pagesRequest(request, targetUrl) {
 
 async function fetchAdminPages(request, env, url) {
   const origin = originFrom(env, 'ADMIN_PAGES_ORIGIN', 'https://myblog-admin.pages.dev')
-  const relativePath = url.pathname.slice('/admin'.length) || '/'
-  const target = new URL(relativePath + url.search, origin)
+  const target = new URL(url.pathname + url.search, origin)
   let response = await fetch(pagesRequest(request, target))
 
-  const isAsset = relativePath.startsWith('/_nuxt/') || /\.[A-Za-z0-9]{1,12}$/.test(relativePath)
+  const isAsset = url.pathname.startsWith('/admin/_nuxt/') || /\.[A-Za-z0-9]{1,12}$/.test(url.pathname)
   if (response.status === 404 && request.method === 'GET' && !isAsset) {
     response = await fetch(pagesRequest(request, new URL('/', origin)))
   }

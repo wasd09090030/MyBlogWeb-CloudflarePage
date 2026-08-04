@@ -1,5 +1,8 @@
 const encoder = new TextEncoder()
-const PBKDF2_ITERATIONS = 210_000
+// Cloudflare Workers Free allows 10 ms of CPU per request. The 210k setting
+// exceeded that budget during the production canary, while 100k remains
+// compatible with the existing verifier minimum and completes on Free.
+const PBKDF2_ITERATIONS = 100_000
 
 function toBase64Url(bytes: Uint8Array): string {
   let binary = ''

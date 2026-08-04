@@ -1,10 +1,16 @@
+import type { AssetKind } from '~~/server/domain/assets'
 import { resolveImageAsset } from '~~/server/domain/media'
 import { getCloudflareEnv } from '~~/server/utils/cloudflare'
 
-const THUMBNAIL_WIDTH = 640
-const THUMBNAIL_QUALITY = 72
 const MAX_IMAGE_INPUT_BYTES = 20 * 1024 * 1024
 const THUMBNAIL_CACHE_CONTROL = 'public, max-age=31536000, immutable'
+
+// 固定变换按素材类型区分：文章封面 640px / q75，画廊及其他 960px / q85。
+const THUMBNAIL_VARIANTS: Record<AssetKind, { width: number; quality: number }> = {
+  article_cover: { width: 640, quality: 75 },
+  gallery: { width: 960, quality: 85 },
+  other: { width: 960, quality: 85 }
+}
 
 function imageErrorCode(error: unknown): number | undefined {
   if (!error || typeof error !== 'object') return undefined
@@ -12,7 +18,7 @@ function imageErrorCode(error: unknown): number | undefined {
   return typeof code === 'number' ? code : undefined
 }
 
-async function transformThumbnail(event: Parameters<typeof resolveImageAsset>[0], sourceUrl: string): Promise<Response> {
+async function transformThumbnail(event: Parameters<typeof resolveImageAsset>[0], sourceUrl: string, variant: { width: number; quality: number }): Promise<Response> {
   const images = getCloudflareEnv(event).IMAGES
   if (!images) throw createError({ statusCode: 503, statusMessage: 'Image transformation is not configured' })
 
@@ -52,8 +58,8 @@ async function transformThumbnail(event: Parameters<typeof resolveImageAsset>[0]
   try {
     const transformed = await images
       .input(sourceResponse.body)
-      .transform({ width: THUMBNAIL_WIDTH, fit: 'scale-down' })
-      .output({ format: 'image/webp', quality: THUMBNAIL_QUALITY })
+      .transform({ width: variant.width, fit: 'scale-down' })
+      .output({ format: 'image/webp', quality: variant.quality })
     const response = transformed.response()
     const headers = new Headers(response.headers)
     headers.set('cache-control', THUMBNAIL_CACHE_CONTROL)
@@ -82,7 +88,10 @@ export default defineEventHandler(async (event) => {
   const publicId = decodeURIComponent(isThumbnail ? String(parts[1] || '').replace(/\.webp$/i, '') : String(parts[0] || ''))
   const resolved = await resolveImageAsset(event, publicId)
   if (!resolved) throw createError({ statusCode: 404, statusMessage: 'Image not found' })
-  if (isThumbnail) return await transformThumbnail(event, resolved.sourceUrl)
+  if (isThumbnail) {
+    const variant = THUMBNAIL_VARIANTS[resolved.asset.kind as AssetKind] ?? THUMBNAIL_VARIANTS.other
+    return await transformThumbnail(event, resolved.sourceUrl, variant)
+  }
   setResponseHeader(event, 'cache-control', 'public, max-age=300')
   return Response.redirect(resolved.sourceUrl, 302)
 })

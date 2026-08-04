@@ -28,9 +28,11 @@ npx wrangler secret put DEEPSEEK_API_KEY --config wrangler.toml
 
 `blog-api` binds Cloudflare Images as `env.IMAGES` for the stable
 `/images/thumb/{publicId}.webp` route. The Worker accepts only the D1-resolved
-image provider source, applies one fixed `640px` `scale-down` transformation,
-and returns WebP at quality `72` with a one-year immutable cache header. Client
-requests cannot choose dimensions, quality, format, or source URLs.
+image provider source and applies a fixed `scale-down` transformation chosen by
+asset kind: article covers use `640px` at WebP quality `75`, while gallery and
+other assets use `960px` at quality `85`. Responses carry a one-year immutable
+cache header. Client requests cannot choose dimensions, quality, format, or
+source URLs.
 
 The Images Free plan includes 5,000 unique transformations per calendar month
 for external/R2-backed images. The current registry has 361 active assets, so

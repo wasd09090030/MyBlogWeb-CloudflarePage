@@ -5,6 +5,8 @@ import { sha256Id } from '~~/server/utils/asset-id'
 
 export type AssetKind = 'article_cover' | 'gallery' | 'other'
 
+export type ThumbnailVariant = 'card' | 'grid' | 'lightbox'
+
 export type ImageAssetRow = {
   id: number
   public_id: string
@@ -116,6 +118,10 @@ export function publicImageUrl(event: H3Event, publicId: string): string {
 
 export function thumbnailUrl(event: H3Event, publicId: string | null | undefined): string | null {
   return isValidPublicId(publicId) ? `${getRequestOrigin(event).replace(/\/$/, '')}/images/thumb/${encodeURIComponent(publicId)}.webp` : null
+}
+
+export function thumbnailVariantUrl(publicId: string | null | undefined, variant: ThumbnailVariant): string | null {
+  return isValidPublicId(publicId) ? `/images/thumb/${variant}/${encodeURIComponent(publicId)}.webp` : null
 }
 
 export async function findImageAsset(event: H3Event, publicId: string): Promise<ImageAssetRow | null> {

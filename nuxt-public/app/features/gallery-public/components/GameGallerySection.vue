@@ -185,7 +185,7 @@ const imageErrorMap = ref({})
 const getImageKey = (image, index) => getGalleryImageKey(image, index)
 
 const hasImage = (image, index) => {
-  const thumbnailUrl = image?.thumbnailUrl
+  const thumbnailUrl = image?.lightboxUrl || image?.thumbnailUrl
   if (!thumbnailUrl) return false
   return !imageErrorMap.value[getImageKey(image, index)]
 }
@@ -224,7 +224,7 @@ const GameTileImage = {
       return [
         h(ImageLoadingPlaceholder, { show: !isImageLoaded(image, index) }),
         h('img', {
-          src: image.thumbnailUrl || '',
+          src: image.lightboxUrl || image.thumbnailUrl || '',
           alt: image.title || '游戏截屏',
           class: 'game-tile__image',
           draggable: false,

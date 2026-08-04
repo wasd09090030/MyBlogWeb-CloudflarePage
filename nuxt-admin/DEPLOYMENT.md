@@ -27,12 +27,14 @@ npx wrangler secret put DEEPSEEK_API_KEY --config wrangler.toml
 ## Permanent thumbnail transformations
 
 `blog-api` binds Cloudflare Images as `env.IMAGES` for the stable
-`/images/thumb/{publicId}.webp` route. The Worker accepts only the D1-resolved
-image provider source and applies a fixed `scale-down` transformation chosen by
-asset kind: article covers use `640px` at WebP quality `75`, while gallery and
-other assets use `960px` at quality `85`. Responses carry a one-year immutable
-cache header. Client requests cannot choose dimensions, quality, format, or
-source URLs.
+`/images/thumb/{publicId}.webp` route. Transformations are fixed per named
+display variant: article cards use `card` (`640px` / q75), gallery grids use
+`grid` (`960px` / q85, also the default for the legacy bare URL), and gallery
+lightboxes/heroes use `lightbox` (`1920px` / q85). All variants use
+`scale-down` and output WebP with a one-year immutable cache header. The
+legacy `/images/thumb/{publicId}.webp` URL defaults to `grid`. Article detail
+covers use the native image via the `/images/{publicId}` redirect. Client
+requests cannot choose dimensions, quality, format, or source URLs.
 
 The Images Free plan includes 5,000 unique transformations per calendar month
 for external/R2-backed images. The current registry has 361 active assets, so

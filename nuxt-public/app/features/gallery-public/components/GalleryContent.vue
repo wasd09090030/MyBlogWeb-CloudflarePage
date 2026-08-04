@@ -122,7 +122,7 @@
                 @touchstart="$emit('start-drag', $event)"
               >
                 <img
-                  :src="selectedImage?.thumbnailUrl || ''"
+                  :src="(selectedImage?.lightboxUrl || selectedImage?.thumbnailUrl) || ''"
                   alt="画廊图片"
                   class="fullscreen-image"
                   :class="{ 'is-dragging': isDragging }"

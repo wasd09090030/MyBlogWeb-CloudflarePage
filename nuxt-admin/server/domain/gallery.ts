@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import { assetUpsertStatement, resolveAssetReference } from './assets'
+import { assetUpsertStatement, resolveAssetReference, thumbnailVariantUrl } from './assets'
 import { batch, execute, getDb, nowIso, parseNonNegativeInt, parsePositiveInt, queryAll, queryFirst, requireId } from '~~/server/utils/d1'
 
 type GalleryRow = {
@@ -44,10 +44,14 @@ function mapGallery(event: H3Event, row: GalleryRow, publicOnly = false) {
   const thumbnailUrl = row.image_asset_public_id
     ? `/images/thumb/${encodeURIComponent(row.image_asset_public_id)}.webp`
     : null
+  const lightboxUrl = row.image_asset_public_id
+    ? thumbnailVariantUrl(row.image_asset_public_id, 'lightbox')
+    : null
   if (publicOnly) {
     return {
       id: row.id,
       thumbnailUrl,
+      lightboxUrl,
       imageWidth: row.image_width,
       imageHeight: row.image_height,
       tag: row.tag,

@@ -73,7 +73,7 @@ jobs:
       - run: npm ci
       - run: npm run generate
       - name: Deploy Admin Pages artifact
-        run: npx wrangler pages deploy .output/public/admin --project-name="$ADMIN_PAGES_PROJECT_NAME"
+        run: npx wrangler pages deploy .output/public --project-name="$ADMIN_PAGES_PROJECT_NAME"
 
   deploy-router:
     needs: deploy-admin-pages

@@ -8,9 +8,10 @@ const wrangler = readFileSync(resolve(root, 'wrangler.toml'), 'utf8')
 const failures = []
 
 if (!/images\s*\.input\(sourceResponse\.body\)/.test(route)) failures.push('thumbnail route must use the Images binding input stream')
-if (!/article_cover:\s*\{\s*width:\s*640,\s*quality:\s*75\s*\}/.test(route)) failures.push('article cover thumbnail must be 640px at quality 75')
-if (!/gallery:\s*\{\s*width:\s*960,\s*quality:\s*85\s*\}/.test(route)) failures.push('gallery thumbnail must be 960px at quality 85')
-if (!/other:\s*\{\s*width:\s*960,\s*quality:\s*85\s*\}/.test(route)) failures.push('other thumbnail must match the 960px quality 85 default')
+if (!/card:\s*\{\s*width:\s*640,\s*quality:\s*75\s*\}/.test(route)) failures.push('card variant must be 640px at quality 75')
+if (!/grid:\s*\{\s*width:\s*960,\s*quality:\s*85\s*\}/.test(route)) failures.push('grid variant must be 960px at quality 85')
+if (!/lightbox:\s*\{\s*width:\s*1920,\s*quality:\s*85\s*\}/.test(route)) failures.push('lightbox variant must be 1920px at quality 85')
+if (!/DEFAULT_VARIANT:\s*ThumbnailVariant\s*=\s*['"]grid['"]/.test(route)) failures.push('old-format default variant must be grid')
 if (!/fit:\s*['"]scale-down['"]/.test(route)) failures.push('thumbnail route must keep scale-down fit')
 if (!/format:\s*['"]image\/webp['"]/.test(route)) failures.push('thumbnail route must output WebP')
 if (!/\[images\][\s\S]*binding\s*=\s*["']IMAGES["']/.test(wrangler)) failures.push('wrangler.toml must bind Images as IMAGES')
@@ -20,5 +21,5 @@ if (failures.length) {
   console.error(JSON.stringify({ ok: false, failures }, null, 2))
   process.exitCode = 1
 } else {
-  console.log(JSON.stringify({ ok: true, transform: 'cover 640px q75 | gallery/other 960px q85', cache: 'worker' }, null, 2))
+  console.log(JSON.stringify({ ok: true, transform: 'card 640/q75 | grid 960/q85 | lightbox 1920/q85', default: 'grid', cache: 'worker' }, null, 2))
 }

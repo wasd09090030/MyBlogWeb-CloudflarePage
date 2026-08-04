@@ -40,9 +40,10 @@ const coverContainerStyle = computed(() => ({
   aspectRatio: containerAspectRatio.value
 }))
 const coverImageUrl = computed(() => {
+  const native = props.article?.coverImageUrl
   const thumbnailUrl = props.article?.thumbnailUrl
   const coverImage = props.article?.coverImage
-  return thumbnailUrl || (coverImage && coverImage !== 'null' ? coverImage : '')
+  return native || thumbnailUrl || (coverImage && coverImage !== 'null' ? coverImage : '')
 })
 const hasCoverImage = computed(() => {
   return Boolean(coverImageUrl.value && !imageErrored.value)

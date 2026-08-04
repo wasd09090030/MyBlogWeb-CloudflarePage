@@ -92,6 +92,7 @@ export type ArticleSummary = {
   coverImageAssetId?: number | null
   coverImageAssetPublicId?: string | null
   thumbnailUrl?: string | null
+  coverImageUrl?: string | null
   category: ArticleCategory
   createdAt: string
   updatedAt: string

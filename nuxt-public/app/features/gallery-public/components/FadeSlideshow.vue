@@ -12,7 +12,7 @@
         >
           <template v-if="hasImage(gallery, index)">
             <img
-              :src="gallery.thumbnailUrl || ''"
+              :src="(gallery.lightboxUrl || gallery.thumbnailUrl) || ''"
               alt="画廊图片"
               class="fade-image"
               @error="handleImageError(gallery, index)"
@@ -40,7 +40,7 @@ const imageErrorMap = ref({})
 
 const getImageKey = (image, index) => String(image?.id ?? image?.thumbnailUrl ?? index)
 const hasImage = (image, index) => {
-  const thumbnailUrl = image?.thumbnailUrl
+  const thumbnailUrl = image?.lightboxUrl || image?.thumbnailUrl
   if (!thumbnailUrl) return false
   return !imageErrorMap.value[getImageKey(image, index)]
 }

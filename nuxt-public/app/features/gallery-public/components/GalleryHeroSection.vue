@@ -122,7 +122,7 @@ const railPreviewImages = computed(() => props.previewImages.slice(0, 2))
 const featuredPreviewImage = computed(() => props.previewImages[2] ?? props.previewImages[0] ?? null)
 
 const getImageKey = (image, index) => getGalleryImageKey(image, index)
-const getPreviewImageUrl = (image) => image?.thumbnailUrl || ''
+const getPreviewImageUrl = (image) => image?.lightboxUrl || image?.thumbnailUrl || ''
 
 const hasImage = (image, index) => {
   const thumbnailUrl = getPreviewImageUrl(image)

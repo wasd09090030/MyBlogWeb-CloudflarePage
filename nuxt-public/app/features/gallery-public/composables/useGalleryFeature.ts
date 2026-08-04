@@ -4,7 +4,7 @@ import { createTimedCacheState, withInFlightDedup } from '~/shared/cache'
 import { toAppResult } from '~/shared/types/result'
 import type { AppResult } from '~/shared/types/result'
 
-type GalleryItem = { id: number; thumbnailUrl?: string | null; imageWidth?: number | null; imageHeight?: number | null; tag?: string; createdAt?: string }
+type GalleryItem = { id: number; thumbnailUrl?: string | null; lightboxUrl?: string | null; imageWidth?: number | null; imageHeight?: number | null; tag?: string; createdAt?: string }
 
 export const useGalleryFeature = () => {
   const client = createApiClient()

@@ -142,8 +142,8 @@ export const useArticleDetailPage = async () => {
   }
 
   const getArticleImage = (value: unknown): string | undefined => {
-    const detail = value as { thumbnailUrl?: string; coverImage?: string } | null
-    const image = detail?.thumbnailUrl || (detail?.coverImage && detail.coverImage !== 'null'
+    const detail = value as { coverImageUrl?: string; thumbnailUrl?: string; coverImage?: string } | null
+    const image = detail?.coverImageUrl || detail?.thumbnailUrl || (detail?.coverImage && detail.coverImage !== 'null'
       ? detail.coverImage
       : '')
     return image || undefined
@@ -284,6 +284,7 @@ export const useArticleDetailPage = async () => {
       content?: string
       contentMarkdown?: string
       coverImage?: string
+      coverImageUrl?: string
       thumbnailUrl?: string
       createdAt?: string
       updatedAt?: string
@@ -292,7 +293,7 @@ export const useArticleDetailPage = async () => {
 
     const title = detail.title || '文章详情'
     const description = detail.aiSummary || getDescription(detail.content || detail.contentMarkdown)
-    const imageUrl = resolveUrl(detail.thumbnailUrl || (detail.coverImage && detail.coverImage !== 'null'
+    const imageUrl = resolveUrl(detail.coverImageUrl || detail.thumbnailUrl || (detail.coverImage && detail.coverImage !== 'null'
       ? detail.coverImage
       : '/og-default.svg'))
     const articleUrl = canonicalUrl.value || resolveUrl(canonicalPath.value)

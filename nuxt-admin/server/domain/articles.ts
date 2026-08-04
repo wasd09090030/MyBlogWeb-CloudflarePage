@@ -1,6 +1,6 @@
 import type { H3Event } from 'h3'
 import { batch, execute, getDb, nowIso, parseJsonArray, parsePagination, parsePositiveInt, queryAll, queryFirst, requireId } from '~~/server/utils/d1'
-import { assetUpsertStatement, resolveAssetReference } from './assets'
+import { assetUpsertStatement, resolveAssetReference, thumbnailVariantUrl } from './assets'
 import { fallbackSlug } from '~~/server/utils/slug'
 
 const articleSelect = `
@@ -43,7 +43,10 @@ const categoryValues = new Set(['study', 'game', 'work', 'resource', 'other'])
 function mapArticle(event: H3Event, row: ArticleRow, mode: 'admin' | 'summary' | 'detail') {
   const tags = parseJsonArray(row.tags)
   const thumbnail = row.cover_image_asset_public_id
-    ? `/images/thumb/${encodeURIComponent(row.cover_image_asset_public_id)}.webp`
+    ? thumbnailVariantUrl(row.cover_image_asset_public_id, 'card')
+    : null
+  const coverImageUrl = row.cover_image_asset_public_id
+    ? `/images/${encodeURIComponent(row.cover_image_asset_public_id)}`
     : null
   const base = {
     id: row.id,
@@ -53,6 +56,7 @@ function mapArticle(event: H3Event, row: ArticleRow, mode: 'admin' | 'summary' |
     coverImageAssetId: row.cover_image_asset_id,
     coverImageAssetPublicId: row.cover_image_asset_public_id,
     thumbnailUrl: thumbnail,
+    coverImageUrl,
     category: row.category,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

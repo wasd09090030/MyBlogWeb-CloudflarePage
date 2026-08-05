@@ -20,26 +20,12 @@
           <NuxtLink to="/gallery" class="nav-link">
             <Icon name="heroicons:photo" size="sm" class="me-1" />画廊
           </NuxtLink>
-          <div
-            class="nav-more-wrapper"
-            @mouseenter="showMoreMenu = true"
-            @mouseleave="showMoreMenu = false"
-          >
-            <button type="button" class="nav-link nav-more-trigger" aria-label="其他导航">
-              <Icon name="heroicons:squares-2x2" size="sm" class="me-1" />其他
-              <Icon name="heroicons:chevron-down" size="xs" class="ms-1" />
-            </button>
-            <Transition name="dropdown-fade">
-              <div v-show="showMoreMenu" class="nav-more-panel" role="menu" aria-label="其他">
-                <NuxtLink to="/archive" class="nav-more-item" role="menuitem">
-                  <Icon name="heroicons:book-open" size="xs" class="me-1" />归档
-                </NuxtLink>
-                <NuxtLink to="/about" class="nav-more-item" role="menuitem">
-                  <Icon name="heroicons:user-circle" size="xs" class="me-1" />关于站长
-                </NuxtLink>
-              </div>
-            </Transition>
-          </div>
+          <NuxtLink to="/archive" class="nav-link">
+            <Icon name="heroicons:book-open" size="sm" class="me-1" />归档
+          </NuxtLink>
+          <NuxtLink to="/about" class="nav-link">
+            <Icon name="heroicons:user-circle" size="sm" class="me-1" />关于站长
+          </NuxtLink>
         </nav>
         <button
           type="button"
@@ -163,7 +149,6 @@ const colorMode = useColorMode()
 
 const showMobileMenu = ref(false)
 const isHydrated = ref(false)
-const showMoreMenu = ref(false)
 
 const isNavbarHidden = ref(false)
 const hasScrolled = ref(false)
@@ -313,65 +298,6 @@ onUnmounted(() => {
   outline-offset: 3px;
   border-radius: 0.625rem;
 }
-.nav-more-wrapper {
-  position: relative;
-  display: inline-flex;
-}
-.nav-more-trigger {
-  appearance: none;
-}
-.nav-more-panel {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.45rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  white-space: nowrap;
-  z-index: 1000;
-}
-.dropdown-fade-enter-active,
-.dropdown-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.dropdown-fade-enter-from,
-.dropdown-fade-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-8px);
-}
-.dropdown-fade-enter-to,
-.dropdown-fade-leave-from {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-.nav-more-item {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.42rem 0.78rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-primary);
-  text-decoration: none;
-  color: var(--text-primary);
-  font-size: 0.92rem;
-  transition: all 0.2s ease;
-}
-.nav-more-item:hover {
-  background: var(--nav-link-hover-bg);
-  border-color: var(--accent-primary);
-  color: var(--primary-color);
-}
-.nav-more-item:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
 :global(.dark) .nav-link,
 .dark .nav-link {
   color: var(--text-primary);
@@ -384,16 +310,6 @@ onUnmounted(() => {
 :global(.dark) .nav-link:active,
 .dark .nav-link:active {
   background: var(--nav-link-active-bg);
-}
-:global(.dark) .nav-more-panel,
-.dark .nav-more-panel {
-  border-color: var(--border-color-dark);
-  background: var(--bg-secondary);
-}
-:global(.dark) .nav-more-item,
-.dark .nav-more-item {
-  border-color: var(--border-color-dark);
-  background: var(--bg-primary);
 }
 .navbar-right-buttons {
   display: flex;

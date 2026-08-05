@@ -1,32 +1,29 @@
 <template>
   <div class="icon-marquee-container">
-    <!-- 第一列：从上往下 -->
-    <div class="marquee-column marquee-down">
-      <div class="marquee-content">
-        <div v-for="(icon, index) in iconsColumn1" :key="`down-${index}`" class="icon-item">
-          <img :src="icon.src" :alt="`icon-${icon.id}`" class="icon-image" />
-        </div>
+    <!-- 左列：向上滚动 -->
+    <UMarquee
+      orientation="vertical"
+      :pause-on-hover="true"
+      :overlay="false"
+      class="marquee-column"
+    >
+      <div v-for="(icon, index) in iconsColumn1" :key="`c1-${index}`" class="icon-item">
+        <img :src="icon.src" :alt="`icon-${icon.id}`" class="icon-image" />
       </div>
-      <div class="marquee-content" aria-hidden="true">
-        <div v-for="(icon, index) in iconsColumn1" :key="`down-dup-${index}`" class="icon-item">
-          <img :src="icon.src" :alt="`icon-${icon.id}`" class="icon-image" />
-        </div>
-      </div>
-    </div>
+    </UMarquee>
 
-    <!-- 第二列：从下往上 -->
-    <div class="marquee-column marquee-up">
-      <div class="marquee-content">
-        <div v-for="(icon, index) in iconsColumn2" :key="`up-${index}`" class="icon-item">
-          <img :src="icon.src" :alt="`icon-${icon.id}`" class="icon-image" />
-        </div>
+    <!-- 右列：向下滚动（reverse） -->
+    <UMarquee
+      orientation="vertical"
+      reverse
+      :pause-on-hover="true"
+      :overlay="false"
+      class="marquee-column marquee-col-2"
+    >
+      <div v-for="(icon, index) in iconsColumn2" :key="`c2-${index}`" class="icon-item">
+        <img :src="icon.src" :alt="`icon-${icon.id}`" class="icon-image" />
       </div>
-      <div class="marquee-content" aria-hidden="true">
-        <div v-for="(icon, index) in iconsColumn2" :key="`up-dup-${index}`" class="icon-item">
-          <img :src="icon.src" :alt="`icon-${icon.id}`" class="icon-image" />
-        </div>
-      </div>
-    </div>
+    </UMarquee>
   </div>
 </template>
 
@@ -64,33 +61,16 @@ const iconsColumn2 = [
   flex-shrink: 0;
 }
 
+/* UMarquee 列：等分宽度、充满容器高度、覆盖默认间距与时长 */
 .marquee-column {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
+  min-width: 0;
+  height: 100%;
+  --gap: 20px;
 }
 
-.marquee-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  padding-bottom: 20px;
-}
-
-/* 向下滚动动画 */
-.marquee-down .marquee-content {
-  animation-name: scrollDown;
-  animation-duration: 20s;
-}
-
-/* 向上滚动动画 */
-.marquee-up .marquee-content {
-  animation-name: scrollUp;
-  animation-duration: 18s;
+.marquee-col-2 {
+  --duration: 18s;
 }
 
 .icon-item {
@@ -108,14 +88,6 @@ const iconsColumn2 = [
   flex-shrink: 0;
 }
 
-
-
-.icon-item i {
-  font-size: 1.8rem;
-  color: rgba(255, 255, 255, 0.85);
-  transition: color 0.3s ease;
-}
-
 .icon-image {
   width: 40px;
   height: 40px;
@@ -123,32 +95,9 @@ const iconsColumn2 = [
   transition: transform 0.3s ease;
 }
 
-
-
-/* 向下滚动关键帧 */
-@keyframes scrollDown {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(-100%);
-  }
-}
-
-/* 向上滚动关键帧 */
-@keyframes scrollUp {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
 /* 暗色主题适配 */
 .dark .icon-item {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.1);
 }
-
 </style>

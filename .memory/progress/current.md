@@ -1,45 +1,39 @@
 # 当前进度
-最后更新：2026-07-22
+最后更新：2026-08-05
 
 ## 当前阶段
-Phase A（`nuxt/` Tailwind v3→v4 升级）已完成并验证通过。下一阶段：Phase B（`nuxt/` admin NaiveUI → Nuxt UI v4 迁移，独立 OpenSpec change `nuxt-ssr-nuxt-ui-v4-migration/`，见 spec `docs/superpowers/specs/2026-07-24-nuxt-ssr-nuxt-ui-v4-migration-design.md` §3.2）。
+管理后台已完整迁移到 **Cloudflare Free 架构**（SPA Pages + `blog-api` Worker + D1，无 R2/Workers Paid），生产在 `wasd09090030.top`（blog-router 分发）运行。`nuxt/` 旧 SSR 后台冻结待删，`backend-dotnet` 只读保留作回滚参考。
 
-## 最近完成
-- `nuxt-shrink-to-pure-admin-and-nuxt-ui-v4`（change: `openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/`，**仅范围收缩子集**完成）：
-  - **删除**：8 个公共 features/pages/layouts 文件 + 6 个公共组件/composables/utils/plugins + 4 个 effects + 1 个 sidebar 残留 + 1 个公共 plugin
-  - **配置清理**：`nuxt.config.ts` 删 `sitemap` 块 / `prerender` 块 / 6 个公共路径 `routeRules`（/, /article/**, /gallery, /about, /tutorials）/ `keen-slider` CSS 引用 / `@nuxtjs/seo` 模块 / `robots` 块 / 简化 `schemaOrg`
-  - **依赖清理**：卸 `@nuxtjs/seo` / `keen-slider` / `pixi.js`（78 个传递包移除）
-  - **app.vue 清理**：删 `router.afterEach` gallery 滚动守卫；简化 `useSeoMeta`（去 og/twitter 等公共 SEO 字段）；`shouldKeepAlive` 恒为 false；`getPageKey` 简化为 `route.fullPath`
-  - **MarkdownRenderer 修复**：移除 `useMarkdownWorker` 依赖（公共 worker 已删）+ 删除 `workerPrefetch.client.ts` 插件
-  - **SSR 修正**：`pages/admin/imagebed/index.vue` 补 `definePageMeta({ ssr: false })`（与 admin 其他页面一致）
-  - **验证**：`npm run build` 通过（22.7 MB / 5.13 MB gzip）
-- **关键决策（路径 C）**：原 OpenSpec change 范围包含 NaiveUI→NuxtUI 迁移，但 `@nuxt/ui@3.0.0` / `3.3.7` 均强依赖 `@tailwindcss/vite@4.3.3`（传递），与"tailwind 暂不同步"决策互斥。**UI 迁移延后**，待 Tailwind v3→v4 升级联动做。
+## 最近完成（2026-08）
+- **Cloudflare Free admin 迁移**（2026-08-04）：见 `features/completed/cloudflare-free-admin-migration.md`。SPA 上 `myblog-admin` Pages、Nitro server 部署为 `blog-api` Worker、`blog-router` 绑 apex/www/blog 三域名。
+- **缩略图命名变体**（2026-08-05，commit `58792fd`）：见 `features/completed/thumbnail-named-variants.md`。card/grid/lightbox 三变体白名单，文章详情封面用原生图。
+- **admin Origin 校验 bug 修复**（2026-08-05）：见 `lessons/admin-origin-check-vs-routed-hostnames.md`。`assertSafeMutation` 由硬编码 `PUBLIC_SITE_ORIGIN` 改为基于 `runtime.request.url` 的真实 origin，www/blog/http 访问后台不再 403。已部署并 curl 验证。
+- **blog-api 错误响应统一 JSON**（2026-08-05）：`nitro.errorHandler = '~~/server/error-handler'`，错误不再按 Accept 渲染 SPA HTML 壳。已部署（Version `caef1f0e`）并验证：无 Accept+UA=Mozilla / Accept json / 未授权路径均返回 JSON。
+- **Cloudflare「Always Use HTTPS」开启**（2026-08-05）：zone `wasd09090030.top`，`http://` 301 → `https://`，已验证。
+
+## 正在进行的 / 阻塞
+- 无阻塞。`blog-api` 最新构建已部署（Version `caef1f0e-b97c-4eb8-995b-35c7a028e51c`）。
 
 ## 下一步
-1. 用户确认后提交本次改动（变更 OpenSpec change 元数据 + 删除文件 + 配置调整 + MarkdownRenderer 修复）。
-2. 部署前同步更新云服务器 Nginx / Cloudflare Worker 路由：`server.wasd09090030.top` 上对 `/` `/article/*` `/gallery` `/tutorials` `/about` 的转发移除（这些路径已由 `nuxt-public/` 处理），Worker 的 `SERVER_ROUTES` 同步精简。
-3. 后续 change 候选：
-   - **Tailwind v3→v4 升级（nuxt/）**：可参考 `openspec/changes/archive/2026-07-14-tailwind-v4-upgrade/`（nuxt-public 已完成）
-   - **Nuxt UI v4 迁移（nuxt/）**：在 Tailwind v4 升级**之后**做
-   - **NaiveUI 全面卸（nuxt/）**：UI 迁移完成后
+1. （可选）www→apex 归一化（当前 apex/www/blog 三个入口都可用，Always Use HTTPS 已消除 http 入口）。
+2. 清理 `nuxt/` 旧项目与 `backend-dotnet`（仅观察期后删）。
+3. README.md 已过时（仍写 SSR/Workers Paid/R2/`blog-admin`），建议同步更新。
 
 ## 已验证结论（勿重复踩坑）
-- v4 下 prose 类进入 cascade layer：若用未分层 CSS 定义 `.prose` 亮色变量会压死 `dark:prose-invert` 的变量切换 → 解法是按 `.prose` / `.dark .prose` 两态直接写死最终值（本项目 prose 与 dark:prose-invert 恒成对出现，见 MarkdownRenderer.vue）。
-- v4 默认主题变量按需生成（tree-shaken），自定义 CSS 引用 `var(--color-*)` 必须带字面值 fallback，或直接用字面值。
-- 旧 JS 配置里的 typography `blog` 变体是死配置（MarkdownRenderer size 校验器不含 'blog'）；`.dark code` 等嵌套选择器在 v3 typography 配置中生成 `.prose .dark code`，从未匹配过（伪暗色规则）。
-- link-checker 报 `/tools`、`/mania` 404 是 default.vue 中历史硬编码外链（target=_blank 的站外工具页），与样式无关。
-- `nuxt-public/dist/` 是 `.output/public` 的镜像/链接，不是历史构建，不能当基线对比。
-- node_modules 曾残留手动试装的 tailwind v4 包（extraneous）导致升级工具误判版本；`npm install && npm prune` 恢复一致后才能正常跑 v3→v4 迁移。
-- **Nuxt UI v3/v4 强依赖 Tailwind v4**：`@nuxt/ui@3.0.0` 与 `3.3.7` 都把 `@tailwindcss/vite@4.3.3` 作为**传递依赖**。"UI 迁移"+"Tailwind 不同步"两条决策互斥，须联动规划。
-- **admin 页面 ssr: false 防线**：`pages/admin/imagebed/index.vue` 原本缺 `ssr: false`，其他 8 个 admin 页面都设了——本次同步补齐避免 hydration mismatch。
+- **admin API Origin 校验必须基于请求实际 origin**（`runtime.request.url`，router 经 service binding 保留原始 URL），不能只信硬编码 env；h3 `getRequestURL` 因 router 不转发 `x-forwarded-proto` 会把 HTTPS 判成 http。详见 `lessons/`。
+- Nuxt 4 中 `~`/`@` 指向 `app/` 目录，`nitro.errorHandler` 配置要引用 `server/` 需用 `~~/`（项目根）。
+- blog-api 是纯 API Worker（SPA 由 Pages 单独服务），不应返回 HTML 错误页。
+- `isJsonRequest` 只认 `/api/` 前缀，不认 `/admin/api/` → 裸 curl/浏览器类请求会拿到 HTML 错误页（已用 JSON handler 根治）。
+- 旧结论（nuxt/ Tailwind v4 时代）已归档：`archive/2026-07-nuxt-ssr-admin-progress.md`。
 
 ## 风险与待确认
-- Inspira UI 引入时：其主题模板 `--radius-sm/md/lg/xl`（@theme inline）与 `theme-variables.css` 同名变量冲突，会改变 `rounded-*` 取值——引入前必须先解决命名空间。
-- v4 原生 @layer 使未分层样式（Naive UI/手写 CSS）优先级高于 utilities：本次回归未见异常，但长尾页面仍可能有个别差异。
-- `nuxt/` 现在仍依赖 NaiveUI（UI 迁移延后）——技术债分裂仍在，待 Tailwind v4 升级后联动做 Nuxt UI 迁移。
+- blog-api Worker 自带 subdomain（`blog-api.256870170.workers.dev`）已启用——非规范入口，长期建议禁用或加保护。
+- `http://wasd09090030.top` 无 https 跳转，用户可能误走 http 入口（修复后可登录，但入口不统一）。
+- 图片媒体二进制归独立图床项目 `cloudflare-imgbed`，blog-api 无 R2；配额走 Images Free 5000 变换/月。
 
 ## 关键入口
-- 构建（nuxt-public）：`cd nuxt-public && npm run generate`；预览：`npx serve .output/public -l 4173`
-- 构建（nuxt）：`cd nuxt && npm run build`；启动：`npm run dev`（http://localhost:3000/admin/login）
-- nuxt-public 样式入口：`nuxt.config.ts` css 数组；`app/assets/css/tailwind.css`（引擎配置）；`prose-theme.css`（typography 主题）
-- nuxt 样式入口：`nuxt.config.ts` css 数组；`app/assets/css/tailwind.css`（v3 引擎配置）；`theme-variables.css`（手写 token）
+- 部署 blog-api：`cd nuxt-admin && npm run deploy:api`（= `npm run build:api && wrangler deploy --config wrangler.toml`）
+- 部署 admin SPA：`cd nuxt-admin && npm run deploy:pages`（wrangler pages deploy .output/public --project-name=myblog-admin）
+- 部署 router：`cd cloudflare-worker && wrangler deploy`（README 有说明）
+- 本地开发：`cd nuxt-admin && npm run dev`（http://localhost:3000/admin/login）
+- 图床：`cfimg.wasd09090030.top`（cloudflare-imgbed Pages 项目）

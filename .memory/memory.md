@@ -1,26 +1,40 @@
 # 项目记忆索引
 
-> 个人博客站（Nuxt 4 静态生成 + Cloudflare Pages 前端 / ASP.NET Core 后端 / Cloudflare Worker）。
-> 详细变更提案与设计以 `openspec/`（changes + specs）为准，本目录只存跨会话状态与经验。
+> 个人博客站：**Cloudflare Free 架构**（2026-08-04 完成迁移）。
+> 详细变更提案与设计以 `docs/superpowers/specs/`、`docs/superpowers/plans/` 为准，本目录只存跨会话状态与经验。
+> 最后核验：2026-08-05（含 Cloudflare API 线上核实）。
 
 ## 项目核心
 
-- **nuxt-public**：对外博客前端，Nuxt 4.3 静态生成（nitro static preset），部署 Cloudflare Pages。UI 依赖 Naive UI + Tailwind CSS。
-- **nuxt**：云服务器 SSR 项目，**纯 admin 容器**（仅服务 `/admin/*` 路由）。UI 依赖 Naive UI + Tailwind v3。后端通过 `NUXT_API_BASE_URL=http://127.0.0.1:5000/api` 直连。
-- 其他子项目：backend-dotnet、cloudflare-worker。
+- **nuxt-public/**：对外博客前端，Nuxt 4 SSG（static preset），Cloudflare Pages（`myblogweb-cloudflarepage`）。主页、文章、画廊、教程、关于。
+- **nuxt-admin/**：管理后台，Nuxt 4 **SPA**（`ssr:false`）。静态壳上 `myblog-admin` Pages 项目；Nitro server 部署为 `blog-api` Worker（D1 `blog-db`，负责 `/admin/api/*`、`/api/*`、`/images/*`）。无 R2，媒体二进制归独立图床。
+- **cloudflare-worker/**：= `blog-router` Worker，绑 apex/www/blog 三个自定义域名，按路径分发。
+- **图床（独立仓库）**：`cloudflare-imgbed` Pages 项目，`cfimg.wasd09090030.top`。
+- **backend-dotnet/**：历史数据迁移源，只读保留，不再作为运行时依赖。
+- **nuxt/**：旧 SSR 后台，已冻结待删（回滚/历史参考）。
 
 ## 关键架构决策
 
-- **Tailwind CSS v4（2026-07-03 完成升级）**：经 `@tailwindcss/vite` 集成，无 PostCSS 链、无 JS 配置；typography 定制在 `app/assets/css/components/prose-theme.css`；暗色模式为 class 策略（自建 useTheme 切 `.dark`，`@custom-variant dark`）。详见 `openspec/changes/tailwind-v4-upgrade/`（proposal/design/specs/tasks）。状态：已实施、已验证（构建 + 目视回归）。
-- **UI 演进路线（用户决策，2026-07-03）**：暂时保留 Naive UI（用户不喜欢其审美，属过渡方案）→ 稳定后调研引入 Nuxt UI v4 替换设计语言（独立 change）；Inspira UI 不依赖 Nuxt UI，Tailwind v4 就绪后可随时按需复制引入（需 motion-v + tw-animate-css）。
-- **nuxt/ 收缩为纯 admin 容器（2026-07-22 完成）**：`openspec/changes/nuxt-shrink-to-pure-admin-and-nuxt-ui-v4/` 路径 C（仅范围收缩，UI 迁移延后）。详见 `.memory/progress/current.md`。
-- **Nuxt UI v3/v4 与 Tailwind v3 互斥（2026-07-22 验证）**：`@nuxt/ui@3.0.0` 与 `3.3.7` 均把 `@tailwindcss/vite@4.3.3` 作为**传递依赖**拉入。Nuxt UI 迁移必须**先**升级 Tailwind v3→v4（或推迟到 v4 升级联动做）。用户"tailwind 暂不同步"决策直接导致 UI 迁移延后。
-- **nuxt/ Tailwind v4 升级（2026-07-24 完成）**：见 `openspec/changes/nuxt-ssr-tailwind-v4-upgrade/`。通过 `@tailwindcss/vite` 集成，无 PostCSS 链、无 JS 配置；admin 范围不含 typography 插件；暗色模式 `.dark` class 由 `@custom-variant dark` 暴露。Phase A 独立验证通过，下一步启动 Phase B（NaiveUI → Nuxt UI v4）。
+- **Cloudflare Free admin 迁移（2026-08-04 完成）**：SPA 静态壳 + `blog-api` Worker + D1，替代原云服务器 SSR 后台与 Workers Paid/R2。设计：`docs/superpowers/specs/2026-08-03-cloudflare-free-spa-admin-design.md`；详见 `features/completed/cloudflare-free-admin-migration.md`。
+- **admin 同源相对 URL，无 CORS 头**：浏览器只走 `/admin/api/*` BFF；所有变更请求经 `assertSafeMutation` 做 Origin 校验（CSRF 防线）。
+- **缩略图按展示场景命名变体**（2026-08-05）：card/grid/lightbox 三白名单变体，详情封面用原生图。见 `features/completed/thumbnail-named-variants.md`。
+- **blog-api 错误响应统一 JSON**（2026-08-05）：`nitro.errorHandler = '~~/server/error-handler'`。
+- 其他历史决策（nuxt-public Tailwind v4、UI 演进路线等）见 `archive/` 与旧 progress 归档。
 
 ## 当前进度
 
-- 入口：`progress/current.md`
+- 入口：`progress/current.md`（2026-08-05 更新）
+
+## 已完成的重要功能
+
+- [Cloudflare Free admin 迁移](features/completed/cloudflare-free-admin-migration.md) — 已实施、已线上验证
+- [缩略图命名变体](features/completed/thumbnail-named-variants.md) — 已实施、已线上验证
 
 ## 经验与教训
 
-- 见 `progress/current.md` 内“已验证结论”小节（量少暂不单独建目录）。
+- [admin Origin 校验 vs 多主机名路由](lessons/admin-origin-check-vs-routed-hostnames.md) — 已修复（2026-08-05）
+- 旧结论（nuxt/ Tailwind v4 时代）：见 `archive/2026-07-nuxt-ssr-admin-progress.md`
+
+## 归档
+
+- `archive/2026-07-nuxt-ssr-admin-progress.md` — 2026-07 nuxt/ SSR 收缩 + Tailwind v4 进度，已被迁移取代

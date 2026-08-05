@@ -29,6 +29,9 @@ export default defineNuxtConfig({
   routeRules: {
     '/admin/**': { headers: { 'cache-control': 'private, no-store, max-age=0' } }
   },
-  nitro: { preset: 'cloudflare_module' },
+  nitro: {
+    preset: 'cloudflare_module',
+    errorHandler: '~~/server/error-handler'
+  },
   typescript: { strict: true }
 })

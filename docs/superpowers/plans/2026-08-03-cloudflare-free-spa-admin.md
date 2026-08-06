@@ -313,8 +313,8 @@
 - Modify: `nuxt-admin/README.md`
 - Modify: `nuxt-admin/DEPLOYMENT.md`
 - Modify: `README.md`
-- Modify: `docs/Cloudflare-Production-Cutover.md`
-- Modify: `docs/Cloudflare-Production-Cutover.zh-CN.md`
+- Modify: `docs/archive/Cloudflare-Production-Cutover.md`
+- Modify: `docs/archive/Cloudflare-Production-Cutover.zh-CN.md`
 - Modify: `openspec/changes/cloudflare-admin-d1-migration/tasks.md`
 
 - [ ] **Step 1: Document the new secret ownership.**

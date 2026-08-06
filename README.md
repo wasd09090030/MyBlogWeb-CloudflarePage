@@ -58,10 +58,11 @@ npm run deploy:pages    # 生成并部署 myblog-admin Pages（静态 SPA）
 
 D1 迁移必须先执行：`cd nuxt-admin && npm run db:migrate:remote`。生产变量在 `nuxt-admin/wrangler.toml` 的 `[vars]` 与 Worker Secrets（`SESSION_PEPPER`、`ADMIN_RESET_TOKEN`、`IMAGE_API_TOKEN`）中配置。完整步骤见 [nuxt-admin/README.md](nuxt-admin/README.md) 与 [nuxt-admin/DEPLOYMENT.md](nuxt-admin/DEPLOYMENT.md)。
 
-GitHub Actions 按 `D1 migrations -> blog-api -> blog-router -> Pages` 顺序发布。后台仍保留 Pages Deploy Hook/API，可在文章变更后触发公开站重新生成。旧 .NET API、旧 `nuxt/` 和 PM2 文件仅用于观察期回滚，不再参与正常流量。
+部署不依赖 GitHub Actions 推送自动部署，改为本地 Wrangler 手动按序发布：`D1 migrations -> blog-api -> myblog-admin Pages -> blog-router -> myblogweb-cloudflarepage Pages`。公开站 `nuxt-public` 也可通过后台「重构 nuxt-public」按钮（`POST /admin/api/ops/pages/deploy-hook`）触发 Cloudflare Pages 重建，适用于文章、画廊等内容变更后刷新静态站。旧 .NET API、旧 `nuxt/` 和 PM2 文件仅用于观察期回滚，不再参与正常流量。完整部署步骤见 [CLAUDE.md](CLAUDE.md) 与 [nuxt-admin/DEPLOYMENT.md](nuxt-admin/DEPLOYMENT.md)。
 
 ## 相关文档
 
+- [CLAUDE.md](CLAUDE.md) — 部署方式与后台 trigger 按钮重建说明
 - [Cloudflare Free admin 迁移设计](docs/superpowers/specs/2026-08-03-cloudflare-free-spa-admin-design.md)
 - [缩略图命名变体设计](docs/superpowers/specs/2026-08-04-thumbnail-named-variants-design.md)
 - [管理后台 Markdown 编辑器记录](doc/2026-07-25_admin-markdown-editor.md)

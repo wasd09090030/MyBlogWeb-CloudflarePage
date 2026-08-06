@@ -88,7 +88,7 @@ Export a backup before the first production write. After import, validate row co
 
 ## Deploy order
 
-The release workflow enforces this order:
+Deployment is manual via local Wrangler (no GitHub Actions workflow). The order is fixed:
 
 1. Apply D1 migrations and run Free/image API checks.
 2. Build and deploy the `blog-api` Worker.

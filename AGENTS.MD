@@ -100,7 +100,7 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 - `nuxt-admin/nuxt.config.ts`：活动 SSR 管理后台配置，含 `buildAssetsDir: '/_ssr/'`
 - `nuxt-admin/DEPLOYMENT.md`：当前后台的 PM2、Nginx 与回滚说明
 - `cloudflare-worker/router.js`：Worker 路由分发
-- `.github/workflows/release.yml`：CI/CD 双目标构建
+- `CLAUDE.md`：部署方式与后台 trigger 按钮重建说明（不依赖 GitHub Actions，本地 Wrangler 手动发布）
 
 ## 7. 测试与验证策略
 - 当前无完整自动化测试套件

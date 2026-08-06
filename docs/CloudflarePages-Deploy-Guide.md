@@ -38,12 +38,12 @@ npx wrangler pages deploy .output/public --project-name myblogweb-cloudflarepage
 
 ## Background rebuilds
 
-Pages Deploy Hooks remain supported for content changes. Configure the hook URL as the Worker secret `PAGES_DEPLOY_HOOK_URL` (or configure the scoped Cloudflare API fallback). The admin operation `POST /admin/api/ops/pages/deploy-hook` can be called after an article mutation and does not expose the hook URL to the browser.
+The public Pages project is connected to Git, so pushing `nuxt-public` code to `main` triggers a Cloudflare Pages build automatically. For content changes (articles, galleries) that don't involve code, the admin "重构 nuxt-public" button calls `POST /admin/api/ops/pages/deploy-hook`, which triggers a Pages rebuild via the `PAGES_DEPLOY_HOOK_URL` Worker secret (or falls back to the scoped Cloudflare API). The hook URL is never exposed to the browser.
 
-The release workflow also supports a full ordered deployment:
+Manual full ordered deployment:
 
 ```text
-D1 migrations -> blog-admin Worker -> blog-router Worker -> Pages artifact
+D1 migrations -> blog-api Worker -> myblog-admin Pages -> blog-router Worker -> public Pages artifact
 ```
 
 See [nuxt-admin/DEPLOYMENT.md](../nuxt-admin/DEPLOYMENT.md) for the complete cutover and smoke-test checklist.

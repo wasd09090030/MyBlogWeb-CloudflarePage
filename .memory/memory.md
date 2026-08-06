@@ -19,6 +19,7 @@
 - **admin 同源相对 URL，无 CORS 头**：浏览器只走 `/admin/api/*` BFF；所有变更请求经 `assertSafeMutation` 做 Origin 校验（CSRF 防线）。
 - **缩略图按展示场景命名变体**（2026-08-05）：card/grid/lightbox 三白名单变体，详情封面用原生图。见 `features/completed/thumbnail-named-variants.md`。
 - **blog-api 错误响应统一 JSON**（2026-08-05）：`nitro.errorHandler = '~~/server/error-handler'`。
+- **部署改为本地 wrangler 手动发布**（2026-08-06）：已删除 `.github/workflows/release.yml`（推送自动部署）。固定顺序 `D1 migrations -> blog-api -> myblog-admin Pages -> blog-router -> myblogweb-cloudflarepage Pages`；公开站连 Git 可自动构建，内容变更走后台「重构 nuxt-public」按钮（`POST /admin/api/ops/pages/deploy-hook`，依赖 `PAGES_DEPLOY_HOOK_URL` 或 Cloudflare API secrets）。部署文档见仓库根 `CLAUDE.md`。
 - 其他历史决策（nuxt-public Tailwind v4、UI 演进路线等）见 `archive/` 与旧 progress 归档。
 
 ## 当前进度
@@ -33,6 +34,7 @@
 ## 经验与教训
 
 - [admin Origin 校验 vs 多主机名路由](lessons/admin-origin-check-vs-routed-hostnames.md) — 已修复（2026-08-05）
+- [Nuxt UI v4 主题类需 Tailwind 扫描 .nuxt/ui](lessons/nuxt-ui-tailwind-source.md) — 已修复（2026-08-05），`tailwind.css` 需 `@source '../../../.nuxt/ui'`，否则动画类不生成
 - 旧结论（nuxt/ Tailwind v4 时代）：见 `archive/2026-07-nuxt-ssr-admin-progress.md`
 
 ## 归档

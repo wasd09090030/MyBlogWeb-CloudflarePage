@@ -11,7 +11,7 @@
         <span v-for="(ch, i) in brandLetters" :key="i" :style="{ '--i': i }">{{ ch }}</span>
       </div>
       <p class="brand-sub">WyrmKk</p>
-      <p class="progress-percent">{{ Math.round(loadingProgress) }}%</p>
+      <p class="progress-percent" role="status" aria-live="polite">{{ Math.round(loadingProgress) }}%</p>
     </div>
   </div>
 </template>
@@ -59,12 +59,12 @@ const brandLetters = 'GALLERY'.split('')
   position: absolute;
   inset: 0;
   overflow: hidden;
+  filter: blur(60px);
 }
 
 .orb {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(60px);
   opacity: 0.55;
   animation: orb-drift 18s ease-in-out infinite alternate;
 }

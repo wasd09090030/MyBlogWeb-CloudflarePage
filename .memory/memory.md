@@ -2,7 +2,7 @@
 
 > 个人博客站：**Cloudflare Free 架构**（2026-08-04 完成迁移）。
 > 详细变更提案与设计以 `docs/superpowers/specs/`、`docs/superpowers/plans/` 为准，本目录只存跨会话状态与经验。
-> 最后核验：2026-08-05（含 Cloudflare API 线上核实）。
+> 最后核验：2026-08-06（含线上删除链路回归）。
 
 ## 项目核心
 
@@ -33,6 +33,7 @@
 
 ## 经验与教训
 
+- [admin Content-Type 415 拦截删除](lessons/admin-content-type-415-delete.md) — 已修复（2026-08-06），无 body 的变更请求不得强制 Content-Type
 - [admin Origin 校验 vs 多主机名路由](lessons/admin-origin-check-vs-routed-hostnames.md) — 已修复（2026-08-05）
 - [Nuxt UI v4 主题类需 Tailwind 扫描 .nuxt/ui](lessons/nuxt-ui-tailwind-source.md) — 已修复（2026-08-05），`tailwind.css` 需 `@source '../../../.nuxt/ui'`，否则动画类不生成
 - 旧结论（nuxt/ Tailwind v4 时代）：见 `archive/2026-07-nuxt-ssr-admin-progress.md`

@@ -110,31 +110,33 @@ watch(() => form.coverImage, () => { coverPreviewError.value = false })
       <section v-show="mode !== 'source'"><AdminMarkdownPreview :markdown="form.contentMarkdown" /></section>
     </div>
     <USlideover v-model:open="settingsOpen" title="文章设置" side="right">
-      <div class="space-y-4">
-        <UFormField label="Slug"><UInput v-model="form.slug" class="w-full" /></UFormField>
-        <UFormField label="分类"><USelect v-model="form.category" :items="['study', 'game', 'work', 'resource', 'other']" class="w-full" /></UFormField>
-        <UFormField label="封面图"><UInput v-model="form.coverImage" class="w-full" placeholder="https://..." /></UFormField>
-        <div class="overflow-hidden rounded-md border border-default bg-elevated">
-          <img v-if="form.coverImage && !coverPreviewError" :src="form.coverImage" alt="文章封面预览" class="aspect-video w-full object-cover" @error="coverPreviewError = true" />
-          <div v-else class="grid aspect-video place-items-center p-4 text-center text-sm text-muted">
-            <div>
-              <UIcon :name="coverPreviewError ? 'i-lucide-image-off' : 'i-lucide-image'" class="mx-auto mb-2 size-6" />
-              <p>{{ coverPreviewError ? '封面地址无法加载' : '输入封面地址后在此预览' }}</p>
+      <template #body>
+        <div class="space-y-4">
+          <UFormField label="Slug"><UInput v-model="form.slug" class="w-full" /></UFormField>
+          <UFormField label="分类"><USelect v-model="form.category" :items="['study', 'game', 'work', 'resource', 'other']" class="w-full" /></UFormField>
+          <UFormField label="封面图"><UInput v-model="form.coverImage" class="w-full" placeholder="https://..." /></UFormField>
+          <div class="overflow-hidden rounded-md border border-default bg-elevated">
+            <img v-if="form.coverImage && !coverPreviewError" :src="form.coverImage" alt="文章封面预览" class="aspect-video w-full object-cover" @error="coverPreviewError = true" />
+            <div v-else class="grid aspect-video place-items-center p-4 text-center text-sm text-muted">
+              <div>
+                <UIcon :name="coverPreviewError ? 'i-lucide-image-off' : 'i-lucide-image'" class="mx-auto mb-2 size-6" />
+                <p>{{ coverPreviewError ? '封面地址无法加载' : '输入封面地址后在此预览' }}</p>
+              </div>
             </div>
           </div>
+          <UFormField label="标签" help="输入后按 Enter、Tab 或离开输入框即可添加；可直接粘贴逗号分隔的多个标签。">
+            <UInputTags v-model="form.tags" class="w-full" placeholder="输入标签" add-on-tab add-on-blur add-on-paste separator="," />
+          </UFormField>
+          <div class="flex flex-wrap gap-1">
+            <UButton v-for="tag in suggestedTags" :key="tag" size="xs" :color="form.tags.includes(tag) ? 'primary' : 'neutral'" :variant="form.tags.includes(tag) ? 'soft' : 'ghost'" @click="toggleTag(tag)">{{ tag }}</UButton>
+          </div>
+          <UFormField label="AI 摘要"><UTextarea v-model="form.aiSummary" :rows="4" class="w-full" /></UFormField>
+          <UButton block variant="soft" :loading="aiPending" icon="i-lucide-sparkles" @click="aiSummary">生成 AI 摘要</UButton>
+          <USeparator />
+          <p class="text-sm text-muted">{{ stats.characters }} 字符 · {{ stats.words }} 词 · {{ stats.headings }} 标题</p>
+          <p v-if="draftSavedAt" class="text-xs text-muted">草稿已保存</p>
         </div>
-        <UFormField label="标签" help="输入后按 Enter、Tab 或离开输入框即可添加；可直接粘贴逗号分隔的多个标签。">
-          <UInputTags v-model="form.tags" class="w-full" placeholder="输入标签" add-on-tab add-on-blur add-on-paste separator="," />
-        </UFormField>
-        <div class="flex flex-wrap gap-1">
-          <UButton v-for="tag in suggestedTags" :key="tag" size="xs" :color="form.tags.includes(tag) ? 'primary' : 'neutral'" :variant="form.tags.includes(tag) ? 'soft' : 'ghost'" @click="toggleTag(tag)">{{ tag }}</UButton>
-        </div>
-        <UFormField label="AI 摘要"><UTextarea v-model="form.aiSummary" :rows="4" class="w-full" /></UFormField>
-        <UButton block variant="soft" :loading="aiPending" icon="i-lucide-sparkles" @click="aiSummary">生成 AI 摘要</UButton>
-        <USeparator />
-        <p class="text-sm text-muted">{{ stats.characters }} 字符 · {{ stats.words }} 词 · {{ stats.headings }} 标题</p>
-        <p v-if="draftSavedAt" class="text-xs text-muted">草稿已保存</p>
-      </div>
+      </template>
     </USlideover>
     <UModal v-model:open="restoreOpen" title="恢复本地草稿"><template #body>发现一个未过期的本地草稿。恢复会覆盖当前表单内容。</template><template #footer><div class="flex justify-end gap-2"><UButton color="neutral" variant="ghost" @click="discardDraft">丢弃</UButton><UButton @click="restoreDraft">恢复草稿</UButton></div></template></UModal>
     <UModal v-model:open="imageOpen" title="插入图片"><template #body><div class="space-y-4"><UInput v-model="imageUrl" placeholder="https://example.com/image.jpg" class="w-full" /><label class="block"><input class="hidden" type="file" accept="image/*" @change="uploadImage" /><UButton as="span" variant="soft" icon="i-lucide-upload" :loading="imageUploading">上传到图床</UButton></label></div></template><template #footer><UButton @click="insertImageUrl">插入 URL</UButton></template></UModal>

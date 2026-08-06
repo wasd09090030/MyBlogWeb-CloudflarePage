@@ -4,12 +4,16 @@
     <UMarquee
       orientation="vertical"
       :pause-on-hover="true"
-      :overlay="false"
-      class="marquee-column"
+      :ui="{ root: 'marquee-column [--duration:20s]' }"
     >
-      <div v-for="(icon, index) in iconsColumn1" :key="`c1-${index}`" class="icon-item">
-        <img :src="icon.src" :alt="`icon-${icon.id}`" class="icon-image" />
-      </div>
+      <img
+        v-for="(icon, index) in iconsColumn1"
+        :key="`c1-${index}`"
+        :src="icon.src"
+        :alt="`icon-${icon.id}`"
+        class="icon-image"
+        loading="lazy"
+      />
     </UMarquee>
 
     <!-- 右列：向下滚动（reverse） -->
@@ -17,12 +21,16 @@
       orientation="vertical"
       reverse
       :pause-on-hover="true"
-      :overlay="false"
-      class="marquee-column marquee-col-2"
+      :ui="{ root: 'marquee-column marquee-col-2 [--duration:18s]' }"
     >
-      <div v-for="(icon, index) in iconsColumn2" :key="`c2-${index}`" class="icon-item">
-        <img :src="icon.src" :alt="`icon-${icon.id}`" class="icon-image" />
-      </div>
+      <img
+        v-for="(icon, index) in iconsColumn2"
+        :key="`c2-${index}`"
+        :src="icon.src"
+        :alt="`icon-${icon.id}`"
+        class="icon-image"
+        loading="lazy"
+      />
     </UMarquee>
   </div>
 </template>
@@ -61,7 +69,7 @@ const iconsColumn2 = [
   flex-shrink: 0;
 }
 
-/* UMarquee 列：等分宽度、充满容器高度、覆盖默认间距与时长 */
+/* 两个直列 UMarquee 共用卡片的裁剪边界和默认上下遮罩。 */
 .marquee-column {
   flex: 1;
   min-width: 0;
@@ -73,31 +81,12 @@ const iconsColumn2 = [
   --duration: 18s;
 }
 
-.icon-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 60px;
-  height: 60px;
-  background: rgba(87, 82, 96, 0.08);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
-}
-
+/* 图标直接展示，无外部卡片背景；
+   固定尺寸避免 UMarquee content 的 min-w-max 把 SVG 撑到原始大小 */
 .icon-image {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
-  transition: transform 0.3s ease;
-}
-
-/* 暗色主题适配 */
-.dark .icon-item {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 </style>

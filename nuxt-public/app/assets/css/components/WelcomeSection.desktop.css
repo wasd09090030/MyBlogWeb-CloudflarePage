@@ -194,7 +194,7 @@
   display: flex;
   flex-direction: column;
   gap: 15px;
-  overflow: hidden; /* 防止内容溢出 */
+  overflow: hidden;
 }
 
 /* 顶部区域布局 */
@@ -239,6 +239,7 @@
 /* 文字内容 */
 .announcement-text-content {
   flex: 1;
+  max-width: calc(100% - 160px);
   padding-left: 30%;
   color: var(--bs-body-color);
   position: relative;
@@ -265,11 +266,14 @@
   color: var(--bs-body-color);
 }
 
-/* 图标走马灯容器 */
+/* 图标走马灯容器：嵌在公告卡片内，边界由 .top-section 的圆角与裁剪统一控制。 */
 .icon-marquee-wrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
   width: 150px;
-  flex-shrink: 0;
-  position: relative;
+  overflow: hidden;
   z-index: 1;
 }
 

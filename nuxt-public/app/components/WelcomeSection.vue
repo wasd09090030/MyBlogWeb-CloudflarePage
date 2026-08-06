@@ -24,14 +24,13 @@
 
     <!-- 右侧信息区域 -->
     <div class="info-section">
-      <!-- 顶部区域：公告 + 图标走马灯统一容器 -->
+      <!-- 顶部区域：公告文字与内嵌图标走马灯 -->
       <div class="top-section">
         <div class="announcement-text-content">
           <h3 class="announcement-title">简洁、美观、高性能的个人网站</h3>
           <p class="announcement-subtitle">Build with Asp.Net Core8.0 and Nuxt</p>
         </div>
-        
-        <!-- 图标走马灯 -->
+
         <IconMarquee class="icon-marquee-wrapper" />
       </div>
 

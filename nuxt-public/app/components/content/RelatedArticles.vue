@@ -1,7 +1,7 @@
 <template>
   <div v-if="articles && articles.length > 0" class="related-articles-mdc my-12">
     <div class="related-articles-header">
-      <Icon name="heroicons:hand-thumb-up" size="30" class="text-blue-600 dark:text-blue-400" />
+      <Icon name="heroicons:hand-thumb-up" size="30" class="text-[color:var(--article-prose-accent)]" />
       <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">相关推荐</h3>
     </div>
 
@@ -33,16 +33,16 @@
             <Icon name="heroicons:photo" size="3xl" class="text-gray-400 dark:text-gray-500" />
           </div>
 
-          <div class="card-content-overlay">
-            <h4 class="card-title line-clamp-2">
-              {{ article.title }}
-            </h4>
-            <div class="card-meta">
-              <Icon name="heroicons:calendar" size="sm" />
-              <time :datetime="article.createdAt">
-                {{ formatDate(article.createdAt) }}
-              </time>
-            </div>
+        </div>
+        <div class="card-content">
+          <h4 class="card-title line-clamp-2">
+            {{ article.title }}
+          </h4>
+          <div class="card-meta">
+            <Icon name="heroicons:calendar" size="sm" />
+            <time :datetime="article.createdAt">
+              {{ formatDate(article.createdAt) }}
+            </time>
           </div>
         </div>
       </NuxtLink>
@@ -266,18 +266,17 @@ function formatDate(dateString) {
 .related-article-card {
   text-decoration: none;
   display: block;
-  border-radius: 1rem;
+  border-radius: 0.375rem;
   overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+  border: 1px solid var(--article-prose-border, #d9dde3);
+  background: var(--article-prose-surface, #f3f4f6);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .related-article-card:hover {
   text-decoration: none;
-  transform: translateY(-4px);
-  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.14);
-  border-color: rgba(59, 130, 246, 0.5);
+  border-color: var(--article-prose-accent, #2563eb);
+  background: var(--article-prose-accent-soft, #e9eef8);
 }
 
 .card-media {
@@ -285,7 +284,7 @@ function formatDate(dateString) {
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: linear-gradient(145deg, rgba(148, 163, 184, 0.25), rgba(226, 232, 240, 0.35));
+  background: var(--article-prose-surface, #f3f4f6);
 }
 
 .card-image {
@@ -307,18 +306,15 @@ function formatDate(dateString) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(150deg, rgba(15, 23, 42, 0.12), rgba(30, 41, 59, 0.32));
+  background: var(--article-prose-surface, #f3f4f6);
 }
 
-.card-content-overlay {
-  position: absolute;
-  inset: 0;
+.card-content {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   gap: 0.5rem;
   padding: 0.95rem;
-  background: linear-gradient(180deg, rgba(2, 6, 23, 0.04) 35%, rgba(2, 6, 23, 0.86) 100%);
+  background: var(--article-prose-surface, #f3f4f6);
 }
 
 .card-title {
@@ -326,17 +322,15 @@ function formatDate(dateString) {
   font-size: 1rem;
   line-height: 1.35;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  color: var(--article-prose-heading, #20252c);
 }
 
 .card-meta {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--article-prose-muted, #737b87);
   font-size: 0.83rem;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 @media (min-width: 768px) {
@@ -361,7 +355,6 @@ function formatDate(dateString) {
 }
 
 :global(.dark) .related-article-card {
-  border-color: rgba(71, 85, 105, 0.75);
-  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.45);
+  border-color: var(--article-prose-border, #363d47);
 }
 </style>

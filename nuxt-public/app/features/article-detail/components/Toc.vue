@@ -2,17 +2,17 @@
   <div v-if="tocItems.length > 0" class="h-full flex flex-col">
     <!-- 头部 -->
     <div 
-      class="flex cursor-pointer items-center justify-between border-b border-[color:var(--article-prose-border)] px-3 py-3 transition-colors hover:bg-[color:var(--article-prose-surface)]"
+      class="flex items-center justify-between px-3 py-3 border-b border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
       @click="toggleCollapse"
     >
-      <h6 class="m-0 flex items-center gap-2 text-sm font-semibold text-[color:var(--article-prose-heading)]">
-        <Icon name="heroicons:list-bullet" size="sm" class="text-[color:var(--article-prose-muted)]" />
+      <h6 class="flex items-center gap-2 text-sm font-semibold m-0 text-gray-800 dark:text-gray-100">
+        <Icon name="heroicons:list-bullet" size="sm" class="text-pink-500 dark:text-pink-400" />
         文章目录
       </h6>
       <Icon 
         :name="isCollapsed ? 'heroicons:chevron-down' : 'heroicons:chevron-up'" 
         size="sm"
-        class="text-[color:var(--article-prose-muted)] transition-transform duration-200"
+        class="text-gray-500 dark:text-gray-400 transition-transform duration-200"
       />
     </div>
 
@@ -39,15 +39,19 @@
               <a
                 :ref="el => setItemRef(heading.id, el)"
                 :href="`#${heading.id}`"
-                class="flex items-center px-3 py-2 transition-colors duration-200"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
                 :class="[
                   getTocTextClass(heading),
                   activeHeading === heading.id
-                    ? 'border-s-2 border-[color:var(--article-prose-accent)] bg-[color:var(--article-prose-accent-soft)] font-medium text-[color:var(--article-prose-heading)]'
-                    : 'border-s-2 border-transparent text-[color:var(--article-prose-muted)] hover:bg-[color:var(--article-prose-surface)] hover:text-[color:var(--article-prose-heading)]'
+                    ? 'bg-pink-100 dark:bg-pink-500/20 text-pink-600 dark:text-pink-300 font-medium shadow-xs dark:shadow-pink-500/10'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-pink-600 dark:hover:text-pink-400'
                 ]"
                 @click.prevent="scrollToHeading(heading.id)"
               >
+                <span
+                  class="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200"
+                  :class="activeHeading === heading.id ? 'bg-pink-500 dark:bg-pink-400 scale-125' : 'bg-gray-400 dark:bg-gray-500'"
+                />
                 <span class="truncate">{{ heading.text }}</span>
               </a>
             </UTooltip>
@@ -56,17 +60,17 @@
       </nav>
 
       <!-- 阅读进度 -->
-      <div class="border-t border-[color:var(--article-prose-border)] px-3 py-3">
-        <div class="mb-2 flex items-center justify-between text-xs text-[color:var(--article-prose-muted)]">
+      <div class="px-3 py-3 border-t border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-900/30">
+        <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 mb-2">
           <span class="flex items-center gap-1">
-            <Icon name="heroicons:book-open" size="sm" class="text-[color:var(--article-prose-muted)]" />
+            <Icon name="heroicons:book-open" size="sm" class="text-gray-500 dark:text-gray-400" />
             阅读进度
           </span>
-          <span class="font-semibold text-[color:var(--article-prose-heading)]">{{ Math.round(progress) }}%</span>
+          <span class="font-semibold text-pink-600 dark:text-pink-400">{{ Math.round(progress) }}%</span>
         </div>
-        <div class="h-0.5 overflow-hidden bg-[color:var(--article-prose-border)]">
+        <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner">
           <div 
-            class="h-full bg-[color:var(--article-prose-accent)] transition-all duration-300"
+            class="h-full bg-linear-to-r from-pink-500 to-rose-500 dark:from-pink-400 dark:to-rose-400 rounded-full transition-all duration-300"
             :style="{ width: `${progress}%` }"
           />
         </div>
@@ -169,7 +173,7 @@ function toggleCollapse() {
 function getTocItemClass(heading) {
   const depth = heading?.depth || 0
   return depth > 0
-    ? 'toc-item-child border-l border-[color:var(--article-prose-border)]'
+    ? 'toc-item-child border-l border-gray-200 dark:border-gray-700'
     : 'toc-item-root'
 }
 
@@ -411,18 +415,21 @@ onUnmounted(() => {
 <style>
 /* 标题高亮动画 - 全局样式，更明显 */
 .heading-highlight {
-  animation: highlight-flash 1.2s ease-out !important;
+  animation: highlight-flash 3s ease-out !important;
 }
 
 @keyframes highlight-flash {
   0% {
-    background-color: color-mix(in srgb, var(--article-prose-accent) 18%, transparent) !important;
+    background-color: color-mix(in srgb, var(--accent-primary) 30%, transparent) !important;
+    border-radius: 0.25rem;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent-primary) 40%, transparent);
   }
   50% {
-    background-color: color-mix(in srgb, var(--article-prose-accent) 8%, transparent);
+    background-color: color-mix(in srgb, var(--accent-primary) 20%, transparent);
   }
   100% {
     background-color: transparent;
+    box-shadow: none;
   }
 }
 </style>

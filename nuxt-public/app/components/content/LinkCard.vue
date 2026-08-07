@@ -58,13 +58,12 @@ defineProps({
   padding-inline: 1rem;
 
   /* Styling */
-  border-radius: 12px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 0.375rem;
+  transition: transform 0.2s ease;
 }
 
 .link-card-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .link-text {

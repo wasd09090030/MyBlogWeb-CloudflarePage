@@ -46,9 +46,6 @@ export default defineNuxtConfig({
     // Nuxt UI v4 设计 token 入口（Phase 0 新增；必须晚于 tailwind.css，
     // 因为 @nuxt/ui 内部消费 Tailwind 注入的 CSS 变量）
     '~/assets/css/main.css',
-    '../shared/article-typography/article-prose.desktop.css',
-    '../shared/article-typography/mdc-contract.css',
-    '../shared/article-typography/article-prose.mobile.css',
     '~/assets/css/components/responsive-utilities.desktop.css',
     '~/assets/css/components/responsive-utilities.mobile.css',
     '~/assets/css/layout.css',

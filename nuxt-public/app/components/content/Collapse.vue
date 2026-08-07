@@ -1,6 +1,6 @@
 <template>
   <details 
-    class="collapse-mdc my-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+    class="collapse-mdc my-4 overflow-hidden"
     :open="defaultOpen"
   >
     <summary class="collapse-summary px-4 py-3 bg-gray-50 dark:bg-gray-800 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">

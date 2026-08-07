@@ -1,20 +1,19 @@
 <template>
   <div class="github-card-mdc my-6">
-    <div v-if="loading" class="loading-skeleton p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+    <div v-if="loading" class="loading-skeleton p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md">
       <div class="skeleton-line w-3/4 h-6 mb-3 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
       <div class="skeleton-line w-full h-4 mb-2 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
       <div class="skeleton-line w-5/6 h-4 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
     </div>
     
-    <div v-else-if="repoData" class="github-card p-4 bg-white dark:bg-linear-to-br dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-0.5 relative overflow-hidden">
+    <div v-else-if="repoData" class="github-card p-4 bg-[color:var(--article-prose-surface,#f3f4f6)] transition-all duration-200 overflow-hidden">
       <!-- 装饰性光晕效果 -->
-      <div class="absolute inset-0 bg-linear-to-br from-blue-50/60 via-transparent to-transparent dark:from-sky-500/10 dark:via-transparent dark:to-transparent pointer-events-none"></div>
       
       <!-- 内容区域 -->
-      <div class="relative z-10">
+      <div>
         <!-- 仓库名称和描述 -->
         <div class="repo-header mb-4">
-          <a :href="repoData.html_url" target="_blank" rel="noopener" class="repo-name text-lg font-semibold text-blue-600 hover:text-blue-700 dark:text-sky-300 dark:hover:text-sky-200 transition-colors inline-flex items-center no-underline hover:underline">
+          <a :href="repoData.html_url" target="_blank" rel="noopener" class="repo-name text-lg font-semibold text-[color:var(--article-prose-link)] hover:text-[color:var(--article-prose-accent)] transition-colors inline-flex items-center no-underline hover:underline">
             <Icon name="mdi:github" class="inline-block mr-2" />
             {{ repoData.full_name }}
           </a>
@@ -56,7 +55,7 @@
       </div>
     </div>
     
-    <div v-else-if="error" class="error-message p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-lg text-red-600 dark:text-red-400">
+    <div v-else-if="error" class="error-message p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-md text-red-600 dark:text-red-400">
       <Icon name="mdi:alert-circle" class="inline-block mr-2" />
       {{ error }}
     </div>
@@ -172,16 +171,6 @@ watch(() => props.repo, () => {
 <style scoped>
 .github-card-mdc {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
-}
-
-/* 保留装饰性光晕在暗色模式下的增强效果 */
-.dark .github-card:hover {
-  border-color: rgba(56, 189, 248, 0.3);
-}
-
-/* 暗色模式下仓库名称的文字发光效果 */
-.dark .repo-name {
-  text-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
 }
 
 /* 暗色模式下语言点的外光晕 */

@@ -1,6 +1,6 @@
 <template>
   <UCard
-    class="code-playground-mdc my-6 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+    class="code-playground-mdc my-6 overflow-hidden"
     :ui="{ root: 'p-0 gap-0', header: 'p-0', body: 'p-0' }"
   >
     <!-- 隐藏的原始内容容器 -->

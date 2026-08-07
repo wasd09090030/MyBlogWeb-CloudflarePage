@@ -5,7 +5,14 @@
       :total="totalPages"
       :items-per-page="1"
       :sibling-count="1"
+      color="neutral"
+      variant="outline"
+      active-color="primary"
+      active-variant="solid"
       show-edges
+      :ui="{
+        item: 'transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 active:shadow-none'
+      }"
       @update:page="onPageChange"
     />
     <div class="pagination-summary">

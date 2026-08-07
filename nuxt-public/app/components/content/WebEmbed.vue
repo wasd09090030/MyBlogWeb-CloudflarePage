@@ -1,6 +1,6 @@
 <template>
   <div class="web-embed-mdc my-6">
-    <div class="embed-container rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700" :style="containerStyle">
+    <div class="embed-container rounded-md overflow-hidden border border-gray-200 dark:border-gray-700" :style="containerStyle">
       <div v-if="embedHtml" v-html="embedHtml" class="embed-content" />
       
       <iframe

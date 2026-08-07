@@ -52,10 +52,7 @@ const toggle = () => {
 
 <style scoped>
 .spoiler-mdc {
-  border-radius: 10px;
   overflow: hidden;
-  border: 1.5px solid #f59e0b55;
-  background: transparent;
 }
 
 /* 警告条 */
@@ -64,14 +61,14 @@ const toggle = () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: linear-gradient(90deg, #f59e0b22 0%, #fbbf2411 100%);
+  background: var(--article-prose-surface, #f3f4f6);
   cursor: pointer;
   user-select: none;
   transition: background 0.2s;
 }
 
 .spoiler-warning-bar:hover {
-  background: linear-gradient(90deg, #f59e0b33 0%, #fbbf2422 100%);
+  background: var(--article-prose-accent-soft, #e9eef8);
 }
 
 .spoiler-warning-icon {

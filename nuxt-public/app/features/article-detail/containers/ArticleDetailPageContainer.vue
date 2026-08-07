@@ -29,7 +29,7 @@
     <article v-else-if="article" class="relative">
       <ArticleDetailCoverImage :article="article" />
 
-      <ContentPageBody width="article" vertical="content" spacing="compact">
+      <ContentPageBody width="articleDetail" vertical="content" spacing="compact">
         <ArticleDetailHeader :article="article" @go-back="goBack" />
         <ArticleDetailContent :article="article" @toc-ready="onTocReady" @go-back="goBack" />
       </ContentPageBody>

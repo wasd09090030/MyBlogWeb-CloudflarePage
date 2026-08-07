@@ -1,0 +1,8 @@
+@media (max-width: 768px) {
+  .article-prose { max-width: none; overflow-wrap: anywhere; }
+  .article-prose .katex-display { margin-block: 1rem; }
+  .article-prose-heading--h2 { margin-top: 2rem; font-size: 1.35rem; }
+  .article-prose-heading--h3 { margin-top: 1.75rem; font-size: 1.15rem; }
+  .article-prose--legacy h1 { font-size: 1.75rem; }
+  .article-prose--legacy h2 { font-size: 1.35rem; }
+}

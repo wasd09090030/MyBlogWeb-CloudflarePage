@@ -27,7 +27,7 @@ watch(() => props.src, () => { failed.value = false; previewOpen.value = false }
 </script>
 
 <template>
-  <figure class="my-6 flex" :class="{ 'justify-start': align === 'left', 'justify-center': align === 'center', 'justify-end': align === 'right' }">
+  <figure class="image-enhanced-mdc my-6 flex" :class="{ 'justify-start': align === 'left', 'justify-center': align === 'center', 'justify-end': align === 'right' }">
     <div class="max-w-full" :style="{ maxWidth: width }">
       <button v-if="src && !failed" type="button" class="block max-w-full overflow-hidden text-left" :class="{ 'cursor-zoom-in': zoomable, 'rounded-lg': rounded, 'border border-default': border, 'shadow-lg': shadow }" :disabled="!zoomable" @click="previewOpen = zoomable">
         <img :src="src" :alt="alt" :title="title" :loading="lazy ? 'lazy' : 'eager'" class="block max-w-full" :class="{ 'rounded-lg': rounded }" @error="failed = true">

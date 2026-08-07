@@ -4,5 +4,5 @@ const safeUrl = computed(() => { try { const url = new URL(props.url || ''); ret
 </script>
 
 <template>
-  <figure class="my-5"><div class="overflow-hidden rounded-md border border-default bg-muted" :style="{ aspectRatio }"><iframe v-if="safeUrl" :src="safeUrl" :title="title" class="size-full" sandbox="allow-scripts allow-same-origin allow-popups" referrerpolicy="strict-origin-when-cross-origin" :allowfullscreen="allowFullscreen" /><div v-else class="flex size-full items-center justify-center text-sm text-muted">Invalid embed URL</div></div><figcaption v-if="caption" class="mt-2 text-center text-sm text-muted">{{ caption }}</figcaption></figure>
+  <figure class="web-embed-mdc my-5"><div class="overflow-hidden rounded-md border border-default bg-muted" :style="{ aspectRatio }"><iframe v-if="safeUrl" :src="safeUrl" :title="title" class="size-full" sandbox="allow-scripts allow-same-origin allow-popups" referrerpolicy="strict-origin-when-cross-origin" :allowfullscreen="allowFullscreen" /><div v-else class="flex size-full items-center justify-center text-sm text-muted">Invalid embed URL</div></div><figcaption v-if="caption" class="mt-2 text-center text-sm text-muted">{{ caption }}</figcaption></figure>
 </template>

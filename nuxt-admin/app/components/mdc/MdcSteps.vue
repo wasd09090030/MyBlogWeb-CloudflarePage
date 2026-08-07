@@ -7,7 +7,7 @@ watch(() => props.current, value => { active.value = Math.max(1, Number(value) |
 </script>
 
 <template>
-  <section class="my-5 rounded-md border border-default bg-elevated p-4">
+  <section class="steps-mdc my-5 rounded-md border border-default bg-elevated p-4">
     <ol class="space-y-3">
       <li v-for="(step, index) in steps" :key="index" class="flex gap-3" :class="{ 'text-primary': index + 1 === active, 'text-muted': index + 1 > active }"><span class="flex size-6 shrink-0 items-center justify-center rounded-full border border-current text-xs">{{ index + 1 }}</span><div><p class="font-medium">{{ step.title || `Step ${index + 1}` }}</p><p v-if="step.description" class="text-sm text-muted">{{ step.description }}</p></div></li>
     </ol>

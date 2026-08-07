@@ -36,7 +36,7 @@ watch(() => props.markdown, () => { previewError.value = '' })
   <section class="admin-markdown-preview min-h-[32rem] rounded-md border border-default p-5">
     <UAlert v-if="previewError" color="warning" variant="soft" :title="previewError" class="mb-4" />
     <ClientOnly fallback-tag="div" fallback="Loading preview...">
-      <MDCCached :value="markdown" :components="previewComponents" tag="article" class="prose prose-neutral max-w-none dark:prose-invert" @error="previewError = 'Markdown preview could not be rendered.'" />
+      <MDCCached :value="markdown" :components="previewComponents" tag="article" class="article-prose article-prose--admin" @error="previewError = 'Markdown preview could not be rendered.'" />
     </ClientOnly>
   </section>
 </template>

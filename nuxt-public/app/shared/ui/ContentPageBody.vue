@@ -13,7 +13,7 @@ const props = defineProps({
   width: {
     type: String,
     default: 'content',
-    validator: value => ['narrow', 'article', 'content', 'wide', 'full'].includes(value)
+    validator: value => ['narrow', 'article', 'articleDetail', 'content', 'wide', 'full'].includes(value)
   },
   spacing: {
     type: String,
@@ -34,6 +34,7 @@ const props = defineProps({
 const widthClasses = {
   narrow: 'mx-auto w-full max-w-3xl',
   article: 'mx-auto w-full max-w-4xl',
+  articleDetail: 'mx-auto w-full max-w-5xl',
   content: 'mx-auto w-full max-w-5xl',
   wide: 'mx-auto w-full max-w-6xl',
   full: 'w-full max-w-none'

@@ -6,5 +6,5 @@ async function copyCode() { const text = slots.default?.().map(node => node.chil
 </script>
 
 <template>
-  <UCard class="my-5"><template #header><div class="flex items-center justify-between gap-3"><span class="font-medium">{{ title }}</span><div class="flex items-center gap-2"><UBadge color="neutral" variant="subtle">{{ lang }}</UBadge><UButton size="xs" color="neutral" variant="ghost" :icon="copied ? 'i-lucide-check' : 'i-lucide-copy'" :aria-label="copied ? 'Copied' : 'Copy code'" @click="copyCode" /></div></div></template><pre class="overflow-x-auto text-sm"><code><slot /></code></pre></UCard>
+  <UCard class="code-playground-mdc my-5"><template #header><div class="flex items-center justify-between gap-3"><span class="font-medium">{{ title }}</span><div class="flex items-center gap-2"><UBadge color="neutral" variant="subtle">{{ lang }}</UBadge><UButton size="xs" color="neutral" variant="ghost" :icon="copied ? 'i-lucide-check' : 'i-lucide-copy'" :aria-label="copied ? 'Copied' : 'Copy code'" @click="copyCode" /></div></div></template><pre class="overflow-x-auto text-sm"><code><slot /></code></pre></UCard>
 </template>

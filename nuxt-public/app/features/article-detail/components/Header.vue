@@ -1,11 +1,11 @@
 <template>
-  <header class="mb-8">
-    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+  <header class="article-detail-header mb-7">
+    <h1 class="mb-3 text-3xl font-bold leading-tight text-[color:var(--article-prose-heading)] md:text-4xl">
       {{ article.title }}
     </h1>
     
     <!-- 元信息 -->
-    <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mb-6">
+    <div class="mb-5 flex flex-wrap items-center gap-3 text-sm text-[color:var(--article-prose-muted)]">
       <UBadge :color="getCategoryTagType(article.category)" variant="subtle" size="md">
         {{ getCategoryName(article.category) }}
       </UBadge>

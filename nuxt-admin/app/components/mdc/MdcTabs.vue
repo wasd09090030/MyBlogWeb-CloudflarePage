@@ -5,7 +5,7 @@ const labels = computed(() => props.labels.length ? props.labels : ['First'])
 </script>
 
 <template>
-  <section class="my-5">
+  <section class="tabs-mdc my-5">
     <div class="flex flex-wrap gap-1 border-b border-default pb-2" role="tablist">
       <UButton v-for="(label, index) in labels" :key="label" size="xs" :color="active === index ? 'primary' : 'neutral'" :variant="active === index ? 'soft' : 'ghost'" role="tab" :aria-selected="active === index" @click="active = index">{{ label }}</UButton>
     </div>

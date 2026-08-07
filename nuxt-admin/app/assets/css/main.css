@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
+@import '../../../../shared/article-typography/article-prose.desktop.css';
+@import '../../../../shared/article-typography/mdc-contract.css';
+@import '../../../../shared/article-typography/article-prose.mobile.css';
+
+@source '../../../../shared/article-typography/prose-preset.ts';
 
 @theme {
   --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;

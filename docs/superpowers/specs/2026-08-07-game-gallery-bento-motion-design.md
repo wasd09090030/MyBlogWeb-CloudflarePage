@@ -36,6 +36,10 @@ fullscreen viewing.
 - Provide exactly three desktop Bento variants: `A` (feature image with a side
   column), `B` (compact three-column contact sheet), and `C` (wide primary area
   with a secondary contact sheet).
+- Variant `C` must not use a full-width feature image. Cap the complete block at
+  `1080px`; use a seven-column feature image and a five-column companion image,
+  followed by four three-column secondary tiles. This keeps low-resolution game
+  screenshots below an oversized poster-like display scale.
 - Select the first variant by a stable hash of the month key. A given month must
   retain its variant across visits while different months naturally vary.
 - For months requiring multiple six-image blocks, use the selected variant as

@@ -72,6 +72,14 @@ test('game section exposes stable variant and whole-month compact-count classes'
   assert.match(css, /max-width:\s*980px/)
 })
 
+test('variant C keeps its feature image below full-width poster scale', async () => {
+  const css = await readAppFile('assets/css/components/GameGallerySection.desktop.css')
+
+  assert.match(css, /\.game-bento-grid--c\s*\{[\s\S]*?max-width:\s*1080px/)
+  assert.match(css, /\.game-bento-grid--c\s+\.game-bento-tile--feature\s*\{[\s\S]*?grid-column:\s*span 7/)
+  assert.match(css, /\.game-bento-grid--c\s+\.game-bento-tile--wide\s*\{[\s\S]*?grid-column:\s*span 5/)
+})
+
 test('gallery category content is keyed for camera-push switching', async () => {
   const source = await readAppFile('features/gallery-public/components/GalleryContent.vue')
   const css = await readAppFile('assets/css/components/Gallery.desktop.css')

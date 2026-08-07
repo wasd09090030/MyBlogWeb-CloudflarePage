@@ -119,6 +119,49 @@ Run: `npx vue-tsc --noEmit`
 
 Expected: exit code `0`.
 
+### Task 4: Cap Variant C Feature Scale
+
+**Files:**
+- Modify: `nuxt-public/app/assets/css/components/GameGallerySection.desktop.css`
+- Modify: `nuxt-public/scripts/game-gallery-bento-layout.test.mjs`
+
+- [ ] **Step 1: Write the failing C-variant geometry contract**
+
+```js
+test('variant C keeps its feature image below full-width poster scale', async () => {
+  const css = await readAppFile('assets/css/components/GameGallerySection.desktop.css')
+
+  assert.match(css, /\.game-bento-grid--c\s*\{[\s\S]*?max-width:\s*1080px/)
+  assert.match(css, /\.game-bento-grid--c\s+\.game-bento-tile--feature\s*\{[\s\S]*?grid-column:\s*span 7/)
+  assert.match(css, /\.game-bento-grid--c\s+\.game-bento-tile--wide\s*\{[\s\S]*?grid-column:\s*span 5/)
+})
+```
+
+- [ ] **Step 2: Verify the contract fails**
+
+Run: `node --test scripts/game-gallery-bento-layout.test.mjs`
+
+Expected: FAIL because C uses a 12-column feature image.
+
+- [ ] **Step 3: Apply C-only grid rules**
+
+```css
+.game-bento-grid--c { width: 100%; max-width: 1080px; margin-inline: auto; }
+.game-bento-grid--c .game-bento-tile--feature { grid-column: span 7; }
+.game-bento-grid--c .game-bento-tile--wide { grid-column: span 5; }
+.game-bento-grid--c .game-bento-tile--standard { grid-column: span 3; }
+```
+
+- [ ] **Step 4: Verify and commit**
+
+Run: `node --test scripts/game-gallery-bento-layout.test.mjs`
+
+Expected: PASS.
+
+Run: `npx vue-tsc --noEmit`
+
+Expected: exit code `0`.
+
 ### Task 3: Browser Regression
 
 **Files:**

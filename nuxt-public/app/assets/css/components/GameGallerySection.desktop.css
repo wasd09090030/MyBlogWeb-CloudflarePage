@@ -83,12 +83,25 @@
   aspect-ratio: 16 / 10;
 }
 
-.game-bento-grid--c .game-bento-tile--feature {
-  grid-column: span 12;
+.game-bento-grid--c {
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
 }
 
-.game-bento-grid--c .game-bento-tile--wide,
+.game-bento-grid--c .game-bento-tile--feature {
+  grid-column: span 7;
+}
+
+.game-bento-grid--c .game-bento-tile--wide {
+  grid-column: span 5;
+}
+
 .game-bento-grid--c .game-bento-tile--standard {
+  grid-column: span 3;
+}
+
+.game-bento-grid--c .game-bento-tile:nth-child(n + 3) {
   grid-column: span 3;
 }
 

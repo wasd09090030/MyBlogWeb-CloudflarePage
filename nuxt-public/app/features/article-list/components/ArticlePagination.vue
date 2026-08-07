@@ -1,19 +1,11 @@
 <template>
   <div v-if="totalPages > 1" class="pagination-container">
     <UPagination
-      :page="currentPageLocal"
+      v-model:page="currentPageLocal"
       :total="totalPages"
       :items-per-page="1"
-      :sibling-count="1"
-      color="neutral"
-      variant="outline"
-      active-color="primary"
-      active-variant="solid"
+      :show-controls="false"
       show-edges
-      :ui="{
-        item: 'transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 active:shadow-none'
-      }"
-      @update:page="onPageChange"
     />
     <div class="pagination-summary">
       共 {{ totalCount }} 篇文章，当前 {{ currentPageLocal }} / {{ totalPages }} 页
@@ -56,22 +48,13 @@ const props = defineProps({
 
 const emit = defineEmits(['update:page'])
 
-const currentPageLocal = ref(props.currentPage)
-
-watch(
-  () => props.currentPage,
-  (newVal) => {
-    if (typeof newVal === 'number' && newVal !== currentPageLocal.value) {
-      currentPageLocal.value = newVal
-    }
+const currentPageLocal = computed({
+  get: () => props.currentPage,
+  set: (page) => {
+    if (page < 1 || page > props.totalPages || page === props.currentPage) return
+    emit('update:page', page)
   }
-)
-
-const onPageChange = (page) => {
-  if (page < 1 || page > props.totalPages || page === currentPageLocal.value) return
-  currentPageLocal.value = page
-  emit('update:page', page)
-}
+})
 </script>
 
 <style scoped>

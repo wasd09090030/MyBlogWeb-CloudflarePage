@@ -7,7 +7,7 @@
   --article-prose-accent: #2563eb;
   --article-prose-accent-soft: color-mix(in srgb, var(--article-prose-accent) 9%, transparent);
   --article-prose-link: #374151;
-  max-width: 72ch;
+  max-width: 84ch;
   margin-inline: auto;
   color: var(--article-prose-text);
 }

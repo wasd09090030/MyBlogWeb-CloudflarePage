@@ -31,7 +31,7 @@
 
       <ContentPageBody width="articleDetail" vertical="content" spacing="compact">
         <ArticleDetailHeader :article="article" @go-back="goBack" />
-        <ArticleDetailContent :article="article" @toc-ready="onTocReady" @go-back="goBack" />
+        <ArticleDetailContent :article="article" @toc-ready="onTocReady" />
       </ContentPageBody>
     </article>
 

@@ -61,16 +61,22 @@ export async function triggerPagesDeploy(event: H3Event) {
       const token = getRequiredSecret(event, 'CLOUDFLARE_API_TOKEN')
       const accountId = getRequiredSecret(event, 'CLOUDFLARE_ACCOUNT_ID')
       const project = getRequiredSecret(event, 'PAGES_PROJECT_NAME')
+      const form = new FormData()
+      form.set('branch', 'main')
       response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/pages/projects/${encodeURIComponent(project)}/deployments`, {
         method: 'POST',
-        headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-        body: JSON.stringify({}),
+        headers: { authorization: `Bearer ${token}` },
+        body: form,
         signal: timeoutSignal(15_000)
       })
     }
   } catch {
     throw createError({ statusCode: 504, statusMessage: 'Pages deployment request timed out' })
   }
-  if (!response.ok) throw createError({ statusCode: 502, statusMessage: 'Pages deployment request failed' })
+  if (!response.ok) {
+    const detail = (await response.text().catch(() => '')).trim().replace(/\s+/g, ' ')
+    const suffix = detail ? `: ${detail.slice(0, 240)}` : ''
+    throw createError({ statusCode: 502, statusMessage: `Pages deployment request failed (${response.status})${suffix}` })
+  }
   return { success: true, message: 'Pages deployment triggered' }
 }

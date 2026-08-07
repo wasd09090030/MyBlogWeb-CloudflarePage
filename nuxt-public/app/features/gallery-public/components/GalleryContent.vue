@@ -44,6 +44,8 @@
           </div>
         </div>
 
+        <Transition name="gallery-mode" mode="out-in">
+          <div :key="activeTag" class="gallery-mode-panel">
         <!-- Artwork：顶部 Hero 保留嵌入感，后续图片流走稳定 masonry -->
         <template v-if="activeTag === 'artwork' && artworkGalleries.length > 0">
           <GalleryHeroSection
@@ -77,8 +79,7 @@
             <GameGallerySection
               :images="group.items"
               :show-section-header="false"
-              :show-month-title="false"
-              @image-click="$emit('open-fullscreen', $event)"
+              @image-click="handleGameImageClick"
             />
           </template>
         </GalleryTimelineLayout>
@@ -89,10 +90,17 @@
           title="暂无游戏截屏"
           description="画廊中还没有游戏截图"
         />
+          </div>
+        </Transition>
       </div>
     </Transition>
 
     <Teleport to="body">
+      <ImageOriginTransition
+        :active="showFullscreen"
+        :src="(selectedImage?.lightboxUrl || selectedImage?.thumbnailUrl) || ''"
+        :origin-rect="fullscreenOriginRect"
+      />
       <Transition name="fullscreen-fade">
         <div v-if="showFullscreen" class="fullscreen-modal" @click="$emit('close-fullscreen')">
           <div class="fullscreen-backdrop"></div>
@@ -150,6 +158,7 @@ import GalleryHeroSection from '~/features/gallery-public/components/GalleryHero
 import GalleryTimelineLayout from '~/features/gallery-public/components/GalleryTimelineLayout.vue'
 import GalleryMasonryList from '~/features/gallery-public/components/GalleryMasonryList.vue'
 import GameGallerySection from '~/features/gallery-public/components/GameGallerySection.vue'
+import ImageOriginTransition from '~/shared/ui/ImageOriginTransition.vue'
 import { groupGalleryByMonth } from '~/features/gallery-public/utils/monthGrouping'
 import StateLoading from '~/shared/ui/StateLoading.vue'
 import StateError from '~/shared/ui/StateError.vue'
@@ -168,6 +177,7 @@ const props = defineProps({
   isGalleryReady: { type: Boolean, required: true },
   selectedImage: { type: Object, default: null },
   showFullscreen: { type: Boolean, required: true },
+  fullscreenOriginRect: { type: Object, default: null },
   imageTransformStyle: { type: Object, required: true },
   imageScale: { type: Number, required: true },
   isDragging: { type: Boolean, required: true },
@@ -202,6 +212,10 @@ const gameMonthGroups = computed(() => groupGalleryByMonth(
 
 const handleFullscreenImageLoad = () => {
   emit('image-load')
+}
+
+const handleGameImageClick = (image, originRect) => {
+  emit('open-fullscreen', { image, originRect })
 }
 
 defineExpose({

@@ -139,6 +139,24 @@
   opacity: 0;
 }
 
+.gallery-mode-enter-active {
+  transition: opacity 320ms ease-out, transform 320ms ease-out;
+}
+
+.gallery-mode-leave-active {
+  transition: opacity 160ms ease-in, transform 160ms ease-in;
+}
+
+.gallery-mode-enter-from {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.gallery-mode-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
 /* 加载动画退出过渡 */
 .loading-fade-enter-active,
 .loading-fade-leave-active {
@@ -366,6 +384,13 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-mode-enter-active,
+  .gallery-mode-leave-active {
+    transition: none !important;
   }
 }
 

@@ -13,6 +13,7 @@
     :is-gallery-ready="isGalleryReady"
     :selected-image="selectedImage"
     :show-fullscreen="showFullscreen"
+    :fullscreen-origin-rect="fullscreenOriginRect"
     :image-transform-style="imageTransformStyle"
     :image-scale="imageScale"
     :is-dragging="isDragging"
@@ -55,6 +56,7 @@ const loading = ref(false)  // SSG 数据已就绪，无需加载状态
 const error = ref(_initialError ? mapErrorToUserMessage(_initialError, '获取画廊数据失败，请稍后重试') : null)
 const showFullscreen = ref(false)
 const selectedImage = ref(null)
+const fullscreenOriginRect = ref(null)
 const activeTag = ref('artwork')
 
 const isInitialLoading = ref(true)
@@ -145,8 +147,9 @@ const destroyGallerySliders = () => {
   destroySliders(refs)
 }
 
-const openFullscreen = (gallery) => {
-  selectedImage.value = gallery
+const openFullscreen = (payload) => {
+  selectedImage.value = payload?.image ?? payload
+  fullscreenOriginRect.value = payload?.originRect ?? null
   showFullscreen.value = true
   resetZoom()
 }
@@ -154,6 +157,7 @@ const openFullscreen = (gallery) => {
 const closeFullscreen = () => {
   showFullscreen.value = false
   selectedImage.value = null
+  fullscreenOriginRect.value = null
   resetZoom()
 }
 

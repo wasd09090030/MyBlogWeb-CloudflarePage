@@ -78,6 +78,7 @@
           <template #month="{ group }">
             <GameGallerySection
               :images="group.items"
+              :month-key="group.key"
               :show-section-header="false"
               @image-click="handleGameImageClick"
             />

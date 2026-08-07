@@ -11,7 +11,11 @@
       <div
         v-for="(block, blockIndex) in bentoBlocks"
         :key="`bento-${blockIndex}`"
-        class="game-bento-grid"
+        :class="[
+          'game-bento-grid',
+          `game-bento-grid--${block.variant}`,
+          `game-bento-grid--count-${images.length}`
+        ]"
       >
         <button
           v-for="tile in block.tiles"
@@ -47,6 +51,10 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  monthKey: {
+    type: String,
+    default: 'unknown'
+  },
   showSectionHeader: {
     type: Boolean,
     default: true
@@ -58,7 +66,7 @@ const imageLoadedMap = ref({})
 const imageErrorMap = ref({})
 
 const getImageKey = (image, index) => getGalleryImageKey(image, index)
-const bentoBlocks = computed(() => buildGameBentoBlocks(props.images))
+const bentoBlocks = computed(() => buildGameBentoBlocks(props.images, props.monthKey))
 
 const hasImage = (image, index) => {
   const thumbnailUrl = image?.lightboxUrl || image?.thumbnailUrl

@@ -27,13 +27,27 @@ test('builds repeatable Bento blocks without dropping or reordering screenshots'
   assert.deepEqual(blocks[0].tiles.map(tile => tile.role), ['feature', 'wide', 'standard', 'standard', 'wide', 'standard'])
 })
 
+test('assigns a stable month variant and rotates following Bento blocks', () => {
+  const images = Array.from({ length: 13 }, (_, id) => ({
+    id,
+    imageWidth: 1600,
+    imageHeight: 1000
+  }))
+
+  const first = buildGameBentoBlocks(images, '2026-08')
+  const second = buildGameBentoBlocks(images, '2026-08')
+
+  assert.deepEqual(first.map(block => block.variant), second.map(block => block.variant))
+  assert.equal(new Set(first.map(block => block.variant)).size, 3)
+})
+
 const projectRoot = new URL('../', import.meta.url)
 const readAppFile = (path) => readFile(new URL(`app/${path}`, projectRoot), 'utf8')
 
 test('game gallery has one Bento render path and forwards tile bounds', async () => {
   const source = await readAppFile('features/gallery-public/components/GameGallerySection.vue')
 
-  assert.match(source, /class="game-bento-grid"/)
+  assert.match(source, /'game-bento-grid'/)
   assert.match(source, /buildGameBentoBlocks/)
   assert.match(source, /getBoundingClientRect\(\)/)
   assert.doesNotMatch(source, /skeleton-[abcd]|filmstrip/i)
@@ -44,6 +58,18 @@ test('desktop game tiles are square and shadow-free', async () => {
 
   assert.match(source, /\.game-bento-tile\s*\{[\s\S]*?border-radius:\s*0;/)
   assert.match(source, /\.game-bento-tile\s*\{[\s\S]*?box-shadow:\s*none;/)
+})
+
+test('game section exposes stable variant and whole-month compact-count classes', async () => {
+  const component = await readAppFile('features/gallery-public/components/GameGallerySection.vue')
+  const css = await readAppFile('assets/css/components/GameGallerySection.desktop.css')
+
+  assert.match(component, /game-bento-grid--\$\{block\.variant\}/)
+  assert.match(component, /game-bento-grid--count-\$\{images\.length\}/)
+  assert.match(component, /monthKey/)
+  assert.match(css, /max-width:\s*640px/)
+  assert.match(css, /max-width:\s*820px/)
+  assert.match(css, /max-width:\s*980px/)
 })
 
 test('gallery category content is keyed for camera-push switching', async () => {

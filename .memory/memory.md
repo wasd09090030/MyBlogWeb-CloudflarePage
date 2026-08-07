@@ -2,7 +2,7 @@
 
 > 个人博客站：**Cloudflare Free 架构**（2026-08-04 完成迁移）。
 > 详细变更提案与设计以 `docs/superpowers/specs/`、`docs/superpowers/plans/` 为准，本目录只存跨会话状态与经验。
-> 最后核验：2026-08-06（含线上删除链路回归）。
+> 最后核验：2026-08-06（含线上删除链路回归 + admin 侧边弹窗/gallery 加载动画改造）。
 
 ## 项目核心
 
@@ -36,6 +36,7 @@
 - [admin Content-Type 415 拦截删除](lessons/admin-content-type-415-delete.md) — 已修复（2026-08-06），无 body 的变更请求不得强制 Content-Type
 - [admin Origin 校验 vs 多主机名路由](lessons/admin-origin-check-vs-routed-hostnames.md) — 已修复（2026-08-05）
 - [Nuxt UI v4 主题类需 Tailwind 扫描 .nuxt/ui](lessons/nuxt-ui-tailwind-source.md) — 已修复（2026-08-05），`tailwind.css` 需 `@source '../../../.nuxt/ui'`，否则动画类不生成
+- [Nuxt UI v4 USlideover 需 #body 具名插槽](lessons/nuxt-ui-slideover-body-slot.md) — 已验证（2026-08-06），默认插槽只渲染为 DialogTrigger 触发元素，内容放默认插槽会内联渲染、弹窗正文空
 - 旧结论（nuxt/ Tailwind v4 时代）：见 `archive/2026-07-nuxt-ssr-admin-progress.md`
 
 ## 归档

@@ -3,6 +3,7 @@
   inset: 0;
   display: grid;
   place-items: center;
+  background: #FFF;
   z-index: 10000;
   pointer-events: none;
 }
@@ -12,9 +13,9 @@
   width: 96px;
   height: 96px;
   overflow: hidden;
+  border: 2px solid #38BDF8;
   border-radius: 6px;
   background: #FFF;
-  box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 18%);
 }
 
 .loader::before {

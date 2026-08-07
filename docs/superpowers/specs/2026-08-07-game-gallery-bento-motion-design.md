@@ -25,9 +25,27 @@ fullscreen viewing.
 - The first image in each month is the feature image. It is wider than the other
   tiles but retains its source aspect ratio.
 - A month with more images continues the same grid rhythm in subsequent blocks;
-  it must not change to a horizontal filmstrip.
+  it must not change to a horizontal filmstrip. Each block may use one of the
+  approved Bento variants, but all variants retain the same hard-edged,
+  shadow-free, horizontal-image language.
 - A short final row may remain short. The implementation must not stretch a tile
   or change modes solely to fill the row.
+
+### Variant selection and compact months
+
+- Provide exactly three desktop Bento variants: `A` (feature image with a side
+  column), `B` (compact three-column contact sheet), and `C` (wide primary area
+  with a secondary contact sheet).
+- Select the first variant by a stable hash of the month key. A given month must
+  retain its variant across visits while different months naturally vary.
+- For months requiring multiple six-image blocks, use the selected variant as
+  the first block and progress through the remaining `A -> B -> C` order. This
+  prevents a long month from repeating one block while remaining stable.
+- A month with one image renders the image centered with a maximum desktop width
+  of `640px`. A two-image month uses a compact two-column layout capped at
+  `820px`; a three-image month uses equal columns capped at `980px`.
+- The compact one-, two-, and three-image presentations are scale constraints
+  within the same game-gallery language, not additional image viewer modes.
 
 ### Aspect handling
 

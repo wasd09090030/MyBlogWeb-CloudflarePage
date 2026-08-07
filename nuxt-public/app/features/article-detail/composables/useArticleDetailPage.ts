@@ -1,6 +1,4 @@
 import { consumePreloadedArticle } from '~/utils/articlePreloadCache'
-import { parseMarkdown } from '@nuxtjs/mdc/runtime'
-import mdcHighlighter from '#mdc-highlighter'
 import { createArticleDetailRepository } from '~/features/article-detail/services/articleDetail.repository'
 import { logAppError, toNuxtErrorPayload } from '~/shared/errors'
 import { buildArticleAsyncDataKey } from '~/shared/cache/keys'
@@ -66,19 +64,8 @@ export const useArticleDetailPage = async () => {
       // 静态生成/SSR 阶段提前解析 Markdown，避免客户端首访重解析。
       if (import.meta.server && markdown && !detail._mdcAst) {
         try {
-          const ast = await parseMarkdown(markdown, {
-            highlight: {
-              theme: {
-                default: 'material-theme-darker',
-                dark: 'one-dark-pro'
-              },
-              highlighter: mdcHighlighter
-            },
-            toc: {
-              depth: 4,
-              searchDepth: 4
-            }
-          })
+          const { parseArticleMarkdown } = await import('#article-markdown-parser')
+          const ast = await parseArticleMarkdown(markdown)
           detail._mdcAst = ast
           detail._mdcToc = ast?.toc
         } catch (parseError: unknown) {
@@ -87,8 +74,8 @@ export const useArticleDetailPage = async () => {
         }
       }
 
-      // Markdown 存在时无需重复携带 HTML 内容，减少 payload 体积。
-      if (markdown) {
+      // 预解析成功时无需重复携带 HTML 内容；失败时保留 HTML 供客户端兼容回退。
+      if (markdown && detail._mdcAst) {
         delete detail.content
       }
 

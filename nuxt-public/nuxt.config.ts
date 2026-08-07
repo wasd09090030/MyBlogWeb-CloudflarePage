@@ -1,4 +1,5 @@
 import tailwindcss from '@tailwindcss/vite'
+import { fileURLToPath } from 'node:url'
 import { buildArticleRoute, fetchAllArticleRoutes, toIsoLastmod } from './build/article-route-data'
 
 // Editorial 字体仅作用于画廊时间线月份标题
@@ -8,6 +9,21 @@ const enableSourceMap = process.env.NUXT_SOURCEMAP === 'true'
 const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://wasd09090030.top'
 // SSG fetches use the deployed Worker URL; browser runtime requests stay same-origin.
 const apiBase = process.env.NUXT_API_BASE_URL || process.env.NUXT_PUBLIC_API_BASE_URL || 'https://wasd09090030.top/api'
+const articleMarkdownParserId = '#article-markdown-parser'
+const articleMarkdownParserPath = fileURLToPath(new URL('./app/features/article-detail/services/parseArticleMarkdown.server.ts', import.meta.url))
+const articleMarkdownParserClientStubId = '\0article-markdown-parser-client-stub'
+
+const articleMarkdownParserPlugin = {
+  name: 'article-markdown-parser-server-only',
+  resolveId(id: string, _importer: string | undefined, options: { ssr?: boolean } | undefined) {
+    if (id !== articleMarkdownParserId) return null
+    return options?.ssr ? articleMarkdownParserPath : articleMarkdownParserClientStubId
+  },
+  load(id: string) {
+    if (id !== articleMarkdownParserClientStubId) return null
+    return 'export async function parseArticleMarkdown() { throw new Error("Server-only Markdown parser invoked in browser") }'
+  }
+}
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-09',
@@ -181,7 +197,7 @@ export default defineNuxtConfig({
   },
 
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), articleMarkdownParserPlugin],
     worker: { format: 'es' },
       optimizeDeps: {
         include: [
@@ -209,10 +225,6 @@ export default defineNuxtConfig({
         treeshake: { preset: 'recommended' },
         output: {
           manualChunks(id) {
-            // Markdown 渲染相关（大型库）
-            if (id.includes('node_modules/mermaid')) {
-              return 'vendor-mermaid'
-            }
             // 数学公式渲染
             if (id.includes('node_modules/katex')) {
               return 'vendor-katex'

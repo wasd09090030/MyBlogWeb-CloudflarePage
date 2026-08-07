@@ -54,8 +54,6 @@
 </template>
 
 <script setup>
-import { parseMarkdown } from '@nuxtjs/mdc/runtime'
-import mdcHighlighter from '#mdc-highlighter'
 import StateEmpty from '~/shared/ui/StateEmpty.vue'
 
 // Worker 预处理已移除,使用内联 fallback
@@ -99,16 +97,6 @@ const loading = ref(false)
 const error = ref(null)
 const containerRef = ref(null)
 
-const markdownParseOptions = {
-  highlight: {
-    theme: {
-      default: 'material-theme-darker',
-      dark: 'one-dark-pro'
-    },
-    highlighter: mdcHighlighter
-  }
-}
-
 let katexStylesReady = false
 let katexStylesPromise = null
 
@@ -117,7 +105,7 @@ let mermaidInstance = null
 let mermaidLoading = false
 
 const htmlContent = computed(() => {
-  if (!props.markdown && props.html) {
+  if (props.html) {
     return props.html
   }
   return null
@@ -322,52 +310,9 @@ async function renderMermaidDiagrams() {
   }
 }
 
-const parseContent = async () => {
-  if (!props.markdown) {
-    ast.value = null
-    return
-  }
-
-  loading.value = true
-  error.value = null
-
-  try {
-    await ensureKatexStylesIfNeeded()
-
-    // 🔥 并行执行：Worker 预处理 + 主线程 Markdown 解析
-    // Worker 线程：TOC 提取、Mermaid 检测、文本统计（不阻塞主线程）
-    // 主线程：parseMarkdown AST 生成（必须在主线程）
-    const [preprocessed, result] = await Promise.all([
-      preprocessMarkdown(props.markdown).catch(() => null),
-      parseMarkdown(props.markdown, markdownParseOptions)
-    ])
-
-    ast.value = result
-
-    // Worker 预处理的 TOC 通常比 parseMarkdown 更快就绪
-    // 优先使用 parseMarkdown 的 TOC（更准确），降级到 Worker 版本
-    if (result.toc) {
-      emit('toc-ready', result.toc)
-    } else if (preprocessed?.toc) {
-      // Worker 提取的快速 TOC 作为后备
-      emit('toc-ready', { links: preprocessed.toc })
-    }
-
-    // 使用 Worker 的 Mermaid 检测结果决定是否需要渲染
-    const hasMermaid = preprocessed?.codeBlocks?.hasMermaid
-      ?? props.markdown?.includes('```mermaid')
-
-    if (hasMermaid) {
-      // 使用 requestIdleCallback 延迟渲染 Mermaid，避免阻塞主线程
-      scheduleIdleTask(() => tryRenderMermaid())
-    }
-  } catch (e) {
-    console.error('Markdown 解析失败:', e)
-    error.value = e.message || '内容解析失败'
-    ast.value = null
-  } finally {
-    loading.value = false
-  }
+function parseContent() {
+  ast.value = null
+  error.value = props.html ? null : '内容预处理失败'
 }
 
 /**

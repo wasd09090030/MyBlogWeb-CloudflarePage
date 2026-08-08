@@ -7,21 +7,22 @@
     font-size: 1.3rem;
   }
 
-  .game-bento-grid {
+  .game-month-head,
+  .game-month-tail {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
   }
 
-  .game-bento-tile,
-  .game-bento-tile--feature,
-  .game-bento-tile--wide,
-  .game-bento-tile--standard {
-    width: 100%;
-    aspect-ratio: 16 / 9;
+  .game-month-tail {
+    margin-top: 0.75rem;
   }
 
-  .game-bento-grid--tiles-1 .game-bento-tile {
-    margin-inline: auto;
+  .game-bento-tile,
+  .game-month-tail--3 .game-bento-tile,
+  .game-month-tail--4 .game-bento-tile {
+    width: 100%;
+    flex-basis: auto;
+    aspect-ratio: 16 / 9;
   }
 }

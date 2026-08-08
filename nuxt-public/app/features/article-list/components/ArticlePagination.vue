@@ -1,18 +1,12 @@
 <template>
   <div v-if="totalPages > 1" class="pagination-container">
-    <div
-      ref="paginationControlRef"
-      class="pagination-control"
-      :style="paginationIndicatorStyle"
-    >
-      <UPagination
-        v-model:page="currentPageLocal"
-        :total="totalPages"
-        :items-per-page="1"
-        :show-controls="false"
-        show-edges
-      />
-    </div>
+    <UPagination
+      v-model:page="currentPageLocal"
+      :total="totalPages"
+      :items-per-page="1"
+      :show-controls="false"
+      show-edges
+    />
     <div class="pagination-summary">
       共 {{ totalCount }} 篇文章，当前 {{ currentPageLocal }} / {{ totalPages }} 页
     </div>
@@ -53,9 +47,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:page'])
-const paginationControlRef = ref(null)
-const paginationIndicatorStyle = ref({ '--pagination-indicator-opacity': 0 })
-let resizeObserver = null
 
 const currentPageLocal = computed({
   get: () => props.currentPage,
@@ -64,49 +55,24 @@ const currentPageLocal = computed({
     emit('update:page', page)
   }
 })
-
-const updatePaginationIndicator = () => {
-  nextTick(() => {
-    const control = paginationControlRef.value
-    const list = control?.querySelector('[data-slot="list"]')
-    const selectedItem = list?.querySelector('[data-slot="item"][data-selected="true"]')
-
-    if (!list || !selectedItem) {
-      paginationIndicatorStyle.value = { '--pagination-indicator-opacity': 0 }
-      return
-    }
-
-    const listBounds = list.getBoundingClientRect()
-    const selectedBounds = selectedItem.getBoundingClientRect()
-    paginationIndicatorStyle.value = {
-      '--pagination-indicator-width': `${selectedBounds.width}px`,
-      '--pagination-indicator-offset': `${selectedBounds.left - listBounds.left}px`,
-      '--pagination-indicator-opacity': 1
-    }
-  })
-}
-
-watch(
-  () => [props.currentPage, props.totalPages],
-  updatePaginationIndicator,
-  { flush: 'post' }
-)
-
-onMounted(() => {
-  updatePaginationIndicator()
-
-  if (typeof ResizeObserver !== 'undefined' && paginationControlRef.value) {
-    resizeObserver = new ResizeObserver(updatePaginationIndicator)
-    resizeObserver.observe(paginationControlRef.value)
-  }
-})
-
-onBeforeUnmount(() => {
-  resizeObserver?.disconnect()
-})
 </script>
 
 <style scoped>
-@import '~/assets/css/components/ArticlePagination.desktop.css';
-@import '~/assets/css/components/ArticlePagination.mobile.css';
+.pagination-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  margin: 2rem 0;
+}
+
+.pagination-summary {
+  color: rgba(55, 65, 81, 0.68);
+  font-size: 0.875rem;
+}
+
+:global(.dark) .pagination-summary {
+  color: rgba(226, 232, 240, 0.7);
+}
 </style>

@@ -14,7 +14,8 @@
         :class="[
           'game-bento-grid',
           `game-bento-grid--${block.variant}`,
-          `game-bento-grid--count-${images.length}`
+          `game-bento-grid--count-${images.length}`,
+          `game-bento-grid--tiles-${block.tiles.length}`
         ]"
       >
         <button
@@ -23,6 +24,7 @@
           v-motion
           type="button"
           class="game-bento-tile"
+          :aria-label="tile.image?.title || `Open game screenshot ${tile.index + 1}`"
           :class="[`game-bento-tile--${tile.role}`, `game-bento-tile--${tile.aspect}`]"
           :initial="{ opacity: 0.001, y: 14 }"
           :visible-once="{

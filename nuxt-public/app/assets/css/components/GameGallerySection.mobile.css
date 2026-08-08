@@ -18,6 +18,10 @@
   .game-bento-tile--wide,
   .game-bento-tile--standard {
     width: 100%;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
+  }
+
+  .game-bento-grid--tiles-1 .game-bento-tile {
+    margin-inline: auto;
   }
 }

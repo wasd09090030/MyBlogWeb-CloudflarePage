@@ -1,11 +1,6 @@
 const BENTO_ROLE_SEQUENCE = ['feature', 'wide', 'standard', 'standard', 'wide', 'standard']
 const BENTO_VARIANTS = ['a', 'b', 'c']
 
-const toFiniteDimension = (value) => {
-  const numericValue = Number(value)
-  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : null
-}
-
 const hashString = (value) => {
   let hash = 0
   for (let index = 0; index < value.length; index++) {
@@ -18,14 +13,9 @@ const getBlockVariant = (monthKey, blockIndex) => (
   BENTO_VARIANTS[(hashString(String(monthKey)) + blockIndex) % BENTO_VARIANTS.length]
 )
 
-export const getGameBentoAspect = (image) => {
-  const width = toFiniteDimension(image?.imageWidth ?? image?.width)
-  const height = toFiniteDimension(image?.imageHeight ?? image?.height)
-  if (!width || !height) return '16x10'
-
-  const ratio = width / height
-  return ratio >= 1.7 ? '16x9' : '16x10'
-}
+// Game screenshots are stored as 16:9. Keep the layout stable even when
+// legacy records omit or misreport their dimensions.
+export const getGameBentoAspect = () => '16x9'
 
 export const buildGameBentoBlocks = (images, monthKey = 'unknown') => {
   const blockSize = BENTO_ROLE_SEQUENCE.length

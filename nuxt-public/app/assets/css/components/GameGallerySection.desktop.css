@@ -68,23 +68,23 @@
 
 .game-bento-tile--wide {
   grid-column: span 6;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
 }
 
 .game-bento-tile--standard {
   grid-column: span 4;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
 }
 
 /* Three editorial arrangements mirror the reference contact sheets. */
 .game-bento-grid--a .game-bento-tile:nth-child(2) { grid-column: 1 / span 6; }
 .game-bento-grid--a .game-bento-tile:nth-child(3) { grid-column: 7 / span 6; }
-.game-bento-grid--a .game-bento-tile:nth-child(n + 4) { grid-column: span 4; aspect-ratio: 4 / 3; }
+.game-bento-grid--a .game-bento-tile:nth-child(n + 4) { grid-column: span 4; aspect-ratio: 16 / 9; }
 
-.game-bento-grid--b .game-bento-tile:nth-child(1) { grid-column: 1 / span 7; grid-row: span 2; aspect-ratio: 4 / 3; }
+.game-bento-grid--b .game-bento-tile:nth-child(1) { grid-column: 1 / span 7; grid-row: span 2; aspect-ratio: 16 / 9; }
 .game-bento-grid--b .game-bento-tile:nth-child(2) { grid-column: 8 / span 5; }
 .game-bento-grid--b .game-bento-tile:nth-child(3) { grid-column: 8 / span 5; }
-.game-bento-grid--b .game-bento-tile:nth-child(n + 4) { grid-column: span 4; aspect-ratio: 4 / 3; }
+.game-bento-grid--b .game-bento-tile:nth-child(n + 4) { grid-column: span 4; aspect-ratio: 16 / 9; }
 
 .game-bento-grid--c { max-width: 1080px; }
 .game-bento-grid--c .game-bento-tile--feature { grid-column: span 7; }
@@ -92,7 +92,7 @@
 .game-bento-grid--c .game-bento-tile:nth-child(1) { grid-column: 2 / span 5; }
 .game-bento-grid--c .game-bento-tile:nth-child(2) { grid-column: 7 / span 5; }
 .game-bento-grid--c .game-bento-tile:nth-child(3) { grid-column: 4 / span 6; aspect-ratio: 16 / 9; }
-.game-bento-grid--c .game-bento-tile:nth-child(n + 4) { grid-column: span 4; aspect-ratio: 4 / 3; }
+.game-bento-grid--c .game-bento-tile:nth-child(n + 4) { grid-column: span 4; aspect-ratio: 16 / 9; }
 
 .game-bento-grid--tiles-1,
 .game-bento-grid--count-1 {
@@ -126,19 +126,17 @@
 .game-bento-grid--count-3 .game-bento-tile {
   grid-column: span 1 !important;
   grid-row: auto !important;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
 }
 
-.game-bento-tile:hover,
-.game-bento-tile:focus-visible {
+.game-bento-tile:hover {
   transform: translateY(-4px);
-  outline: 2px solid rgba(228, 95, 56, 0.9);
-  outline-offset: 2px;
   z-index: 2;
 }
 
 .game-bento-tile:focus-visible {
-  outline-color: #e45f38;
+  outline: 2px solid #e45f38;
+  outline-offset: 2px;
 }
 
 .game-bento-tile :deep(.game-tile__image) {

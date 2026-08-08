@@ -103,6 +103,7 @@
 
 .game-bento-grid--c .game-bento-tile:nth-child(n + 3) {
   grid-column: span 3;
+  aspect-ratio: 4 / 3;
 }
 
 .game-bento-grid--count-1 {

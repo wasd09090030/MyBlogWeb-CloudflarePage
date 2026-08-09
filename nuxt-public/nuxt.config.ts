@@ -42,14 +42,13 @@ export default defineNuxtConfig({
 
   css: [
     '~/assets/css/theme-variables.css',
+    // Tailwind 与 Nuxt UI 必须在同一入口编译，才能生成 text-inverted、
+    // ring-accented 等 Nuxt UI 语义工具类。
     '~/assets/css/tailwind.css',
-    // Nuxt UI v4 设计 token 入口（Phase 0 新增；必须晚于 tailwind.css，
-    // 因为 @nuxt/ui 内部消费 Tailwind 注入的 CSS 变量）
+    // 项目设计 token 与共享文章排版入口。
     '~/assets/css/main.css',
     '~/assets/css/components/responsive-utilities.desktop.css',
     '~/assets/css/components/responsive-utilities.mobile.css',
-    '~/assets/css/layout.css',
-    '~/assets/css/app.css',
     // Editorial 字体（仅作用于画廊时间线月份标题）
     '@fontsource/playfair-display/400.css',
     '@fontsource/playfair-display/700.css',

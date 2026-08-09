@@ -1,6 +1,6 @@
 
 <template>
-  <div id="app" :class="['min-vh-100', colorMode.value === 'dark' ? 'dark' : 'light']">
+  <div id="app" :class="['min-h-screen', colorMode.value === 'dark' ? 'dark' : 'light']">
     <!-- 根据主题切换动画效果 -->
     <ClientOnly>
       <Teleport to="body">
@@ -13,7 +13,7 @@
         <NuxtLink to="/" class="navbar-brand">
           <img src="/icon/logo.webp" alt="Logo" class="navbar-logo" loading="eager" fetchpriority="high" decoding="async" />
         </NuxtLink>
-        <nav class="navbar-center-nav d-none d-lg-flex">
+        <nav class="navbar-center-nav hidden lg:flex">
           <NuxtLink to="/" class="nav-link">
             <Icon name="heroicons:home" size="sm" class="me-1" />首页
           </NuxtLink>
@@ -29,13 +29,13 @@
         </nav>
         <button
           type="button"
-          class="mobile-menu-btn d-lg-none"
+          class="mobile-menu-btn lg:hidden"
           @click="showMobileMenu = true"
           aria-label="打开导航菜单"
         >
           <Icon name="heroicons:bars-3" size="lg" />
         </button>
-        <div class="navbar-right-buttons d-none d-lg-flex">
+        <div class="navbar-right-buttons hidden lg:flex">
           <LazyEffectsSearchBar />
         </div>
       </div>
@@ -82,15 +82,11 @@
     <div v-if="shouldShowWelcomeSection" class="welcome-section-container"><HomeWelcomeSection /></div>
     <div class="main-container">
       <div class="main-content">
-        <div class="container-fluid">
-          <div class="row">
-            <div class="col-12" :class="{ 'col-lg-8 col-xl-9': showSidebar, 'col-lg-12 col-xl-12': !showSidebar }">
-              <main><slot /></main>
-            </div>
-            <div v-if="showSidebar" class="col-lg-4 col-xl-3 d-none d-lg-block sidebar-animate">
-              <div class="sidebar-content"><LazySideBar /></div>
-            </div>
-          </div>
+        <div class="site-layout" :class="{ 'site-layout--with-sidebar': showSidebar }">
+          <main class="site-layout__content"><slot /></main>
+          <aside v-if="showSidebar" class="site-layout__sidebar sidebar-animate">
+            <div class="sidebar-content"><LazySideBar /></div>
+          </aside>
         </div>
       </div>
     </div>
@@ -328,13 +324,6 @@ onUnmounted(() => {
 .mobile-menu-btn:hover {
   background: var(--nav-link-hover-bg);
 }
-@media (min-width: 992px) {
-  .d-lg-none { display: none !important; }
-}
-@media (max-width: 991.98px) {
-  .d-none.d-lg-flex { display: none !important; }
-}
-
 /* Drawer */
 .drawer-overlay {
   position: fixed;
@@ -437,6 +426,63 @@ onUnmounted(() => {
 }
 
 /* Main Container */
+.welcome-section-container {
+  padding-top: 20px;
+}
+.main-container {
+  width: 100%;
+  margin: 0 auto 3rem;
+}
+.main-content {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  max-width: 80%;
+  margin: 10px auto 0;
+  padding: 1.5rem 0 0;
+}
+.site-layout {
+  width: 100%;
+  padding: 0 1rem;
+}
+.site-layout__content {
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 20px;
+}
+.site-layout__sidebar {
+  display: none;
+}
+.sidebar-content {
+  position: sticky;
+  top: 80px;
+  height: fit-content;
+}
+@media (min-width: 992px) {
+  .site-layout--with-sidebar {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(15rem, 1fr);
+  }
+  .site-layout__sidebar {
+    display: block;
+  }
+}
+@media (max-width: 768px) {
+  .main-content {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 0;
+    padding: 1rem 12px 20px;
+  }
+  .site-layout {
+    padding: 0;
+  }
+}
+@media (min-width: 768px) and (max-width: 992px) {
+  .main-content {
+    max-width: 85%;
+  }
+}
 .main-container {
   margin-bottom: 3rem;
 }

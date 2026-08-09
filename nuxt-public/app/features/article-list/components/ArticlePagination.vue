@@ -4,8 +4,6 @@
       v-model:page="currentPageLocal"
       :total="totalPages"
       :items-per-page="1"
-      :show-controls="false"
-      show-edges
     />
     <div class="pagination-summary">
       共 {{ totalCount }} 篇文章，当前 {{ currentPageLocal }} / {{ totalPages }} 页
@@ -23,8 +21,8 @@
  *
  * UPagination 用 total/itemsPerPage 推导总页数；这里以容器传入的
  * totalPages 为准（totalPages:itemsPerPage = 1:1），保证页数与摘要一致。
- * 分页控件本体完全交给 UPagination（含首/末页与省略号），不再添加自定义
- * 分页样式；外层仅保留居中容器与计数摘要文本。
+ * 分页控件本体完全交给 UPagination，并沿用官方默认 controls/edges 行为；
+ * 外层仅保留居中容器与计数摘要文本。
  */
 const props = defineProps({
   currentPage: {

@@ -194,77 +194,6 @@ body {
   }
 }
 
-/* 按钮基础样式 */
-.btn {
-  transition: all 0.3s ease;
-}
-
-.btn:active {
-  transform: scale(0.98);
-}
-
-/* 卡片阴影效果 */
-.card {
-  transition: all 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-/* 表单样式 */
-.form-control:focus {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 0.2rem var(--focus-ring-color);
-}
-
-/* 工具类 */
-.text-gradient {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.bg-gradient-primary {
-  background: var(--gradient-primary) !important;
-}
-
-.shadow-custom {
-  box-shadow: var(--shadow-lg) !important;
-}
-
-/* 响应式隐藏类 - 桌面/移动规则已迁移到
-   assets/css/components/responsive-utilities.{desktop,mobile}.css
-   并通过 nuxt.config.ts 的 css: [] 数组全局加载。 */
-
-/* 加载状态 */
-.loading {
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-/* 错误状态 */
-.error {
-  color: var(--accent-danger);
-}
-
-/* 成功状态 */
-.success {
-  color: var(--accent-success);
-}
-
-/* 警告状态 */
-.warning {
-  color: var(--accent-warning);
-}
-
-/* 信息状态 */
-.info {
-  color: var(--accent-info);
-}
-
 /* 打印样式 */
 @media print {
   .no-print {
@@ -294,14 +223,4 @@ body {
   }
 }
 
-/* 高对比度模式 */
-@media (prefers-contrast: high) {
-  .btn {
-    border-width: 2px !important;
-  }
-
-  .card {
-    border-width: 2px !important;
-  }
-}
 </style>

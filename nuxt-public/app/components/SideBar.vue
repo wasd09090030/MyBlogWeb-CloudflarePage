@@ -1,6 +1,6 @@
 <template>
   <!-- 桌面端侧边栏 -->
-  <div class="desktop-sidebar d-none d-lg-block sidebar-fade-in">
+  <div class="desktop-sidebar hidden lg:block sidebar-fade-in">
     <div class="sidebar-content">
       <section class="sidebar-section category-section">
         <div class="category-grid">
@@ -40,7 +40,7 @@
   </div>
 
   <!-- 移动端浮动按钮 -->
-  <div class="mobile-personal-info d-lg-none">
+  <div class="mobile-personal-info lg:hidden">
     <div class="personal-info-sidebar" v-show="!isCollapsed">
       <div class="sidebar-content">
         <section class="sidebar-section category-section">

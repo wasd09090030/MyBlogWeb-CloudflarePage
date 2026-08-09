@@ -8,76 +8,42 @@
         <LazyEffectsStarryNight v-else-if="showBackgroundAnimation" />
       </Teleport>
     </ClientOnly>
-    <header v-if="!isGalleryRoute" class="app-navbar" :class="{ 'navbar-hidden': isNavbarHidden, 'navbar-scrolled': hasScrolled }">
-      <div class="navbar-container">
-        <NuxtLink to="/" class="navbar-brand">
-          <img src="/icon/logo.webp" alt="Logo" class="navbar-logo" loading="eager" fetchpriority="high" decoding="async" />
-        </NuxtLink>
-        <nav class="navbar-center-nav hidden lg:flex">
-          <NuxtLink to="/" class="nav-link">
-            <Icon name="heroicons:home" size="sm" class="me-1" />首页
-          </NuxtLink>
-          <NuxtLink to="/gallery" class="nav-link">
-            <Icon name="heroicons:photo" size="sm" class="me-1" />画廊
-          </NuxtLink>
-          <NuxtLink to="/archive" class="nav-link">
-            <Icon name="heroicons:book-open" size="sm" class="me-1" />归档
-          </NuxtLink>
-          <NuxtLink to="/about" class="nav-link">
-            <Icon name="heroicons:user-circle" size="sm" class="me-1" />关于站长
-          </NuxtLink>
-        </nav>
-        <button
-          type="button"
-          class="mobile-menu-btn lg:hidden"
-          @click="showMobileMenu = true"
-          aria-label="打开导航菜单"
-        >
-          <Icon name="heroicons:bars-3" size="lg" />
-        </button>
-        <div class="navbar-right-buttons hidden lg:flex">
-          <LazyEffectsSearchBar />
-        </div>
-      </div>
-    </header>
+    <UHeader
+      v-if="!isGalleryRoute"
+      title="WyrmKk"
+      mode="drawer"
+      class="site-header"
+      :class="{ 'site-header--hidden': isNavbarHidden, 'site-header--scrolled': hasScrolled }"
+      :ui="{ container: 'max-w-[1400px]' }"
+    >
+      <template #title>
+        <img
+          src="/icon/logo.webp"
+          alt="WyrmKk"
+          class="h-9 w-auto"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </template>
 
-    <!-- 移动端抽屉菜单 -->
-    <Teleport to="body">
-      <Transition name="drawer-fade">
-        <div v-if="showMobileMenu" class="drawer-overlay" @click="showMobileMenu = false" />
-      </Transition>
-      <Transition name="drawer-slide">
-        <div v-if="showMobileMenu" class="drawer-panel">
-          <div class="drawer-header">
-            <span class="drawer-title">导航菜单</span>
-            <button type="button" class="drawer-close" @click="showMobileMenu = false" aria-label="关闭">
-              <Icon name="heroicons:x-mark" size="md" />
-            </button>
-          </div>
-          <nav class="drawer-nav">
-            <NuxtLink to="/" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="heroicons:home" size="sm" />首页
-            </NuxtLink>
-            <NuxtLink to="/gallery" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="heroicons:photo" size="sm" />画廊
-            </NuxtLink>
-            <NuxtLink to="/archive" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="heroicons:book-open" size="sm" />归档
-            </NuxtLink>
-            <NuxtLink to="/about" class="drawer-nav-item" @click="showMobileMenu = false">
-              <Icon name="heroicons:user-circle" size="sm" />关于站长
-            </NuxtLink>
-          </nav>
-          <div class="drawer-footer">
-            <button type="button" class="drawer-theme-btn" @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'">
-              <Icon v-if="isHydrated" :name="colorMode.value === 'dark' ? 'heroicons:sun-solid' : 'heroicons:moon-solid'" size="md" :solid="true" />
-              <Icon v-else name="heroicons:moon-solid" size="md" :solid="true" />
-              {{ colorMode.value === 'dark' ? '浅色模式' : '深色模式' }}
-            </button>
-          </div>
+      <UNavigationMenu :items="navigationItems" class="hidden lg:flex" />
+
+      <template #right>
+        <div class="hidden items-center gap-2 lg:flex">
+          <LazyEffectsSearchBar />
+          <UColorModeButton />
         </div>
-      </Transition>
-    </Teleport>
+      </template>
+
+      <template #body>
+        <UNavigationMenu :items="navigationItems" orientation="vertical" class="-mx-2.5" />
+        <div class="mt-4 flex items-center justify-between border-t border-default pt-4">
+          <span class="text-sm text-muted">外观</span>
+          <UColorModeButton />
+        </div>
+      </template>
+    </UHeader>
 
     <div v-if="shouldShowWelcomeSection" class="welcome-section-container"><HomeWelcomeSection /></div>
     <div class="main-container">
@@ -143,7 +109,6 @@ const router = useRouter()
 // 写入 preference 即可触发 localStorage 持久化 + DOM class 同步
 const colorMode = useColorMode()
 
-const showMobileMenu = ref(false)
 const isHydrated = ref(false)
 
 const isNavbarHidden = ref(false)
@@ -151,6 +116,13 @@ const hasScrolled = ref(false)
 const lastScrollY = ref(0)
 const scrollThreshold = 60
 const showBackgroundAnimation = ref(true)
+
+const navigationItems = computed(() => [
+  { label: '首页', icon: 'i-heroicons-home', to: '/', active: route.path === '/' },
+  { label: '画廊', icon: 'i-heroicons-photo', to: '/gallery', active: route.path === '/gallery' },
+  { label: '归档', icon: 'i-heroicons-book-open', to: '/archive', active: route.path === '/archive' },
+  { label: '关于站长', icon: 'i-heroicons-user-circle', to: '/about', active: route.path === '/about' }
+])
 
 // 原 themeOverrides（n-config-provider）已迁移到 app.config.ts 的 ui.colors
 // 与 main.css 的 @theme 块；Nuxt UI 直接消费，无需在此维护
@@ -214,215 +186,17 @@ onUnmounted(() => {
 #app {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
-.app-navbar {
+.site-header {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: transparent;
-  backdrop-filter: none;
-  border-bottom: 1px solid transparent;
-  padding: 1rem;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              background-color 0.3s ease,
-              border-color 0.3s ease,
-              padding 0.3s ease,
-              box-shadow 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
 }
-.app-navbar.navbar-scrolled {
-  background: var(--navbar-scrolled-bg);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--navbar-scrolled-border);
-  box-shadow: var(--navbar-scrolled-shadow);
-  padding: 0.6rem 1rem;
-}
-.app-navbar.navbar-hidden {
+.site-header--hidden {
   transform: translateY(-100%);
 }
-:global(.dark) .app-navbar,
-.dark .app-navbar {
-  background: transparent;
-  border-bottom-color: transparent;
-}
-:global(.dark) .app-navbar.navbar-scrolled,
-.dark .app-navbar.navbar-scrolled {
-  background: var(--navbar-scrolled-bg);
-  border-bottom-color: var(--navbar-scrolled-border);
-  box-shadow: var(--navbar-scrolled-shadow);
-}
-.navbar-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-}
-.navbar-center-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.nav-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1.25rem;
-  color: var(--text-primary);
-  text-decoration: none;
-  border-radius: 0.625rem;
-  font-weight: 500;
-  font-size: 1.1rem;
-  background: transparent;
-  border: none;
-  font-family: inherit;
-  line-height: inherit;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.nav-link:hover {
-  background: var(--nav-link-hover-bg);
-  color: var(--primary-color);
-}
-.nav-link:active {
-  background: var(--nav-link-active-bg);
-}
-.nav-link:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 3px;
-  border-radius: 0.625rem;
-}
-:global(.dark) .nav-link,
-.dark .nav-link {
-  color: var(--text-primary);
-}
-:global(.dark) .nav-link:hover,
-.dark .nav-link:hover {
-  background: var(--nav-link-hover-bg);
-  color: var(--primary-color-hover);
-}
-:global(.dark) .nav-link:active,
-.dark .nav-link:active {
-  background: var(--nav-link-active-bg);
-}
-.navbar-right-buttons {
-  display: flex;
-  align-items: center;
-}
-.mobile-menu-btn {
-  font-size: 1.5rem;
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  transition: background 0.2s ease;
-}
-.mobile-menu-btn:hover {
-  background: var(--nav-link-hover-bg);
-}
-/* Drawer */
-.drawer-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  z-index: 2000;
-}
-.drawer-panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 280px;
-  background: var(--bg-primary);
-  z-index: 2001;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
-}
-.drawer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--border-color);
-}
-.drawer-title {
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: var(--text-primary);
-}
-.drawer-close {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 0.375rem;
-  transition: background 0.2s ease;
-}
-.drawer-close:hover {
-  background: var(--nav-link-hover-bg);
-}
-.drawer-nav {
-  flex: 1;
-  padding: 0.75rem 0;
-  overflow-y: auto;
-}
-.drawer-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1.25rem;
-  color: var(--text-primary);
-  text-decoration: none;
-  font-size: 1rem;
-  transition: background 0.2s ease;
-}
-.drawer-nav-item:hover {
-  background: var(--nav-link-hover-bg);
-  color: var(--primary-color);
-}
-.drawer-footer {
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--border-color);
-}
-.drawer-theme-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.75rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-.drawer-theme-btn:hover {
-  background: var(--nav-link-hover-bg);
-}
-.drawer-fade-enter-active,
-.drawer-fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-.drawer-fade-enter-from,
-.drawer-fade-leave-to {
-  opacity: 0;
-}
-.drawer-slide-enter-active,
-.drawer-slide-leave-active {
-  transition: transform 0.25s ease;
-}
-.drawer-slide-enter-from,
-.drawer-slide-leave-to {
-  transform: translateX(-100%);
+.site-header--scrolled {
+  box-shadow: var(--shadow-sm);
 }
 
 /* Main Container */
@@ -462,6 +236,7 @@ onUnmounted(() => {
   .site-layout--with-sidebar {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(15rem, 1fr);
+    column-gap: 1.5rem;
   }
   .site-layout__sidebar {
     display: block;

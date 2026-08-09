@@ -1,13 +1,14 @@
 <template>
   <div>
-    <!-- Search Button -->
-<button
-  @click="showModal = true"
-  class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/35 backdrop-blur-md border border-white/30 transition-all duration-300 text-white hover:text-white hover:scale-105 active:scale-95 btn-search"
-  aria-label="Search"
->
-      <Icon name="mdi:magnify" size="20" />
-    </button>
+    <UButton
+      icon="i-mdi-magnify"
+      color="neutral"
+      variant="ghost"
+      size="md"
+      square
+      aria-label="搜索文章"
+      @click="showModal = true"
+    />
 
     <!-- Search Modal -->
     <UModal
@@ -105,11 +106,3 @@ const quickSearch = (tag) => {
   handleSearch()
 }
 </script>
-
-<style scoped>
-.btn-search {
-  /* 适当增加点击区域 */
-  padding: 0.25rem;
-  background-color: rgb(18, 167, 253);
-}
-</style>

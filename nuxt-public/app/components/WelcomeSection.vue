@@ -90,54 +90,6 @@
       </div>
     </div>
 
-    <!-- 移动端悬浮导航按钮 -->
-    <div class="mobile-fab-container">
-      <!-- 遮罩层 -->
-      <div 
-        class="fab-overlay" 
-        :class="{ 'fab-overlay-active': isFabExpanded }"
-        @click="toggleFab"
-      ></div>
-      
-      <!-- 展开的菜单项 -->
-      <div class="fab-menu" :class="{ 'fab-menu-expanded': isFabExpanded }">
-        <div class="fab-menu-item" @click="handleFabArticles">
-          <span class="fab-menu-label">文章</span>
-          <div class="fab-menu-icon articles-icon">
-         
-              <Icon name="heroicons:document-text" size="md" />
-         
-          </div>
-        </div>
-        <div class="fab-menu-item" @click="handleFabGallery">
-          <span class="fab-menu-label">画廊</span>
-          <div class="fab-menu-icon gallery-icon">
-      
-              <Icon name="heroicons:photo" size="md" />
-       
-          </div>
-        </div>
-        <div class="fab-menu-item" @click="handleFabAbout">
-          <span class="fab-menu-label">关于</span>
-          <div class="fab-menu-icon about-icon">
-       
-              <Icon name="heroicons:user-circle" size="md" />
-          </div>
-        </div>
-      </div>
-      
-      <!-- 主悬浮按钮 -->
-      <button 
-        class="fab-main-btn" 
-        :class="{ 'fab-main-btn-active': isFabExpanded }"
-        @click="toggleFab"
-      >
-      
-          <Icon name="heroicons:squares-2x2-solid" size="lg" class="fab-icon-default" />
-          <Icon name="heroicons:x-mark" size="lg" class="fab-icon-close" />
- 
-      </button>
-    </div>
   </div>
 
 </template>
@@ -152,7 +104,6 @@ const { navigateToArticle } = useArticleNavigation()
 // 响应式数据
 const articleCount = ref(0)
 const loading = ref(false)
-const isFabExpanded = ref(false)
 
 // API composable
 const { getArticles, getAllArticles } = useArticlesFeature()
@@ -192,26 +143,6 @@ const goToGallery = () => {
 
 const goToArchive = () => {
   router.push('/archive')
-}
-
-// 悬浮按钮相关方法
-const toggleFab = () => {
-  isFabExpanded.value = !isFabExpanded.value
-}
-
-const handleFabArticles = () => {
-  isFabExpanded.value = false
-  goToArticles()
-}
-
-const handleFabGallery = () => {
-  isFabExpanded.value = false
-  goToGallery()
-}
-
-const handleFabAbout = () => {
-  isFabExpanded.value = false
-  goToAbout()
 }
 
 // 随机跳转文章

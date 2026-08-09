@@ -186,17 +186,25 @@ onUnmounted(() => {
 #app {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
-.site-header {
+.site-header[data-slot='root'] {
   position: sticky;
   top: 0;
   z-index: 1000;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+  background: transparent;
+  border-bottom-color: transparent;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
-.site-header--hidden {
+.site-header--hidden[data-slot='root'] {
   transform: translateY(-100%);
 }
-.site-header--scrolled {
-  box-shadow: var(--shadow-sm);
+.site-header--scrolled[data-slot='root'] {
+  background: var(--navbar-scrolled-bg);
+  backdrop-filter: blur(12px);
+  border-bottom-color: var(--navbar-scrolled-border);
+  box-shadow: var(--navbar-scrolled-shadow);
 }
 
 /* Main Container */

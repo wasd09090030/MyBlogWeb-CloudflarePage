@@ -42,17 +42,20 @@ const categoryValues = new Set(['study', 'game', 'work', 'resource', 'other'])
 
 function mapArticle(event: H3Event, row: ArticleRow, mode: 'admin' | 'summary' | 'detail') {
   const tags = parseJsonArray(row.tags)
-  const thumbnail = row.cover_image_asset_public_id
+  const hasAsset = Boolean(row.cover_image_asset_public_id)
+  const thumbnail = hasAsset
     ? thumbnailVariantUrl(row.cover_image_asset_public_id, 'card')
     : null
-  const coverImageUrl = row.cover_image_asset_public_id
+  const coverImageUrl = hasAsset
     ? `/images/${encodeURIComponent(row.cover_image_asset_public_id)}`
     : null
   const base = {
     id: row.id,
     title: row.title,
     slug: row.slug,
-    coverImage: mode === 'summary' || mode === 'detail' ? null : row.cover_image,
+    // 回退保底：summary/detail 模式下，仅当无缩略图资产时才暴露原始封面
+    // （历史文章为外部图床原图，非 cfimg）；有缩略图时保持 null，payload 不变。
+    coverImage: mode === 'admin' || !hasAsset ? row.cover_image : null,
     coverImageAssetId: row.cover_image_asset_id,
     coverImageAssetPublicId: row.cover_image_asset_public_id,
     thumbnailUrl: thumbnail,

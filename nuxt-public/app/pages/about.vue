@@ -13,7 +13,7 @@
           
           <h1 class="hero-title">
             <span
-              class="d-block text-muted fs-4 fw-normal mb-2 fade-up"
+              class="block text-muted text-xl font-normal mb-2 fade-up"
               :style="{ animationDelay: '0.2s' }"
             >
               Hi, I'm

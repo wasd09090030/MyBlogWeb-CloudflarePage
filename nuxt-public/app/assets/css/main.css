@@ -1,16 +1,14 @@
 /*
- * main.css — Nuxt UI v4 集成入口
+ * main.css — 项目设计 token 与文章排版入口
  *
  * 与 tailwind.css 的职责划分：
- *   tailwind.css → 注入 Tailwind v4 引擎、dark 变体、@layer base 兼容
- *   main.css    → 注入 Nuxt UI 设计 token + 自定义 @theme 设计 token（Phase 4 补全）
- *
- * 加载顺序（nuxt.config.ts css:[] 数组）：tailwind.css 必须在 main.css 之前，
- *   因为 @nuxt/ui 的源码 @import "tailwindcss" 引用了 Tailwind 注入的 CSS 变量。
+ *   tailwind.css → 在同一编译入口注入 Tailwind v4、Nuxt UI、dark 变体与 base 兼容
+ *   main.css    → 注入项目自定义 @theme token 与共享文章排版
  */
 
-/* Nuxt UI v4 自身入口（内部会引用 Tailwind 注入的 --ui-* 变量） */
-@import '@nuxt/ui';
+@import '../../../../shared/article-typography/article-prose.desktop.css';
+@import '../../../../shared/article-typography/mdc-contract.css';
+@import '../../../../shared/article-typography/article-prose.mobile.css';
 
 /*
  * Phase 4 自定义设计 token（从原 NaiveUI themeOverrides 迁出）

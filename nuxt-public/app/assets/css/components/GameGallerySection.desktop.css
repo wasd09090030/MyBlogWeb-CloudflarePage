@@ -1,6 +1,6 @@
 .game-gallery-section {
   width: 100%;
-  padding: 2.5rem 2rem 4rem;
+  padding: 2.5rem 2rem 4.5rem;
 }
 
 .game-gallery-section--embedded {
@@ -34,15 +34,36 @@
 .game-months {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: clamp(2.5rem, 6vw, 5rem);
 }
 
-.game-bento-grid {
-  --game-bento-gap: 10px;
+.game-month-layout {
+  --game-bento-gap: clamp(0.65rem, 1.2vw, 1rem);
+  width: min(100%, 1280px);
+  margin-inline: auto;
+}
+
+.game-month-head {
   display: grid;
-  grid-auto-flow: row dense;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--game-bento-gap);
+  align-items: stretch;
+}
+
+.game-month-tail {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--game-bento-gap);
+  margin-top: var(--game-bento-gap);
+}
+
+.game-month-tail--3 .game-bento-tile {
+  flex: 0 0 calc((100% - (var(--game-bento-gap) * 2)) / 3);
+}
+
+.game-month-tail--4 .game-bento-tile {
+  flex: 0 0 calc((100% - (var(--game-bento-gap) * 3)) / 4);
 }
 
 .game-bento-tile {
@@ -59,96 +80,42 @@
   transition: transform 180ms ease;
 }
 
-.game-bento-tile--feature {
-  grid-column: span 8;
-  aspect-ratio: 16 / 10;
+.game-bento-tile {
+  aspect-ratio: 16 / 9;
 }
 
-.game-bento-tile--wide {
-  grid-column: span 4;
-  aspect-ratio: 16 / 10;
+/* Each month keeps one reference layout, then extends with its final row. */
+.game-month-layout--compact .game-month-head--count-1 .game-bento-tile:nth-child(1) { grid-column: 4 / span 6; }
+.game-month-layout--compact .game-month-head--count-2 .game-bento-tile { grid-column: span 6; }
+.game-month-layout--compact .game-month-head--count-3 .game-bento-tile { grid-column: span 4; }
+.game-month-layout--compact .game-month-head--count-4 .game-bento-tile { grid-column: span 6; }
+
+.game-month-layout--style1 .game-month-head .game-bento-tile:nth-child(1) { grid-column: 3 / span 8; }
+.game-month-layout--style1 .game-month-head .game-bento-tile:nth-child(n + 2) { grid-column: span 3; }
+
+.game-month-layout--style2 .game-month-head .game-bento-tile:nth-child(1) { grid-column: 1 / span 7; grid-row: 1 / span 2; aspect-ratio: auto; }
+.game-month-layout--style2 .game-month-head .game-bento-tile:nth-child(2),
+.game-month-layout--style2 .game-month-head .game-bento-tile:nth-child(3) { grid-column: 8 / span 5; aspect-ratio: 12 / 5; }
+.game-month-layout--style2 .game-month-head .game-bento-tile:nth-child(2) { grid-row: 1; }
+.game-month-layout--style2 .game-month-head .game-bento-tile:nth-child(3) { grid-row: 2; }
+
+.game-month-layout--style3 .game-month-head .game-bento-tile:nth-child(1) { grid-column: 3 / span 8; }
+
+.game-bento-tile:hover {
+  transform: translateY(-4px);
+  z-index: 2;
 }
 
-.game-bento-tile--standard {
-  grid-column: span 4;
-  aspect-ratio: 16 / 10;
-}
-
-.game-bento-grid--b {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.game-bento-grid--b .game-bento-tile {
-  grid-column: span 1;
-  aspect-ratio: 16 / 10;
-}
-
-.game-bento-grid--c {
-  width: 100%;
-  max-width: 1080px;
-  margin-inline: auto;
-}
-
-.game-bento-grid--c .game-bento-tile--feature {
-  grid-column: span 7;
-}
-
-.game-bento-grid--c .game-bento-tile--wide {
-  grid-column: span 5;
-}
-
-.game-bento-grid--c .game-bento-tile--standard {
-  grid-column: span 3;
-}
-
-.game-bento-grid--c .game-bento-tile:nth-child(n + 3) {
-  grid-column: span 3;
-}
-
-.game-bento-grid--count-1 {
-  width: 100%;
-  max-width: 640px;
-  margin-inline: auto;
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.game-bento-grid--count-2 {
-  width: 100%;
-  max-width: 820px;
-  margin-inline: auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.game-bento-grid--count-3 {
-  width: 100%;
-  max-width: 980px;
-  margin-inline: auto;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.game-bento-grid--count-1 .game-bento-tile,
-.game-bento-grid--count-2 .game-bento-tile,
-.game-bento-grid--count-3 .game-bento-tile {
-  grid-column: span 1;
-  aspect-ratio: 16 / 10;
-}
-
-.game-bento-tile:hover,
 .game-bento-tile:focus-visible {
-  transform: translateY(-3px);
-  outline: 2px solid rgba(255, 255, 255, 0.88);
+  outline: 2px solid #e45f38;
   outline-offset: 2px;
-}
-
-.game-bento-tile:focus-visible {
-  outline-color: #e45f38;
 }
 
 .game-bento-tile :deep(.game-tile__image) {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   user-select: none;
   -webkit-user-drag: none;

@@ -198,64 +198,6 @@
   color: var(--text-primary);
 }
 
-/* 移动端浮动按钮和侧边栏 */
-.mobile-personal-info {
-  position: fixed;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-}
-
-.personal-info-sidebar {
-  background-color: var(--bs-body-bg);
-  border: 1px solid var(--bs-border-color);
-  border-radius: 15px 0 0 15px;
-  box-shadow: -5px 0 20px var(--panel-border-soft);
-  padding: 1.5rem;
-  transition: all 0.3s ease;
-  width: 280px;
-  max-height: 80vh;
-  overflow-y: auto;
-  z-index: 999;
-  margin-right: 10px;
-}
-
-:global(.dark) .personal-info-sidebar,
-.dark .personal-info-sidebar {
-  background-color: var(--bs-dark);
-  border-color: var(--bs-border-color-translucent);
-  box-shadow: -5px 0 20px var(--shadow-lg);
-}
-
-.toggle-button {
-  width: 50px;
-  height: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: var(--gradient-primary);
-  color: var(--text-inverse);
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: var(--shadow-md);
-  transition: all 0.3s ease;
-  z-index: 1001;
-  font-size: 1.4rem;
-  border: none;
-}
-
-.toggle-button:hover {
-  transform: scale(1.1);
-  box-shadow: var(--shadow-lg);
-}
-
-.toggle-button:active {
-  transform: scale(0.95);
-}
-
 /* 通用样式 */
 .avatar-container {
   width: 100px;
@@ -893,33 +835,6 @@
     height: 300px;
     opacity: 0;
   }
-}
-
-/* 滚动条样式 */
-.personal-info-sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.personal-info-sidebar::-webkit-scrollbar-track {
-  background: var(--bs-light);
-  border-radius: 3px;
-}
-
-.personal-info-sidebar::-webkit-scrollbar-thumb {
-  background: var(--bs-secondary);
-  border-radius: 3px;
-}
-
-.personal-info-sidebar::-webkit-scrollbar-thumb:hover {
-  background: var(--bs-primary);
-}
-
-.dark .personal-info-sidebar::-webkit-scrollbar-track {
-  background: var(--bs-gray-800);
-}
-
-.dark .personal-info-sidebar::-webkit-scrollbar-thumb {
-  background: var(--bs-gray-600);
 }
 
 /* 自定义动画类替换animate.css */

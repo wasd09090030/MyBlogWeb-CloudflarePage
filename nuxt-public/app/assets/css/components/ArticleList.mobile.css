@@ -223,15 +223,4 @@
     padding: 0.5rem;
   }
 
-  /* 搜索/筛选提示优化 */
-  .alert.alert-info {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-    border-radius: 8px;
-  }
-
-  .alert.alert-info .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-  }
 }

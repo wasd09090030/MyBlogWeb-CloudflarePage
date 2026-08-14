@@ -8,32 +8,48 @@
     <div v-if="images.length === 0" class="game-empty">暂无游戏截屏</div>
 
     <div v-else class="game-months">
-      <div
-        v-for="(block, blockIndex) in bentoBlocks"
-        :key="`bento-${blockIndex}`"
-        :class="[
-          'game-bento-grid',
-          `game-bento-grid--${block.variant}`,
-          `game-bento-grid--count-${images.length}`
-        ]"
-      >
-        <button
-          v-for="tile in block.tiles"
-          :key="getImageKey(tile.image, tile.index)"
-          v-motion
-          type="button"
-          class="game-bento-tile"
-          :class="[`game-bento-tile--${tile.role}`, `game-bento-tile--${tile.aspect}`]"
-          :initial="{ opacity: 0.001, y: 14 }"
-          :visible-once="{
-            opacity: 1,
-            y: 0,
-            transition: { duration: 300, delay: tile.index * 45, ease: 'easeOut' }
-          }"
-          @click="emitGameImageClick($event, tile.image)"
+      <div :class="['game-month-layout', `game-month-layout--${layout.style}`]">
+        <div class="game-month-head" :class="`game-month-head--count-${layout.head.length}`">
+          <button
+            v-for="tile in layout.head"
+            :key="getImageKey(tile.image, tile.index)"
+            v-motion
+            type="button"
+            class="game-bento-tile"
+            :aria-label="tile.image?.title || `Open game screenshot ${tile.index + 1}`"
+            :initial="{ opacity: 0.001, y: 14 }"
+            :visible-once="{
+              opacity: 1,
+              y: 0,
+              transition: { duration: 300, delay: tile.index * 45, ease: 'easeOut' }
+            }"
+            @click="emitGameImageClick($event, tile.image)"
+          >
+            <GameTileImage :image="tile.image" :index="tile.index" />
+          </button>
+        </div>
+        <div
+          v-if="layout.tail.length"
+          :class="['game-month-tail', `game-month-tail--${layout.tailColumns}`]"
         >
-          <GameTileImage :image="tile.image" :index="tile.index" />
-        </button>
+          <button
+            v-for="tile in layout.tail"
+            :key="getImageKey(tile.image, tile.index)"
+            v-motion
+            type="button"
+            class="game-bento-tile"
+            :aria-label="tile.image?.title || `Open game screenshot ${tile.index + 1}`"
+            :initial="{ opacity: 0.001, y: 14 }"
+            :visible-once="{
+              opacity: 1,
+              y: 0,
+              transition: { duration: 300, delay: tile.index * 45, ease: 'easeOut' }
+            }"
+            @click="emitGameImageClick($event, tile.image)"
+          >
+            <GameTileImage :image="tile.image" :index="tile.index" />
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -44,7 +60,7 @@ import { h, resolveComponent } from 'vue'
 import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
 import { getGalleryImageKey } from '~/features/gallery-public/utils/masonryLayout'
 import { getGalleryTimestamp } from '~/features/gallery-public/utils/monthGrouping'
-import { buildGameBentoBlocks } from '~/features/gallery-public/utils/gameBentoLayout'
+import { buildGameBentoLayout } from '~/features/gallery-public/utils/gameBentoLayout'
 
 const props = defineProps({
   images: {
@@ -66,7 +82,7 @@ const imageLoadedMap = ref({})
 const imageErrorMap = ref({})
 
 const getImageKey = (image, index) => getGalleryImageKey(image, index)
-const bentoBlocks = computed(() => buildGameBentoBlocks(props.images, props.monthKey))
+const layout = computed(() => buildGameBentoLayout(props.images, props.monthKey))
 
 const hasImage = (image, index) => {
   const thumbnailUrl = image?.lightboxUrl || image?.thumbnailUrl

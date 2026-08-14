@@ -92,15 +92,6 @@
     display: none;
   }
 
-  /* 显示悬浮按钮 */
-  .mobile-fab-container {
-    display: block;
-    position: fixed;
-    right: 16px;
-    bottom: 80px;
-    z-index: 1000;
-  }
-
   .carousel-section {
     border-radius: 12px;
   }
@@ -202,8 +193,4 @@
     margin: 0 3px !important;
   }
 
-  .mobile-fab-container {
-    right: 14px;
-    bottom: 70px;
-  }
 }

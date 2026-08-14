@@ -33,6 +33,6 @@ export const articleProsePreset = {
   td: { base: 'border-b border-[color:var(--article-prose-border)] px-3 py-2 align-top text-[color:var(--article-prose-text)]' },
   code: { base: 'rounded-sm bg-[color:var(--article-prose-surface)] px-1 py-0.5 font-mono text-[0.875em] font-medium text-[color:var(--article-prose-heading)]' },
   pre: { slots: { root: 'article-code-block relative my-6', base: 'overflow-x-auto rounded-md bg-zinc-950 px-4 py-4 text-sm leading-7 text-zinc-200', copy: 'absolute end-3 top-3 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100', header: 'flex items-center gap-2 rounded-t-md border border-b-0 border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-300', filename: 'font-medium text-zinc-100', icon: 'size-4 text-zinc-400' } },
-  img: { slots: { base: 'my-7 mx-auto rounded-md border border-[color:var(--article-prose-border)]', overlay: 'fixed inset-0 z-50 bg-background/80 backdrop-blur-sm', content: 'fixed inset-0 z-50 flex items-center justify-center p-4', zoomedImage: 'max-h-[90vh] max-w-[90vw] rounded-md shadow-xl' } },
+  img: { slots: { base: 'my-7 mx-auto rounded-md border border-[color:var(--article-prose-border)]', overlay: 'fixed inset-0 z-50 bg-background/80 backdrop-blur-sm', content: 'fixed inset-0 z-50 flex items-center justify-center p-4', zoomedImage: 'max-h-[90vh] max-w-[90vw] rounded-md' } },
   hr: { base: 'my-8 border-0 border-t border-[color:var(--article-prose-border)]' }
 } as const

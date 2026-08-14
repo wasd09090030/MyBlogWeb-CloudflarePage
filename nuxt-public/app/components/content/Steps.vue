@@ -1,10 +1,9 @@
 <template>
-  <div class="steps-mdc my-6 p-4 bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 relative overflow-hidden">
+  <div class="steps-mdc my-6 p-4 overflow-hidden">
     <!-- 装饰性光晕效果 -->
-    <div class="absolute inset-0 bg-linear-to-br from-blue-50/70 via-transparent to-transparent dark:from-sky-500/15 dark:via-transparent dark:to-transparent pointer-events-none"></div>
 
     <!-- 内容区域 -->
-    <div class="relative z-10">
+    <div>
       <UStepper
         v-model="stepperIndex"
         :items="stepperItems"

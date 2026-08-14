@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '@nuxt/ui';
 
 @source '../../app.config.ts';
 @source '../../../../shared/article-typography/prose-preset.ts';

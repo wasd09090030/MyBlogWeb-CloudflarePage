@@ -31,7 +31,7 @@
     </div>
 
     <!-- 返回按钮 -->
-    <UButton color="success" variant="ghost" leading-icon="heroicons:arrow-left" @click="() => $emit('go-back')">
+    <UButton color="neutral" variant="subtle" leading-icon="heroicons:arrow-left" @click="() => $emit('go-back')">
       返回
     </UButton>
   </header>

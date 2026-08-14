@@ -8,7 +8,7 @@ const toast = useToast()
 const open = ref(false)
 const importOpen = ref(false)
 const editing = ref<GalleryItem | null>(null)
-const form = reactive({ imageUrl: '', tag: 'artwork', isActive: true, sortOrder: 0 })
+const form = reactive({ imageUrl: '', tag: 'artwork', isActive: true, sortOrder: 0, createdAt: '' })
 const batch = reactive({ imageUrls: '', tag: 'artwork', isActive: true })
 const tagFilter = ref('all')
 const visibilityFilter = ref('all')
@@ -32,6 +32,31 @@ const sortOptions = [
   { label: '最新创建', value: 'newest' }
 ]
 const { data: items, refresh } = await useAsyncData('admin-gallery', () => api.get<GalleryItem[]>('gallery/admin'))
+
+function toShanghaiDateTimeLocal(value?: string) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23'
+  }).formatToParts(date)
+  const fields = Object.fromEntries(parts.filter(part => part.type !== 'literal').map(part => [part.type, part.value]))
+  return `${fields.year}-${fields.month}-${fields.day}T${fields.hour}:${fields.minute}`
+}
+
+function toCreatedAtUtc(value: string) {
+  if (!value) return undefined
+  const localValue = value.length === 16 ? `${value}:00` : value
+  const date = new Date(`${localValue}+08:00`)
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
+}
+
 const visibleItems = computed(() => {
   const list = (items.value || []).filter((item) => {
     const tagMatches = tagFilter.value === 'all' || (item.tag || 'artwork') === tagFilter.value
@@ -48,13 +73,14 @@ const visibleItems = computed(() => {
 function edit(item?: GalleryItem) {
   editing.value = item || null
   Object.assign(form, item
-    ? { imageUrl: item.imageUrl, tag: item.tag === 'game' ? 'game' : 'artwork', isActive: item.isActive !== false, sortOrder: item.sortOrder || 0 }
-    : { imageUrl: '', tag: 'artwork', isActive: true, sortOrder: (items.value?.length || 0) + 1 })
+    ? { imageUrl: item.imageUrl, tag: item.tag === 'game' ? 'game' : 'artwork', isActive: item.isActive !== false, sortOrder: item.sortOrder || 0, createdAt: toShanghaiDateTimeLocal(item.createdAt) }
+    : { imageUrl: '', tag: 'artwork', isActive: true, sortOrder: (items.value?.length || 0) + 1, createdAt: '' })
   open.value = true
 }
 async function save() {
-  if (editing.value) await api.patch(`gallery/${editing.value.id}`, form)
-  else await api.post('gallery', form)
+  const { createdAt, ...galleryInput } = form
+  if (editing.value) await api.patch(`gallery/${editing.value.id}`, { ...galleryInput, createdAt: toCreatedAtUtc(createdAt) })
+  else await api.post('gallery', galleryInput)
   open.value = false
   toast.add({ title: '画廊已保存', color: 'success' })
   await refresh()
@@ -123,7 +149,7 @@ async function remove(item: GalleryItem) { if (!confirm('删除该画廊项？')
     <UEmpty v-else icon="i-lucide-images" title="没有符合条件的图片" description="调整筛选条件或导入新的图片。" />
 
     <UModal v-model:open="open" title="画廊项">
-      <template #body><UForm :state="form" class="space-y-4" @submit="save"><UFormField label="图片地址"><UInput v-model="form.imageUrl" class="w-full" /></UFormField><UFormField label="素材类型"><USelect v-model="form.tag" :items="tagOptions" class="w-full" /></UFormField><UFormField label="排序"><UInput v-model.number="form.sortOrder" type="number" class="w-full" /></UFormField><UCheckbox v-model="form.isActive" label="公开显示" /><UButton type="submit" block>保存</UButton></UForm></template>
+      <template #body><UForm :state="form" class="space-y-4" @submit="save"><UFormField label="图片地址"><UInput v-model="form.imageUrl" class="w-full" /></UFormField><UFormField label="素材类型"><USelect v-model="form.tag" :items="tagOptions" class="w-full" /></UFormField><UFormField v-if="editing" label="展示时间（UTC+8）"><UInput v-model="form.createdAt" type="datetime-local" class="w-full" /></UFormField><UFormField label="排序"><UInput v-model.number="form.sortOrder" type="number" class="w-full" /></UFormField><UCheckbox v-model="form.isActive" label="公开显示" /><UButton type="submit" block>保存</UButton></UForm></template>
     </UModal>
     <UModal v-model:open="importOpen" title="批量导入图片"><template #body><UForm :state="batch" class="space-y-4" @submit="importBatch"><UFormField label="每行一个图片地址"><UTextarea v-model="batch.imageUrls" :rows="8" class="w-full" /></UFormField><UFormField label="素材类型"><USelect v-model="batch.tag" :items="tagOptions" class="w-full" /></UFormField><UCheckbox v-model="batch.isActive" label="导入后公开显示" /><UButton type="submit" block icon="i-lucide-import">导入图片</UButton></UForm></template></UModal>
   </div>

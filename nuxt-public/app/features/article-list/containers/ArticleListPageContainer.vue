@@ -39,29 +39,31 @@
           size="medium"
         />
 
-        <TransitionGroup
-          v-else-if="listContext.articles.length"
-          tag="div"
-          name="layout-fade"
-          :class="articlesContainerClasses"
-        >
-          <ArticleListArticleCard
-            v-for="(article, index) in listContext.articles"
-            :key="article.id"
-            :article="article"
-            :index="index"
-            :is-reverse="isListView && (listContext.indexOffset + index + 1) % 2 === 0"
-            :view-mode="effectiveViewMode"
-            :route-query="currentRouteQuery"
-          />
-        </TransitionGroup>
+        <Transition v-else name="pagination-page" mode="out-in">
+          <div
+            v-if="listContext.articles.length"
+            :key="`page-${listContext.currentPage}`"
+            :class="articlesContainerClasses"
+          >
+            <ArticleListArticleCard
+              v-for="(article, index) in listContext.articles"
+              :key="article.id"
+              :article="article"
+              :index="index"
+              :is-reverse="isListView && (listContext.indexOffset + index + 1) % 2 === 0"
+              :view-mode="effectiveViewMode"
+              :route-query="currentRouteQuery"
+            />
+          </div>
 
-        <StateEmpty
-          v-else
-          icon="heroicons:document-text"
-          :description="listContext.emptyText"
-          class="my-5"
-        />
+          <StateEmpty
+            v-else
+            key="empty"
+            icon="heroicons:document-text"
+            :description="listContext.emptyText"
+            class="my-5"
+          />
+        </Transition>
 
         <ArticleListArticlePagination
           :current-page="paginationPage"

@@ -1,5 +1,5 @@
 <template>
-  <div class="image-comparison-mdc my-6 relative rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700" ref="containerRef">
+  <div class="image-comparison-mdc my-6 relative overflow-hidden" ref="containerRef">
     <div class="relative select-none" :style="{ aspectRatio: aspectRatio || 'auto' }">
       <!-- 后图（右侧） -->
       <div class="absolute inset-0">

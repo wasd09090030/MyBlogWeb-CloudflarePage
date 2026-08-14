@@ -29,11 +29,6 @@
     </template>
 
     <!-- 底部返回按钮 -->
-    <div class="mt-10 mb-4 text-center">
-      <UButton color="info" variant="solid" size="lg" leading-icon="heroicons:arrow-left" @click="() => $emit('go-back')">
-        返回上页
-      </UButton>
-    </div>
   </div>
 </template>
 
@@ -45,7 +40,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['toc-ready', 'go-back'])
+const emit = defineEmits(['toc-ready'])
 const showSecondaryBlocks = ref(false)
 
 // 从 MarkdownRenderer 接收 TOC 数据（来自 AST，更快）

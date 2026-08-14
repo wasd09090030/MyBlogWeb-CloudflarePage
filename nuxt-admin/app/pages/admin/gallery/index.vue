@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { GalleryItem } from '~/types/admin'
+import type { GalleryHeroConfiguration, GalleryHeroItem, GalleryHeroSection, GalleryItem } from '~/types/admin'
 
 definePageMeta({ layout: 'admin', middleware: 'admin-auth', keepalive: true })
 
@@ -15,6 +15,19 @@ const visibilityFilter = ref('all')
 const sortMode = ref('manual')
 const orderDirty = ref(false)
 const backfilling = ref(false)
+const heroSaving = ref(false)
+const heroSections = reactive<Record<GalleryHeroSection, GalleryHeroItem[]>>({
+  fade: [],
+  accordion: [],
+  coverflow: [],
+  preview: []
+})
+const heroDefinitions: Array<{ key: GalleryHeroSection; label: string; limit: number }> = [
+  { key: 'fade', label: '淡入轮播', limit: 5 },
+  { key: 'accordion', label: '手风琴', limit: 5 },
+  { key: 'coverflow', label: 'Coverflow', limit: 5 },
+  { key: 'preview', label: '右侧预览', limit: 3 }
+]
 const tagOptions = [
   { label: 'Artwork', value: 'artwork' },
   { label: 'Game', value: 'game' }
@@ -32,6 +45,23 @@ const sortOptions = [
   { label: '最新创建', value: 'newest' }
 ]
 const { data: items, refresh } = await useAsyncData('admin-gallery', () => api.get<GalleryItem[]>('gallery/admin'))
+const { data: heroConfiguration, refresh: refreshHeroConfiguration } = await useAsyncData(
+  'admin-gallery-hero',
+  () => api.get<GalleryHeroConfiguration>('gallery/hero')
+)
+
+function applyHeroConfiguration(configuration: GalleryHeroConfiguration) {
+  for (const definition of heroDefinitions) {
+    heroSections[definition.key] = (configuration.sections[definition.key] || []).map(item => ({
+      ...item,
+      imageUrl: item.sourceImageUrl || item.imageUrl
+    }))
+  }
+}
+
+watch(heroConfiguration, (configuration) => {
+  if (configuration) applyHeroConfiguration(configuration)
+}, { immediate: true })
 
 function toShanghaiDateTimeLocal(value?: string) {
   if (!value) return ''
@@ -114,6 +144,39 @@ async function saveOrder() {
   toast.add({ title: '手动排序已保存', color: 'success' })
   await refresh()
 }
+function addHeroItem(section: GalleryHeroSection) {
+  const definition = heroDefinitions.find(item => item.key === section)
+  if (!definition || heroSections[section].length >= definition.limit) return
+  heroSections[section].push({ imageUrl: '' })
+}
+function moveHeroItem(section: GalleryHeroSection, index: number, direction: -1 | 1) {
+  const targetIndex = index + direction
+  if (targetIndex < 0 || targetIndex >= heroSections[section].length) return
+  const [item] = heroSections[section].splice(index, 1)
+  heroSections[section].splice(targetIndex, 0, item!)
+}
+function removeHeroItem(section: GalleryHeroSection, index: number) {
+  heroSections[section].splice(index, 1)
+}
+async function saveHeroConfiguration() {
+  const sections = Object.fromEntries(heroDefinitions.map(({ key }) => [
+    key,
+    heroSections[key].map(item => ({ imageUrl: item.imageUrl.trim() }))
+  ])) as Record<GalleryHeroSection, Array<{ imageUrl: string }>>
+  if (Object.values(sections).flat().some(item => !item.imageUrl)) {
+    toast.add({ title: '请填写所有 Hero 图片地址，或删除空项', color: 'warning' })
+    return
+  }
+  heroSaving.value = true
+  try {
+    const saved = await api.put<GalleryHeroConfiguration>('gallery/hero', { sections })
+    applyHeroConfiguration(saved)
+    toast.add({ title: 'Artwork Hero 已保存', color: 'success' })
+    await refreshHeroConfiguration()
+  } finally {
+    heroSaving.value = false
+  }
+}
 async function toggle(item: GalleryItem) { await api.patch(`gallery/${item.id}/toggle-active`); await refresh() }
 async function backfillImageAssets() {
   backfilling.value = true
@@ -138,6 +201,27 @@ async function remove(item: GalleryItem) { if (!confirm('删除该画廊项？')
     </div>
 
     <div class="flex justify-end"><UButton color="neutral" variant="soft" icon="i-lucide-refresh-cw" :loading="backfilling" @click="backfillImageAssets">迁移永久缩略图</UButton></div>
+
+    <UCard>
+      <template #header>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div><p class="text-sm text-muted">独立于瀑布流</p><h3 class="text-lg font-semibold">Artwork Hero</h3></div>
+          <UButton icon="i-lucide-save" :loading="heroSaving" @click="saveHeroConfiguration">保存 Hero 配置</UButton>
+        </div>
+      </template>
+      <div class="grid gap-5 lg:grid-cols-2">
+        <section v-for="definition in heroDefinitions" :key="definition.key" class="space-y-3 rounded-md border border-default p-4">
+          <div class="flex items-center justify-between gap-2"><h4 class="font-medium">{{ definition.label }}</h4><span class="text-sm text-muted">{{ heroSections[definition.key].length }} / {{ definition.limit }}</span></div>
+          <div v-for="(item, index) in heroSections[definition.key]" :key="item.id || `${definition.key}-${index}`" class="flex items-center gap-2">
+            <UInput v-model="item.imageUrl" class="min-w-0 flex-1" :aria-label="`${definition.label} 图片地址 ${index + 1}`" />
+            <UTooltip text="上移"><UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-arrow-up" :disabled="index === 0" :aria-label="`上移 ${definition.label} 图片`" @click="moveHeroItem(definition.key, index, -1)" /></UTooltip>
+            <UTooltip text="下移"><UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-arrow-down" :disabled="index === heroSections[definition.key].length - 1" :aria-label="`下移 ${definition.label} 图片`" @click="moveHeroItem(definition.key, index, 1)" /></UTooltip>
+            <UTooltip text="删除"><UButton size="xs" color="error" variant="ghost" icon="i-lucide-trash-2" :aria-label="`删除 ${definition.label} 图片`" @click="removeHeroItem(definition.key, index)" /></UTooltip>
+          </div>
+          <UButton size="sm" color="neutral" variant="soft" icon="i-lucide-plus" :disabled="heroSections[definition.key].length >= definition.limit" @click="addHeroItem(definition.key)">添加图片</UButton>
+        </section>
+      </div>
+    </UCard>
     <UCard :ui="{ body: 'p-3 sm:p-3' }"><div class="flex flex-wrap items-center gap-3"><USelect v-model="tagFilter" :items="tagFilterOptions" class="w-36" /><USelect v-model="visibilityFilter" :items="visibilityOptions" class="w-36" /><USelect v-model="sortMode" :items="sortOptions" class="w-48" /><span class="ms-auto text-sm text-muted">显示 {{ visibleItems.length }} / {{ items?.length || 0 }} 项</span></div></UCard>
 
     <div v-if="visibleItems.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

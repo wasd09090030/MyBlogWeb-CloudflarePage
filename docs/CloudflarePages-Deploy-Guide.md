@@ -1,6 +1,6 @@
 # Cloudflare Pages Deployment Guide
 
-The public site remains a Nuxt 4 SSG project on Cloudflare Pages. Runtime data and admin operations are served by the `blog-admin` Worker, so Pages never needs a direct connection to the old .NET API.
+The public site remains a Nuxt 4 SSG project on Cloudflare Pages. The admin shell is a separate `myblog-admin` Pages SPA, while runtime data and admin operations are served by the `blog-api` Worker. Neither Pages project has a runtime dependency on the old .NET API.
 
 ## Pages project
 
@@ -50,11 +50,11 @@ See [nuxt-admin/DEPLOYMENT.md](../nuxt-admin/DEPLOYMENT.md) for the complete cut
 
 ## Domain routing
 
-Attach the public hostname to the front-door `blog-router` Worker. It sends `/admin`, `/api`, `/images`, and `/_ssr` through the `BLOG_ADMIN` Service Binding and forwards all other paths to the Pages origin. Keep Pages' `/_nuxt/` asset path separate from the admin Worker's `/_ssr/` path.
+Attach the public hostname to the front-door `blog-router` Worker. It sends `/admin/api`, `/api`, and `/images` through the `BLOG_API` Service Binding, forwards `/admin/*` to `myblog-admin` Pages, and forwards all other paths to the public Pages origin. Keep public assets under `/_nuxt/` and admin assets under `/admin/_nuxt/`.
 
 ## Troubleshooting
 
-- SSG cannot load articles: verify `NUXT_API_BASE_URL`, Worker routing, D1 migrations, and the `blog-admin` binding.
+- SSG cannot load articles: verify `NUXT_API_BASE_URL`, Worker routing, D1 migrations, and the `BLOG_API` binding.
 - A published article is not visible: trigger the Pages Deploy Hook and inspect the Pages deployment log.
-- Admin assets return 404: verify the Worker build preserved `buildAssetsDir: '/_ssr/'` and that the router sends `/_ssr/*` to `blog-admin`.
-- Do not reintroduce `backend.wasd09090030.top` or a PM2 process into the production request path; the old backend is a rollback-only reference.
+- Admin assets return 404: verify the Admin Pages artifact contains `admin/_nuxt/` and that `ADMIN_PAGES_ORIGIN` points to the `myblog-admin` Pages project.
+- Do not reintroduce `backend.wasd09090030.top`, PM2, or Nginx into the production request path; the old backend is a historical reference only.

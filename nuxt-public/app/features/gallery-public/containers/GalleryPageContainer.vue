@@ -17,7 +17,7 @@
     :image-transform-style="imageTransformStyle"
     :image-scale="imageScale"
     :is-dragging="isDragging"
-    :get-gallery-slice="getGallerySlice"
+    :hero-images="getHeroImages"
     @change-tag="setActiveTag"
     @open-fullscreen="openFullscreen"
     @close-fullscreen="closeFullscreen"
@@ -42,16 +42,20 @@ import { mapErrorToUserMessage } from '~/shared/errors'
 
 // SSG 预渲染阶段拉取画廊数据，构建时将结果写入 _payload.json；
 // 客户端水化时直接从 payload 读取，无需额外网络请求。
-const { getGalleriesSSG } = createGalleryRepository()
+const { getGalleriesSSG, getGalleryHeroSSG } = createGalleryRepository()
 let _initialGalleries = []
+let _initialHero = { isConfigured: false, sections: { fade: [], accordion: [], coverflow: [], preview: [] } }
 let _initialError = null
 try {
-  _initialGalleries = await getGalleriesSSG()
+  const [galleriesResult, heroResult] = await Promise.all([getGalleriesSSG(), getGalleryHeroSSG()])
+  _initialGalleries = galleriesResult
+  _initialHero = heroResult
 } catch (err) {
   _initialError = err
 }
 
 const galleries = ref(_initialGalleries)
+const heroConfiguration = ref(_initialHero)
 const loading = ref(false)  // SSG 数据已就绪，无需加载状态
 const error = ref(_initialError ? mapErrorToUserMessage(_initialError, '获取画廊数据失败，请稍后重试') : null)
 const showFullscreen = ref(false)
@@ -81,6 +85,11 @@ const imageTransformStyle = computed(() => ({
 
 const artworkGalleries = computed(() => galleries.value.filter(gallery => normalizeTag(gallery.tag) === 'artwork'))
 const gameGalleries = computed(() => galleries.value.filter(gallery => normalizeTag(gallery.tag) === 'game'))
+
+const getHeroImages = (section, start, end) => {
+  if (heroConfiguration.value.isConfigured) return heroConfiguration.value.sections[section] || []
+  return getSlice(artworkGalleries.value, start, end)
+}
 
 const setActiveTag = (tag) => {
   if (activeTag.value === tag) return
@@ -123,10 +132,6 @@ const preloadAllImagesHandler = async () => {
 }
 
 let startTime = Date.now()
-
-const getGallerySlice = (start, end) => {
-  return getSlice(artworkGalleries.value, start, end)
-}
 
 const getSliderRefs = () => {
   return galleryContentRef.value?.getSliderRefs?.() || {

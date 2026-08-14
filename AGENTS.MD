@@ -4,19 +4,19 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 ## 1. 项目概览
 本仓库是全栈博客系统，采用混合架构：
 - 静态博客前端：`nuxt-public/`（Nuxt 4，SSG 静态生成，部署到 Cloudflare Pages；组件库：**Nuxt UI v4 ✅ 已从 NaiveUI 迁移完成**——见 `openspec/changes/nuxt-ui-migration/`）
-- 动态 SSR 管理后台：`nuxt-admin/`（Nuxt 4 SSR，部署到云服务器；组件库：**Nuxt UI v4**；负责 `/admin/*`）
+- 管理后台前端：`nuxt-admin/`（Nuxt 4 SPA，部署到 Cloudflare Pages；组件库：**Nuxt UI v4**；负责 `/admin/*`）
 - 旧动态 SSR 项目：`nuxt/`（冻结，仅作回滚与历史参考；禁止新增功能）
-- 后端：`backend-dotnet/BlogApi/`（.NET 8 Web API）
+- 运行时 API：`nuxt-admin/server/` 构建为 `blog-api` Cloudflare Worker，使用 D1；`backend-dotnet/BlogApi/` 仅保留为历史迁移和回滚参考
 - 路由分发：`cloudflare-worker/`（Cloudflare Worker，统一域名路由）
 
 ### 两个前端项目职责划分
 
-| | nuxt-public/（静态站） | nuxt-admin/（SSR 管理后台） |
+| | nuxt-public/（静态站） | nuxt-admin/（管理后台 SPA） |
 |---|---|---|
-| 部署位置 | Cloudflare Pages（CDN） | 云服务器（PM2 + Nginx） |
+| 部署位置 | Cloudflare Pages（CDN） | Cloudflare Pages + `blog-api` Worker |
 | 负责页面 | `/` 首页、`/article/*` 文章、`/gallery` 画廊、`/tutorials` 教程、`/about` 关于 | `/admin/*` 管理后台（仅此） |
-| 渲染方式 | 构建时静态生成（SSG） | 运行时服务端渲染（SSR） |
-| 资源路径 | `/_nuxt/`（默认） | `/_ssr/`（避免冲突） |
+| 渲染方式 | 构建时静态生成（SSG） | 构建时静态生成的 SPA 壳 + 浏览器端路由 |
+| 资源路径 | `/_nuxt/`（默认） | `/admin/_nuxt/`（与公开站隔离） |
 | SEO | sitemap.xml + robots.txt | sitemap 禁用，robots Disallow: / |
 
 ### 跨项目导航规则
@@ -24,7 +24,7 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 - 同项目内部导航：使用 `NuxtLink`（SPA 路由）
 
 ## 核心行为
-1. 你的每一步操作，都要反思自己上下文是否一致，如果发现冲突，立刻停止工作，向用户报告情况，等待反馈
+1. 如果发现冲突，立刻停止工作，向用户报告情况，等待反馈
 2. 记得调用 mcp router 的 fetch、context7 mcp等服务，你必须搜索最新的知识，禁止直接使用 LLM 内置过时知识库。避免造成时间滞后带来的错误.
 
 ## 2. 当前结构（按迁移后状态）
@@ -37,20 +37,20 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 - `pages/`：路由入口层
 - `components/`：通用组件（MarkdownRenderer、CommentSection 等）
 
-### 2.2 动态 SSR 管理后台（`nuxt-admin/`）
+### 2.2 管理后台 SPA 与 API Worker（`nuxt-admin/`）
 - `app/pages/admin/`：管理后台路由入口
 - `app/components/`：布局、编辑器、预览与本地 MDC 组件
-- `app/composables/`：认证、BFF 请求和业务状态
-- `server/routes/admin/api/`：同源 Cookie BFF
-- `server/utils/`：后端 API 与 Cookie 转发工具
+- `app/composables/`：浏览器端认证、同源 API 请求和业务状态
+- `server/routes/admin/api/`：由 `blog-api` Worker 处理的受保护 API
+- `server/utils/`：D1、Cookie 会话与 Cloudflare 运行时工具
 
-### 2.3 后端（`backend-dotnet/BlogApi/`）
+### 2.3 历史后端（`backend-dotnet/BlogApi/`）
 - `Controllers/`、`Services/`、`Models/`、`DTOs/`、`Data/`
-- 单体服务中体量较大文件集中在 `Services/BeatmapService.cs`
+- 仅用于数据迁移和回滚参考，不参与生产请求路径
 
 ### 2.4 路由分发（`cloudflare-worker/`）
-- `router.js`：根据路径前缀分发请求到 Pages 或云服务器
-- `SERVER_ROUTES`: `/admin`, `/api`, `/images`, `/_ssr`
+- `router.js`：根据路径前缀分发到 Pages 或 `blog-api` Service Binding
+- `/admin/*` 到 `myblog-admin` Pages；`/admin/api/*`、`/api/*`、`/images/*` 到 `blog-api`
 
 ## 3. 开发命令
 
@@ -59,11 +59,12 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 - 本地开发：`npm run dev`
 - 静态生成：`npm run generate`
 
-### 3.2 动态 SSR 管理后台（在 `nuxt-admin/`）
+### 3.2 管理后台与 API（在 `nuxt-admin/`）
 - 安装依赖：`npm install`
 - 本地开发：`npm run dev`
-- 生产构建：`npm run build`
-- 产物预览：`npm run preview`
+- API Worker 构建：`npm run build:api`
+- Admin Pages 生成：`npm run generate`
+- 部署：`npm run deploy:api`、`npm run deploy:pages`
 
 ### 3.3 后端（在 `backend-dotnet/BlogApi/`）
 - 运行：`dotnet run`
@@ -92,13 +93,13 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 
 ## 5. 配置与样式注意事项
 - Nuxt Admin 使用 Nuxt UI v4 与 Tailwind CSS v4；不要引入 Naive UI。
-- SSR 项目 `buildAssetsDir` 为 `/_ssr/`，与 Pages 的 `/_nuxt/` 隔离。
-- 浏览器到后端的受保护请求必须经由 `/admin/api/*` BFF，保持 SSR Cookie 方案。
+- Admin SPA 的资源路径为 `/admin/_nuxt/`，与公开站的 `/_nuxt/` 隔离。
+- 浏览器到受保护接口必须使用同源 `/admin/api/*`；Cookie 会话由 `blog-api` Worker 验证。
 
 ## 6. 关键配置文件
 - `nuxt-public/nuxt.config.ts`：静态生成配置，含 `prerender:routes` hook
-- `nuxt-admin/nuxt.config.ts`：活动 SSR 管理后台配置，含 `buildAssetsDir: '/_ssr/'`
-- `nuxt-admin/DEPLOYMENT.md`：当前后台的 PM2、Nginx 与回滚说明
+- `nuxt-admin/nuxt.config.ts`：Admin SPA 与 Cloudflare Worker 构建配置
+- `nuxt-admin/DEPLOYMENT.md`：D1、Worker、Pages 的发布和回滚说明
 - `cloudflare-worker/router.js`：Worker 路由分发
 - `CLAUDE.md`：部署方式与后台 trigger 按钮重建说明（不依赖 GitHub Actions，本地 Wrangler 手动发布）
 
@@ -118,7 +119,7 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 
 ## 9. 安全与配置
 - 前端环境变量：`NUXT_PUBLIC_API_BASE_URL`、`NUXT_PUBLIC_SITE_URL`
-- 后端默认数据库：`blog.sqlite`
+- 生产数据库：Cloudflare D1 `blog-db`
 - 首次部署后务必修改管理员默认密码（历史默认值：`admin123`）
 
 ## 10. AI Agent 执行约束
@@ -128,4 +129,4 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 4. 前端改动后优先做定点验证（目标页面回归），避免无关的全量验证开销。
 5. 非任务范围文件不改动；如发现潜在问题，在 PR 说明中列为后续项。
 6. 修改 nuxt-public/ 时注意：这是静态站，不支持运行时 API 调用（客户端 fetch 除外）。
-7. 修改 nuxt-admin/ 时注意：资源路径为 `/_ssr/`，不是默认的 `/_nuxt/`；`nuxt/` 不得新增功能。
+7. 修改 nuxt-admin/ 时注意：Admin Pages 资源路径为 `/admin/_nuxt/`；受保护请求保持同源 `/admin/api/*`；`nuxt/` 不得新增功能。

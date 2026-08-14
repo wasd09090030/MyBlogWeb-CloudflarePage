@@ -2,6 +2,7 @@ import { changeAdminPassword, requireAdminSession } from '~~/server/domain/auth'
 import { createArticle, deleteArticle, getAdminArticle, listAdminArticles, updateArticle } from '~~/server/domain/articles'
 import { listAdminComments, deleteComment, updateCommentStatus } from '~~/server/domain/comments'
 import { batchImportGallery, backfillGalleryAssets, createGallery, deleteGallery, getAdminGallery, listAdminGallery, refreshGalleryDimensions, toggleGalleryActive, updateGallery, updateGallerySortOrder } from '~~/server/domain/gallery'
+import { listAdminGalleryHero, replaceGalleryHero } from '~~/server/domain/gallery-hero'
 import { generateArticleSummary } from '~~/server/domain/operations'
 import { assertSafeMutation } from '~~/server/utils/request-security'
 
@@ -40,6 +41,8 @@ export default defineEventHandler(async (event) => {
   }
 
   if (parts[0] === 'gallery') {
+    if (parts.length === 2 && parts[1] === 'hero' && currentMethod === 'GET') return await listAdminGalleryHero(event)
+    if (parts.length === 2 && parts[1] === 'hero' && currentMethod === 'PUT') return await replaceGalleryHero(event, body || {})
     if (parts.length === 2 && parts[1] === 'admin' && currentMethod === 'GET') return await listAdminGallery(event)
     if (parts.length === 1 && currentMethod === 'POST') { setResponseStatus(event, 201); return await createGallery(event, body || {}) }
     if (parts.length === 1 && currentMethod === 'GET') return await listAdminGallery(event)

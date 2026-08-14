@@ -12,6 +12,18 @@ export type GalleryItem = {
   createdAt?: string
 }
 
+export type GalleryHeroSections = {
+  fade: GalleryItem[]
+  accordion: GalleryItem[]
+  coverflow: GalleryItem[]
+  preview: GalleryItem[]
+}
+
+export type GalleryHeroConfiguration = {
+  isConfigured: boolean
+  sections: GalleryHeroSections
+}
+
 type NuxtDataContainer = {
   data?: Record<string, unknown>
 }
@@ -67,5 +79,15 @@ export const createGalleryRepository = () => {
     return data.value ?? []
   }
 
-  return { getGalleriesSSG }
+  const getGalleryHeroSSG = async (): Promise<GalleryHeroConfiguration> => {
+    const key = 'gallery:public:hero'
+    const { data, error } = await useFetch<GalleryHeroConfiguration>(
+      `${client.baseURL}${API_ENDPOINTS.gallery.publicHero}`,
+      { key, getCachedData: (k, nuxtApp) => getCachedNuxtData<GalleryHeroConfiguration>(nuxtApp as { payload: unknown; static: unknown }, k) }
+    )
+    if (error.value) throw error.value
+    return data.value ?? { isConfigured: false, sections: { fade: [], accordion: [], coverflow: [], preview: [] } }
+  }
+
+  return { getGalleriesSSG, getGalleryHeroSSG }
 }

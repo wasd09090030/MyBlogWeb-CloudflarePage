@@ -47,13 +47,13 @@
         <Transition name="gallery-mode" mode="out-in">
           <div :key="activeTag" class="gallery-mode-panel">
         <!-- Artwork：顶部 Hero 保留嵌入感，后续图片流走稳定 masonry -->
-        <template v-if="activeTag === 'artwork' && artworkGalleries.length > 0">
+        <template v-if="activeTag === 'artwork' && hasArtworkContent">
           <GalleryHeroSection
             ref="galleryHeroSectionRef"
-            :fade-images="getGallerySlice(0, 5)"
-            :accordion-images="getGallerySlice(5, 10)"
-            :coverflow-images="getGallerySlice(10, 15)"
-            :preview-images="getGallerySlice(15, 18)"
+            :fade-images="heroImages('fade', 0, 5)"
+            :accordion-images="heroImages('accordion', 5, 10)"
+            :coverflow-images="heroImages('coverflow', 10, 15)"
+            :preview-images="heroImages('preview', 15, 18)"
             @image-click="$emit('open-fullscreen', $event)"
           />
 
@@ -182,7 +182,7 @@ const props = defineProps({
   imageTransformStyle: { type: Object, required: true },
   imageScale: { type: Number, required: true },
   isDragging: { type: Boolean, required: true },
-  getGallerySlice: { type: Function, required: true }
+  heroImages: { type: Function, required: true }
 })
 
 const emit = defineEmits([
@@ -201,8 +201,13 @@ const emit = defineEmits([
 const galleryHeroSectionRef = ref(null)
 const galleryMasonryListRef = ref(null)
 
+const hasArtworkContent = computed(() => {
+  if (props.artworkGalleries.length > 0) return true
+  return ['fade', 'accordion', 'coverflow', 'preview'].some(section => props.heroImages(section, 0, 0).length > 0)
+})
+
 const artworkMonthGroups = computed(() => groupGalleryByMonth(
-  props.getGallerySlice(0, props.artworkGalleries.length),
+  props.artworkGalleries,
   { sectionPrefix: 'gallery-artwork-month' }
 ))
 

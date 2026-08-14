@@ -8,42 +8,47 @@
         <LazyEffectsStarryNight v-else-if="showBackgroundAnimation" />
       </Teleport>
     </ClientOnly>
-    <UHeader
-      v-if="!isGalleryRoute"
-      title="WyrmKk"
-      mode="drawer"
-      class="site-header"
-      :class="{ 'site-header--hidden': isNavbarHidden, 'site-header--scrolled': hasScrolled }"
-      :ui="{ container: 'max-w-[1400px]' }"
-    >
-      <template #title>
-        <img
-          src="/icon/logo.webp"
-          alt="WyrmKk"
-          class="h-9 w-auto"
-          loading="eager"
-          fetchpriority="high"
-          decoding="async"
-        />
-      </template>
+    <header v-if="!isGalleryRoute" class="app-navbar" :class="{ 'navbar-hidden': isNavbarHidden, 'navbar-scrolled': hasScrolled }">
+      <div class="navbar-container">
+        <NuxtLink to="/" class="navbar-brand">
+          <img src="/icon/logo.webp" alt="Logo" class="navbar-logo" loading="eager" fetchpriority="high" decoding="async" />
+        </NuxtLink>
+        <nav class="navbar-center-nav hidden min-[992px]:flex" aria-label="主导航">
+          <NuxtLink to="/" class="nav-link"><Icon name="heroicons:home" size="sm" class="me-1" />首页</NuxtLink>
+          <NuxtLink to="/gallery" class="nav-link"><Icon name="heroicons:photo" size="sm" class="me-1" />画廊</NuxtLink>
+          <NuxtLink to="/archive" class="nav-link"><Icon name="heroicons:book-open" size="sm" class="me-1" />归档</NuxtLink>
+          <NuxtLink to="/about" class="nav-link"><Icon name="heroicons:user-circle" size="sm" class="me-1" />关于站长</NuxtLink>
+        </nav>
+        <button type="button" class="mobile-menu-btn min-[992px]:hidden" aria-label="打开导航菜单" @click="showMobileMenu = true">
+          <Icon name="heroicons:bars-3" size="lg" />
+        </button>
+        <div class="navbar-right-buttons hidden min-[992px]:flex"><LazyEffectsSearchBar /></div>
+      </div>
+    </header>
 
-      <UNavigationMenu :items="navigationItems" class="hidden lg:flex" />
-
-      <template #right>
-        <div class="hidden items-center gap-2 lg:flex">
-          <LazyEffectsSearchBar />
-          <UColorModeButton />
+    <Teleport to="body">
+      <Transition name="drawer-fade"><div v-if="showMobileMenu" class="drawer-overlay" @click="showMobileMenu = false" /></Transition>
+      <Transition name="drawer-slide">
+        <div v-if="showMobileMenu" class="drawer-panel" role="dialog" aria-modal="true" aria-label="导航菜单">
+          <div class="drawer-header">
+            <span class="drawer-title">导航菜单</span>
+            <button type="button" class="drawer-close" aria-label="关闭导航菜单" @click="showMobileMenu = false"><Icon name="heroicons:x-mark" size="md" /></button>
+          </div>
+          <nav class="drawer-nav" aria-label="移动端导航">
+            <NuxtLink to="/" class="drawer-nav-item" @click="showMobileMenu = false"><Icon name="heroicons:home" size="sm" />首页</NuxtLink>
+            <NuxtLink to="/gallery" class="drawer-nav-item" @click="showMobileMenu = false"><Icon name="heroicons:photo" size="sm" />画廊</NuxtLink>
+            <NuxtLink to="/archive" class="drawer-nav-item" @click="showMobileMenu = false"><Icon name="heroicons:book-open" size="sm" />归档</NuxtLink>
+            <NuxtLink to="/about" class="drawer-nav-item" @click="showMobileMenu = false"><Icon name="heroicons:user-circle" size="sm" />关于站长</NuxtLink>
+          </nav>
+          <div class="drawer-footer">
+            <button type="button" class="drawer-theme-btn" @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'">
+              <Icon :name="colorMode.value === 'dark' ? 'heroicons:sun-solid' : 'heroicons:moon-solid'" size="md" />
+              {{ colorMode.value === 'dark' ? '浅色模式' : '深色模式' }}
+            </button>
+          </div>
         </div>
-      </template>
-
-      <template #body>
-        <UNavigationMenu :items="navigationItems" orientation="vertical" class="-mx-2.5" />
-        <div class="mt-4 flex items-center justify-between border-t border-default pt-4">
-          <span class="text-sm text-muted">外观</span>
-          <UColorModeButton />
-        </div>
-      </template>
-    </UHeader>
+      </Transition>
+    </Teleport>
 
     <div v-if="shouldShowWelcomeSection" class="welcome-section-container"><HomeWelcomeSection /></div>
     <div class="main-container">
@@ -109,6 +114,7 @@ const router = useRouter()
 // 写入 preference 即可触发 localStorage 持久化 + DOM class 同步
 const colorMode = useColorMode()
 
+const showMobileMenu = ref(false)
 const isHydrated = ref(false)
 
 const isNavbarHidden = ref(false)
@@ -116,13 +122,6 @@ const hasScrolled = ref(false)
 const lastScrollY = ref(0)
 const scrollThreshold = 60
 const showBackgroundAnimation = ref(true)
-
-const navigationItems = computed(() => [
-  { label: '首页', icon: 'i-heroicons-home', to: '/', active: route.path === '/' },
-  { label: '画廊', icon: 'i-heroicons-photo', to: '/gallery', active: route.path === '/gallery' },
-  { label: '归档', icon: 'i-heroicons-book-open', to: '/archive', active: route.path === '/archive' },
-  { label: '关于站长', icon: 'i-heroicons-user-circle', to: '/about', active: route.path === '/about' }
-])
 
 // 原 themeOverrides（n-config-provider）已迁移到 app.config.ts 的 ui.colors
 // 与 main.css 的 @theme 块；Nuxt UI 直接消费，无需在此维护
@@ -178,6 +177,9 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+@import '~/assets/css/components/LegacyNavbar.desktop.css';
+@import '~/assets/css/components/LegacyNavbar.mobile.css';
+
 :global(.dark),
 .dark {
   background-color: transparent;
@@ -185,26 +187,6 @@ onUnmounted(() => {
 }
 #app {
   transition: background-color 0.3s ease, color 0.3s ease;
-}
-.site-header[data-slot='root'] {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  background: transparent;
-  border-bottom-color: transparent;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    background-color 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
-}
-.site-header--hidden[data-slot='root'] {
-  transform: translateY(-100%);
-}
-.site-header--scrolled[data-slot='root'] {
-  background: var(--navbar-scrolled-bg);
-  backdrop-filter: blur(12px);
-  border-bottom-color: var(--navbar-scrolled-border);
-  box-shadow: var(--navbar-scrolled-shadow);
 }
 
 /* Main Container */

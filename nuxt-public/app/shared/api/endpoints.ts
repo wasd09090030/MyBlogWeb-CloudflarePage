@@ -19,6 +19,7 @@ export const API_ENDPOINTS = {
   gallery: {
     // 对齐后端 GalleryController 的公开与管理端点。
     publicList: '/gallery',
+    publicHero: '/gallery/hero',
     adminList: '/gallery/admin',
     detail: (id: string | number) => `/gallery/${id}`,
     toggleActive: (id: string | number) => `/gallery/${id}/toggle-active`,

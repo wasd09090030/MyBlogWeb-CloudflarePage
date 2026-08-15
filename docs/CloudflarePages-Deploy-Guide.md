@@ -57,4 +57,4 @@ Attach the public hostname to the front-door `blog-router` Worker. It sends `/ad
 - SSG cannot load articles: verify `NUXT_API_BASE_URL`, Worker routing, D1 migrations, and the `BLOG_API` binding.
 - A published article is not visible: trigger the Pages Deploy Hook and inspect the Pages deployment log.
 - Admin assets return 404: verify the Admin Pages artifact contains `admin/_nuxt/` and that `ADMIN_PAGES_ORIGIN` points to the `myblog-admin` Pages project.
-- Do not reintroduce `backend.wasd09090030.top`, PM2, or Nginx into the production request path; the old backend is a historical reference only.
+- Do not reintroduce `backend.wasd09090030.top`, PM2, or Nginx into the production request path; the old .NET backend and legacy `nuxt/` admin were removed from the repository (2026-08).

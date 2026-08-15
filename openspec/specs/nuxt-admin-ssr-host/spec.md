@@ -4,11 +4,11 @@
 Define the Cloudflare-hosted administration application and its stable public route contract.
 ## Requirements
 ### Requirement: Standalone SSR admin host
-The repository SHALL contain a `nuxt-admin/` Nuxt 4 application dedicated to administration. It SHALL use Nuxt UI v4, Tailwind v4, and `UApp`; it SHALL NOT depend on `nuxt/` application source files or NaiveUI.
+The repository SHALL contain a `nuxt-admin/` Nuxt 4 application dedicated to administration. It SHALL use Nuxt UI v4, Tailwind v4, and `UApp`; it SHALL NOT include NaiveUI dependencies or component usage.
 
 #### Scenario: Clean project dependency baseline
 - **WHEN** `nuxt-admin/package.json` and `nuxt-admin/app/` are inspected
-- **THEN** they declare Nuxt UI v4 and contain no `naive-ui`, `<n-*>`, or legacy `nuxt/` source imports
+- **THEN** they declare Nuxt UI v4 and contain no `naive-ui` or `<n-*>` imports
 
 ### Requirement: Cloudflare-hosted protected routes
 The `/admin/**` routes served by `nuxt-admin` SHALL be a Cloudflare Pages SPA. Its protected operations SHALL use same-origin `/admin/api/**` requests, with authentication and authorization enforced by the `blog-api` Worker before protected data is returned.

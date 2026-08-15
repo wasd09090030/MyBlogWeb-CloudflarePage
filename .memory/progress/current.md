@@ -1,10 +1,11 @@
 # 当前进度
-最后更新：2026-08-06
+最后更新：2026-08-15
 
 ## 当前阶段
-管理后台已完整迁移到 **Cloudflare Free 架构**（SPA Pages + `blog-api` Worker + D1，无 R2/Workers Paid），生产在 `wasd09090030.top`（blog-router 分发）运行。`nuxt/` 旧 SSR 后台冻结待删，`backend-dotnet` 只读保留作回滚参考。
+管理后台已完整迁移到 **Cloudflare Free 架构**（SPA Pages + `blog-api` Worker + D1，无 R2/Workers Paid），生产在 `wasd09090030.top`（blog-router 分发）运行。`nuxt/` 旧 SSR 后台与 `backend-dotnet` 已于 2026-08-15 清理删除。
 
 ## 最近完成（2026-08）
+- **清理遗弃项目**（2026-08-15）：删除 `backend-dotnet/`（.NET API）与 `nuxt/`（旧 SSR 后台）及引用它们的活动文档（README/AGENTS/openspec 活动 spec/部署指南），归档 `docs/AUTHENTICATION_SYSTEM.md` 与 `docs/ImageAssets-Permanent-Thumbnails-Deployment.md`。
 - **admin 编辑区侧边弹窗 + gallery 加载动画重设计**（2026-08-06）：①`nuxt-admin/app/components/ArticleEditor.vue` 元数据（Slug/分类/封面/标签/AI摘要/统计/草稿）移入右侧 `USlideover` 弹窗、标题常驻顶部、工具栏齿轮按钮默认收起/全屏隐藏（commits `7326696`、修复 `0b7ebfc`）；②`nuxt-public/app/components/GalleryLoadingAnimation.vue` 重写为毛玻璃面板+渐变光斑+GALLERY 字母逐个淡入+大号百分比（commits `fb019d0`、修复 `2a7ca5f`）。设计 `docs/superpowers/specs/2026-08-06-admin-editor-drawer-and-gallery-loading-design.md`，计划 `docs/superpowers/plans/2026-08-06-admin-editor-drawer-and-gallery-loading.md`。**⚠️ Nuxt UI v4 `USlideover` 内容必须放 `#body` 具名插槽**（默认插槽只渲染为 DialogTrigger 触发元素，放默认插槽会内联渲染、弹窗正文为空），详见 `lessons/nuxt-ui-slideover-body-slot.md`。已 `nuxt typecheck`（admin）/ `nuxt generate`（public，158 routes）验证通过；**线上待部署 + 浏览器人工验收**。
 - **admin Content-Type 415 拦截删除修复**（2026-08-06）：`assertSafeMutation` 改为仅在请求有 body 时校验 Content-Type（`hasRequestBody()`：content-length>0 或 chunked），无 body 的 DELETE/POST（`api.del`、无参 `api.post`：删除、登出、图床单删）不再 415。已部署 blog-api（Version `88115e2d`）并线上回归：文章/评论/画廊 DELETE→204、图床单删→200、伪造表单 Content-Type 仍 415。详见 `lessons/admin-content-type-415-delete.md`。
 - **移除 GitHub Actions 推送自动部署，改本地 Wrangler 手动发布**（2026-08-06）：删除 `.github/workflows/release.yml`（原 push→D1→blog-api→router→Pages 自动发布）。现在部署顺序固定为 `D1 migrations -> blog-api -> myblog-admin Pages -> blog-router -> myblogweb-cloudflarepage Pages`，全部本地 wrangler 手动执行；公开站 `myblogweb-cloudflarepage` 连了 Git，代码推送会触发 Pages 自动构建，内容变更走后台「重构 nuxt-public」按钮（`POST /admin/api/ops/pages/deploy-hook`）。新写 `CLAUDE.md`（部署文档），README/AGENTS/DEPLOYMENT.md/CloudflarePages-Deploy-Guide 同步。后台 trigger 依赖 `blog-api` Secret `PAGES_DEPLOY_HOOK_URL`（或回退 `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`/`PAGES_PROJECT_NAME`）。
@@ -21,8 +22,7 @@
 
 ## 下一步
 1. （可选）www→apex 归一化（当前 apex/www/blog 三个入口都可用，Always Use HTTPS 已消除 http 入口）。
-2. 清理 `nuxt/` 旧项目与 `backend-dotnet`（仅观察期后删）。
-3. （待确认）`blog-api` 尚未配置 `PAGES_DEPLOY_HOOK_URL`（或回退的 Cloudflare API secrets），后台「重构 nuxt-public」按钮目前会 503；需要时在 `nuxt-admin/` 执行 `npx wrangler secret put`。
+2. （待确认）`blog-api` 尚未配置 `PAGES_DEPLOY_HOOK_URL`（或回退的 Cloudflare API secrets），后台「重构 nuxt-public」按钮目前会 503；需要时在 `nuxt-admin/` 执行 `npx wrangler secret put`。
 
 ## 已验证结论（勿重复踩坑）
 - **`assertSafeMutation` 的 Content-Type 校验只应对有 body 的请求生效**；无 body 的 DELETE/POST（`api.del`、无参 `api.post`）不带 Content-Type，强制校验会 415 拦掉删除/登出。用 content-length/chunked 判 body。详见 `lessons/`。

@@ -2,7 +2,7 @@
 
 > 个人博客站：**Cloudflare Free 架构**（2026-08-04 完成迁移）。
 > 详细变更提案与设计以 `docs/superpowers/specs/`、`docs/superpowers/plans/` 为准，本目录只存跨会话状态与经验。
-> 最后核验：2026-08-06（含线上删除链路回归 + admin 侧边弹窗/gallery 加载动画改造）。
+> 最后核验：2026-08-15（backend-dotnet 与 nuxt/ 遗弃项目已清理删除）。
 
 ## 项目核心
 
@@ -10,8 +10,6 @@
 - **nuxt-admin/**：管理后台，Nuxt 4 **SPA**（`ssr:false`）。静态壳上 `myblog-admin` Pages 项目；Nitro server 部署为 `blog-api` Worker（D1 `blog-db`，负责 `/admin/api/*`、`/api/*`、`/images/*`）。无 R2，媒体二进制归独立图床。
 - **cloudflare-worker/**：= `blog-router` Worker，绑 apex/www/blog 三个自定义域名，按路径分发。
 - **图床（独立仓库）**：`cloudflare-imgbed` Pages 项目，`cfimg.wasd09090030.top`。
-- **backend-dotnet/**：历史数据迁移源，只读保留，不再作为运行时依赖。
-- **nuxt/**：旧 SSR 后台，已冻结待删（回滚/历史参考）。
 
 ## 关键架构决策
 
@@ -24,7 +22,7 @@
 
 ## 当前进度
 
-- 入口：`progress/current.md`（2026-08-05 更新）
+- 入口：`progress/current.md`（2026-08-15 更新）
 
 ## 已完成的重要功能
 

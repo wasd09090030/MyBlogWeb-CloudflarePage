@@ -10,8 +10,6 @@
 | `nuxt-admin/` | `/admin/*` 管理后台（SPA）、同源 API、认证与运维接口 | Nuxt 4 SPA + `blog-api` Worker + D1（Cloudflare Free，无 R2/Workers Paid） |
 | `cloudflare-worker/` | 统一域名路由分发（= `blog-router` Worker） | Cloudflare Worker |
 | `cloudflare-imgbed`（独立仓库） | 图床：媒体二进制托管与 CDN | Cloudflare Pages，`cfimg.wasd09090030.top` |
-| `backend-dotnet/BlogApi/` | 历史数据迁移源与回滚参考 | ASP.NET Core 8（只读保留，不再作为运行时依赖） |
-| `nuxt/` | 旧 SSR 管理后台 | 已冻结待删，仅用于回滚和历史参考 |
 
 `cloudflare-worker/router.js`（`blog-router`）按路径分发，`blog-router` 绑定了三个自定义域名：`wasd09090030.top`、`www.wasd09090030.top`、`blog.wasd09090030.top`：
 
@@ -58,7 +56,7 @@ npm run deploy:pages    # 生成并部署 myblog-admin Pages（静态 SPA）
 
 D1 迁移必须先执行：`cd nuxt-admin && npm run db:migrate:remote`。生产变量在 `nuxt-admin/wrangler.toml` 的 `[vars]` 与 Worker Secrets（`SESSION_PEPPER`、`ADMIN_RESET_TOKEN`、`IMAGE_API_TOKEN`）中配置。完整步骤见 [nuxt-admin/README.md](nuxt-admin/README.md) 与 [nuxt-admin/DEPLOYMENT.md](nuxt-admin/DEPLOYMENT.md)。
 
-部署不依赖 GitHub Actions 推送自动部署，改为本地 Wrangler 手动按序发布：`D1 migrations -> blog-api -> myblog-admin Pages -> blog-router -> myblogweb-cloudflarepage Pages`。公开站 `nuxt-public` 也可通过后台「重构 nuxt-public」按钮（`POST /admin/api/ops/pages/deploy-hook`）触发 Cloudflare Pages 重建，适用于文章、画廊等内容变更后刷新静态站。旧 .NET API、旧 `nuxt/` 和 PM2 文件仅用于观察期回滚，不再参与正常流量。完整部署步骤见 [CLAUDE.md](CLAUDE.md) 与 [nuxt-admin/DEPLOYMENT.md](nuxt-admin/DEPLOYMENT.md)。
+部署不依赖 GitHub Actions 推送自动部署，改为本地 Wrangler 手动按序发布：`D1 migrations -> blog-api -> myblog-admin Pages -> blog-router -> myblogweb-cloudflarepage Pages`。公开站 `nuxt-public` 也可通过后台「重构 nuxt-public」按钮（`POST /admin/api/ops/pages/deploy-hook`）触发 Cloudflare Pages 重建，适用于文章、画廊等内容变更后刷新静态站。遗弃的 `backend-dotnet/`（.NET API）与 `nuxt/`（旧 SSR 后台）已于 2026-08 清理删除。完整部署步骤见 [CLAUDE.md](CLAUDE.md) 与 [nuxt-admin/DEPLOYMENT.md](nuxt-admin/DEPLOYMENT.md)。
 
 ## 相关文档
 

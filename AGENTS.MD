@@ -1,12 +1,11 @@
 ## 开发环境
 
-Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
+Windows WSL2，Node.js 20.19+，VS Code
 ## 1. 项目概览
 本仓库是全栈博客系统，采用混合架构：
 - 静态博客前端：`nuxt-public/`（Nuxt 4，SSG 静态生成，部署到 Cloudflare Pages；组件库：**Nuxt UI v4 ✅ 已从 NaiveUI 迁移完成**——见 `openspec/changes/nuxt-ui-migration/`）
 - 管理后台前端：`nuxt-admin/`（Nuxt 4 SPA，部署到 Cloudflare Pages；组件库：**Nuxt UI v4**；负责 `/admin/*`）
-- 旧动态 SSR 项目：`nuxt/`（冻结，仅作回滚与历史参考；禁止新增功能）
-- 运行时 API：`nuxt-admin/server/` 构建为 `blog-api` Cloudflare Worker，使用 D1；`backend-dotnet/BlogApi/` 仅保留为历史迁移和回滚参考
+- 运行时 API：`nuxt-admin/server/` 构建为 `blog-api` Cloudflare Worker，使用 D1
 - 路由分发：`cloudflare-worker/`（Cloudflare Worker，统一域名路由）
 
 ### 两个前端项目职责划分
@@ -44,11 +43,7 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 - `server/routes/admin/api/`：由 `blog-api` Worker 处理的受保护 API
 - `server/utils/`：D1、Cookie 会话与 Cloudflare 运行时工具
 
-### 2.3 历史后端（`backend-dotnet/BlogApi/`）
-- `Controllers/`、`Services/`、`Models/`、`DTOs/`、`Data/`
-- 仅用于数据迁移和回滚参考，不参与生产请求路径
-
-### 2.4 路由分发（`cloudflare-worker/`）
+### 2.3 路由分发（`cloudflare-worker/`）
 - `router.js`：根据路径前缀分发到 Pages 或 `blog-api` Service Binding
 - `/admin/*` 到 `myblog-admin` Pages；`/admin/api/*`、`/api/*`、`/images/*` 到 `blog-api`
 
@@ -66,14 +61,8 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 - Admin Pages 生成：`npm run generate`
 - 部署：`npm run deploy:api`、`npm run deploy:pages`
 
-### 3.3 后端（在 `backend-dotnet/BlogApi/`）
-- 运行：`dotnet run`
-- 构建：`dotnet build`
-- 发布：`dotnet publish -c Release`
-
 ## 4. 编码与风格约定
 - Vue/Nuxt：2 空格缩进，组件 PascalCase，组合式函数 `useXxx`
-- C#：4 空格缩进，类型/公开成员 PascalCase，局部变量 camelCase
 - 样式：Tailwind + 组件样式文件（`nuxt-public/app/assets/css/components/*.{desktop,mobile}.css`）
 - 新增前端业务代码优先进入 `features/*`，避免继续堆积在 `pages/*` 或全局 `components/*`
 - 所有的非naiveui的自行设计的部分应该封装成vue组件放在nuxt-public\app\shared\ui下
@@ -129,4 +118,4 @@ Windows WSL2，Node.js 20.19+，.NET 8 SDK，VS Code
 4. 前端改动后优先做定点验证（目标页面回归），避免无关的全量验证开销。
 5. 非任务范围文件不改动；如发现潜在问题，在 PR 说明中列为后续项。
 6. 修改 nuxt-public/ 时注意：这是静态站，不支持运行时 API 调用（客户端 fetch 除外）。
-7. 修改 nuxt-admin/ 时注意：Admin Pages 资源路径为 `/admin/_nuxt/`；受保护请求保持同源 `/admin/api/*`；`nuxt/` 不得新增功能。
+7. 修改 nuxt-admin/ 时注意：Admin Pages 资源路径为 `/admin/_nuxt/`；受保护请求保持同源 `/admin/api/*`。

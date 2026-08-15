@@ -126,11 +126,11 @@ When there are fewer than 4 images, the system SHALL use an existing small-count
 ### Requirement: Scope limited to nuxt-public
 The implementation SHALL only modify files under `nuxt-public` and the OpenSpec change artifacts.
 
-The implementation MUST NOT modify `nuxt/`, `backend-dotnet/`, `cloudflare-worker/`, gallery API contracts, database schema, or admin gallery forms.
+The implementation MUST NOT modify `cloudflare-worker/`, gallery API contracts, database schema, or admin gallery forms.
 
-#### Scenario: SSR frontend unchanged
+#### Scenario: Scope respected
 - **WHEN** the implementation is complete
-- **THEN** no files under `nuxt/` are modified for this change
+- **THEN** modified files are limited to `nuxt-public/` and the OpenSpec change artifacts
 
 #### Scenario: Backend unchanged
 - **WHEN** the implementation is complete

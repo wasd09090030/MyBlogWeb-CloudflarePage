@@ -251,13 +251,13 @@ const highlightCards = [
 
 const projects = [
   {
-    title: 'Blog API Core',
-    description: '基于 .NET 8 + EFCore + Sqlite3 的高性能博客后端。',
+    title: 'Blog API',
+    description: '基于 Cloudflare Workers + D1 的博客 API 服务，承载认证、文章、评论与画廊接口。',
     status: 'LIVE',
-    update: 'Weekly Updates',
-    tags: ['.NET 8', 'EF Core', 'SQLite', 'Redis'],
-    cta: 'API Docs',
-    external: 'https://github.com/wasd09090030/MyBlogWeb/tree/master/backend-dotnet',
+    update: 'Active',
+    tags: ['Cloudflare Workers', 'D1', 'Nuxt 4'],
+    cta: 'View Source',
+    external: 'https://github.com/wasd09090030/MyBlogWeb-CloudflarePage',
     accent: 'theme-violet'
   },
   {

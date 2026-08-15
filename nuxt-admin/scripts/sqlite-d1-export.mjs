@@ -9,7 +9,8 @@ const getArg = (name, fallback) => {
   return index >= 0 && args[index + 1] ? args[index + 1] : fallback
 }
 
-const databasePath = resolve(getArg('--db', '../backend-dotnet/BlogApi/blog.sqlite'))
+// Legacy default '../backend-dotnet/BlogApi/blog.sqlite' was removed with the backend (2026-08); pass --db for a backup file.
+const databasePath = resolve(getArg('--db', './.data/blog.sqlite'))
 const outputPath = resolve(getArg('--output', './.data/d1-import.sql'))
 const manifestPath = resolve(getArg('--manifest', './.data/d1-import-manifest.json'))
 const sqliteCommand = process.env.SQLITE3_BIN || 'sqlite3'

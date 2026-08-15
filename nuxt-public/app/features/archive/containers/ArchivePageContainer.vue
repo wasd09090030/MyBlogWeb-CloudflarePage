@@ -140,7 +140,7 @@ onMounted(fetchArticles)
   background: var(--paper);
   color: var(--ink);
   border: 1px solid var(--line);
-  box-shadow: 0 24px 60px -32px rgba(25, 21, 16, 0.45);
+
   font-family: var(--sans);
 }
 
@@ -153,7 +153,7 @@ onMounted(fetchArticles)
   --muted: #8f8577;
   --accent: #e06a5a;
   --line: #3a342d;
-  box-shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.7);
+
 }
 
 /* ---------- 报头 ---------- */

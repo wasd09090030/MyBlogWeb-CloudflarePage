@@ -123,13 +123,13 @@ onMounted(fetchArticles)
 
 <style scoped>
 .magazine-archive {
-  --paper: #f6f1e7;
-  --paper-2: #efe7d8;
-  --ink: #191510;
-  --ink-soft: #4a423a;
-  --muted: #8a7f6f;
-  --accent: #b3372a;
-  --line: #d9cfbd;
+  --paper: var(--bg-primary);
+  --paper-2: var(--bg-secondary);
+  --ink: var(--text-primary);
+  --ink-soft: var(--text-secondary);
+  --muted: var(--text-muted);
+  --accent: var(--accent-primary);
+  --line: var(--border-color);
   --serif: 'Playfair Display', 'Noto Serif SC', 'Songti SC', 'SimSun', Georgia, 'Times New Roman', serif;
   --sans: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
 
@@ -144,17 +144,7 @@ onMounted(fetchArticles)
   font-family: var(--sans);
 }
 
-:global(.dark) .magazine-archive,
-.dark .magazine-archive {
-  --paper: #171412;
-  --paper-2: #201c18;
-  --ink: #f1e9dd;
-  --ink-soft: #c9bfae;
-  --muted: #8f8577;
-  --accent: #e06a5a;
-  --line: #3a342d;
 
-}
 
 /* ---------- 报头 ---------- */
 .mag-head {
@@ -339,7 +329,7 @@ onMounted(fetchArticles)
 }
 
 .mag-article:hover {
-  background: rgba(179, 55, 42, 0.05);
+  background: var(--nav-link-hover-bg);
 }
 
 .mag-date {

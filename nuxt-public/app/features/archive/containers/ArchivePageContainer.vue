@@ -1,87 +1,77 @@
 <template>
-  <UPage
-    class="archive-page"
-    :ui="{
-      root: 'lg:gap-14',
-      center: 'min-w-0',
-      right: 'order-last'
-    }"
-  >
-    <ContentPageBody width="full" spacing="none" :padded="false" class="archive-main">
-      <StateLoading v-if="loading" message="探索记忆坐标中..." class="py-12" />
+  <div class="magazine-archive">
+    <header class="mag-head">
+      <div class="mag-rule"><span>◆</span></div>
+      <h1 class="mag-title">文章归档 <em>Archive</em></h1>
+      <div class="mag-rule"><span>◆</span></div>
+      <p class="mag-subtitle">Timeline × Tags · 按时间与标签浏览全部文章</p>
+      <div v-if="selectedTag" class="mag-filter">
+        <span>正在阅读 <strong>#{{ selectedTag }}</strong> · {{ filteredArticles.length }} 篇</span>
+        <button class="mag-filter-close" @click="selectedTag = null" aria-label="清除筛选">✕</button>
+      </div>
+    </header>
 
-      <UAlert
-        v-else-if="error"
-        color="error"
-        variant="soft"
-        title="数据读取失败"
-        class="mb-8"
-        :description="error.message"
+    <StateLoading v-if="loading" message="正在翻阅旧刊..." class="py-12" />
+
+    <UAlert
+      v-else-if="error"
+      color="error"
+      variant="soft"
+      title="数据读取失败"
+      class="mb-8"
+      :description="error.message"
+    />
+
+    <template v-else>
+      <StateEmpty
+        v-if="timelineGroups.length === 0"
+        icon="heroicons:book-open"
+        description="此处空空如也，尚未有记录"
+        class="my-16"
       />
 
-      <template v-else>
-        <!-- MD3 风格的筛选气泡 -->
-        <div v-if="selectedTag" class="md3-filter-chip">
-          <span class="filter-text">包含 <strong>#{{ selectedTag }}</strong> 的快照 ({{ filteredArticles.length }})</span>
-          <button class="md3-icon-btn" @click="selectedTag = null" aria-label="清除筛选">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.5" d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z"/></svg>
-          </button>
-        </div>
-
-        <StateEmpty
-          v-if="timelineGroups.length === 0"
-          icon="heroicons:inbox"
-          description="此处空空如也，尚未有记录"
-          class="my-16"
-        />
-
-        <!-- MD3 极简风格时间线 -->
-        <div v-else class="md3-timeline">
-          <div v-for="group in timelineGroups" :key="group.month" class="timeline-group">
-            <h2 class="timeline-month">{{ group.month }}</h2>
-            <div class="timeline-list">
-              <NuxtLink
-                v-for="article in group.articles"
-                :key="article.id"
-                :to="getArticlePath(article)"
-                class="timeline-item"
-              >
-                <!-- 轨道圆点 -->
-                <div class="timeline-track">
-                  <div class="timeline-dot-wrapper">
-                    <div class="timeline-dot"></div>
-                  </div>
-                </div>
-                <!-- 日期（左）+ 标题（右）行内布局 -->
-                <div class="timeline-content">
-                  <time class="article-date">{{ formatDateShort(article.createdAt) }}</time>
-                  <span class="article-title">{{ article.title }}</span>
-                </div>
-              </NuxtLink>
+      <div v-else class="mag-body">
+        <div class="mag-timeline">
+          <div
+            v-for="(group, index) in timelineGroups"
+            :key="group.month"
+            class="mag-event"
+            :class="index % 2 === 0 ? 'mag-event--left' : 'mag-event--right'"
+          >
+            <div class="mag-event-card">
+              <div class="mag-month">
+                <span class="mag-year">{{ monthParts(group.month).year }}</span>
+                <span class="mag-month-number">{{ monthParts(group.month).month }}</span>
+              </div>
+              <div class="mag-articles">
+                <NuxtLink
+                  v-for="article in group.articles"
+                  :key="article.id"
+                  :to="getArticlePath(article)"
+                  class="mag-article"
+                >
+                  <time class="mag-date">{{ formatDateShort(article.createdAt) }}</time>
+                  <span class="mag-title">{{ article.title }}</span>
+                  <span v-if="article.summary" class="mag-summary">{{ article.summary }}</span>
+                </NuxtLink>
+              </div>
             </div>
           </div>
         </div>
-      </template>
-    </ContentPageBody>
 
-    <template #right>
-      <aside class="archive-sidebar">
-        <div class="md3-card tag-cloud-panel">
-          <div class="panel-header">
-            <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="currentColor" d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58s1.05-.22 1.41-.59l7-7c.36-.36.58-.86.58-1.41s-.22-1.06-.58-1.42zM5.5 7A1.5 1.5 0 0 1 4 5.5A1.5 1.5 0 0 1 5.5 4A1.5 1.5 0 0 1 7 5.5A1.5 1.5 0 0 1 5.5 7z"/></svg>
-            <span class="panel-title">探索标签</span>
-            <span class="panel-count">{{ tagStats.length }}</span>
+        <aside class="mag-tags">
+          <div class="tags-box">
+            <p class="tags-label">专栏标签 · Tags</p>
+            <ArchiveTagCloud
+              :tags="tagStats"
+              :selected-tag="selectedTag"
+              @update:selected-tag="selectedTag = $event"
+            />
           </div>
-
-          <ArchiveTagCloud
-            :tags="tagStats"
-            :selected-tag="selectedTag"
-            @update:selected-tag="selectedTag = $event"
-          />
-        </div>
-      </aside>
+        </aside>
+      </div>
     </template>
-  </UPage>
+  </div>
 </template>
 <script setup lang="ts">
 import { useArticlesFeature } from '~/features/article-list/composables/useArticlesFeature'
@@ -90,7 +80,6 @@ import { formatDateShort, getArticlePath } from '~/features/archive/utils/format
 import StateLoading from '~/shared/ui/StateLoading.vue'
 import StateEmpty from '~/shared/ui/StateEmpty.vue'
 import ArchiveTagCloud from '~/shared/ui/ArchiveTagCloud.vue'
-import ContentPageBody from '~/shared/ui/ContentPageBody.vue'
 
 const { getAllArticles } = useArticlesFeature()
 
@@ -123,319 +112,325 @@ const filteredArticles = computed(() => {
 
 const timelineGroups = computed(() => groupArticlesByMonth(filteredArticles.value))
 
+function monthParts(monthKey: string) {
+  const match = monthKey.match(/^(\d{4})年(\d{2})月$/)
+  if (!match) return { year: monthKey, month: '' }
+  return { year: match[1], month: match[2] }
+}
+
 onMounted(fetchArticles)
 </script>
 
 <style scoped>
-:root {
-  --md-sys-motion-easing: cubic-bezier(0.2, 0, 0, 1);
+.magazine-archive {
+  --paper: #f6f1e7;
+  --paper-2: #efe7d8;
+  --ink: #191510;
+  --ink-soft: #4a423a;
+  --muted: #8a7f6f;
+  --accent: #b3372a;
+  --line: #d9cfbd;
+  --serif: 'Playfair Display', 'Noto Serif SC', 'Songti SC', 'SimSun', Georgia, 'Times New Roman', serif;
+  --sans: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 60px -32px rgba(25, 21, 16, 0.45);
+  font-family: var(--sans);
 }
 
-.archive-page {
-  --archive-accent-soft: rgba(13, 110, 253, 0.08);
-  --archive-accent-soft-strong: rgba(13, 110, 253, 0.18);
-  --archive-track-color: var(--border-color-light);
-  --archive-hover-bg: var(--nav-link-hover-bg);
-  --archive-dot-color: var(--text-tertiary);
-  --archive-dot-border: var(--bg-primary);
-  --archive-dot-wrapper-hover: rgba(13, 110, 253, 0.12);
-  --archive-card-bg: var(--card-bg);
-  --archive-card-border: var(--border-color);
-  --archive-card-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
-  --archive-chip-dismiss-bg: rgba(0, 0, 0, 0.08);
-  min-height: 100vh;
-  max-width: 1080px;
-  margin: 2rem auto 5rem;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-  color: var(--text-primary);
+:global(.dark) .magazine-archive,
+.dark .magazine-archive {
+  --paper: #171412;
+  --paper-2: #201c18;
+  --ink: #f1e9dd;
+  --ink-soft: #c9bfae;
+  --muted: #8f8577;
+  --accent: #e06a5a;
+  --line: #3a342d;
+  box-shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.7);
 }
 
-:global(.dark) .archive-page,
-.dark .archive-page {
-  --archive-accent-soft: rgba(66, 153, 225, 0.16);
-  --archive-accent-soft-strong: rgba(66, 153, 225, 0.28);
-  --archive-track-color: var(--border-color);
-  --archive-hover-bg: rgba(96, 165, 250, 0.14);
-  --archive-dot-color: var(--text-muted);
-  --archive-dot-border: var(--card-bg);
-  --archive-dot-wrapper-hover: rgba(66, 153, 225, 0.2);
-  --archive-card-border: var(--border-color-light);
-  --archive-card-shadow: 0 20px 44px rgba(2, 6, 23, 0.28);
-  --archive-chip-dismiss-bg: rgba(255, 255, 255, 0.1);
+/* ---------- 报头 ---------- */
+.mag-head {
+  text-align: center;
+  padding: 0.75rem 0 2.5rem;
 }
 
-.archive-main {
-  min-width: 0;
+.mag-rule {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--accent);
+  max-width: 640px;
+  margin: 0 auto;
 }
 
-.archive-sidebar {
-  position: sticky;
-  top: 6rem; /* 根据全局顶部导航高度预留 */
+.mag-rule::before,
+.mag-rule::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: var(--ink);
 }
 
-/* 筛选气泡 */
-.md3-filter-chip {
+.mag-title {
+  font-family: var(--serif);
+  font-size: clamp(34px, 6vw, 54px);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  margin: 10px 0;
+}
+
+.mag-title em {
+  font-style: italic;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.mag-subtitle {
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mag-filter {
   display: inline-flex;
   align-items: center;
-  background: var(--archive-accent-soft);
-  color: var(--primary-color, #6366f1);
-  padding: 0.6rem 1.25rem;
-  border-radius: 999px;
-  margin-bottom: 2.5rem;
-  font-size: 0.95rem;
-  font-weight: 500;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s var(--md-sys-motion-easing);
-  animation: chip-pop 0.4s var(--md-sys-motion-easing) forwards;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
 }
 
-@keyframes chip-pop {
-  0% { opacity: 0; transform: translateY(10px) scale(0.95); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.filter-text strong {
+.mag-filter strong {
+  color: var(--accent);
   font-weight: 700;
 }
 
-.md3-icon-btn {
+.mag-filter-close {
   background: transparent;
   border: none;
-  color: currentColor;
-  margin-left: 0.5rem;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 4px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.25s, transform 0.15s;
+  transition: color 0.2s, transform 0.2s;
 }
 
-.md3-icon-btn:hover {
-  background: var(--archive-chip-dismiss-bg);
-  transform: scale(1.1);
+.mag-filter-close:hover {
+  color: var(--accent);
+  transform: scale(1.15);
 }
 
-/* --- 自定义时间线核心样式 --- */
-.md3-timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
+/* ---------- 主体双栏 ---------- */
+.mag-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(220px, 1fr);
+  gap: 64px;
+  align-items: start;
 }
 
-.timeline-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.timeline-month {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0 0 0.65rem 2.4rem;
+/* ---------- 杂志风时间线 ---------- */
+.mag-timeline {
   position: relative;
-  color: var(--primary-color, #6366f1);
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
+  padding: 8px 0 20px;
 }
 
-/* 月份标识锚点圆点 */
-.timeline-month::before {
+.mag-timeline::before {
   content: '';
   position: absolute;
-  left: -2.4rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--primary-color, #6366f1);
-  box-shadow: 0 0 0 3px var(--archive-accent-soft-strong);
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--ink);
+  transform: translateX(-50%);
+}
+
+.mag-event {
+  position: relative;
+  width: 50%;
+  padding: 0 44px 52px 0;
+}
+
+.mag-event--right {
+  left: 50%;
+  padding: 0 0 52px 44px;
+}
+
+.mag-event:last-child {
+  padding-bottom: 0;
+}
+
+.mag-event::before {
+  content: '◆';
+  position: absolute;
+  top: 2px;
+  right: -6px;
+  font-size: 12px;
+  color: var(--accent);
   z-index: 2;
 }
 
-.timeline-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  position: relative;
+.mag-event--right::before {
+  right: auto;
+  left: -6px;
 }
 
-/* 时间线轨道主线 */
-.timeline-list::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 4px;
-  width: 1.5px;
-  background: var(--archive-track-color);
-  z-index: 0;
-}
-
-.timeline-item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  padding: 0.28rem 0.75rem 0.28rem 2.2rem;
-  border-radius: 10px;
-  transition: background 0.22s cubic-bezier(0.2, 0, 0, 1);
-  outline: none;
-  gap: 0;
-}
-
-.timeline-item:hover {
-  background: var(--archive-hover-bg);
-}
-
-.timeline-item:focus-visible {
-  background: var(--archive-hover-bg);
-  box-shadow: 0 0 0 3px var(--archive-accent-soft);
-}
-
-.timeline-track {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 10px;
-  z-index: 1;
-}
-
-.timeline-dot-wrapper {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
+.mag-event-card {
   background: transparent;
-  transition: background 0.25s cubic-bezier(0.2, 0, 0, 1);
+  border: 0;
+  padding: 0;
 }
 
-.timeline-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--archive-dot-color);
-  border: 1.5px solid var(--archive-dot-border);
-  box-sizing: content-box;
-  transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.timeline-item:hover .timeline-dot {
-  background: var(--primary-color, #6366f1);
-  border-color: var(--primary-color, #6366f1);
-  transform: scale(1.5);
-}
-
-.timeline-item:hover .timeline-dot-wrapper {
-  background: var(--archive-dot-wrapper-hover);
-}
-
-/* 内容区：日期左 + 标题右 */
-.timeline-content {
-  flex: 1;
+.mag-month {
   display: flex;
   align-items: baseline;
-  gap: 1rem;
-  min-width: 0;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.article-date {
-  flex-shrink: 0;
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
-  line-height: 1.4;
-  width: 2.8rem;
-  font-weight: 500;
+.mag-year {
+  font-family: var(--serif);
+  font-size: clamp(30px, 3.2vw, 38px);
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
 }
 
-.article-title {
-  flex: 1;
-  font-size: 0.93rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  line-height: 1.55;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 0.22s cubic-bezier(0.2, 0, 0, 1);
+.mag-month-number {
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--ink-soft);
+  letter-spacing: 0.08em;
 }
 
-.timeline-item:hover .article-title {
-  color: var(--primary-color, #6366f1);
+.mag-articles {
+  margin-top: 14px;
+  border-top: 1px solid var(--ink);
 }
 
-/* --- 右侧 Tag Cloud 卡片 --- */
-.md3-card {
-  background: var(--archive-card-bg);
-  border-radius: 24px;
-  padding: 1.8rem;
-  box-shadow: var(--archive-card-shadow);
-  border: 1px solid var(--archive-card-border);
-}
-
-.panel-header {
+.mag-article {
   display: flex;
-  align-items: center;
-  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  transition: background 0.25s;
 }
 
-.panel-icon {
-  color: var(--primary-color, #6366f1);
-  margin-right: 0.6rem;
+.mag-article:last-child {
+  border-bottom: none;
 }
 
-.panel-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--text-primary);
+.mag-article:hover {
+  background: rgba(179, 55, 42, 0.05);
+}
+
+.mag-date {
+  flex: 0 0 auto;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.mag-title {
   flex: 1;
+  min-width: 0;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+  transition: color 0.25s;
 }
 
-.panel-count {
-  background: var(--archive-accent-soft);
-  color: var(--primary-color, #6366f1);
-  padding: 0.2rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 700;
+.mag-article:hover .mag-title {
+  color: var(--accent);
 }
 
-/* 响应式 */
-@media (max-width: 860px) {
-  .archive-main,
-  .archive-sidebar {
-    width: 100%;
+.mag-summary {
+  width: 100%;
+  font-size: 12px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  margin-top: 2px;
+}
+
+/* ---------- 右侧标签云 ---------- */
+.mag-tags {
+  position: sticky;
+  top: 6rem;
+}
+
+.tags-box {
+  border-top: 2px solid var(--ink);
+  padding-top: 20px;
+}
+
+.tags-label {
+  font-size: 10.5px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 960px) {
+  .mag-body {
+    grid-template-columns: 1fr;
+    gap: 52px;
   }
-  .archive-sidebar {
+
+  .mag-tags {
     position: static;
   }
-  .archive-page {
-    margin-top: 1.25rem;
-    margin-bottom: 3rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
+}
+
+@media (max-width: 760px) {
+  .magazine-archive {
+    padding: 1.25rem 1rem 3rem;
   }
-  .timeline-month {
-    font-size: 1rem;
-    margin-left: 2rem;
+
+  .mag-timeline::before {
+    left: 10px;
+    transform: none;
   }
-  .timeline-month::before {
-    left: -2rem;
+
+  .mag-event,
+  .mag-event--right {
+    width: 100%;
+    left: auto !important;
+    padding: 0 0 44px 40px;
   }
-  .timeline-item {
-    padding-left: 1.9rem;
+
+  .mag-event::before,
+  .mag-event--right::before {
+    right: auto;
+    left: 4px;
+  }
+
+  .mag-title {
+    font-size: 15px;
   }
 }
 </style>

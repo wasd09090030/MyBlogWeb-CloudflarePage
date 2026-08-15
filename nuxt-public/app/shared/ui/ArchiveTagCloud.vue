@@ -3,13 +3,13 @@
     <span
       v-for="tag in tags"
       :key="tag.name"
-      class="tag-pill"
-      :class="{ 'tag-pill--active': selectedTag === tag.name }"
+      class="tag-link"
+      :class="{ 'tag-link--active': selectedTag === tag.name }"
       :style="{ fontSize: getTagSize(tag.count) }"
       @click="handleClick(tag.name)"
     >
       <span class="tag-hash">#</span>{{ tag.name }}
-      <em class="tag-count">{{ tag.count }}</em>
+      
     </span>
   </div>
 </template>
@@ -52,25 +52,25 @@ function getTagSize(count: number): string {
 .tag-cloud {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem 0.5rem;
-  align-items: center; /* 确保不同字号的中心对齐，视觉上更稳健 */
-  line-height: 1.2;
+  gap: 2px 20px;
+  align-items: baseline;
+  line-height: 2.1;
 }
 
-.tag-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.35em 0.8em;
-  border-radius: 100px; /* MD3 全圆角 Chip */
+.tag-link {
+  display: inline;
+  font-family: var(--serif, 'Playfair Display', 'Noto Serif SC', 'Songti SC', Georgia, serif);
+  color: var(--ink-soft, #4a423a);
+  text-decoration: none;
+  line-height: 2.1;
   cursor: pointer;
   user-select: none;
-  transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
-  font-weight: 500;
+  transition: color 0.2s, text-decoration-color 0.2s;
+
   
-  /* 默认 MD3 Tonal 风格 */
-  background-color: var(--bg-secondary);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
+
+
+
 }
 
 .tag-hash {
@@ -79,47 +79,36 @@ function getTagSize(count: number): string {
   font-weight: 400;
 }
 
-.tag-count {
-  font-style: normal;
-  font-size: 0.75em;
-  font-weight: 600;
-  margin-left: 0.35em;
-  background: var(--article-muted-chip-bg);
-  color: var(--article-muted-chip-text);
-  padding: 0.15em 0.45em;
-  border-radius: 12px;
-  line-height: 1;
-  transition: background 0.3s, color 0.3s;
-}
+
 
 /* Hover 浮起态 (MD3 Elevation & State Layer) */
-.tag-pill:hover {
-  background-color: var(--bg-hover);
-  color: var(--text-primary);
-  border-color: var(--border-color-dark);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+.tag-link:hover {
+  color: var(--accent, #b3372a);
+  text-decoration: underline;
+  text-underline-offset: 5px;
 }
 
-.tag-pill:hover .tag-count {
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-}
+
 
 /* Active 激活态 (MD3 Primary Container/Primary) */
-.tag-pill--active {
-  background-color: var(--primary-color, #6366f1) !important;
-  color: #fff !important;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35) !important;
-  transform: translateY(-2px);
+.tag-link--active {
+
+  color: var(--accent, #b3372a);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  font-weight: 700;
+
+
 }
 
-.tag-pill--active .tag-hash {
+.tag-link--active .tag-hash {
   opacity: 0.8;
 }
-
-.tag-pill--active .tag-count {
-  background: rgba(255, 255, 255, 0.25);
-  color: #fff;
+/*
 }
-</style>
+
+
+
+
+}
+*/</style>

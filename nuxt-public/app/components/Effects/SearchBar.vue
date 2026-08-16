@@ -1,14 +1,9 @@
 <template>
   <div>
-    <UButton
-      icon="i-mdi-magnify"
-      color="neutral"
-      variant="ghost"
-      size="md"
-      square
-      aria-label="搜索文章"
-      @click="showModal = true"
-    />
+    <button type="button" class="search-pill" aria-label="搜索文章" @click="showModal = true">
+      <Icon name="mdi:magnify" size="18" />
+      <span>搜索文章…</span>
+    </button>
 
     <!-- Search Modal -->
     <UModal
@@ -106,3 +101,25 @@ const quickSearch = (tag) => {
   handleSearch()
 }
 </script>
+
+<style scoped>
+.search-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.search-pill:hover {
+  border-color: var(--accent-primary);
+  color: var(--text-secondary);
+}
+</style>

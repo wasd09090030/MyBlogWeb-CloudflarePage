@@ -2,36 +2,54 @@
   <!-- 桌面端侧边栏 -->
   <div class="desktop-sidebar hidden lg:block sidebar-fade-in">
     <div class="sidebar-content">
+      <!-- 站长卡片 -->
+      <section class="sidebar-section side-author-section">
+        <div class="side-author">
+          <span class="side-author-ava">W</span>
+          <div class="side-author-meta">
+            <div class="side-author-name">WyrmKk</div>
+            <div class="side-author-bio">全栈开发 · 游戏玩家 · 数字花园园丁</div>
+          </div>
+        </div>
+        <div class="side-author-stats">
+          <div><b>{{ articleCount }}</b><span>文章</span></div>
+          <div><b>{{ categories.length }}</b><span>分类</span></div>
+          <div><b>18</b><span>标签</span></div>
+        </div>
+      </section>
+
+      <!-- 文章分类 -->
       <section class="sidebar-section category-section">
-        <div class="category-grid">
+        <h4 class="side-section-title">
+          <Icon name="heroicons:folder-open" size="md" />
+          <span>文章分类</span>
+        </h4>
+        <div class="side-cat-list">
           <button
             v-for="category in categories"
             :key="category.key"
             type="button"
-            class="category-card"
+            class="side-cat-row"
             @click="goToCategory(category.key)"
           >
-            <div class="category-main">
-              <span class="category-icon">
-                <Icon :name="category.icon" size="md" />
-              </span>
-              <p class="category-label">{{ category.label }}</p>
-            </div>
-            <span class="category-count">{{ category.count }} 篇</span>
+            <span class="side-cat-icon">
+              <Icon :name="category.icon" size="md" />
+            </span>
+            <span class="side-cat-label">{{ category.label }}</span>
+            <span class="side-cat-count">{{ category.count }} 篇</span>
           </button>
         </div>
       </section>
 
+      <!-- 归档 -->
       <section class="sidebar-section archive-section">
+        <h4 class="side-section-title">
+          <Icon name="heroicons:calendar" size="md" />
+          <span>归档</span>
+        </h4>
         <div class="archive-list">
-          <div
-            v-for="month in monthArchives"
-            :key="month.key"
-            class="archive-item"
-          >
-            <div class="archive-meta">
-              <p class="archive-month">{{ month.label }}</p>
-            </div>
+          <div v-for="month in monthArchives" :key="month.key" class="archive-item">
+            <span class="archive-month">{{ month.label }}</span>
             <span class="archive-count">{{ month.count }} 篇</span>
           </div>
         </div>
@@ -46,8 +64,8 @@ import { useArticlesFeature } from '~/features/article-list/composables/useArtic
 const router = useRouter();
 
 const categoryConfig = [
-  { key: 'study', label: '学习', icon: 'heroicons:document-text' },
-  { key: 'game', label: '游戏', icon: 'mdi:gamepad-variant' },
+  { key: 'study', label: '学习笔记', icon: 'heroicons:document-text' },
+  { key: 'game', label: '游戏评测', icon: 'mdi:gamepad-variant' },
   { key: 'work', label: '个人作品', icon: 'heroicons:code-bracket-square' },
   { key: 'resource', label: '资源分享', icon: 'heroicons:folder-open' }
 ];
@@ -97,6 +115,12 @@ const categories = computed(() => {
     ...cat,
     count: categoryStats[cat.key] || 0
   }));
+});
+
+// 文章总数
+const articleCount = computed(() => {
+  const categoryStats = sidebarStatsData.value?.categoryStats || {};
+  return Object.values(categoryStats).reduce((sum, count) => sum + (count || 0), 0);
 });
 
 const generateRecentMonths = (length = 6) => {

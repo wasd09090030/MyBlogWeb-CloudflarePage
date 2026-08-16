@@ -7,13 +7,13 @@ export default defineAppConfig({
   },
   ui: {
     colors: {
-      primary: 'blue',
-      secondary: 'purple',
-      neutral: 'zinc',
+      primary: 'rose',
+      secondary: 'amber',
+      neutral: 'stone',
       info: 'sky',
-      success: 'green',
+      success: 'teal',
       warning: 'amber',
-      error: 'red'
+      error: 'rose'
     },
     prose: articleProsePreset
   }

@@ -95,25 +95,21 @@
   flex-shrink: 0;
 }
 
-:global(.dark) .category-bar,
 .dark .category-bar {
   background: var(--card-bg);
   border-color: var(--border-color);
 }
 
-:global(.dark) .category-list-item,
 .dark .category-list-item {
   color: var(--text-secondary);
 }
 
-:global(.dark) .category-list-item:hover,
 .dark .category-list-item:hover {
   background: var(--article-category-hover-bg);
   border-color: var(--article-category-hover-border);
   color: var(--accent-primary);
 }
 
-:global(.dark) .category-list-item.active,
 .dark .category-list-item.active {
   background: var(--article-active-gradient);
   color: var(--text-inverse);
@@ -412,7 +408,6 @@
   transform: none;
 }
 
-:global(.dark) .article-tag,
 .dark .article-tag {
   color: var(--article-tag-color);
   /* 移除所有装饰性样式 */
@@ -420,7 +415,6 @@
   border: none;
 }
 
-:global(.dark) .article-tag:hover,
 .dark .article-tag:hover {
   color: var(--article-tag-hover-color);
   /* 移除所有装饰性样式 */
@@ -533,7 +527,6 @@
   text-transform: uppercase;
 }
 
-:global(.dark) .button-text,
 .dark .button-text {
   color: var(--text-primary);
 }
@@ -558,7 +551,6 @@
 
 /* ========== 暗色主题适配（桌面端） ========== */
 
-:global(.dark) .article-card,
 .dark .article-card {
   background: var(--card-bg);
   border-color: var(--border-color);
@@ -568,66 +560,146 @@
   /* box-shadow removed */
 }
 
-:global(.dark) .article-title,
 .dark .article-title {
-  color: var(--text-primary);
+  color: #fffaf7;
 }
 
-:global(.dark) .article-title-link:hover .article-title,
 .dark .article-title-link:hover .article-title {
   color: var(--accent-primary);
 }
 
-:global(.dark) .article-content-preview,
 .dark .article-content-preview {
-  color: var(--text-secondary);
+  color: #f2e6e0;
 }
 
-:global(.dark) .article-date,
 .dark .article-date {
-  background: var(--article-muted-chip-bg);
-  color: var(--article-muted-chip-text);
+  background: rgba(255, 245, 241, 0.2);
+  color: #f5e6df;
 }
 
-:global(.dark) .article-image-placeholder,
+.dark .article-tag {
+  color: #fecdd3;
+}
+
+.dark .learn-more .button-text {
+  color: #fff4ef;
+}
+
 .dark .article-image-placeholder {
   background: var(--article-image-placeholder);
 }
 
-:global(.dark) .page-header,
-.dark .page-header,
 .dark .page-header {
   background: var(--card-bg);
   border-color: var(--border-color);
   box-shadow: none;
 }
 
-:global(.dark) .page-header__heading,
-.dark .page-header__heading,
 .dark .page-header__heading {
   color: var(--text-primary);
 }
 
-:global(.dark) .page-header__subtitle,
-.dark .page-header__subtitle,
 .dark .page-header__subtitle {
   color: var(--text-muted);
 }
 
-:global(.dark) .view-toggle-btn,
-.dark .view-toggle-btn,
 .dark .view-toggle-btn {
   border-color: var(--border-color);
   background: var(--bg-secondary);
   color: var(--text-secondary);
 }
 
-:global(.dark) .view-toggle-btn.active,
-.dark .view-toggle-btn.active,
 .dark .view-toggle-btn.active {
   background: var(--article-active-gradient);
   color: var(--text-inverse);
   border-color: transparent;
+}
+
+/* ========== D4 蜜桃主题覆盖（2026 首页改版） ========== */
+
+/* 分类栏：胶囊容器 */
+.category-bar {
+  border-radius: 999px;
+  box-shadow: 0 2px 10px rgba(225, 29, 72, 0.04);
+}
+
+/* 分类胶囊 */
+.category-list-item {
+  border-radius: 999px;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.category-list-item:hover {
+  transform: translateY(-1px);
+}
+
+.category-list-item.active {
+  background: linear-gradient(135deg, #fb7185, #e11d48);
+  box-shadow: 0 4px 14px rgba(251, 113, 133, 0.4);
+}
+
+/* 文章卡片：24px 大圆角 + 弹性 hover + 平滑日夜过渡 */
+.article-card {
+  border-radius: 24px;
+  background-color: #ffffff;
+  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.05);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.5s ease;
+  position: relative;
+}
+
+.article-card:hover {
+  transform: translateY(-6px) rotate(-0.4deg);
+  box-shadow: 0 18px 42px rgba(225, 29, 72, 0.16);
+  border-color: rgba(251, 113, 133, 0.5);
+}
+
+/* 卡片顶部渐变饰条（hover 浮现） */
+.article-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 2;
+  background: linear-gradient(90deg, #fb7185, #fb923c, #fda4af);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.article-card:hover::before {
+  opacity: 1;
+}
+
+/* 网格模式封面圆角 */
+.article-card-grid {
+  border-radius: 24px;
+}
+
+.article-card-grid .article-image-section {
+  border-radius: 24px 24px 0 0;
+}
+
+/* 阅读全文按钮圆形底色 */
+.learn-more .circle {
+  background: linear-gradient(135deg, #fb7185, #e11d48);
+}
+
+.dark .learn-more .circle {
+  background: linear-gradient(135deg, #fb7185, #e11d48);
+}
+
+/* 暗色适配 */
+.dark .article-card {
+  background-color: var(--card-bg);
+}
+
+.dark .article-card:hover {
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.5);
+}
+
+.dark .category-bar {
+  box-shadow: none;
 }
 
 /* 自定义动画 */

@@ -1,4 +1,5 @@
 /* ========== 移动端规则 ==========
+   D4 蜜桃：全宽晚霞横幅 + 三张重叠导航卡
    所有规则必须包在 @media (max-width: <breakpoint>) 内。
    允许的断点: 576px / 768px / 992px。
 */
@@ -6,191 +7,161 @@
 /* 平板端 (992px以下) */
 @media (max-width: 992px) {
   .welcome-section {
-    width: 92%;
-    flex-direction: column;
-    height: auto;
-    gap: 15px;
+    margin-bottom: 3.25rem;
+    padding: 0 20px;
   }
 
-  .carousel-wrapper {
-    max-width: 100%;
-    height: 35vh;
-    min-height: 220px;
-    flex: none;
-  }
-
-  .info-section {
-    max-width: 100%;
-    flex: none;
-    height: auto;
-  }
-
-  .top-section {
-    padding: 1rem 1.5rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .top-section::before {
-    width: 120px;
-    opacity: 0.6;
-  }
-
-  .announcement-text-content {
-    padding-left: 0;
-    max-width: calc(100% - 150px);
-    width: auto;
-  }
-
-  .announcement-title {
-    font-size: 1.1rem;
-  }
-
-  .announcement-subtitle {
-    font-size: 0.8rem;
-  }
-
-  .bottom-cards {
-    flex-direction: row;
-    gap: 10px;
-  }
-
-  .info-card {
-    min-height: 100px;
-  }
-
-  .card-content-wrapper {
-    padding: 10px 12px;
-  }
-
-
-  .card-title {
-    font-size: 0.96rem;
-  }
-
-  .card-subtitle {
-    font-size: 0.78rem;
-  }
-
-}
-
-/* 移动端 (768px以下) */
-@media (max-width: 768px) {
-  .welcome-section {
-    width: 95%;
-    gap: 0;
-  }
-
-  .carousel-wrapper {
-    height: 38vh;
+  .peach-hero {
     min-height: 240px;
   }
 
-  /* 移动端隐藏右侧信息区域 */
-  .info-section {
-    display: none;
+  .hero-title {
+    font-size: 28px;
   }
 
-  .carousel-section {
-    border-radius: 12px;
+  .peach-cards {
+    gap: 14px;
+    padding: 0 16px;
+    margin-top: -40px;
   }
 
-  .swiper-container {
-    border-radius: 12px;
-  }
-
-  .slide-card {
-    border-radius: 12px;
-  }
-
-  .slide-category-badge {
-    top: 12px;
-    left: 12px;
-    padding: 5px 12px;
-    font-size: 0.75rem;
-  }
-
-  .slide-content {
-    padding: 14px;
-  }
-
-  .slide-title {
-    font-size: 1.1rem;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
-
-  .carousel-nav-btn {
-    width: 34px !important;
-    height: 34px !important;
-    font-size: 0.9rem;
-  }
-
-  .carousel-nav-prev {
-    right: 52px !important;
-    left: auto !important;
-    bottom: 12px !important;
-  }
-
-  .carousel-nav-next {
-    right: 12px !important;
-    bottom: 12px !important;
+  .peach-card {
+    padding: 18px 16px;
   }
 }
 
-/* 小屏移动端 (576px以下) */
+/* 平板竖屏 / 大屏手机 (768px以下) */
+@media (max-width: 768px) {
+  .welcome-section {
+    margin-bottom: 3rem;
+    padding: 0 16px;
+  }
+
+  .peach-hero {
+    min-height: 210px;
+  }
+
+  .hero-in {
+    padding: 36px 20px;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+  }
+
+  .hero-title {
+    font-size: 24px;
+    margin: 10px 0 6px;
+  }
+
+  .hero-sub {
+    font-size: 13.5px;
+  }
+
+  .hero-cta {
+    margin-top: 18px;
+  }
+
+  .peach-cards {
+    gap: 10px;
+    padding: 0 12px;
+    margin-top: -34px;
+  }
+
+  .peach-card {
+    gap: 10px;
+    padding: 14px 12px;
+    border-radius: 18px;
+  }
+
+  .card-ic {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+
+  .card-body b {
+    font-size: 14px;
+  }
+
+  .card-body span {
+    font-size: 11px;
+  }
+
+  .card-more {
+    font-size: 15px;
+  }
+}
+
+/* 手机端 (576px以下) */
 @media (max-width: 576px) {
   .welcome-section {
-    width: 96%;
+    margin-bottom: 2.75rem;
+    padding: 0 12px;
   }
 
-  .carousel-wrapper {
-    height: 35vh;
-    min-height: 220px;
+  .peach-hero {
+    min-height: 180px;
+    border-radius: 22px;
   }
 
-  .slide-category-badge {
-    top: 10px;
-    left: 10px;
-    padding: 4px 10px;
-    font-size: 0.7rem;
+  .hero-in {
+    padding: 30px 16px;
   }
 
-  .slide-content {
-    padding: 12px;
+  .hero-eyebrow {
+    font-size: 10px;
   }
 
-  .slide-title {
-    font-size: 1rem;
-    margin-bottom: 6px;
+  .hero-title {
+    font-size: 21px;
   }
 
-  .carousel-nav-btn {
-    width: 30px !important;
-    height: 30px !important;
-    font-size: 0.8rem;
+  .hero-sub {
+    font-size: 12.5px;
   }
 
-  .carousel-nav-prev {
-    right: 46px !important;
-    bottom: 10px !important;
+  .hero-cta {
+    gap: 8px;
+    margin-top: 14px;
   }
 
-  .carousel-nav-next {
-    right: 10px !important;
-    bottom: 10px !important;
+  .hero-btn-primary,
+  .hero-btn-ghost {
+    font-size: 13px;
+    padding: 9px 18px;
   }
 
-  :deep(.swiper-pagination) {
-    bottom: 10px !important;
-    left: 10px !important;
+  .peach-cards {
+    gap: 8px;
+    padding: 0 8px;
+    margin-top: -28px;
   }
 
-  :deep(.swiper-pagination-bullet) {
-    width: 6px;
-    height: 6px;
-    margin: 0 3px !important;
+  .peach-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border-radius: 16px;
   }
 
+  .card-ic {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .card-body span {
+    display: none;
+  }
+
+  .card-body b {
+    font-size: 13px;
+  }
+
+  .card-more {
+    display: none;
+  }
 }

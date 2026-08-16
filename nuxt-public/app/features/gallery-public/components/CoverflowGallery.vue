@@ -315,7 +315,7 @@ watch(
   transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.5s ease, z-index 0s;
   cursor: pointer;
   border-radius: 15px;
-  background: #f0f0f0;
+  background: var(--gallery-card-strong, #f0f0f0);
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
   /* 默认居中 */
   left: 0;
@@ -350,7 +350,7 @@ watch(
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.82);
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.58), rgba(30, 41, 59, 0.3));
+  background: var(--gallery-fallback, linear-gradient(145deg, rgba(157, 23, 77, 0.58), rgba(61, 47, 43, 0.3)));
 }
 
 .item-overlay {

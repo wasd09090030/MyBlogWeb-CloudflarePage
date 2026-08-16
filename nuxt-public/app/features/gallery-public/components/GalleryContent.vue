@@ -1,5 +1,7 @@
 <template>
   <div class="gallery-fullscreen">
+    <GalleryAtmosphere />
+
     <Transition name="loading-fade" mode="out-in">
       <GalleryLoadingAnimation
         v-if="isInitialLoading"
@@ -164,6 +166,7 @@ import { groupGalleryByMonth } from '~/features/gallery-public/utils/monthGroupi
 import StateLoading from '~/shared/ui/StateLoading.vue'
 import StateError from '~/shared/ui/StateError.vue'
 import StateEmpty from '~/shared/ui/StateEmpty.vue'
+import GalleryAtmosphere from '~/shared/ui/GalleryAtmosphere.vue'
 
 const props = defineProps({
   galleries: { type: Array, required: true },
@@ -238,4 +241,86 @@ defineExpose({
 <style scoped>
 @import '~/assets/css/components/Gallery.desktop.css';
 @import '~/assets/css/components/Gallery.mobile.css';
+
+.gallery-fullscreen {
+  --gallery-bg: linear-gradient(135deg, #fff8f3 0%, #f8e7e2 48%, #f4dce7 100%);
+  --gallery-card-bg: rgba(255, 255, 255, 0.72);
+  --gallery-card-strong: rgba(255, 253, 251, 0.92);
+  --gallery-border: rgba(157, 23, 77, 0.16);
+  --gallery-ink-rgb: 61, 47, 43;
+  --gallery-ink: #3d2f2b;
+  --gallery-muted: #8a7368;
+  --gallery-ribbon: #e11d48;
+  --gallery-orbit: #fb923c;
+  --gallery-fallback: linear-gradient(140deg, rgba(157, 23, 77, 0.62), rgba(61, 47, 43, 0.34));
+  position: relative;
+  color: var(--gallery-ink);
+  background: var(--gallery-bg);
+}
+
+:global(.dark .gallery-fullscreen) {
+  --gallery-bg: linear-gradient(135deg, #241a17 0%, #33241f 54%, #2b1c2a 100%);
+  --gallery-card-bg: rgba(51, 36, 31, 0.82);
+  --gallery-card-strong: rgba(51, 36, 31, 0.95);
+  --gallery-border: rgba(251, 113, 133, 0.24);
+  --gallery-ink-rgb: 247, 236, 233;
+  --gallery-ink: #fdf5f1;
+  --gallery-muted: #cdb8ad;
+  --gallery-ribbon: #fb7185;
+  --gallery-orbit: #fb923c;
+  --gallery-fallback: linear-gradient(140deg, rgba(112, 55, 73, 0.78), rgba(36, 26, 23, 0.76));
+}
+
+.gallery-fullscreen :deep(.embedded-card),
+.gallery-fullscreen :deep(.gallery-hero__preview--tall),
+.gallery-fullscreen :deep(.gallery-hero__preview--wide) {
+  background: var(--gallery-card-bg);
+  border: 1px solid var(--gallery-border);
+  box-shadow: 0 18px 44px rgba(var(--gallery-ink-rgb), 0.08);
+}
+
+.gallery-fullscreen :deep(.gallery-hero__preview-card) {
+  background: var(--gallery-card-strong);
+}
+
+.gallery-fullscreen :deep(.gallery-hero__preview-fallback),
+.gallery-fullscreen :deep(.accordion-fallback),
+.gallery-fullscreen :deep(.carousel-fallback),
+.gallery-fullscreen :deep(.fade-fallback),
+.gallery-fullscreen :deep(.gallery-masonry__fallback),
+.gallery-fullscreen :deep(.game-card-fallback) {
+  background: var(--gallery-fallback);
+}
+
+.gallery-fullscreen :deep(.gallery-timeline__rail) {
+  background: rgba(var(--gallery-ink-rgb), 0.24);
+}
+
+.gallery-fullscreen :deep(.gallery-timeline__year-label),
+.gallery-fullscreen :deep(.gallery-timeline__item),
+.gallery-fullscreen :deep(.gallery-month-section__eyebrow),
+.gallery-fullscreen :deep(.gallery-timeline__sublabel) {
+  color: rgba(var(--gallery-ink-rgb), 0.62);
+}
+
+.gallery-fullscreen :deep(.gallery-timeline__year.is-active .gallery-timeline__year-label),
+.gallery-fullscreen :deep(.gallery-month-section__title) {
+  color: var(--gallery-ink);
+}
+
+.gallery-fullscreen :deep(.gallery-timeline__item:hover),
+.gallery-fullscreen :deep(.gallery-timeline__item:focus-visible),
+.gallery-fullscreen :deep(.gallery-timeline__item[aria-current='true']) {
+  background: var(--gallery-card-bg);
+  color: var(--gallery-ink);
+}
+
+.gallery-fullscreen :deep(.game-section-title) {
+  color: var(--gallery-ink);
+}
+
+.gallery-fullscreen :deep(.game-section-subtitle),
+.gallery-fullscreen :deep(.game-empty) {
+  color: var(--gallery-muted);
+}
 </style>

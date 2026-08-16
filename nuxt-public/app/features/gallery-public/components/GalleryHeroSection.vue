@@ -225,9 +225,10 @@ defineExpose({
 .embedded-card {
   overflow: hidden;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--gallery-card-bg, rgba(255, 255, 255, 0.92));
+  border: 1px solid var(--gallery-border, rgba(157, 23, 77, 0.16));
   backdrop-filter: blur(12px);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 18px 44px rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.08);
   z-index: 1;
 }
 
@@ -257,8 +258,8 @@ defineExpose({
   height: var(--hero-fade-height);
   padding: 12px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.52);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: var(--gallery-card-bg, rgba(255, 255, 255, 0.52));
+  border: 1px solid var(--gallery-border, rgba(157, 23, 77, 0.16));
   backdrop-filter: blur(10px);
 }
 
@@ -273,8 +274,8 @@ defineExpose({
   height: var(--hero-panel-height);
   padding: 12px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.56);
-  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: var(--gallery-card-bg, rgba(255, 255, 255, 0.56));
+  border: 1px solid var(--gallery-border, rgba(157, 23, 77, 0.16));
   backdrop-filter: blur(12px);
 }
 
@@ -288,7 +289,7 @@ defineExpose({
   overflow: hidden;
   border-radius: 12px;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--gallery-card-strong, rgba(255, 255, 255, 0.82));
   min-height: 0;
 }
 
@@ -297,7 +298,7 @@ defineExpose({
 }
 
 .gallery-hero__preview-card--soft-background {
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: var(--gallery-card-bg, rgba(255, 255, 255, 0.5));
   background-blend-mode: soft-light;
 }
 
@@ -330,7 +331,7 @@ defineExpose({
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.84);
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.58), rgba(30, 41, 59, 0.3));
+  background: var(--gallery-fallback, linear-gradient(145deg, rgba(157, 23, 77, 0.58), rgba(61, 47, 43, 0.3)));
 }
 
 @media (min-width: 1280px) {

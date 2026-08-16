@@ -73,7 +73,7 @@
   overflow: hidden;
   border: 0;
   border-radius: 0;
-  background: rgba(15, 23, 42, 0.72);
+  background: var(--gallery-fallback, rgba(15, 23, 42, 0.72));
   box-shadow: none;
   cursor: pointer;
   padding: 0;
@@ -127,7 +127,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--gallery-ink, rgba(255, 255, 255, 0.78));
 }
 
 .game-tile-date {
@@ -163,11 +163,11 @@
   }
 }
 
-:global(.dark) .game-section-title {
-  color: rgba(248, 250, 252, 0.9);
+:global(.dark .game-section-title) {
+  color: var(--gallery-ink, rgba(248, 250, 252, 0.9));
 }
 
-:global(.dark) .game-section-subtitle,
-:global(.dark) .game-empty {
-  color: rgba(226, 232, 240, 0.75);
+:global(.dark .game-section-subtitle),
+:global(.dark .game-empty) {
+  color: var(--gallery-muted, rgba(226, 232, 240, 0.75));
 }

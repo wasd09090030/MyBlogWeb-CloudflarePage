@@ -12,7 +12,7 @@
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--gallery-bg, linear-gradient(135deg, #fff8f3 0%, #f8e7e2 48%, #f4dce7 100%));
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 1000;
@@ -73,9 +73,10 @@
 .embedded-card {
   overflow: hidden;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--gallery-card-bg, rgba(255, 255, 255, 0.92));
+  border: 1px solid var(--gallery-border, rgba(157, 23, 77, 0.16));
   backdrop-filter: blur(12px);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 18px 44px rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.08);
   z-index: 1;
 }
 
@@ -95,9 +96,9 @@
 
 .gallery-option {
   appearance: none;
-  border: 1px solid rgba(15, 23, 42, 0.15);
-  background: rgba(255, 255, 255, 0.75);
-  color: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--gallery-border, rgba(157, 23, 77, 0.16));
+  background: var(--gallery-card-bg, rgba(255, 255, 255, 0.75));
+  color: var(--gallery-ink, #3d2f2b);
   padding: 0.55rem 1.4rem;
   border-radius: 999px;
   font-size: 0.95rem;
@@ -109,16 +110,16 @@
 }
 
 .gallery-option:hover {
-  border-color: rgba(100, 108, 255, 0.45);
-  color: rgba(30, 64, 175, 0.9);
-  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  box-shadow: 0 10px 25px rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.12);
 }
 
 .gallery-option.is-active {
-  background: rgba(15, 23, 42, 0.92);
+  background: var(--gradient-primary, linear-gradient(135deg, #fb7185, #e11d48));
   color: #ffffff;
-  border-color: rgba(15, 23, 42, 0.9);
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.2);
+  border-color: transparent;
+  box-shadow: 0 12px 30px rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.2);
 }
 
 /* 画廊淡入过渡 */
@@ -399,6 +400,3 @@
 }
 
 /* 暗色主题：仅改变页面背景 */
-:global(.dark) .gallery-fullscreen {
-  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-}

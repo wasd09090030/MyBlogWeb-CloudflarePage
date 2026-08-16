@@ -278,7 +278,7 @@ watch(
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.82);
-  background: linear-gradient(140deg, rgba(15, 23, 42, 0.65), rgba(30, 41, 59, 0.38));
+  background: var(--gallery-fallback, linear-gradient(140deg, rgba(157, 23, 77, 0.65), rgba(61, 47, 43, 0.38)));
 }
 
 /* 响应式设计 */

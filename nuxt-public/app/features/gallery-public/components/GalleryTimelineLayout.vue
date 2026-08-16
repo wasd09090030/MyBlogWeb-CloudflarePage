@@ -547,64 +547,64 @@ onUnmounted(() => {
 /* gallery-timeline-editorial-minimal · 已移除 .gallery-month-section__count（原数字埋点） */
 
 /* ====== Dark theme overrides ====== */
-:global(.dark) .gallery-timeline__rail {
-  background: rgba(226, 232, 240, 0.32);
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.45);
+:global(.dark .gallery-timeline__rail) {
+  background: rgba(var(--gallery-ink-rgb, 247, 236, 233), 0.32);
+  box-shadow: 0 0 0 1px rgba(36, 26, 23, 0.45);
 }
 
-:global(.dark) .gallery-timeline__year-label {
-  color: rgba(226, 232, 240, 0.55);
+:global(.dark .gallery-timeline__year-label) {
+  color: rgba(var(--gallery-ink-rgb, 247, 236, 233), 0.62);
 }
 
-:global(.dark) .gallery-timeline__year.is-active .gallery-timeline__year-label {
-  color: rgba(248, 250, 252, 0.92);
+:global(.dark .gallery-timeline__year.is-active .gallery-timeline__year-label) {
+  color: var(--gallery-ink, #fdf5f1);
 }
 
-:global(.dark) .gallery-timeline__item {
-  color: rgba(226, 232, 240, 0.68);
+:global(.dark .gallery-timeline__item) {
+  color: rgba(var(--gallery-ink-rgb, 247, 236, 233), 0.72);
 }
 
-:global(.dark) .gallery-timeline__item:hover,
-:global(.dark) .gallery-timeline__item:focus-visible,
-:global(.dark) .gallery-timeline__item[aria-current="true"] {
-  background: rgba(15, 23, 42, 0.62);
-  color: rgba(248, 250, 252, 0.95);
+:global(.dark .gallery-timeline__item:hover),
+:global(.dark .gallery-timeline__item:focus-visible),
+:global(.dark .gallery-timeline__item[aria-current="true"]) {
+  background: var(--gallery-card-bg, rgba(51, 36, 31, 0.82));
+  color: var(--gallery-ink, #fdf5f1);
 }
 
-:global(.dark) .gallery-timeline__dot {
-  background: rgba(226, 232, 240, 0.34);
-  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.66);
+:global(.dark .gallery-timeline__dot) {
+  background: rgba(var(--gallery-ink-rgb, 247, 236, 233), 0.38);
+  box-shadow: 0 0 0 4px rgba(36, 26, 23, 0.66);
 }
 
-:global(.dark) .gallery-timeline__item[aria-current="true"] .gallery-timeline__dot {
-  background: rgba(248, 250, 252, 0.92);
+:global(.dark .gallery-timeline__item[aria-current="true"] .gallery-timeline__dot) {
+  background: var(--gallery-ink, #fdf5f1);
 }
 
 /* 4.10 · 暗色主题：sublabel、fill-bar 暗色覆盖 */
-:global(.dark) .gallery-timeline__sublabel {
-  color: rgba(226, 232, 240, 0.5);
+:global(.dark .gallery-timeline__sublabel) {
+  color: var(--gallery-muted, #cdb8ad);
 }
 
-:global(.dark) .gallery-timeline__item[aria-current="true"] {
-  box-shadow: inset 2px 0 0 var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
+:global(.dark .gallery-timeline__item[aria-current="true"]) {
+  box-shadow: inset 2px 0 0 var(--gallery-ribbon, #fb7185);
 }
 
 /* gallery-timeline-editorial-minimal · Active 月 ::before 引出线暗色覆盖 */
-:global(.dark) .gallery-timeline__item[aria-current="true"]::before {
-  background: var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
+:global(.dark .gallery-timeline__item[aria-current="true"]::before) {
+  background: var(--gallery-ribbon, #fb7185);
 }
 
-:global(.dark) .gallery-timeline__item[aria-current="true"] .gallery-timeline__fill-bar {
-  background: var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
-  box-shadow: 0 0 6px var(--color-editorial-glow, rgba(226, 232, 240, 0.45));
+:global(.dark .gallery-timeline__item[aria-current="true"] .gallery-timeline__fill-bar) {
+  background: var(--gallery-ribbon, #fb7185);
+  box-shadow: 0 0 6px var(--gallery-ribbon, #fb7185);
 }
 
-:global(.dark) .gallery-month-section__eyebrow {
-  color: rgba(226, 232, 240, 0.55);
+:global(.dark .gallery-month-section__eyebrow) {
+  color: rgba(var(--gallery-ink-rgb, 247, 236, 233), 0.64);
 }
 
-:global(.dark) .gallery-month-section__title {
-  color: rgba(248, 250, 252, 0.95);
+:global(.dark .gallery-month-section__title) {
+  color: var(--gallery-ink, #fdf5f1);
 }
 
 /* ====== Mobile (≤1024px) - rail collapses to horizontal ====== */
@@ -722,13 +722,13 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1024px) {
-  :global(.dark) .gallery-timeline {
-    background: linear-gradient(180deg, rgba(26, 32, 44, 0.96), rgba(26, 32, 44, 0.74));
+  :global(.dark .gallery-timeline) {
+    background: linear-gradient(180deg, rgba(51, 36, 31, 0.96), rgba(51, 36, 31, 0.78));
   }
 
-  :global(.dark) .gallery-timeline__item {
-    border-color: rgba(226, 232, 240, 0.12);
-    background: rgba(15, 23, 42, 0.48);
+  :global(.dark .gallery-timeline__item) {
+    border-color: var(--gallery-border, rgba(251, 113, 133, 0.24));
+    background: rgba(36, 26, 23, 0.48);
   }
 }
 

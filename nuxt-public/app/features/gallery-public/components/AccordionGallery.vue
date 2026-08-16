@@ -97,7 +97,7 @@ watch(
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.75);
-  background: linear-gradient(140deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.4));
+  background: var(--gallery-fallback, linear-gradient(140deg, rgba(157, 23, 77, 0.6), rgba(61, 47, 43, 0.4)));
 }
 
 .accordion-item.expanded {

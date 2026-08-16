@@ -853,3 +853,36 @@
 .status-fade {
   animation: fadeIn 0.6s ease-out 1.7s both;
 }
+
+/* ========== D4 蜜桃主题覆盖（2026 首页改版） ========== */
+
+.desktop-sidebar .sidebar-content {
+  border-radius: 22px;
+  background: linear-gradient(180deg, #ffffff, #fffaf4);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.desktop-sidebar .sidebar-content:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(225, 29, 72, 0.1);
+}
+
+:global(.dark) .desktop-sidebar .sidebar-content,
+.dark .desktop-sidebar .sidebar-content {
+  background: linear-gradient(180deg, var(--card-bg), #2a1e1b);
+  border-color: var(--card-border);
+}
+
+/* 分类小卡 */
+.category-card {
+  border-radius: 18px;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.06);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-3px) rotate(-0.5deg);
+  box-shadow: 0 10px 22px rgba(225, 29, 72, 0.14);
+}

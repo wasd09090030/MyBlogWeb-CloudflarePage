@@ -223,4 +223,13 @@
     padding: 0.5rem;
   }
 
+  /* D4 蜜桃：移动端圆角收敛 */
+  .article-card {
+    border-radius: 20px;
+  }
+
+  .category-bar {
+    border-radius: 999px;
+  }
+
 }

@@ -858,10 +858,10 @@
 
 .desktop-sidebar .sidebar-content {
   border-radius: 22px;
-  background: linear-gradient(180deg, #ffffff, #fffaf4);
+  background-color: #ffffff;
   border: 1px solid var(--border-color);
   box-shadow: 0 6px 18px rgba(225, 29, 72, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
 }
 
 .desktop-sidebar .sidebar-content:hover {
@@ -871,7 +871,7 @@
 
 :global(.dark) .desktop-sidebar .sidebar-content,
 .dark .desktop-sidebar .sidebar-content {
-  background: linear-gradient(180deg, var(--card-bg), #2a1e1b);
+  background-color: var(--card-bg);
   border-color: var(--card-border);
 }
 

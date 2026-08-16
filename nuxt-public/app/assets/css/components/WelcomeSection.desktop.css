@@ -44,6 +44,12 @@
   z-index: 1;
   pointer-events: none;
   background: linear-gradient(0deg, rgba(110, 10, 45, 0.42) 0%, rgba(110, 10, 45, 0) 55%);
+  transition: background 0.9s ease;
+}
+
+:global(.dark) .hero-overlay,
+.dark .hero-overlay {
+  background: linear-gradient(0deg, rgba(10, 5, 22, 0.55) 0%, rgba(10, 5, 22, 0) 55%);
 }
 
 .hero-in {
@@ -139,13 +145,13 @@
   align-items: center;
   gap: 14px;
   padding: 22px 20px;
-  background: linear-gradient(180deg, #ffffff, #fffaf4);
+  background-color: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: 24px;
   box-shadow: 0 14px 40px rgba(225, 29, 72, 0.1);
   cursor: pointer;
   text-align: left;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
 }
 
 .peach-card:hover {
@@ -210,7 +216,7 @@
 /* ---- 暗色模式 ---- */
 :global(.dark) .peach-card,
 .dark .peach-card {
-  background: linear-gradient(180deg, var(--card-bg), #2a1e1b);
+  background-color: var(--card-bg);
   border-color: var(--card-border);
 }
 

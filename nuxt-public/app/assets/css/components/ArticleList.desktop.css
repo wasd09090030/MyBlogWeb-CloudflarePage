@@ -653,12 +653,12 @@
   box-shadow: 0 4px 14px rgba(251, 113, 133, 0.4);
 }
 
-/* 文章卡片：24px 大圆角 + 奶油微渐变 + 弹性 hover */
+/* 文章卡片：24px 大圆角 + 弹性 hover + 平滑日夜过渡 */
 .article-card {
   border-radius: 24px;
-  background: linear-gradient(180deg, #ffffff, #fffaf4);
+  background-color: #ffffff;
   box-shadow: 0 6px 18px rgba(225, 29, 72, 0.05);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.5s ease;
   position: relative;
 }
 
@@ -708,7 +708,7 @@
 /* 暗色适配 */
 :global(.dark) .article-card,
 .dark .article-card {
-  background: linear-gradient(180deg, var(--card-bg), #2a1e1b);
+  background-color: var(--card-bg);
 }
 
 :global(.dark) .article-card:hover,

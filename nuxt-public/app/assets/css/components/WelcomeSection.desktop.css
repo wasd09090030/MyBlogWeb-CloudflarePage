@@ -11,7 +11,9 @@
 
 .welcome-section {
   width: 100%;
+  max-width: 1160px;
   margin: 0 auto 3.75rem;
+  padding: 0 24px;
 }
 
 /* ---- 全宽横幅（蜜桃晚霞插画场景） ---- */

@@ -8,6 +8,7 @@
 @media (max-width: 992px) {
   .welcome-section {
     margin-bottom: 3.25rem;
+    padding: 0 20px;
   }
 
   .peach-hero {
@@ -33,6 +34,7 @@
 @media (max-width: 768px) {
   .welcome-section {
     margin-bottom: 3rem;
+    padding: 0 16px;
   }
 
   .peach-hero {
@@ -96,6 +98,7 @@
 @media (max-width: 576px) {
   .welcome-section {
     margin-bottom: 2.75rem;
+    padding: 0 12px;
   }
 
   .peach-hero {

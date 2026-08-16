@@ -253,7 +253,6 @@ defineExpose({
   --gallery-ribbon: #e11d48;
   --gallery-orbit: #fb923c;
   --gallery-fallback: linear-gradient(140deg, rgba(157, 23, 77, 0.62), rgba(61, 47, 43, 0.34));
-  position: relative;
   color: var(--gallery-ink);
   background: var(--gallery-bg);
 }

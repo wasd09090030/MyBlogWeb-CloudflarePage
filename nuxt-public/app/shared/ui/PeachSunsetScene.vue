@@ -118,7 +118,8 @@ defineOptions({ name: 'PeachSunsetScene' })
 .day-hills,
 .day-clouds,
 .day-birds {
-  transition: opacity 0.9s ease;
+  transition: opacity 1s ease;
+  will-change: opacity;
 }
 
 /* ---- 夜晚层（默认隐藏） ---- */
@@ -127,7 +128,15 @@ defineOptions({ name: 'PeachSunsetScene' })
 .night-stars,
 .night-hills {
   opacity: 0;
-  transition: opacity 0.9s ease;
+  transition: opacity 1s ease;
+  will-change: opacity;
+}
+
+/* ---- 月亮/星星：入场带轻微上浮，白天→黑夜更明显 ---- */
+.night-moon,
+.night-stars {
+  transform: translateY(18px);
+  transition: opacity 1s ease, transform 1s ease;
 }
 
 /* ---- 日夜切换 ---- */
@@ -136,6 +145,7 @@ defineOptions({ name: 'PeachSunsetScene' })
 .dark .night-stars,
 .dark .night-hills {
   opacity: 1;
+  transform: translateY(0);
 }
 
 .dark .day-sky,

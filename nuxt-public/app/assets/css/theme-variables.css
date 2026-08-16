@@ -192,11 +192,11 @@
   --bg-overlay: rgba(0, 0, 0, 0.7);
 
   /* 文字颜色 */
-  --text-primary: #f7ece9;
-  --text-secondary: #d9c3bb;
-  --text-tertiary: #bda89d;
+  --text-primary: #fdf5f1;
+  --text-secondary: #e7d9d2;
+  --text-tertiary: #cdb8ad;
   --text-inverse: #241a17;
-  --text-muted: #a98d83;
+  --text-muted: #b7a096;
 
   /* 主题色 */
   --accent-primary: #fb7185;
@@ -299,10 +299,10 @@
   --article-category-hover-bg: rgba(251, 113, 133, 0.15);
   --article-category-hover-border: rgba(251, 113, 133, 0.3);
   --article-active-gradient: linear-gradient(135deg, #fb7185, #e11d48);
-  --article-muted-chip-bg: rgba(247, 236, 233, 0.15);
-  --article-muted-chip-text: #d9c3bb;
-  --article-tag-color: #fb7185;
-  --article-tag-hover-color: #fda4af;
+  --article-muted-chip-bg: rgba(247, 236, 233, 0.18);
+  --article-muted-chip-text: #e2d2c9;
+  --article-tag-color: #fda4af;
+  --article-tag-hover-color: #fecdd3;
   --article-image-placeholder: linear-gradient(135deg, #3a2a24, #241a17);
   --article-lazy-bg: #2e211d;
   --article-lazy-shimmer: linear-gradient(90deg, #4a332b 25%, #5c3d34 50%, #4a332b 75%);
@@ -351,7 +351,7 @@
 /* ==================== 主题切换动画 (Theme Switch Animation) ==================== */
 @media (prefers-reduced-motion: no-preference) {
   :root {
-    --theme-switch-duration: 0.3s;
+    --theme-switch-duration: 0.5s;
   }
 
   html {

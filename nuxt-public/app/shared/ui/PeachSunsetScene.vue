@@ -139,26 +139,27 @@ defineOptions({ name: 'PeachSunsetScene' })
   transition: opacity 1s ease, transform 1s ease;
 }
 
-/* ---- 日夜切换 ---- */
-.dark .night-sky,
-.dark .night-moon,
-.dark .night-stars,
-.dark .night-hills {
+/* ---- 日夜切换 ----
+   主题类位于布局根节点，必须全局匹配，才能让 scoped SVG 样式在两个方向都触发过渡。 */
+:global(.dark .night-sky),
+:global(.dark .night-moon),
+:global(.dark .night-stars),
+:global(.dark .night-hills) {
   opacity: 1;
   transform: translateY(0);
 }
 
-.dark .day-sky,
-.dark .day-sun,
-.dark .day-hills {
+:global(.dark .day-sky),
+:global(.dark .day-sun),
+:global(.dark .day-hills) {
   opacity: 0;
 }
 
-.dark .day-clouds {
+:global(.dark .day-clouds) {
   opacity: 0.18;
 }
 
-.dark .day-birds {
+:global(.dark .day-birds) {
   opacity: 0.35;
 }
 
@@ -199,6 +200,18 @@ defineOptions({ name: 'PeachSunsetScene' })
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .day-sky,
+  .day-sun,
+  .day-hills,
+  .day-clouds,
+  .day-birds,
+  .night-sky,
+  .night-moon,
+  .night-stars,
+  .night-hills {
+    transition: none;
+  }
+
   .sun-breathe,
   .moon-breathe,
   .star {

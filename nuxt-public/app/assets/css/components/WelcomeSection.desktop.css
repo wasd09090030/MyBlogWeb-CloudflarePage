@@ -47,8 +47,7 @@
   transition: background 0.9s ease;
 }
 
-:global(.dark) .hero-overlay,
-.dark .hero-overlay {
+:global(.dark .hero-overlay) {
   background: linear-gradient(0deg, rgba(10, 5, 22, 0.55) 0%, rgba(10, 5, 22, 0) 55%);
 }
 
@@ -214,33 +213,27 @@
 }
 
 /* ---- 暗色模式 ---- */
-:global(.dark) .peach-card,
-.dark .peach-card {
+:global(.dark .peach-card) {
   background-color: var(--card-bg);
   border-color: var(--card-border);
 }
 
-:global(.dark) .peach-card:hover,
-.dark .peach-card:hover {
+:global(.dark .peach-card:hover) {
   box-shadow: 0 22px 48px rgba(0, 0, 0, 0.5);
 }
 
-:global(.dark) .card-body b,
-.dark .card-body b {
+:global(.dark .card-body b) {
   color: var(--text-primary);
 }
 
-:global(.dark) .card-body span,
-.dark .card-body span {
+:global(.dark .card-body span) {
   color: var(--text-tertiary);
 }
 
-:global(.dark) .card-more,
-.dark .card-more {
+:global(.dark .card-more) {
   color: var(--text-tertiary);
 }
 
-:global(.dark) .peach-card:hover .card-more,
-.dark .peach-card:hover .card-more {
+:global(.dark .peach-card:hover .card-more) {
   color: var(--accent-primary);
 }

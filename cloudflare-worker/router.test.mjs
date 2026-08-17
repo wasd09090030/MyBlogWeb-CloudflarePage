@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import router from './router.js'
+import router, { fetchAdminPages } from './router.js'
 
 function request(path, init = {}) {
   return new Request(`https://blog.example${path}`, init)
@@ -57,6 +57,18 @@ test('admin HTML gets no-transform cache-control to block Web Analytics injectio
     assert.equal(htmlResponse.headers.get('cache-control'), 'public, max-age=0, must-revalidate, no-transform')
     const assetResponse = await router.fetch(request('/admin/_nuxt/entry.js'), { ADMIN_PAGES_ORIGIN: 'https://admin.pages.test' })
     assert.equal(assetResponse.headers.get('cache-control'), 'public, max-age=0, must-revalidate')
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test('falls back to the real myblog-admin project when ADMIN_PAGES_ORIGIN is unset', async () => {
+  const originalFetch = globalThis.fetch
+  let target = ''
+  globalThis.fetch = async req => { target = req.url; return new Response('admin shell') }
+  try {
+    await fetchAdminPages(request('/admin'), {}, new URL('https://blog.example/admin'))
+    assert.equal(target, 'https://myblog-admin-8n8.pages.dev/admin')
   } finally {
     globalThis.fetch = originalFetch
   }

@@ -29,7 +29,7 @@ function pagesRequest(request, targetUrl) {
 }
 
 async function fetchAdminPages(request, env, url) {
-  const origin = originFrom(env, 'ADMIN_PAGES_ORIGIN', 'https://myblog-admin.pages.dev')
+  const origin = originFrom(env, 'ADMIN_PAGES_ORIGIN', 'https://myblog-admin-8n8.pages.dev')
   const target = new URL(url.pathname + url.search, origin)
   let response = await fetch(pagesRequest(request, target))
 

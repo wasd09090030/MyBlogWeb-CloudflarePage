@@ -37,6 +37,14 @@ async function fetchAdminPages(request, env, url) {
   if (response.status === 404 && request.method === 'GET' && !isAsset) {
     response = await fetch(pagesRequest(request, new URL('/', origin)))
   }
+  if (!isAsset) {
+    // no-transform 禁止边缘改写响应体，从而阻止 Cloudflare Web Analytics
+    // 向后台 HTML 自动注入 beacon（公开站统计不受影响）；
+    // 哈希静态资源不走这里，保留 Pages 的 immutable 长缓存。
+    const headers = new Headers(response.headers)
+    headers.set('cache-control', 'public, max-age=0, must-revalidate, no-transform')
+    response = new Response(response.body, { status: response.status, statusText: response.statusText, headers })
+  }
   return response
 }
 

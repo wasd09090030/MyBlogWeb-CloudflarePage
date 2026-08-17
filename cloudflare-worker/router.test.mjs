@@ -48,3 +48,16 @@ test('forwards public paths to Public Pages', async () => {
     globalThis.fetch = originalFetch
   }
 })
+
+test('admin HTML gets no-transform cache-control to block Web Analytics injection', async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () => new Response('admin shell', { headers: { 'cache-control': 'public, max-age=0, must-revalidate' } })
+  try {
+    const htmlResponse = await router.fetch(request('/admin'), { ADMIN_PAGES_ORIGIN: 'https://admin.pages.test' })
+    assert.equal(htmlResponse.headers.get('cache-control'), 'public, max-age=0, must-revalidate, no-transform')
+    const assetResponse = await router.fetch(request('/admin/_nuxt/entry.js'), { ADMIN_PAGES_ORIGIN: 'https://admin.pages.test' })
+    assert.equal(assetResponse.headers.get('cache-control'), 'public, max-age=0, must-revalidate')
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})

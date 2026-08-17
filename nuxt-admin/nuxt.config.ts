@@ -26,9 +26,6 @@ export default defineNuxtConfig({
       meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }]
     }
   },
-  routeRules: {
-    '/admin/**': { headers: { 'cache-control': 'private, no-store, max-age=0' } }
-  },
   nitro: {
     preset: 'cloudflare_module',
     errorHandler: '~~/server/error-handler'

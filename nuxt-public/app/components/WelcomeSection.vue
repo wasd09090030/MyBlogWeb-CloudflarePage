@@ -1,13 +1,17 @@
 <template>
   <div class="welcome-section">
-    <!-- 全宽横幅：蜜桃晚霞插画场景 -->
-    <div class="peach-hero">
-      <PeachSunsetScene class="hero-scene" />
-      <div class="hero-overlay" aria-hidden="true"></div>
-      <div class="hero-in">
-        <div class="hero-eyebrow">Peach · 蜜桃时刻</div>
-        <h1 class="hero-title">你好，我是 WyrmKk</h1>
-        <p class="hero-sub">记录代码、游戏与生活的个人博客 —— 甜甜的，慢慢读</p>
+    <!-- 全宽横幅：杂志编辑 × 全身剪影 -->
+    <div class="peach-hero hero-magazine">
+      <div class="hero-dots" aria-hidden="true"></div>
+      <div class="hero-girl" aria-hidden="true"></div>
+      <div class="hero-mag-content">
+        <div class="hero-eyebrow">Blog — Est. 2026 · № 04</div>
+        <h1 class="hero-title" aria-label="你好，我是 WyrmKk">
+          <template v-for="(ch, i) in titleChars" :key="i">
+            <span class="hero-ch" :class="{ 'hero-ch-em': ch.em }" :style="{ animationDelay: `${0.08 + i * 0.045}s` }">{{ ch.ch }}</span>
+          </template>
+        </h1>
+        <p class="hero-sub">记录代码 · 游戏 · 生活</p>
         <div class="hero-cta">
           <button type="button" class="hero-btn-primary" @click="goToRandomArticle">
             <Icon name="heroicons:arrow-path" size="18" />
@@ -43,7 +47,6 @@
 </template>
 
 <script setup>
-import PeachSunsetScene from '~/shared/ui/PeachSunsetScene.vue'
 import { useArticlesFeature } from '~/features/article-list/composables/useArticlesFeature'
 import { useArticleNavigation } from '~/composables/useArticleNavigation'
 
@@ -52,6 +55,14 @@ const { navigateToArticle } = useArticleNavigation()
 
 // API composable
 const { getAllArticles } = useArticlesFeature()
+
+// 标题逐字浮现（杂志编辑动效）：模板直接渲染字符 span，em 部分保持斜体强调色
+const titleChars = computed(() => {
+  const chars = []
+  '你好，我是 '.split('').forEach((c) => chars.push({ ch: c, em: false }))
+  'WyrmKk'.split('').forEach((c) => chars.push({ ch: c, em: true }))
+  return chars
+})
 
 // 页面导航功能
 const goToArticles = () => {

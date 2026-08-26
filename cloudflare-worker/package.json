@@ -1,8 +1,5 @@
 {
   "name": "myblog-cloudflare-router",
   "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "node --test router.test.mjs"
-  }
+  "type": "module"
 }

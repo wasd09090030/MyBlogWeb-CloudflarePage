@@ -58,6 +58,38 @@ export function extractStorageKey(value: string): string | null {
   return isValidStorageKey(path) ? path : null
 }
 
+/**
+ * 从 /images 展示短链中提取 public_id（无素材关联时不返回 storage key）。
+ * 支持三种形态（含带 http(s) 前缀的绝对地址）：
+ *   /images/{publicId}
+ *   /images/thumb/{publicId}.webp          （旧格式）
+ *   /images/thumb/{variant}/{publicId}.webp （新格式）
+ * 其余路径返回 null。
+ */
+export function extractPublicIdFromImageUrl(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  let path: string
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      path = new URL(trimmed).pathname
+    } catch {
+      return null
+    }
+  } else {
+    path = trimmed.split(/[?#]/, 1)[0]
+  }
+  const segments = decodeURIComponent(path).replace(/^\/+/, '').replace(/\/+$/, '').split('/').filter(Boolean)
+  if (segments.length < 2 || segments[0].toLowerCase() !== 'images') return null
+  if (segments[1].toLowerCase() !== 'thumb') {
+    return segments.length === 2 && isValidPublicId(segments[1]) ? segments[1] : null
+  }
+  const last = segments[segments.length - 1]
+  if (!/\.webp$/i.test(last)) return null
+  const candidate = last.replace(/\.webp$/i, '')
+  return isValidPublicId(candidate) ? candidate : null
+}
+
 function guessContentType(storageKey: string): string | null {
   const extension = storageKey.split('.').pop()?.toLowerCase()
   if (extension === 'jpg' || extension === 'jpeg') return 'image/jpeg'
@@ -71,6 +103,23 @@ function guessContentType(storageKey: string): string | null {
 export async function resolveAssetReference(event: H3Event, imageUrl: string | null | undefined, kind: AssetKind): Promise<AssetReference | null> {
   if (!imageUrl?.trim()) return null
   const normalized = imageUrl.trim()
+
+  // /images/{publicId}（或 /images/thumb/...）展示短链：按 public_id 关联既有素材。
+  // 保证画廊单条编辑/批量导入等写路径在回传展示短链时保留（或恢复）永久缩略图，
+  // 而不是把 image_asset_id 置空。
+  const shortLinkPublicId = extractPublicIdFromImageUrl(normalized)
+  if (shortLinkPublicId) {
+    const existing = await findImageAsset(event, shortLinkPublicId)
+    if (!existing || !isValidStorageKey(existing.storage_key)) return null
+    return {
+      publicId: existing.public_id,
+      storageKey: existing.storage_key,
+      sourceUrl: existing.source_url,
+      contentType: existing.content_type,
+      kind: existing.kind as AssetKind
+    }
+  }
+
   const storageKey = extractStorageKey(normalized)
   if (!storageKey) return null
 

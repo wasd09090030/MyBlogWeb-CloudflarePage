@@ -47,10 +47,10 @@ const sortOptions = [
   { label: '排序号：从大到小', value: 'order-desc' },
   { label: '最新创建', value: 'newest' }
 ]
-const { data: items, refresh } = await useAsyncData('admin-gallery', () => api.get<GalleryItem[]>('gallery/admin'))
+const { data: items, refresh } = await useAsyncData('admin-gallery', () => api.get<GalleryItem[]>('gallery/admin', { cache: false }))
 const { data: heroConfiguration, refresh: refreshHeroConfiguration } = await useAsyncData(
   'admin-gallery-hero',
-  () => api.get<GalleryHeroConfiguration>('gallery/hero')
+  () => api.get<GalleryHeroConfiguration>('gallery/hero', { cache: false })
 )
 
 // keepalive 页面从缓存恢复时重新拉取数据，避免列表残留已被删除的行

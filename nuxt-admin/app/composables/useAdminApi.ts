@@ -26,8 +26,9 @@ export function useAdminApi() {
 
   const invalidate = () => { cacheEntries.value = {} }
   const mutate = async <T>(path: string, options: Record<string, unknown>) => {
-    const value = await request<T>(path, options)
+    // 先清缓存再发请求：即使请求失败（如 404），后续 refresh() 也拿不到过期列表
     invalidate()
+    const value = await request<T>(path, options)
     return value
   }
 

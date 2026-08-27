@@ -53,6 +53,17 @@ const { data: heroConfiguration, refresh: refreshHeroConfiguration } = await use
   () => api.get<GalleryHeroConfiguration>('gallery/hero')
 )
 
+// keepalive 页面从缓存恢复时重新拉取数据，避免列表残留已被删除的行
+let hasActivated = false
+onActivated(() => {
+  if (!hasActivated) {
+    hasActivated = true
+    return
+  }
+  refresh()
+  refreshHeroConfiguration()
+})
+
 function applyHeroConfiguration(configuration: GalleryHeroConfiguration) {
   for (const definition of heroDefinitions) {
     heroSections[definition.key] = (configuration.sections[definition.key] || []).map(item => ({
@@ -240,7 +251,16 @@ async function backfillImageAssets() {
     backfilling.value = false
   }
 }
-async function remove(item: GalleryItem) { if (!confirm('删除该画廊项？')) return; await api.del(`gallery/${item.id}`); await refresh() }
+async function remove(item: GalleryItem) {
+  if (!confirm('删除该画廊项？')) return
+  try {
+    await api.del(`gallery/${item.id}`)
+  } catch {
+    // 行可能已在其他会话/标签页被删除（如 404），刷新列表让残留项消失
+    toast.add({ title: '该图片可能已被删除，列表已刷新', color: 'warning' })
+  }
+  await refresh()
+}
 </script>
 
 <template>

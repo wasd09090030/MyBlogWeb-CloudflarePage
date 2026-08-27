@@ -1,64 +1,39 @@
 <template>
-  <div>
-    <button type="button" class="search-pill" aria-label="搜索文章" @click="showModal = true">
+  <div class="search-entry">
+    <button type="button" class="search-pill" aria-label="搜索文章" aria-haspopup="dialog" @click="showModal = true">
       <Icon name="mdi:magnify" size="18" />
-      <span>搜索文章…</span>
+      <span>搜索文章</span>
+      <kbd class="search-pill__shortcut" aria-hidden="true">/</kbd>
     </button>
 
-    <!-- Search Modal -->
-    <UModal
-      v-model:open="showModal"
-      :ui="{ content: 'sm:max-w-[600px] fixed top-[100px] left-1/2 -translate-x-1/2' }"
-      :overlay="true"
-    >
+    <UModal v-model:open="showModal" title="搜索文章" :ui="{ content: 'sm:max-w-[42rem]', body: 'p-0' }">
       <template #header>
-        <div class="flex items-center gap-2 text-gray-800 dark:text-gray-100">
-          <Icon name="mdi:magnify" size="24" class="text-primary-500" />
-          <span class="font-medium">搜索文章</span>
-        </div>
-      </template>
-
-      <template #body>
-        <div class="py-4">
-          <UInput
-            ref="searchInputRef"
-            v-model="searchQuery"
-            type="text"
-            placeholder="输入关键词回车搜索..."
-            size="lg"
-            :ui="{ base: 'text-lg rounded-lg' }"
-            @keyup.enter="handleSearch"
-          >
-            <template #leading>
-              <Icon name="mdi:magnify" class="text-gray-400" />
-            </template>
-          </UInput>
-
-          <div class="mt-4 flex flex-wrap gap-2">
-            <div class="text-xs text-gray-500 dark:text-gray-400 w-full mb-1">热门搜索:</div>
-            <UBadge
-              v-for="tag in popularTags"
-              :key="tag"
-              size="sm"
-              variant="soft"
-              color="primary"
-              class="cursor-pointer"
-              @click="quickSearch(tag)"
-            >
-              {{ tag }}
-            </UBadge>
+        <div class="search-dialog__heading">
+          <span class="search-dialog__icon"><Icon name="mdi:magnify" size="20" /></span>
+          <div>
+            <p class="search-dialog__eyebrow">ARCHIVE</p>
+            <h2 class="search-dialog__title">搜索文章</h2>
           </div>
         </div>
       </template>
-
+      <template #body>
+        <div class="search-dialog__body">
+          <UInput ref="searchInputRef" v-model="searchQuery" type="text" placeholder="输入标题、标签或正文关键词" size="lg" class="search-dialog__input" @keyup.enter="handleSearch">
+            <template #leading><Icon name="mdi:magnify" /></template>
+          </UInput>
+          <div class="search-dialog__tags" aria-label="常用搜索">
+            <span class="search-dialog__tags-label">常用主题</span>
+            <UButton v-for="tag in popularTags" :key="tag" size="xs" color="neutral" variant="outline" class="search-dialog__tag" @click="quickSearch(tag)">{{ tag }}</UButton>
+          </div>
+        </div>
+      </template>
       <template #footer>
-        <div class="flex justify-end gap-2">
-          <UButton color="neutral" variant="ghost" @click="showModal = false">
-            取消
-          </UButton>
-          <UButton color="primary" :disabled="!searchQuery.trim()" @click="handleSearch">
-            搜索
-          </UButton>
+        <div class="search-dialog__footer">
+          <span class="search-dialog__hint">按 Enter 开始检索</span>
+          <div class="flex gap-2">
+            <UButton color="neutral" variant="ghost" @click="showModal = false">取消</UButton>
+            <UButton color="primary" icon="mdi:magnify" :disabled="!searchQuery.trim()" @click="handleSearch">搜索</UButton>
+          </div>
         </div>
       </template>
     </UModal>
@@ -69,31 +44,20 @@
 const showModal = ref(false)
 const searchQuery = ref('')
 const searchInputRef = ref(null)
-
-// 热门搜索标签（可以是静态的或者从配置读取）
 const popularTags = ['Vue', 'Nuxt', 'C#', '.NET', '动漫']
 
-// 自动聚焦输入框
-watch(showModal, async (val) => {
-  if (val) {
-    searchQuery.value = ''
-    await nextTick()
-    // Nuxt UI 的 Input 组件聚焦方法
-    searchInputRef.value?.focus?.()
-  }
+watch(showModal, async (isOpen) => {
+  if (!isOpen) return
+  searchQuery.value = ''
+  await nextTick()
+  searchInputRef.value?.focus?.()
 })
 
 const handleSearch = () => {
   const trimmedQuery = searchQuery.value.trim()
-
   if (!trimmedQuery) return
-
   showModal.value = false
-
-  navigateTo({
-    path: '/',
-    query: { search: trimmedQuery }
-  })
+  navigateTo({ path: '/', query: { search: trimmedQuery } })
 }
 
 const quickSearch = (tag) => {
@@ -103,23 +67,6 @@ const quickSearch = (tag) => {
 </script>
 
 <style scoped>
-.search-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: var(--bg-secondary);
-  color: var(--text-tertiary);
-  border: 1px solid var(--border-color);
-  font-size: 13px;
-  cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
-}
-
-.search-pill:hover {
-  border-color: var(--accent-primary);
-  color: var(--text-secondary);
-}
+@import '~/assets/css/components/SearchBar.desktop.css';
+@import '~/assets/css/components/SearchBar.mobile.css';
 </style>

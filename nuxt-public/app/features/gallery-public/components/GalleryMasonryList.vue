@@ -43,14 +43,10 @@
       </div>
     </div>
 
-    <div ref="infiniteScrollTrigger" class="infinite-scroll-trigger">
+    <div ref="infiniteScrollTrigger" class="infinite-scroll-trigger" :class="{ 'infinite-scroll-trigger--loading': isLoadingMore }">
       <div v-if="isLoadingMore" class="loading-indicator fade-in">
         <div class="loading-spinner"></div>
         <span>加载更多图片...</span>
-      </div>
-      <div v-else-if="!hasMore && displayedCount > 0" class="end-message fade-in">
-        <Icon name="heroicons:check-circle" size="md" />
-        <span>已加载全部 {{ displayedCount }} 张图片</span>
       </div>
     </div>
   </section>
@@ -418,8 +414,12 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 0;
+  min-height: 0;
+}
+
+.infinite-scroll-trigger--loading {
   padding: 2.5rem 2rem;
-  min-height: 80px;
 }
 
 .loading-indicator {
@@ -443,17 +443,6 @@ onUnmounted(() => {
   to { transform: rotate(360deg); }
 }
 
-.end-message {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--accent-success);
-  font-size: 0.9rem;
-  padding: 0.75rem 1.5rem;
-  background: color-mix(in srgb, var(--accent-success) 12%, transparent);
-  border-radius: 25px;
-}
-
 @media (max-width: 767px) {
   .gallery-masonry {
     padding: 0.5rem 0.25rem 1rem;
@@ -463,8 +452,8 @@ onUnmounted(() => {
     border-radius: 10px;
   }
 
-  .infinite-scroll-trigger {
-    padding: 1.5rem;
+  .infinite-scroll-trigger--loading {
+    padding: 1.5rem 0;
   }
 }
 </style>

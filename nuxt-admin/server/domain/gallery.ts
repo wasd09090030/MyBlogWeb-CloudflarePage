@@ -26,6 +26,12 @@ export type GalleryInput = {
   createdAt?: unknown
 }
 
+export type GalleryBatchUpdateInput = {
+  ids?: unknown
+  tag?: unknown
+  createdAt?: unknown
+}
+
 const select = `
   SELECT g.id, g.image_url, g.image_asset_id,
          ia.public_id AS image_asset_public_id,
@@ -204,6 +210,39 @@ export async function updateGallerySortOrder(event: H3Event, updates: unknown) {
   })
   await batch(getDb(event), statements)
   return { message: 'Sort order updated successfully' }
+}
+
+export async function updateGalleryBatch(event: H3Event, input: GalleryBatchUpdateInput) {
+  if (!Array.isArray(input.ids) || input.ids.length < 1 || input.ids.length > 500) {
+    throw createError({ statusCode: 400, statusMessage: 'Provide between 1 and 500 gallery ids' })
+  }
+
+  const ids = [...new Set(input.ids.map(value => requireId(value, 'gallery id')))]
+  const fields: string[] = []
+  const values: Array<string | number> = []
+
+  if (input.tag !== undefined) {
+    fields.push('tag = ?')
+    values.push(normalizeTag(input.tag))
+  }
+  if (input.createdAt !== undefined) {
+    fields.push('created_at = ?')
+    values.push(normalizeCreatedAt(input.createdAt, nowIso()))
+  }
+  if (!fields.length) {
+    throw createError({ statusCode: 400, statusMessage: 'Provide at least one gallery field to update' })
+  }
+
+  fields.push('updated_at = ?')
+  values.push(nowIso())
+  const placeholders = ids.map(() => '?').join(', ')
+  const result = await execute(
+    getDb(event),
+    `UPDATE galleries SET ${fields.join(', ')} WHERE id IN (${placeholders})`,
+    ...values,
+    ...ids
+  )
+  return { updated: Number(result.meta?.changes || 0) }
 }
 
 export async function batchImportGallery(event: H3Event, input: Record<string, unknown>) {

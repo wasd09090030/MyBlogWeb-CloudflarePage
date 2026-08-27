@@ -1,7 +1,7 @@
 import { changeAdminPassword, requireAdminSession } from '~~/server/domain/auth'
 import { createArticle, deleteArticle, getAdminArticle, listAdminArticles, updateArticle } from '~~/server/domain/articles'
 import { listAdminComments, deleteComment, updateCommentStatus } from '~~/server/domain/comments'
-import { batchImportGallery, backfillGalleryAssets, createGallery, deleteGallery, getAdminGallery, listAdminGallery, refreshGalleryDimensions, toggleGalleryActive, updateGallery, updateGallerySortOrder } from '~~/server/domain/gallery'
+import { batchImportGallery, backfillGalleryAssets, createGallery, deleteGallery, getAdminGallery, listAdminGallery, refreshGalleryDimensions, toggleGalleryActive, updateGallery, updateGalleryBatch, updateGallerySortOrder } from '~~/server/domain/gallery'
 import { listAdminGalleryHero, replaceGalleryHero } from '~~/server/domain/gallery-hero'
 import { generateArticleSummary } from '~~/server/domain/operations'
 import { assertSafeMutation } from '~~/server/utils/request-security'
@@ -56,6 +56,7 @@ export default defineEventHandler(async (event) => {
     }
     if (parts.length === 2 && parts[1] === 'refresh-dimensions' && currentMethod === 'POST') return await refreshGalleryDimensions(event)
     if (parts.length === 2 && parts[1] === 'backfill-image-assets' && currentMethod === 'POST') return await backfillGalleryAssets(event)
+    if (parts.length === 3 && parts[1] === 'batch' && parts[2] === 'update' && currentMethod === 'PATCH') return await updateGalleryBatch(event, body || {})
     if (parts.length === 3 && parts[1] === 'batch' && parts[2] === 'sort-order' && currentMethod === 'PATCH') return await updateGallerySortOrder(event, body)
     if (parts.length === 3 && parts[1] === 'batch' && parts[2] === 'import' && currentMethod === 'POST') return await batchImportGallery(event, body || {})
   }

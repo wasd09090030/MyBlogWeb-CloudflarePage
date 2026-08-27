@@ -1,0 +1,6 @@
+@media (max-width: 576px) {
+  .search-pill { min-width: 0; }
+  .search-dialog__body { padding: 0.25rem 1rem 1.25rem; }
+  .search-dialog__hint { display: none; }
+  .search-dialog__footer { justify-content: flex-end; }
+}

@@ -7,9 +7,12 @@ const api = useAdminApi()
 const toast = useToast()
 const open = ref(false)
 const importOpen = ref(false)
+const batchUpdateOpen = ref(false)
 const editing = ref<GalleryItem | null>(null)
 const form = reactive({ imageUrl: '', tag: 'artwork', isActive: true, sortOrder: 0, createdAt: '' })
 const batch = reactive({ imageUrls: '', tag: 'artwork', isActive: true })
+const batchUpdate = reactive({ changeTag: false, tag: 'artwork', changeCreatedAt: false, createdAt: '' })
+const selectedIds = ref<number[]>([])
 const tagFilter = ref('all')
 const visibilityFilter = ref('all')
 const sortMode = ref('manual')
@@ -99,6 +102,53 @@ const visibleItems = computed(() => {
     return (a.sortOrder || 0) - (b.sortOrder || 0)
   })
 })
+
+const allVisibleSelected = computed(() => visibleItems.value.length > 0 && visibleItems.value.every(item => selectedIds.value.includes(item.id)))
+
+function setItemSelected(id: number, selected: boolean | 'indeterminate') {
+  if (selected === true) {
+    if (!selectedIds.value.includes(id)) selectedIds.value = [...selectedIds.value, id]
+    return
+  }
+  selectedIds.value = selectedIds.value.filter(value => value !== id)
+}
+
+function toggleVisibleSelection() {
+  const visibleIds = visibleItems.value.map(item => item.id)
+  if (allVisibleSelected.value) {
+    selectedIds.value = selectedIds.value.filter(id => !visibleIds.includes(id))
+    return
+  }
+  selectedIds.value = [...new Set([...selectedIds.value, ...visibleIds])]
+}
+
+function openBatchUpdate() {
+  if (!selectedIds.value.length) return
+  batchUpdate.changeTag = false
+  batchUpdate.tag = 'artwork'
+  batchUpdate.changeCreatedAt = false
+  batchUpdate.createdAt = ''
+  batchUpdateOpen.value = true
+}
+
+async function saveBatchUpdate() {
+  if (!batchUpdate.changeTag && !batchUpdate.changeCreatedAt) {
+    toast.add({ title: '请选择要批量修改的字段', color: 'warning' })
+    return
+  }
+  if (batchUpdate.changeCreatedAt && !batchUpdate.createdAt) {
+    toast.add({ title: '请选择展示时间', color: 'warning' })
+    return
+  }
+  const payload: { ids: number[]; tag?: string; createdAt?: string } = { ids: selectedIds.value }
+  if (batchUpdate.changeTag) payload.tag = batchUpdate.tag
+  if (batchUpdate.changeCreatedAt) payload.createdAt = toCreatedAtUtc(batchUpdate.createdAt)
+  const result = await api.patch<{ updated: number }>('gallery/batch/update', payload)
+  batchUpdateOpen.value = false
+  selectedIds.value = []
+  toast.add({ title: `已修改 ${result.updated} 张图片`, color: 'success' })
+  await refresh()
+}
 
 function edit(item?: GalleryItem) {
   editing.value = item || null
@@ -222,18 +272,55 @@ async function remove(item: GalleryItem) { if (!confirm('删除该画廊项？')
         </section>
       </div>
     </UCard>
-    <UCard :ui="{ body: 'p-3 sm:p-3' }"><div class="flex flex-wrap items-center gap-3"><USelect v-model="tagFilter" :items="tagFilterOptions" class="w-36" /><USelect v-model="visibilityFilter" :items="visibilityOptions" class="w-36" /><USelect v-model="sortMode" :items="sortOptions" class="w-48" /><span class="ms-auto text-sm text-muted">显示 {{ visibleItems.length }} / {{ items?.length || 0 }} 项</span></div></UCard>
+    <UCard :ui="{ body: 'p-3 sm:p-3' }">
+      <div class="flex flex-wrap items-center gap-3">
+        <USelect v-model="tagFilter" :items="tagFilterOptions" class="w-36" />
+        <USelect v-model="visibilityFilter" :items="visibilityOptions" class="w-36" />
+        <USelect v-model="sortMode" :items="sortOptions" class="w-48" />
+        <span class="ms-auto text-sm text-muted">显示 {{ visibleItems.length }} / {{ items?.length || 0 }} 项</span>
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-2 border-t border-default pt-3">
+        <UButton size="sm" color="neutral" variant="soft" :icon="allVisibleSelected ? 'i-lucide-square-check-big' : 'i-lucide-square'" :disabled="!visibleItems.length" @click="toggleVisibleSelection">
+          {{ allVisibleSelected ? '取消全选当前结果' : '全选当前结果' }}
+        </UButton>
+        <span class="text-sm text-muted">已选 {{ selectedIds.length }} 项</span>
+        <UButton size="sm" icon="i-lucide-pencil-line" :disabled="!selectedIds.length" @click="openBatchUpdate">批量修改</UButton>
+      </div>
+    </UCard>
 
     <div v-if="visibleItems.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <UCard v-for="item in visibleItems" :key="item.id" :ui="{ body: 'p-0' }">
         <img :src="item.imageUrl" :alt="item.tag || 'gallery image'" class="aspect-square w-full object-cover" />
-        <div class="space-y-3 p-3"><div class="flex items-center justify-between gap-2"><UBadge variant="subtle" color="primary">{{ item.tag === 'game' ? 'Game' : 'Artwork' }}</UBadge><UBadge :color="item.isActive ? 'success' : 'neutral'">{{ item.isActive ? '显示' : '隐藏' }}</UBadge></div><div class="flex items-center justify-between"><span class="text-xs text-muted">排序 {{ item.sortOrder || '-' }}</span><div class="flex gap-1"><UTooltip v-if="sortMode === 'manual'" text="上移"><UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-arrow-up" :disabled="visibleItems[0]?.id === item.id" aria-label="上移" @click="move(item, -1)" /></UTooltip><UTooltip v-if="sortMode === 'manual'" text="下移"><UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-arrow-down" :disabled="visibleItems.at(-1)?.id === item.id" aria-label="下移" @click="move(item, 1)" /></UTooltip><UTooltip text="编辑"><UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-pencil" aria-label="编辑" @click="edit(item)" /></UTooltip><UTooltip :text="item.isActive ? '隐藏' : '显示'"><UButton size="xs" color="neutral" variant="ghost" :icon="item.isActive ? 'i-lucide-eye-off' : 'i-lucide-eye'" :aria-label="item.isActive ? '隐藏' : '显示'" @click="toggle(item)" /></UTooltip><UTooltip text="删除"><UButton size="xs" color="error" variant="ghost" icon="i-lucide-trash-2" aria-label="删除" @click="remove(item)" /></UTooltip></div></div></div>
+        <div class="space-y-3 p-3">
+          <div class="flex items-center justify-between gap-2"><UBadge variant="subtle" color="primary">{{ item.tag === 'game' ? 'Game' : 'Artwork' }}</UBadge><UBadge :color="item.isActive ? 'success' : 'neutral'">{{ item.isActive ? '显示' : '隐藏' }}</UBadge></div>
+          <div class="flex items-center justify-between gap-2">
+            <UCheckbox :model-value="selectedIds.includes(item.id)" :aria-label="`选择图片 ${item.id}`" @update:model-value="setItemSelected(item.id, $event)" />
+            <span class="me-auto text-xs text-muted">排序 {{ item.sortOrder || '-' }}</span>
+            <div class="flex gap-1"><UTooltip v-if="sortMode === 'manual'" text="上移"><UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-arrow-up" :disabled="visibleItems[0]?.id === item.id" aria-label="上移" @click="move(item, -1)" /></UTooltip><UTooltip v-if="sortMode === 'manual'" text="下移"><UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-arrow-down" :disabled="visibleItems.at(-1)?.id === item.id" aria-label="下移" @click="move(item, 1)" /></UTooltip><UTooltip text="编辑"><UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-pencil" aria-label="编辑" @click="edit(item)" /></UTooltip><UTooltip :text="item.isActive ? '隐藏' : '显示'"><UButton size="xs" color="neutral" variant="ghost" :icon="item.isActive ? 'i-lucide-eye-off' : 'i-lucide-eye'" :aria-label="item.isActive ? '隐藏' : '显示'" @click="toggle(item)" /></UTooltip><UTooltip text="删除"><UButton size="xs" color="error" variant="ghost" icon="i-lucide-trash-2" aria-label="删除" @click="remove(item)" /></UTooltip></div>
+          </div>
+        </div>
       </UCard>
     </div>
     <UEmpty v-else icon="i-lucide-images" title="没有符合条件的图片" description="调整筛选条件或导入新的图片。" />
 
     <UModal v-model:open="open" title="画廊项">
       <template #body><UForm :state="form" class="space-y-4" @submit="save"><UFormField label="图片地址"><UInput v-model="form.imageUrl" class="w-full" /></UFormField><UFormField label="素材类型"><USelect v-model="form.tag" :items="tagOptions" class="w-full" /></UFormField><UFormField v-if="editing" label="展示时间（UTC+8）"><UInput v-model="form.createdAt" type="datetime-local" class="w-full" /></UFormField><UFormField label="排序"><UInput v-model.number="form.sortOrder" type="number" class="w-full" /></UFormField><UCheckbox v-model="form.isActive" label="公开显示" /><UButton type="submit" block>保存</UButton></UForm></template>
+    </UModal>
+    <UModal v-model:open="batchUpdateOpen" title="批量修改图片">
+      <template #body>
+        <UForm :state="batchUpdate" class="space-y-5" @submit="saveBatchUpdate">
+          <p class="text-sm text-muted">将修改已选的 {{ selectedIds.length }} 张图片。</p>
+          <div class="space-y-3 rounded-md border border-default p-3">
+            <UCheckbox v-model="batchUpdate.changeTag" label="修改图片类别" />
+            <USelect v-model="batchUpdate.tag" :items="tagOptions" class="w-full" :disabled="!batchUpdate.changeTag" />
+          </div>
+          <div class="space-y-3 rounded-md border border-default p-3">
+            <UCheckbox v-model="batchUpdate.changeCreatedAt" label="修改展示时间（UTC+8）" />
+            <UInput v-model="batchUpdate.createdAt" type="datetime-local" class="w-full" :disabled="!batchUpdate.changeCreatedAt" />
+          </div>
+          <div class="flex justify-end gap-2"><UButton color="neutral" variant="ghost" @click="batchUpdateOpen = false">取消</UButton><UButton type="submit" icon="i-lucide-save">保存修改</UButton></div>
+        </UForm>
+      </template>
     </UModal>
     <UModal v-model:open="importOpen" title="批量导入图片"><template #body><UForm :state="batch" class="space-y-4" @submit="importBatch"><UFormField label="每行一个图片地址"><UTextarea v-model="batch.imageUrls" :rows="8" class="w-full" /></UFormField><UFormField label="素材类型"><USelect v-model="batch.tag" :items="tagOptions" class="w-full" /></UFormField><UCheckbox v-model="batch.isActive" label="导入后公开显示" /><UButton type="submit" block icon="i-lucide-import">导入图片</UButton></UForm></template></UModal>
   </div>

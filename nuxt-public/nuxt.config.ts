@@ -172,6 +172,7 @@ export default defineNuxtConfig({
         'heroicons:moon',
         'heroicons:calendar',
         'heroicons:book-open',
+        'heroicons:pencil-square',
         'heroicons:code-bracket',
         'heroicons:magnifying-glass',
         'heroicons:heart',

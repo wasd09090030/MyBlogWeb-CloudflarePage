@@ -1,0 +1,5 @@
+@media (max-width: 576px) {
+  .diary-feed { padding: 1.25rem 1rem 3rem; }
+  .diary-feed__item { grid-template-columns: 60px minmax(0, 1fr); gap: 12px; }
+  .diary-feed__day { font-size: 22px; }
+}

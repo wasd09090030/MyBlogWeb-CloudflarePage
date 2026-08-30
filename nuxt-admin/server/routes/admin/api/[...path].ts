@@ -1,6 +1,7 @@
 import { changeAdminPassword, requireAdminSession } from '~~/server/domain/auth'
 import { createArticle, deleteArticle, getAdminArticle, listAdminArticles, updateArticle } from '~~/server/domain/articles'
 import { listAdminComments, deleteComment, updateCommentStatus } from '~~/server/domain/comments'
+import { deleteDiaryEntry, getAdminDiaryEntry, listAdminDiaryEntries, upsertDiaryEntry } from '~~/server/domain/diary'
 import { batchImportGallery, backfillGalleryAssets, createGallery, deleteGallery, getAdminGallery, listAdminGallery, refreshGalleryDimensions, toggleGalleryActive, updateGallery, updateGalleryBatch, updateGallerySortOrder } from '~~/server/domain/gallery'
 import { listAdminGalleryHero, replaceGalleryHero } from '~~/server/domain/gallery-hero'
 import { generateArticleSummary } from '~~/server/domain/operations'
@@ -59,6 +60,14 @@ export default defineEventHandler(async (event) => {
     if (parts.length === 3 && parts[1] === 'batch' && parts[2] === 'update' && currentMethod === 'PATCH') return await updateGalleryBatch(event, body || {})
     if (parts.length === 3 && parts[1] === 'batch' && parts[2] === 'sort-order' && currentMethod === 'PATCH') return await updateGallerySortOrder(event, body)
     if (parts.length === 3 && parts[1] === 'batch' && parts[2] === 'import' && currentMethod === 'POST') return await batchImportGallery(event, body || {})
+  }
+
+  if (parts[0] === 'diary') {
+    // 日期参数交由领域层校验（非法日期 → 400），确保错误语义一致。
+    if (parts.length === 2 && parts[1] === 'admin' && currentMethod === 'GET') return await listAdminDiaryEntries(event)
+    if (parts.length === 2 && currentMethod === 'GET') return await getAdminDiaryEntry(event, parts[1])
+    if (parts.length === 2 && currentMethod === 'PUT') return await upsertDiaryEntry(event, parts[1], body || {})
+    if (parts.length === 2 && currentMethod === 'DELETE') { await deleteDiaryEntry(event, parts[1]); setResponseStatus(event, 204); return null }
   }
 
   if (parts[0] === 'ai' && parts[1] === 'summary' && currentMethod === 'POST') return await generateArticleSummary(event, body || {})

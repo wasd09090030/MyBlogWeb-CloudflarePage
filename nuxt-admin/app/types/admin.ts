@@ -6,3 +6,6 @@ export type GalleryHeroItem = { id?: number; imageUrl: string; sourceImageUrl?: 
 export type GalleryHeroConfiguration = { isConfigured: boolean; sections: Record<GalleryHeroSection, GalleryHeroItem[]> }
 export type ImagebedConfig = { domain: string; uploadFolder?: string; configured?: boolean }
 export type AuthResponse = { success: boolean; message?: string; token?: string; refreshToken?: string; expiresAt?: string }
+export type DiaryEntry = { entryDate: string; contentMarkdown?: string; mood?: string; weather?: string; location?: string; tags?: string[]; isPublic?: boolean; createdAt?: string; updatedAt?: string }
+export type DiaryMood = 'happy' | 'excited' | 'calm' | 'busy' | 'tired' | 'cozy' | 'pensive'
+export type DiaryWeather = 'sunny' | 'cloudy' | 'overcast' | 'rain' | 'thunder' | 'haze'

@@ -11,6 +11,7 @@ const colorMode = useColorMode()
 const workspaceLinks: NavigationMenuItem[] = [
   { label: '概览', icon: 'i-lucide-layout-dashboard', to: '/admin' },
   { label: '文章', icon: 'i-lucide-file-text', to: '/admin/articles' },
+  { label: '日记', icon: 'i-lucide-notebook-pen', to: '/admin/diary' },
   { label: '评论', icon: 'i-lucide-messages-square', to: '/admin/comments' }
 ]
 const assetLinks: NavigationMenuItem[] = [

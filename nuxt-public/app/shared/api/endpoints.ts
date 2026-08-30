@@ -26,5 +26,10 @@ export const API_ENDPOINTS = {
     batchImport: '/gallery/batch/import',
     batchSortOrder: '/gallery/batch/sort-order',
     refreshDimensions: '/gallery/refresh-dimensions'
+  },
+  diary: {
+    // 每日日记（碎碎念形态）：公开列表支持 ?year=&month= 时间筛选。
+    publicList: '/diary',
+    detail: (date: string) => `/diary/${date}`
   }
 } as const

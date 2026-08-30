@@ -14,10 +14,11 @@
           <img src="/icon/logo.webp" alt="Logo" class="navbar-logo" loading="eager" fetchpriority="high" decoding="async" />
         </NuxtLink>
         <nav class="navbar-center-nav hidden min-[992px]:flex" aria-label="主导航">
-          <NuxtLink to="/" class="nav-link"><Icon name="heroicons:home" size="sm" class="me-1" />首页</NuxtLink>
-          <NuxtLink to="/gallery" class="nav-link"><Icon name="heroicons:photo" size="sm" class="me-1" />画廊</NuxtLink>
-          <NuxtLink to="/archive" class="nav-link"><Icon name="heroicons:book-open" size="sm" class="me-1" />归档</NuxtLink>
-          <NuxtLink to="/about" class="nav-link"><Icon name="heroicons:user-circle" size="sm" class="me-1" />关于站长</NuxtLink>
+          <NuxtLink to="/" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:home" size="sm" class="me-1" />首页</NuxtLink>
+          <NuxtLink to="/gallery" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:photo" size="sm" class="me-1" />画廊</NuxtLink>
+          <NuxtLink to="/archive" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:book-open" size="sm" class="me-1" />归档</NuxtLink>
+          <NuxtLink to="/archive/diary" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:pencil-square" size="sm" class="me-1" />每日日记</NuxtLink>
+          <NuxtLink to="/about" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:user-circle" size="sm" class="me-1" />关于站长</NuxtLink>
         </nav>
         <button type="button" class="mobile-menu-btn min-[992px]:hidden" aria-label="打开导航菜单" @click="showMobileMenu = true">
           <Icon name="heroicons:bars-3" size="lg" />
@@ -35,10 +36,11 @@
             <button type="button" class="drawer-close" aria-label="关闭导航菜单" @click="showMobileMenu = false"><Icon name="heroicons:x-mark" size="md" /></button>
           </div>
           <nav class="drawer-nav" aria-label="移动端导航">
-            <NuxtLink to="/" class="drawer-nav-item" @click="showMobileMenu = false"><Icon name="heroicons:home" size="sm" />首页</NuxtLink>
-            <NuxtLink to="/gallery" class="drawer-nav-item" @click="showMobileMenu = false"><Icon name="heroicons:photo" size="sm" />画廊</NuxtLink>
-            <NuxtLink to="/archive" class="drawer-nav-item" @click="showMobileMenu = false"><Icon name="heroicons:book-open" size="sm" />归档</NuxtLink>
-            <NuxtLink to="/about" class="drawer-nav-item" @click="showMobileMenu = false"><Icon name="heroicons:user-circle" size="sm" />关于站长</NuxtLink>
+            <NuxtLink to="/" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:home" size="sm" />首页</NuxtLink>
+            <NuxtLink to="/gallery" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:photo" size="sm" />画廊</NuxtLink>
+            <NuxtLink to="/archive" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:book-open" size="sm" />归档</NuxtLink>
+            <NuxtLink to="/archive/diary" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:pencil-square" size="sm" />每日日记</NuxtLink>
+            <NuxtLink to="/about" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:user-circle" size="sm" />关于站长</NuxtLink>
           </nav>
           <div class="drawer-footer">
             <button type="button" class="drawer-theme-btn" @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'">
@@ -162,7 +164,7 @@ const isHomeRoute = computed(() => route.path === '/')
 const isGalleryRoute = computed(() => route.path === '/gallery')
 const isArticleDetailRoute = computed(() => route.path.startsWith('/article/'))
 const isAboutRoute = computed(() => route.path === '/about')
-const isArchiveRoute = computed(() => route.path === '/archive')
+const isArchiveRoute = computed(() => route.path === '/archive' || route.path.startsWith('/archive/'))
 const showSidebar = computed(() => !isGalleryRoute.value && !isArticleDetailRoute.value && !isAboutRoute.value && !isArchiveRoute.value)
 
 onMounted(() => {

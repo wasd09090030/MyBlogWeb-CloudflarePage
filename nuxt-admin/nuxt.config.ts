@@ -30,5 +30,10 @@ export default defineNuxtConfig({
     preset: 'cloudflare_module',
     errorHandler: '~~/server/error-handler'
   },
+  routeRules: {
+    // API 响应为动态数据：禁止边缘/浏览器缓存，避免 SSG 构建读到陈旧数据。
+    '/api/**': { headers: { 'cache-control': 'no-store' } },
+    '/admin/api/**': { headers: { 'cache-control': 'no-store' } }
+  },
   typescript: { strict: true }
 })

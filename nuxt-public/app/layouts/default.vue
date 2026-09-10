@@ -15,8 +15,6 @@
         </NuxtLink>
         <nav class="navbar-center-nav hidden min-[992px]:flex" aria-label="主导航">
           <NuxtLink to="/" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:home" size="sm" class="me-1" />首页</NuxtLink>
-          <NuxtLink to="/gallery" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:photo" size="sm" class="me-1" />画廊</NuxtLink>
-          <NuxtLink to="/archive" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:book-open" size="sm" class="me-1" />归档</NuxtLink>
           <NuxtLink to="/archive/diary" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:pencil-square" size="sm" class="me-1" />每日日记</NuxtLink>
           <NuxtLink to="/about" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:user-circle" size="sm" class="me-1" />关于站长</NuxtLink>
         </nav>
@@ -37,8 +35,6 @@
           </div>
           <nav class="drawer-nav" aria-label="移动端导航">
             <NuxtLink to="/" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:home" size="sm" />首页</NuxtLink>
-            <NuxtLink to="/gallery" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:photo" size="sm" />画廊</NuxtLink>
-            <NuxtLink to="/archive" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:book-open" size="sm" />归档</NuxtLink>
             <NuxtLink to="/archive/diary" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:pencil-square" size="sm" />每日日记</NuxtLink>
             <NuxtLink to="/about" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:user-circle" size="sm" />关于站长</NuxtLink>
           </nav>

@@ -28,11 +28,20 @@ export type AssetReference = {
   kind: AssetKind
 }
 
+/**
+ * 路径穿越守卫：只拒绝真正的 `.` / `..` 路径段。
+ * 不能对整串做 `includes('..')`，否则文件名内部的连续点（如 `Twilight..webp`）
+ * 会被误判为非法，导致素材无法注册、缩略图缺失。
+ */
+function hasTraversalSegment(value: string): boolean {
+  return value.split(/[/\\]+/).some(segment => segment === '.' || segment === '..')
+}
+
 export function isValidStorageKey(value: string): boolean {
   return Boolean(value)
     && !value.startsWith('/')
     && !value.startsWith('\\')
-    && !value.includes('..')
+    && !hasTraversalSegment(value)
     && !/^https?:\/\//i.test(value)
 }
 

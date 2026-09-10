@@ -34,6 +34,10 @@ function contentType(storageKey) {
   return ({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif' })[extension] || null
 }
 
+function hasTraversalSegment(value) {
+  return value.split(/[/\\]+/).some(segment => segment === '.' || segment === '..')
+}
+
 function reference(sourceUrl, kind) {
   const url = new URL(sourceUrl)
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.host !== host) {
@@ -41,8 +45,8 @@ function reference(sourceUrl, kind) {
   }
   let storageKey = decodeURIComponent(url.pathname).replace(/^\/+/, '')
   if (storageKey.toLowerCase().startsWith('file/')) storageKey = storageKey.slice(5)
-  if (!storageKey || storageKey.startsWith('/') || storageKey.includes('..') || /^https?:\/\//i.test(storageKey)) {
-    throw new Error(`Invalid storage key: ${sourceUrl}`)
+  if (!storageKey || storageKey.startsWith('/') || storageKey.startsWith('\\') || hasTraversalSegment(storageKey) || /^https?:\/\//i.test(storageKey)) {
+    return null
   }
   const publicId = `i_${createHash('sha256').update(storageKey).digest('base64url').slice(0, 16)}`
   return { sourceUrl, storageKey, publicId, contentType: contentType(storageKey), kind }
@@ -53,14 +57,17 @@ const articles = query(`SELECT id, cover_image AS source_url FROM articles WHERE
 const galleries = query(`SELECT id, image_url AS source_url FROM galleries WHERE image_url LIKE '${sourcePattern}' AND image_asset_id IS NULL ORDER BY id`)
 const assets = new Map()
 const links = []
+const skipped = []
 
 for (const row of articles) {
   const asset = reference(String(row.source_url), 'article_cover')
+  if (!asset) { skipped.push({ table: 'articles', id: Number(row.id), sourceUrl: String(row.source_url) }); continue }
   assets.set(asset.publicId, asset)
   links.push({ table: 'articles', id: Number(row.id), column: 'cover_image_asset_id', publicId: asset.publicId })
 }
 for (const row of galleries) {
   const asset = reference(String(row.source_url), 'gallery')
+  if (!asset) { skipped.push({ table: 'galleries', id: Number(row.id), sourceUrl: String(row.source_url) }); continue }
   assets.set(asset.publicId, asset)
   links.push({ table: 'galleries', id: Number(row.id), column: 'image_asset_id', publicId: asset.publicId })
 }
@@ -75,7 +82,8 @@ for (const link of links) {
 
 mkdirSync(resolve('.data'), { recursive: true })
 writeFileSync(outputPath, `${statements.join('\n')}\n`, 'utf8')
-const summary = { mode: apply ? 'apply' : 'dry-run', remote, host, articles: articles.length, galleries: galleries.length, uniqueAssets: assets.size, outputPath }
+const summary = { mode: apply ? 'apply' : 'dry-run', remote, host, articles: articles.length, galleries: galleries.length, uniqueAssets: assets.size, skipped: skipped.length, outputPath }
+if (skipped.length) console.log(JSON.stringify({ skipped }))
 if (!apply) {
   console.log(JSON.stringify(summary))
   process.exit(0)

@@ -45,7 +45,10 @@
   }
 }
 
-/* 全身剪影（mask + 渐变填充，颜色随主题切换） */
+/* 全身剪影（mask + 渐变填充，颜色随主题切换）
+   资源为无损 WebP（1365×1617，16 KB）：mask 只取 alpha 通道，
+   源 PNG 的 RGB 全为纯黑（冗余），故用 WebP 无损存储，视觉像素级一致。
+   尺寸保持 1365×1617，与 aspect-ratio 严格对应 —— 改图尺寸时须同步此值。 */
 .hero-girl {
   position: absolute;
   left: 3%;
@@ -53,8 +56,8 @@
   height: 168%;
   aspect-ratio: 1365 / 1617;
   z-index: 1;
-  -webkit-mask-image: url('/hero/girl-full-silhouette.png');
-  mask-image: url('/hero/girl-full-silhouette.png');
+  -webkit-mask-image: url('/hero/girl-full-silhouette.webp');
+  mask-image: url('/hero/girl-full-silhouette.webp');
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;

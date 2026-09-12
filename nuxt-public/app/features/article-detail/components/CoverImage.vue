@@ -38,9 +38,14 @@ const props = defineProps({
 // 窄于 16:9 的封面由 object-fit: cover 裁切，宽于 16:9 的同理。
 //
 // 两档 srcset 足以覆盖实际展示宽度：hero 容器桌面约 890 CSS px、移动约 358 CSS px。
-// 不引入 1920 的 lightbox 档：DPR3 手机（358×3≈1074）会跳过 960 直接选中它，
-// 反而把移动端封面从 ~136 KB 抬到 ~415 KB。该档保留给灯箱查看场景。
+// 不引入 lightbox 档：DPR3 手机（358×3≈1074）会直接选中它，
+// 反而把移动端封面体积抬上去。该档保留给灯箱查看场景。
+//
+// 描述符必须与 nuxt-admin/server/routes/images/[...path].get.ts 的
+// THUMBNAIL_VARIANTS 保持同步，否则浏览器会按错误密度选档。
 const COVER_SIZES = '(max-width: 767px) calc(100vw - 32px), (max-width: 1023px) calc(100vw - 48px), 890px'
+const CARD_WIDTH = 720
+const GRID_WIDTH = 1024
 
 const thumbUrl = (variant, publicId) => `/images/thumb/${variant}/${encodeURIComponent(publicId)}.webp`
 
@@ -73,7 +78,10 @@ const coverSrc = computed(() => {
 const coverSrcset = computed(() => {
   const publicId = coverAssetPublicId.value
   if (!publicId) return undefined
-  return [thumbUrl('card', publicId) + ' 640w', thumbUrl('grid', publicId) + ' 960w'].join(', ')
+  return [
+    thumbUrl('card', publicId) + ` ${CARD_WIDTH}w`,
+    thumbUrl('grid', publicId) + ` ${GRID_WIDTH}w`
+  ].join(', ')
 })
 
 const hasCoverImage = computed(() => Boolean(coverSrc.value && !imageErrored.value))

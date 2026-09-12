@@ -7,10 +7,17 @@ const THUMBNAIL_CACHE_CONTROL = 'public, max-age=31536000, immutable'
 
 // 命名变体预设：按展示场景选择，白名单 fail-closed。
 // 旧格式 /images/thumb/{publicId}.webp 缺省等价 DEFAULT_VARIANT。
+//
+// 宽度按 1440p（2560×1440）设备像素需求标定，依据 object-fit: cover 的
+// 不放大下限 = 槽位宽度 × DPR：
+//   card     720  → 文章卡 480 CSS，覆盖 QHD@150%（需 720）
+//   grid    1024  → 画廊最宽消费者是 Accordion 展开卡 494 CSS，覆盖 QHD@200%（需 987）
+//   lightbox 2048 → hero Fade 主视觉 2032×1152 CSS，QHD@100% 需 2032
+// 三档的消费方绑定见 GalleryHeroSection / gallery.ts / gallery-hero.ts / articles.ts。
 const THUMBNAIL_VARIANTS: Record<ThumbnailVariant, { width: number; quality: number }> = {
-  card: { width: 640, quality: 75 },
-  grid: { width: 960, quality: 85 },
-  lightbox: { width: 1920, quality: 85 }
+  card: { width: 720, quality: 75 },
+  grid: { width: 1024, quality: 85 },
+  lightbox: { width: 2048, quality: 82 }
 }
 const DEFAULT_VARIANT: ThumbnailVariant = 'grid'
 const VARIANT_NAMES = new Set(Object.keys(THUMBNAIL_VARIANTS))

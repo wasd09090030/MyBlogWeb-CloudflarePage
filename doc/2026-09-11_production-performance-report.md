@@ -407,9 +407,47 @@ article-desktop    idx=1  size=470400  discovery=951  loadStart=1686 loadEnd=730
 
 **后续动作**
 
-- 本次**未改动任何业务代码**，所有建议待单独开 change 实施。
-- 实施 P0-1 / P0-3 后应重新执行同一套采集脚本（5 个样本 + 移动端档位），与本基线逐项对比。
+- 仍建议在本轮实施后重新执行同一套采集脚本（5 个样本 + 移动端档位），与本基线逐项对比；
+  本次实施只做到了「代码层 + 客户端构建产物」的验证（见下节）。
 - 建议把主线程阶段自耗时与 LCP 候选时序纳入回归检查项，避免后续改动重新引入阻塞样式或延后绘制。
+
+## 实施记录（分支 `perf/cwv-optimization`）
+
+改动落在两个提交：`docs:`（本文档与 HTML 版）与 `perf(public): 收敛首屏关键路径开销`。
+
+| 建议项 | 处置 | 验证方式 |
+|---|---|---|
+| P0-1 封面图 302 → 630 KB 原图 | 改走 `/images/thumb/{grid,card}` 变体 + `srcset`（960w/640w）+ `sizes` | 构建产物与请求 URL 已核对；未做真机复测 |
+| P0-2 封面容器比例回写导致 CLS | 容器固定 `aspect-ratio: 16/9`，删除 onload 回写比例 | 同上 |
+| P0-3 hero 底图发现太晚 | 加 `<link rel="preload" as="image" fetchpriority="high">` | 代码层确认；未复测 LCP |
+| F7 `/hero/**`、`/fonts/**` 缓存过短 | 在 hook 的 `_headers` 与 `routeRules` **两处**同时补 `immutable` | 线上响应头已证实 hook 是权威来源 |
+| P0-4 非首屏阻塞 CSS | 仅 katex 一项成立：改 `?url` + 运行时注入，从所有页面 `<head>` 移除 | **已构建验证**：`vendor-katex.*.css` chunk 消失，改为资源 `katex.min.*.css`，60 个字体引用仍带哈希且目标文件存在 |
+| P1-1 占位图 59 KB + sitemap 污染 | `loading.gif` → 动画 WebP（33,906 B），改 CSS `background` 承载 | 保真度按时间轴对齐 MAE 1.85/255；`<img>` 移除后 sitemap 不再收录（机制已读源码确认） |
+| P1-3 `modulepreload` 为 0 | **有意不改**，理由写在 `nuxt.config.ts` 注释里 | 见该注释的两面证据 |
+
+**未能验证的部分（重要）**
+
+- 本机 `nuxt generate` 无法跑完：prerender / `nitro:build:public-assets` 阶段会挂死
+  （日志停住、无报错），这是沙箱环境限制而非代码问题。
+  **第 1 轮构建的「客户端 + 服务端编译成功」是本轮改动的有效验证依据**；
+  第 2 轮（把旧 `.output` 移走后再构建）在早期即失败，未产出新产物。
+- 因此以下三项**只有代码层/机制层依据，没有产物级验证**：
+  hero `preload` 是否进入预渲染 `<head>`、`_headers` 中新规则是否落地、
+  `sitemap.xml` 中占位图是否确实消失。建议在 CI（Cloudflare Pages 构建）后抽查
+  `/index.html` 的 `<link>` 列表、`/sitemap.xml` 与 `/hero/girl-full-silhouette.webp`
+  的 `Cache-Control`。
+- P0-1 / P0-2 / P0-3 的**收益数值**未复测，上表只说明「已按根因修改」。
+
+**本轮额外纠正的两处判断**
+
+1. F7 原先记为「仓库内没有 `_headers` 文件、规则在 Cloudflare Pages 项目侧」——
+   实为 `nuxt.config.ts` 的 `nitro:build:public-assets` hook 整文件覆盖生成，
+   且**只加 `routeRules` 不生效**。
+2. F4 提到的 8 个阻塞 CSS 中，除 katex 外的 7 个（entry / default / index /
+   HomeWelcomeSection / ImageLoadingPlaceholder / SearchBar / SideBar）**都确实在首屏
+   关键路径上**（导航栏、hero、文章卡片），移除会造成 FOUC，故保留。
+   其中 SideBar、SearchBar 属桌面专用组件，但其 CSS 无法按 `media` 条件加载，
+   作为遗留项记录。
 
 ## 产物
 

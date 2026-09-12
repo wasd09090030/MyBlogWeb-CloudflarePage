@@ -87,6 +87,7 @@ desktop.ini
 .claude/
 .superpowers/
 .worktrees/
+.workbuddy/
 # AI tooling — intentionally tracked
 # OpenSpec change artifacts (proposal/design/specs/tasks) and Claude skills +
 # slash commands are intentionally committed so they survive across machines

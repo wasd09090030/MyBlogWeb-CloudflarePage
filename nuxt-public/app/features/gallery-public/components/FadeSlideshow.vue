@@ -118,15 +118,49 @@ const autoplayPlugin = (slider) => {
 }
 
 const fadePlugin = (slider) => {
+  /*
+   * 每个 slide 上一次实际写入的样式值，用于「变化才写」。
+   *
+   * detailsChanged 在过渡期间逐帧触发。原实现对 5 个 slide 一律写
+   * opacity + pointerEvents + zIndex 共 15 次，但其中大部分 slide 处于静止态
+   * （portion 恒为 0），写入的是完全相同的值 —— 这些写入会白白制造样式重算，
+   * 而 Hero 的淡入淡出区是首屏最大的一块绘制区域。
+   * 加一层值比较后，静止的 slide 被完全跳过，只有正在交叉淡入淡出的两张
+   * 才会真正落到 DOM。语义（含 zIndex 数值）与原先逐字节一致。
+   */
+  const appliedStyles = []
+
+  const applySlideStyle = (index, element, opacity) => {
+    const state = appliedStyles[index] || (appliedStyles[index] = {
+      opacity: null,
+      pointerEvents: null,
+      zIndex: null
+    })
+
+    if (state.opacity !== opacity) {
+      element.style.opacity = opacity
+      state.opacity = opacity
+    }
+
+    const pointerEvents = opacity > 0.5 ? 'auto' : 'none'
+    if (state.pointerEvents !== pointerEvents) {
+      element.style.pointerEvents = pointerEvents
+      state.pointerEvents = pointerEvents
+    }
+
+    const zIndex = `${Math.round(opacity * 100)}`
+    if (state.zIndex !== zIndex) {
+      element.style.zIndex = zIndex
+      state.zIndex = zIndex
+    }
+  }
+
   const setOpacity = () => {
     const details = slider.track.details
     details.slides.forEach((slide, index) => {
-      const opacity = slide.portion
       const element = slider.slides[index]
       if (!element) return
-      element.style.opacity = opacity
-      element.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none'
-      element.style.zIndex = `${Math.round(opacity * 100)}`
+      applySlideStyle(index, element, slide.portion)
     })
   }
 
@@ -141,6 +175,7 @@ const fadePlugin = (slider) => {
       slide.style.height = '100%'
     })
     slider.container.classList.add('is-ready')
+    appliedStyles.length = 0
     setOpacity()
   })
 
@@ -263,12 +298,17 @@ watch(
   transition:
     transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
     filter 0.45s ease;
-  will-change: transform;
+  /* 这里不再常驻 will-change: transform。
+     5 张 lightbox（约 2048px 宽 × 80vh 高）各自常驻一个合成层，
+     要一直占着显存，而 transform 只在 hover 时才真正变化；
+     在 prefers-reduced-motion 下连过渡都没有，提升纯属浪费。
+     改为仅 hover 期间提升（见下方 :hover 规则），用完即撤。 */
 }
 
 .fade-item:hover .fade-image {
   transform: scale(1.025);
   filter: saturate(1.06) contrast(1.02);
+  will-change: transform;
 }
 
 .fade-fallback {

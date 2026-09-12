@@ -54,7 +54,7 @@
           <template v-if="hasImage(featuredPreviewImage, 2)">
             <ImageLoadingPlaceholder :show="!isPreviewLoaded(featuredPreviewImage, 2)" />
             <img
-              :src="featuredPreviewImage.thumbnailUrl || ''"
+              :src="getPreviewImageUrl(featuredPreviewImage)"
               :alt="featuredPreviewImage.title || '画廊图片'"
               class="gallery-hero__preview-image"
               loading="lazy"
@@ -86,6 +86,7 @@ import CoverflowGallery from '~/features/gallery-public/components/CoverflowGall
 import FadeSlideshow from '~/features/gallery-public/components/FadeSlideshow.vue'
 import {
   getGalleryAspectRatioStyle,
+  getGalleryImageDimensions,
   getGalleryImageKey
 } from '~/features/gallery-public/utils/masonryLayout'
 
@@ -135,6 +136,14 @@ const isPreviewLoaded = (image, index) => Boolean(previewLoadedMap.value[getImag
 const handlePreviewLoad = (image, index, event) => {
   const imageKey = getImageKey(image, index)
   previewLoadedMap.value[imageKey] = true
+
+  // 数据源已带宽高时（画廊列表接口返回 imageWidth / imageHeight），
+  // 首屏渲染算出的 aspect-ratio 本身就是对的；图片加载后再用
+  // naturalWidth / naturalHeight 覆写一遍，只会凭空制造一次样式失效与重排，
+  // 而受影响的恰好是首屏最大的一块 Hero 网格。
+  // 实测线上 Hero 前 18 张图的宽高覆盖率为 18/18，因此这条测量路径在生产环境会被整体短路；
+  // 保留它只是为了兜住少数缺宽高的条目（全量 672 张中约有一半缺）。
+  if (getGalleryImageDimensions(image, null)) return
 
   const target = event?.target
   if (target instanceof HTMLImageElement && target.naturalWidth > 0 && target.naturalHeight > 0) {

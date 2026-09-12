@@ -17,7 +17,11 @@
     :image-transform-style="imageTransformStyle"
     :image-scale="imageScale"
     :is-dragging="isDragging"
-    :hero-images="getHeroImages"
+    :fade-images="heroFadeImages"
+    :accordion-images="heroAccordionImages"
+    :coverflow-images="heroCoverflowImages"
+    :hero-preview-images="heroPreviewImages"
+    :has-hero-content="hasHeroContent"
     @change-tag="setActiveTag"
     @open-fullscreen="openFullscreen"
     @close-fullscreen="closeFullscreen"
@@ -78,18 +82,71 @@ const imagePosition = ref({ x: 0, y: 0 })
 const dragHandler = createDragHandler()
 const { isDragging } = dragHandler
 
+// 全屏图片只由 transform 驱动，cursor 交给 CSS 类控制。
+// 好处：拖拽过程中不再因为 cursor 变化而重算这个对象
+// （原先 cursor 依赖 isDragging，拖拽起止各触发一次无谓的整树 render + diff）。
 const imageTransformStyle = computed(() => ({
-  transform: `translate(${imagePosition.value.x}px, ${imagePosition.value.y}px) scale(${imageScale.value})`,
-  cursor: imageScale.value > 1 ? (isDragging.value ? 'grabbing' : 'grab') : 'default'
+  transform: `translate(${imagePosition.value.x}px, ${imagePosition.value.y}px) scale(${imageScale.value})`
 }))
 
 const artworkGalleries = computed(() => galleries.value.filter(gallery => normalizeTag(gallery.tag) === 'artwork'))
 const gameGalleries = computed(() => galleries.value.filter(gallery => normalizeTag(gallery.tag) === 'game'))
 
-const getHeroImages = (section, start, end) => {
-  if (heroConfiguration.value.isConfigured) return heroConfiguration.value.sections[section] || []
-  return getSlice(artworkGalleries.value, start, end)
-}
+/*
+ * Hero 四个切片。
+ *
+ * 这里必须是 computed 而不是在模板里调用函数：
+ * 每个 computed 只在依赖（heroConfiguration / artworkGalleries）变化时重新求值，
+ * 因此数组引用在父组件因无关状态（如 isDragging、imagePosition、loadingProgress）
+ * 重渲染时保持稳定。若写成 `:fade-images="getHeroImages('fade', 0, 5)"`，
+ * 每次父级 render 都会生成一个全新数组，四个 Hero 子组件都会判定 props 变化
+ * 而重新渲染 —— 这正是 Hero 区「一次交互引发整片重渲染」的放大器。
+ */
+const heroSlices = computed(() => {
+  const configuration = heroConfiguration.value
+  if (configuration.isConfigured) {
+    const sections = configuration.sections || {}
+    return {
+      fade: sections.fade || [],
+      accordion: sections.accordion || [],
+      coverflow: sections.coverflow || [],
+      preview: sections.preview || []
+    }
+  }
+
+  // 未配置 Hero 时回落到作品集前 18 张，按分镜顺序切分。
+  const artwork = artworkGalleries.value
+  return {
+    fade: getSlice(artwork, 0, 5),
+    accordion: getSlice(artwork, 5, 10),
+    coverflow: getSlice(artwork, 10, 15),
+    preview: getSlice(artwork, 15, 18)
+  }
+})
+
+const heroFadeImages = computed(() => heroSlices.value.fade)
+const heroAccordionImages = computed(() => heroSlices.value.accordion)
+const heroCoverflowImages = computed(() => heroSlices.value.coverflow)
+const heroPreviewImages = computed(() => heroSlices.value.preview)
+
+/*
+ * Hero 是否在后台被配置了内容。
+ *
+ * 未配置时恒为 false —— 此时 Hero 用的是作品集切片，那一路「有没有内容」
+ * 由 artworkGalleries.length 决定（见 GalleryContent 的 hasArtworkContent）。
+ *
+ * 这与改动前的判定严格等价：旧写法在未配置时走 getSlice(artwork, 0, 0)，
+ * 而 getGallerySlice 在 start === end 时循环不执行、恒返回空数组，
+ * 因此旧逻辑的第二个子句在未配置时必然为 false。
+ */
+const hasHeroContent = computed(() => {
+  const configuration = heroConfiguration.value
+  if (!configuration.isConfigured) return false
+  const sections = configuration.sections || {}
+  return ['fade', 'accordion', 'coverflow', 'preview'].some(
+    section => (sections[section] || []).length > 0
+  )
+})
 
 const setActiveTag = (tag) => {
   if (activeTag.value === tag) return
@@ -178,7 +235,26 @@ const zoomIn = () => zoomInFn(imageScale)
 const zoomOut = () => zoomOutFn(imageScale, imagePosition)
 const resetZoom = () => resetZoomFn(imageScale, imagePosition)
 const handleWheel = (e) => handleWheelFn(e, imageScale, imagePosition)
-const startDrag = (e) => dragHandler.startDrag(e, imageScale, imagePosition)
+
+/*
+ * 全屏拖拽：拖拽期间直接写 DOM 的 style.transform，不触碰响应式状态。
+ *
+ * 若沿用旧写法（每帧 imagePosition.value = { ... }），会连锁触发：
+ *   imagePosition 变更 → imageTransformStyle 重算出新对象
+ *   → GalleryContent 判定 prop 变化 → 重新执行 render 并对整棵子树做 diff。
+ * 鼠标每秒可产生 60~120 次 mousemove，等于每秒对画廊整页做上百次 vdom diff。
+ * 改为只写一个元素的 style；松手时再把最终值提交回 imagePosition，
+ * 保证后续缩放 / 滚轮缩放 / 重置仍以最新位置为基准。
+ */
+const applyDragFrame = ({ x, y }) => {
+  const wrapper = galleryContentRef.value?.getImageWrapperEl?.()
+  if (!wrapper) return
+  wrapper.style.transform = `translate(${x}px, ${y}px) scale(${imageScale.value})`
+}
+
+const startDrag = (e) => dragHandler.startDrag(e, imageScale, imagePosition, {
+  onMove: applyDragFrame
+})
 
 watch(activeTag, async (tag) => {
   if (isInitialLoading.value || galleries.value.length === 0) return

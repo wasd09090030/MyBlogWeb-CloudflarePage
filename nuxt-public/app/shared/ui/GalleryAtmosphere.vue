@@ -48,17 +48,22 @@ defineOptions({ name: 'GalleryAtmosphere' })
   opacity: 0.9;
 }
 
+/* 丝带：虚线保持静态，改用整条 path 平移来制造"流动"观感。
+   stroke-dashoffset 不是可合成属性，每帧都要走「样式重算 → 重绘 → 光栅」；
+   transform 由合成器线程插值，主线程与光栅线程开销都归零。
+   观感与线速度与原方案一致，改动理由见 doc 下的性能诊断报告。 */
 .gallery-atmosphere__ribbon {
   fill: none;
   stroke-width: 1.5;
   stroke-dasharray: 10 20;
-  animation: gallery-ribbon-drift 18s linear infinite;
+  will-change: transform;
+  animation: gallery-ribbon-flow-a 1.5s linear infinite;
 }
 
 .gallery-atmosphere__ribbon--b {
   stroke-dasharray: 4 18;
-  animation-duration: 24s;
-  animation-direction: reverse;
+  animation-name: gallery-ribbon-flow-b;
+  animation-duration: 1.1s;
 }
 
 .gallery-atmosphere__orbit {
@@ -86,8 +91,18 @@ defineOptions({ name: 'GalleryAtmosphere' })
   animation-delay: -3.2s;
 }
 
-@keyframes gallery-ribbon-drift {
-  to { stroke-dashoffset: -360; }
+/* 位移量取「恰好一个虚线周期」，首尾无缝衔接：
+     a: dasharray 10 + 20 = 30  |  b: 4 + 18 = 22
+   配合时长得到线速度 30u/1.5s = 22u/1.1s = 20 u/s，
+   与原 stroke-dashoffset 的 360u/18s = 20 u/s 完全一致。 */
+@keyframes gallery-ribbon-flow-a {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-30px, 0, 0); }
+}
+
+@keyframes gallery-ribbon-flow-b {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(22px, 0, 0); }
 }
 
 @keyframes gallery-orbit-drift {

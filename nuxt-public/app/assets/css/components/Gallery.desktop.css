@@ -272,6 +272,24 @@
   user-select: none;
 }
 
+/* 光标状态改由类控制，不再写进内联 style：
+   内联 cursor 依赖 isDragging，会让拖拽起止各触发一次全页重渲染。 */
+.image-wrapper.is-draggable {
+  cursor: grab;
+}
+
+.image-wrapper.is-draggable.is-dragging {
+  cursor: grabbing;
+}
+
+/* 拖拽期间必须关掉过渡。
+   0.15s 的缓动意味着图片的每一帧位置都只走完「当前差值」的一小部分，
+   视觉上就是永远追不上指针 —— 这正是全屏查看时「粘滞、不跟手」的来源。
+   松手后 is-dragging 移除，过渡恢复，缩放/回弹仍有缓动。 */
+.image-wrapper.is-dragging {
+  transition: none;
+}
+
 .fullscreen-image {
   max-width: 90vw;
   max-height: 85vh;

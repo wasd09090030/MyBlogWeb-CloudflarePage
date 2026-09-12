@@ -52,10 +52,10 @@
         <template v-if="activeTag === 'artwork' && hasArtworkContent">
           <GalleryHeroSection
             ref="galleryHeroSectionRef"
-            :fade-images="heroImages('fade', 0, 5)"
-            :accordion-images="heroImages('accordion', 5, 10)"
-            :coverflow-images="heroImages('coverflow', 10, 15)"
-            :preview-images="heroImages('preview', 15, 18)"
+            :fade-images="fadeImages"
+            :accordion-images="accordionImages"
+            :coverflow-images="coverflowImages"
+            :preview-images="heroPreviewImages"
             @image-click="$emit('open-fullscreen', $event)"
           />
 
@@ -127,7 +127,9 @@
             <Transition name="image-zoom">
               <div
                 v-if="selectedImage"
+                ref="imageWrapperRef"
                 class="image-wrapper"
+                :class="{ 'is-draggable': imageScale > 1, 'is-dragging': isDragging }"
                 :style="imageTransformStyle"
                 @mousedown="$emit('start-drag', $event)"
                 @touchstart="$emit('start-drag', $event)"
@@ -185,7 +187,13 @@ const props = defineProps({
   imageTransformStyle: { type: Object, required: true },
   imageScale: { type: Number, required: true },
   isDragging: { type: Boolean, required: true },
-  heroImages: { type: Function, required: true }
+  // Hero 四个切片由容器层以 computed 下传，保证引用稳定（详见 GalleryPageContainer 注释）。
+  fadeImages: { type: Array, default: () => [] },
+  accordionImages: { type: Array, default: () => [] },
+  coverflowImages: { type: Array, default: () => [] },
+  // 注意：与上面的 previewImages（加载进度用的预览图）不是同一份数据。
+  heroPreviewImages: { type: Array, default: () => [] },
+  hasHeroContent: { type: Boolean, default: false }
 })
 
 const emit = defineEmits([
@@ -203,10 +211,11 @@ const emit = defineEmits([
 
 const galleryHeroSectionRef = ref(null)
 const galleryMasonryListRef = ref(null)
+const imageWrapperRef = ref(null)
 
 const hasArtworkContent = computed(() => {
   if (props.artworkGalleries.length > 0) return true
-  return ['fade', 'accordion', 'coverflow', 'preview'].some(section => props.heroImages(section, 0, 0).length > 0)
+  return props.hasHeroContent
 })
 
 const artworkMonthGroups = computed(() => groupGalleryByMonth(
@@ -234,6 +243,10 @@ defineExpose({
       ...heroRefs,
       masonryListRef: galleryMasonryListRef
     }
+  },
+  // 供容器层在拖拽帧内直接写 transform，避免每帧触发组件重渲染。
+  getImageWrapperEl() {
+    return imageWrapperRef.value ?? null
   }
 })
 </script>

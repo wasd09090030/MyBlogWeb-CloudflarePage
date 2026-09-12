@@ -5,6 +5,7 @@
   >
     <ImageLoadingPlaceholder :show="!imageLoaded" />
     <img
+      ref="coverImageEl"
       :src="coverSrc"
       :srcset="coverSrcset"
       :sizes="COVER_SIZES"

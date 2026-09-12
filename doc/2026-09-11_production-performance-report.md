@@ -160,7 +160,9 @@ API 返回的字段确实同时提供两者（`coverImageUrl=/images/i_tvrehtqGZ
 - 首页 HTML 中该 `<img>` 标签出现 **8 次**（浏览器会去重，只发 1 个请求，但会绘制 8 次）。
 - 组件 `nuxt-public/app/shared/ui/ImageLoadingPlaceholder.vue:10-16` 在 `show`（默认 `true`）时直接渲染 `<img src="/Picture/loading.gif">`，因此被 **SSR 进页面 HTML**。
 
-**连带 SEO 缺陷**：`sitemap.xml`（31,742 B）共有 **312 条 `image:loc`，其中 74 条指向 `/Picture/loading.gif`**。搜索引擎会把这些页面的代表性图片认成「加载中」动图。根因同上：占位图在构建期被写进了预渲染 HTML，被 `@nuxtjs/seo` 的图片发现机制采集。
+**连带 SEO 缺陷**：`sitemap.xml`（31,742 B）共有 **156 条 `image:loc`，其中 74 条指向 `/Picture/loading.gif`**。搜索引擎会把这些页面的代表性图片认成「加载中」动图。根因同上：占位图在构建期被写进了预渲染 HTML，被 `@nuxtjs/seo` 的图片发现机制采集。
+
+> 计数口径：`<image:loc>`、`</image:loc>`、`<image:image>` 三个标签各 156 次（78 个 URL，每个 URL 2 张图）。**不要用 `grep -o 'image:loc'` 统计 —— 它会把开闭标签一起算成 312**，本报告初版即因此误记为 312。
 
 ### F4 — 8 个渲染阻塞 CSS 串在关键路径上（共 57 KB），其中多个与首页首屏无关
 
@@ -303,7 +305,7 @@ function handleImageLoad(event) {
 
 ### P1-1 替换 57.8 KB 的 `loading.gif` 占位图（同时修掉 sitemap 污染）
 
-- **为什么**：57.8 KB（59,208 字节）动图仅用于占位，移动端单请求 5.59 s；它是首页第一个 LCP 候选（最大绘制面积）；HTML 中重复 8 次；sitemap 312 条 `image:loc` 中有 74 条指向它。
+- **为什么**：57.8 KB（59,208 字节）动图仅用于占位，移动端单请求 5.59 s；它是首页第一个 LCP 候选（最大绘制面积）；HTML 中重复 8 次；sitemap 156 条 `image:loc` 中有 74 条指向它。
 - **怎么做**：
   1. 改 `ImageLoadingPlaceholder.vue`：用内联 SVG 或纯 CSS 骨架屏替代 `<img src="/Picture/loading.gif">`（额外请求 0 字节）。
   2. 确保占位元素不参与 LCP 判定（避免大尺寸绘制），例如用背景色/渐变而非大图。
@@ -369,7 +371,7 @@ curl.exe -s -I https://wasd09090030.top/hero/girl-full-silhouette.webp
 
 # sitemap 统计
 curl.exe -s https://wasd09090030.top/sitemap.xml -o sitemap.xml
-# → 31742 B；<image:image> 312 条，<image:loc> 312 条；
+# → 31742 B；<image:image> 156 条，<image:loc> 156 条（开/闭标签各 156，勿用不带尖括号的 image:loc 统计）；
 #   <image:loc>https://wasd09090030.top/Picture/loading.gif</image:loc> 出现 74 次
 
 # 生产 HTML 结构清点
@@ -449,12 +451,122 @@ article-desktop    idx=1  size=470400  discovery=951  loadStart=1686 loadEnd=730
    其中 SideBar、SearchBar 属桌面专用组件，但其 CSS 无法按 `media` 条件加载，
    作为遗留项记录。
 
+## 复测记录（上线后，2026-09-12）
+
+### 方法与环境
+
+- **基线**：2026-09-11 单次采集（`tmp/perf`，优化前）。
+- **复测**：2026-09-12，每个样本重复 **3 轮取中位数**（`tmp/perf-reps`，热缓存样本 1 轮）。
+  采集脚本、URL、视口/节流配置与基线完全一致（桌面 1440×900 DPR1 不限速；
+  移动 390×844 DPR3 + 4× CPU + Slow 4G；冷缓存每轮全新 profile）。
+- 复测统一屏蔽 `static.cloudflareinsights.com`（原因见下「新发现 N1」）。
+- 复测前已把本机遗留的旧 `.output` 与陈旧浏览器 profile 排除，冷缓存均为全新 profile。
+
+### 结论摘要
+
+**稳健改善（三轮一致，可信）**
+
+| 项 | 基线 | 复测 | 说明 |
+|---|---|---|---|
+| 文章页 CLS | **0.0788** | 0 / 0.0275 / 0（中位数 **0**） | 与 P0-2 的根因（容器比例回写）一致，位移源消失 |
+| 文章页 LCP 扣 TTFB | **6408 ms** | 1811 / 1849 / 2160 ms | **−72%**，三轮一致，且与 TTFB 抖动无关 |
+| 文章页 TBT | 74 ms | 47 / 90 / 58 ms | 中位数 58，−22% |
+| 首页热缓存 FCP / LCP | 3160 / 5708 ms | 1288 / 1304 ms | 见下方保留意见 |
+| 首页热缓存传输量 | 1141 KB | 43 KB | 见下方保留意见 |
+| 渲染阻塞资源数 | 8（首页）/ 7（文章页） | 7 / 6 | 每页恒定减少 1 个 |
+
+**无有效信号（噪声内或样本失效）**
+
+- **首页桌面冷缓存**：LCP 5428 → 3620/5128/6344（中位数 5128），FCP 2664 → 2960/3192/3572。
+  扣掉 TTFB 后 `LCP−TTFB` 为 4993/1575/3862（中位数 3862），仍有 −19% 的趋势，
+  但轮间离散度超过差值本身，**不能判定为改善**。
+- **首页移动端**：`LCP−TTFB` 9576 → 8651/8456/2721（中位数 8456，−12%）；
+  但 **TBT 1207 → 1395/1479/1526 明显上升（+18%）**，且三轮一致。
+  未定位到明确原因（可能与占位层动画在慢网络下停留更久有关，未证实），
+  作为遗留项记录。
+- **画廊页**：**样本失效，不可比**。基线与复测的截图都只是一个空壳
+  （仅背景 + 侧边浮标），且两轮都没有发起任何画廊图片请求 ——
+  这与基线报告「画廊页未产生 LCP 候选」一致。DOM 937 → 89/140 的差异来自
+  基线里那些始终没变成可见内容的占位 DOM，不构成回归。
+
+### 机制级验证（trace 证据，比时序数字更可靠）
+
+从复测的 trace / 资源序列逐条核对，六项改动**全部按预期生效**：
+
+| 改动 | 复测证据 |
+|---|---|
+| 封面图走缩略图变体 | 文章页请求 `/images/thumb/grid/i_tvrehtqGZco89Q6Q.webp`（200 直出，无 302）；**原图 `/images/i_tvrehtqGZco89Q6Q` 完全不再被请求** |
+| 封面容器固定 16/9 | `<img>` 带 `width="960" height="540"`，CLS 归零 |
+| hero 底图预加载 | 预渲染 `<head>` 中确认存在 `<link rel="preload" as="image" href="/hero/girl-full-silhouette.webp" fetchpriority="high">` |
+| 缓存规则 | `/hero/girl-full-silhouette.webp` 与 `/fonts/open-sans-400.woff2` 线上返回 `public, max-age=31536000, immutable`（原为 `max-age=0, must-revalidate`） |
+| katex 退出关键路径 | 阻塞样式表从 8 → 7；`vendor-katex.*.css` 不再出现在首屏，改为 hydration 之后注入 `katex.min.*.css` |
+| 占位图改造 | `loading.gif` 在 HTML 与请求中均消失；改为 `/Picture/loading.webp`（33,906 B），由 CSS 发起（请求优先级更低）；`sitemap.xml` 中 `<image:loc>` 156 → 82，其中该占位图 **74 → 0** |
+
+### 新发现（复测暴露的两个问题）
+
+#### N1 — 第三方 `module` 脚本不可达时会把 DCL/load 顶到 21 秒（未修，建议处置）
+
+`static.cloudflareinsights.com/beacon.min.js` 由 Cloudflare 在边缘注入，
+标签形态是 **`<script type="module" …>`**。module 脚本**默认即 defer**，
+属于会推迟 `DOMContentLoaded` 的那一组（它的 `renderBlockingStatus` 是
+`non-blocking`，所以**不影响 FCP/LCP**，但会拖住 DCL 与 `load`）。
+
+复测第一轮（未屏蔽它时），4 个样本**全部**该请求连接超时：
+
+```
+net::ERR_CONNECTION_TIMED_OUT   duration 21029 / 21041 / 211xx / 21305 ms
+→ DCL 从 ~1.5 s 被顶到 22148 / 22290 / 22782 ms，load 同步被拖住
+```
+
+基线中它 0.6–1.1 s 正常返回（`st=200`）。也就是说：**这个第三方域名一旦不可达
+（对大陆访客是常见情形），每个页面的 DCL/load 都会白白推迟约 21 秒**。
+标题/正文的渲染不受影响，但所有挂在 `load` 上的逻辑都会被推迟。
+
+- 处置建议：在 Cloudflare 控制台关闭该 RUM/Web Analytics 注入，
+  或将其改为真正异步（`async`）且在 `load` 之后注入。
+- 复测的处置：采集时用 CDP `Network.setBlockedURLs` 屏蔽它，避免污染整轮测量
+  （已核对：基线中它并非最晚完成的资源，不决定 load，故屏蔽对前后比较公平）。
+
+#### N2 — 封面占位层不再消失（**回归，已修复**）
+
+复测截图发现：文章页封面已加载完成，但「loading…」占位层**一直盖在上面**；
+基线截图（同日、同页面）占位层是正常消失的。
+
+根因：`CoverImage.vue` 中 `coverImageEl` 这个 ref **只声明、没绑定到 `<img>`**
+（模板缺 `ref="coverImageEl"`），于是「挂载后对账 `img.complete`」的
+`syncCoverLoadState()` 在第一行 `if (!image) return` 就退出，成了死代码。
+封面改用 ~136 KB 缩略图后加载更快，在慢网络下经常**先于 hydration 完成**，
+此时 `@load` 不会再触发 → `imageLoaded` 永远为 `false`。
+
+修复：给 `<img>` 补上 `ref="coverImageEl"`（对齐 `ArticleCard.vue` 的
+`ref="imageElement"` 写法）。**待部署后验证**：加载文章页后检查
+`.image-loading-overlay` 是否已从 DOM 中移除。
+
+> 教训：删掉「回写容器比例」时一并删掉了 ref 绑定，而这类「对账」逻辑
+> 失效时**不会报错、也不会在快网络下复现**，只有慢网络 + 命中缓存的组合才暴露。
+
+### 复测本身的方法论局限（必须说明）
+
+- **本机到源站的网络路径极不稳定**：基线 TTFB 663–1415 ms；复测期间同一 URL
+  的 TTFB 实测在 824–44,542 ms 之间，出现过 9,540 ms 与 31,179 ms 的离群值。
+  因此本节的时序结论**只在扣掉 TTFB 或跨轮一致时才采信**，绝对值不可用于横向对标。
+- 无头 Chromium 与带界面 Chrome 的合成器路径不同，帧率类指标不可外推。
+- 移动端为模拟条件（4× CPU + Slow 4G），非真实设备。
+- 未测 INP。
+
+**给后续验证的建议**：用 Cloudflare 自身的 Web Analytics / Speed 面板或
+PageSpeed Insights（从真实地理位置采样）复核 Core Web Vitals，
+而不是依赖这台机器；本机仅适合做「机制是否生效」的回归检查。
+
 ## 产物
 
 | 文件 | 说明 |
 |---|---|
 | `doc/2026-09-11_production-performance-report.md` | 本文档（现状 + 建议） |
 | `doc/2026-09-11_production-performance-report.html` | 可视化报告（瀑布图、体积分布、主线程阶段图、建议卡片），自包含无外部依赖 |
-| `tmp/perf/*.trace.json` | 5 份原始 trace（合计约 150 MB，`tmp/` 已被 gitignore） |
+| `tmp/perf/*.trace.json` | 基线 5 份原始 trace（合计约 150 MB，`tmp/` 已被 gitignore） |
 | `tmp/perf/*.raw.json` / `*.trace-analysis.json` | 终端渲染指标与主线程 CPU 分析结果 |
 | `tmp/perf-collect.mjs` / `tmp/trace-analyze.mjs` / `tmp/perf-report.mjs` | 采集 → 分析 → 出报告的零依赖管线 |
+| `tmp/perf-reps/` | 复测 13 轮的 raw / trace / 分析结果 + `median-comparison.md` |
+| `tmp/perf-after-beacon-failed/` | N1 的证据：beacon 超时那一轮的 raw.json（DCL 被顶到 22 s） |
+| `tmp/perf-compare.mjs` / `tmp/perf-median.mjs` / `tmp/perf-inspect.mjs` | 单轮对比 / 中位数对比（含 TTFB 离散度）/ 异常定位 |

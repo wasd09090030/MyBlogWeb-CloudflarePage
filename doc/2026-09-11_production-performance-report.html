@@ -251,7 +251,7 @@ footer{margin-top:50px;color:var(--fg3);font-size:12.4px;text-align:center}
     </li>
     <li>
       <b>占位图被当成文章配图写进了 sitemap。</b>
-      <code>sitemap.xml</code> 共 312 条 <code>image:loc</code>，其中
+      <code>sitemap.xml</code> 共 156 条 <code>image:loc</code>，其中
       <b>74 条指向 <code>/Picture/loading.gif</code></b>。
       搜索引擎会把「加载中」动图当作这些页面的代表性图片，属于可避免的 SEO 缺陷。
       根因同上：占位图被服务端渲染进了页面 HTML，被 sitemap 模块自动采集。
@@ -841,7 +841,7 @@ footer{margin-top:50px;color:var(--fg3);font-size:12.4px;text-align:center}
       <div class="adv-verify"><span class="k">怎么验证</span>LCP 元素开始时间应前移到 FCP 附近；LCP 目标 ≤2500 ms（桌面）/ ≤4000 ms（移动）；复测确认「加载完成 → 绘制」空窗是否随之消失。</div>
     </div><div class="adv v-p1">
       <div class="adv-head"><span class="pill">P1</span><b>替换 58 KB 的 loading.gif 占位图（同时修掉 sitemap 污染）</b></div>
-      <div class="adv-why"><span class="k">为什么</span>首屏出现一个 58 KB 的 GIF 仅用于占位，移动端 Slow 4G 下单请求耗时超过 5 s；且它是首页第一个 LCP 候选（面积最大的一块绘制）。此外 sitemap.xml 的 312 条 image:loc 中有 74 条指向它，搜索引擎会把「加载中」动图当作页面配图。</div>
+      <div class="adv-why"><span class="k">为什么</span>首屏出现一个 58 KB 的 GIF 仅用于占位，移动端 Slow 4G 下单请求耗时超过 5 s；且它是首页第一个 LCP 候选（面积最大的一块绘制）。此外 sitemap.xml 的 156 条 image:loc 中有 74 条指向它，搜索引擎会把「加载中」动图当作页面配图。</div>
       <div class="adv-how"><span class="k">怎么做</span><ul><li>改 <code>shared/ui/ImageLoadingPlaceholder.vue</code>：用内联 SVG 或纯 CSS 骨架屏替代 <code>&lt;img src="/Picture/loading.gif"&gt;</code>（额外请求 0 字节）</li><li>确保占位元素不参与 LCP 判定（避免大尺寸绘制），例如使用背景色/渐变而非大图</li><li>在 sitemap 配置中排除占位图，或改为只用文章 thumbnailUrl 作为 <code>image:loc</code></li></ul></div>
       <div class="adv-verify"><span class="k">怎么验证</span>首屏请求数 −1，移动端最慢资源排名中不再出现该文件；sitemap.xml 中不再出现 loading.gif。</div>
     </div><div class="adv v-p1">

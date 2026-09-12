@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>生产环境性能分析报告 · wasd09090030.top</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#ffffff; --fg:#1c1f23; --fg2:#5a6169; --fg3:#8b939c;
+  --line:#e4e7eb; --accent:#2f6feb; --accent2:#eef3fe;
+  --good:#1a9c5b; --goodbg:#e8f7ef; --mid:#c47f16; --midbg:#fdf5e6; --bad:#d43b3b; --badbg:#fdecec;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 28px 90px}
+header.top{background:linear-gradient(135deg,#1e2a3a,#2f4a6d);color:#fff;border-radius:16px;padding:32px 34px;margin-bottom:34px}
+header.top h1{margin:0 0 10px;font-size:27px;letter-spacing:.3px}
+header.top .sub{color:#c6d3e4;font-size:14px}
+header.top .meta{margin-top:20px;display:flex;flex-wrap:wrap;gap:10px}
+header.top .meta span{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.18);padding:5px 12px;border-radius:999px;font-size:12.5px}
+section, h2{scroll-margin-top:20px}
+h2{font-size:21px;margin:46px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+h3{font-size:16.5px;margin:30px 0 12px;color:#2a3038}
+h4{font-size:14.5px;margin:18px 0 8px;color:var(--fg2)}
+p.note{color:var(--fg2);font-size:13.6px;background:var(--accent2);border-left:3px solid var(--accent);padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 18px}
+.tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
+table.datatable{border-collapse:collapse;width:100%;font-size:13.8px}
+table.datatable th{text-align:left;padding:11px 14px;background:#fafbfc;color:var(--fg2);font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap}
+table.datatable td{padding:10px 14px;border-bottom:1px solid #f0f2f4}
+table.datatable tr:last-child td{border-bottom:none}
+table.datatable.small{font-size:12.9px}
+td.mono,.mono{font-family:var(--mono);font-size:12.4px;word-break:break-all}
+td.name{white-space:nowrap;font-weight:600}
+.tag{display:inline-block;margin-left:7px;background:#eef1f5;color:var(--fg2);font-size:11px;padding:2px 7px;border-radius:5px;font-weight:500;vertical-align:1px}
+.tag2{background:#eaf4ff;color:#2f6feb}
+.b-good{color:var(--good);font-weight:600}.b-mid{color:var(--mid);font-weight:600}.b-bad{color:var(--bad);font-weight:600}
+.legend{display:flex;gap:16px;margin-top:12px;font-size:12.8px}
+.legend .lg{padding:3px 11px;border-radius:6px}
+.b-good.lg, .lg.b-good{background:var(--goodbg)}
+.b-mid.lg, .lg.b-mid{background:var(--midbg)}
+.bad.lg, .lg.b-bad{background:var(--badbg)}
+.legend2{display:flex;gap:18px;margin-top:14px;font-size:12.6px;color:var(--fg2);flex-wrap:wrap}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.r-css{background:#7c5cff}.r-js{background:#f0a02e}.r-img{background:#25a2b8}.r-font{background:#d4568a}.r-json{background:#5aa469}.r-other{background:#9aa4ae}
+.findings{counter-reset:f;list-style:none;padding:0;margin:0}
+.findings li{counter-increment:f;position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:17px 20px 17px 58px;margin-bottom:12px;font-size:14.2px}
+.findings li::before{content:counter(f);position:absolute;left:18px;top:16px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.findings b{color:#111}
+code{font-family:var(--mono);font-size:12.6px;background:#f2f4f7;padding:1.5px 6px;border-radius:5px;color:#3a4250}
+.waterfall{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px 20px;position:relative}
+.waxis{position:relative;height:34px;margin-left:300px;margin-right:130px;border-bottom:1px dashed var(--line)}
+.wmark{position:absolute;top:0;bottom:0;border-left:1.5px dashed #b9c0c8;font-size:11px}
+.wmark span{position:absolute;top:2px;left:3px;white-space:nowrap;color:var(--fg3);background:var(--card);padding:0 3px}
+.mk-ttfb{border-color:#9aa4ae}.mk-fcp{border-color:#25a2b8}.mk-lcp{border-color:#d43b3b}.mk-load{border-color:#5aa469}
+.wrow{display:flex;align-items:center;gap:12px;height:22px}
+.wlbl{width:288px;flex:0 0 288px;font-size:11.6px;font-family:var(--mono);color:#3d444d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wtrack{flex:1;position:relative;height:12px;background:#f5f6f8;border-radius:3px;overflow:hidden}
+.wbar{position:absolute;top:0;height:12px;border-radius:3px;min-width:2px}
+.wmeta{width:118px;flex:0 0 118px;font-size:10.8px;color:var(--fg3);text-align:right;font-family:var(--mono)}
+.bars{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 22px}
+.grp{margin-bottom:18px}
+.grp:last-child{margin-bottom:0}
+.grp-t{font-size:13px;font-weight:600;color:var(--fg2);margin-bottom:7px}
+.brow{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.blabel{width:230px;flex:0 0 230px;font-size:12.2px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btrack{flex:1;height:15px;background:#f3f5f7;border-radius:4px;overflow:hidden}
+.bfill{height:15px;border-radius:4px;min-width:2px}
+.bval{width:92px;flex:0 0 92px;text-align:right;font-size:12.2px;font-family:var(--mono);color:var(--fg2)}
+.f-js{background:#f0a02e}.f-css{background:#7c5cff}.f-img{background:#25a2b8}.f-font{background:#d4568a}.f-json{background:#5aa469}.f-other{background:#9aa4ae}
+.f-desk{background:#2f6feb}.f-mob{background:#e0673a}
+.ltwrap{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:30px 22px 26px}
+.lttrack{position:relative;height:46px;background:#f5f6f8;border-radius:8px}
+.lt{position:absolute;top:8px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;min-width:3px}
+.lt span{font-size:10.4px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden}
+.lt-ok{background:#4f8ef7}.lt-mid{background:#e0a020}.lt-bad{background:#d43b3b}
+.lttick{position:absolute;top:-18px;bottom:-16px;border-left:1px solid #dfe3e8}
+.lttick span{position:absolute;bottom:-18px;left:3px;font-size:10.4px;color:var(--fg3)}
+.lttable{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 18px}
+.ltrow{font-size:12.9px;color:var(--fg2);padding:5px 0;border-bottom:1px dashed #eef1f4}
+.ltrow:last-child{border-bottom:none}
+.ltrow b{color:var(--fg)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:900px){.two{grid-template-columns:1fr}.wlbl{width:150px;flex-basis:150px}.waxis{margin-left:150px}}
+.advice{display:flex;flex-direction:column;gap:14px}
+.adv{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:16px 20px}
+.v-p0{border-left-color:#d43b3b}.v-p1{border-left-color:#e0a020}.v-p2{border-left-color:#4f8ef7}
+.adv-head{display:flex;align-items:center;gap:10px;font-size:15.5px;margin-bottom:10px}
+.pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;background:#eef1f5;color:var(--fg2)}
+.v-p0 .pill{background:var(--badbg);color:var(--bad)}
+.v-p1 .pill{background:var(--midbg);color:var(--mid)}
+.v-p2 .pill{background:var(--accent2);color:var(--accent)}
+.k{display:inline-block;font-size:11px;font-weight:700;color:var(--fg2);background:#f2f4f7;padding:2px 8px;border-radius:5px;margin-right:8px;vertical-align:1.5px}
+.adv-why,.adv-verify{font-size:13.8px;color:var(--fg2);margin-bottom:8px}
+.adv-how{font-size:13.8px;color:var(--fg2);margin-bottom:8px}
+.adv-how ul{margin:6px 0 0;padding-left:22px}
+.adv-how li{margin-bottom:4px}
+.method{font-size:13.8px;color:var(--fg2);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 22px 16px 38px}
+.method li{margin-bottom:7px}
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:900px){.shots{grid-template-columns:1fr}}
+.shots figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.shots img{display:block;width:100%;height:auto}
+.shots figcaption{font-size:12.4px;color:var(--fg2);padding:10px 14px;border-top:1px solid var(--line)}
+nav.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 22px;display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13.4px;margin-bottom:10px}
+nav.toc a{color:var(--accent);text-decoration:none}
+nav.toc a:hover{text-decoration:underline}
+footer{margin-top:50px;color:var(--fg3);font-size:12.4px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>生产环境网页性能分析报告</h1>
+    <div class="sub">目标站点 <b>https://wasd09090030.top</b>　·　采集方式 Chrome DevTools Protocol（DevTools Performance 同源 trace）</div>
+    <div class="meta">
+      <span>采集时间 2026/9/11 21:10:42</span>
+      <span>样本 5 组</span>
+      <span>Chromium 无头模式</span>
+      <span>桌面 1440×900 / 移动 390×844·4×CPU·Slow 4G</span>
+    </div>
+  </header>
+
+  <p class="note" style="border-left-color:#c47f16;background:#fdf5e6">
+    <b>本页是「优化前」的基线快照</b>（2026-09-11 采集）。已实施并在分支
+    <span class="mono">perf/cwv-optimization</span> 上落地的改动见同名 Markdown 报告的
+    「实施记录」一节：封面图改用缩略图变体 + srcset、封面容器固定 16:9、hero 底图加 preload、
+    katex 阻塞 CSS 从所有页面移除、占位图换动画 WebP 并消除 sitemap 污染。
+    本页的指标、瀑布图与建议项保持原样，以便与实施后的复测结果逐项对比。
+  </p>
+
+  <nav class="toc">
+    <a href="#cwv">一、Core Web Vitals</a>
+    <a href="#findings">二、关键发现</a>
+    <a href="#waterfall">三、资源瀑布</a>
+    <a href="#bytes">四、体积分布</a>
+    <a href="#main">五、主线程分析</a>
+    <a href="#advice">六、优化建议</a>
+    
+    <a href="#appendix">附录</a>
+  </nav>
+
+  
+  <h2 id="cwv">一、Core Web Vitals 与加载指标</h2>
+  <p class="note">数值为单次实验室测量的原始结果（本机 Chrome 全新 profile）。桌面端 1440×900、DPR1、不限速；移动端 390×844、DPR3、CPU 4 倍降速、Slow 4G（1.6 Mbps / 150 ms RTT）。颜色阈值采用 Lighthouse 通用分档。画廊页未产生 LCP 候选（无可量化的最大内容块），标记为"未记录"。</p>
+  <div class="tablewrap"><table class="datatable">
+    <thead><tr><th>样本</th><th>TTFB</th><th>FCP</th><th>LCP</th><th>TBT</th><th>CLS</th><th>DCL</th><th>Load</th></tr></thead>
+    <tbody>
+    <tr>
+      <td class="name">首页<span class="tag">桌面</span><span class="tag tag2">冷缓存</span></td>
+      <td class="b-good">663 ms</td>
+      <td class="b-mid">2664 ms</td>
+      <td class="b-bad">5428 ms</td>
+      <td class="b-good">161 ms</td>
+      <td class="b-good">0.0000</td>
+      <td>3799 ms</td>
+      <td>3870 ms</td>
+    </tr>
+    <tr>
+      <td class="name">首页<span class="tag">桌面</span><span class="tag tag2">热缓存</span></td>
+      <td class="b-mid">1415 ms</td>
+      <td class="b-bad">3160 ms</td>
+      <td class="b-bad">5708 ms</td>
+      <td class="b-good">162 ms</td>
+      <td class="b-good">0.0000</td>
+      <td>4181 ms</td>
+      <td>4407 ms</td>
+    </tr>
+    <tr>
+      <td class="name">文章详情页<span class="tag">桌面</span><span class="tag tag2">冷缓存</span></td>
+      <td class="b-mid">932 ms</td>
+      <td class="b-mid">2524 ms</td>
+      <td class="b-bad">7340 ms</td>
+      <td class="b-good">74 ms</td>
+      <td class="b-good">0.0788</td>
+      <td>3031 ms</td>
+      <td>7304 ms</td>
+    </tr>
+    <tr>
+      <td class="name">画廊页<span class="tag">桌面</span><span class="tag tag2">冷缓存</span></td>
+      <td class="b-mid">1077 ms</td>
+      <td class="b-mid">1896 ms</td>
+      <td class="">未记录</td>
+      <td class="b-good">19 ms</td>
+      <td class="b-good">0.0002</td>
+      <td>2618 ms</td>
+      <td>2618 ms</td>
+    </tr>
+    <tr>
+      <td class="name">首页<span class="tag">移动 4x/Slow4G</span><span class="tag tag2">冷缓存</span></td>
+      <td class="b-good">624 ms</td>
+      <td class="b-bad">4532 ms</td>
+      <td class="b-bad">10200 ms</td>
+      <td class="b-bad">1207 ms</td>
+      <td class="b-good">0.0001</td>
+      <td>8290 ms</td>
+      <td>8293 ms</td>
+    </tr></tbody>
+  </table></div>
+  <div class="legend"><span class="lg b-good">达标</span><span class="lg b-mid">需改进</span><span class="lg b-bad">差</span></div>
+  <p class="note">测量抖动提示：同一站点多次采样，TTFB 在 624–1415 ms 之间波动（最大出现在"热缓存"轮次），FCP/LCP 亦在百毫秒级波动。这说明该站的<b>网络/边缘路径本身不稳定</b>，优化时应对同类改动做多次取中位数再比较。</p>
+  
+  
+  <h2 id="findings">二、关键发现（按影响排序）</h2>
+  <ol class="findings">
+    <li>
+      <b>【最严重】文章详情页封面图走 302 跳到 630 KB 原图，单图决定整页 LCP。</b>
+      文章页 LCP 元素是 <code>IMG.w-full.h-full</code>（面积 470400 px²），
+      它直接引用 <code>/images/i_tvrehtqGZco89Q6Q</code>。实测该 URL 返回
+      <b>302 → <code>cfimg.wasd09090030.top/file/gallery/…webp</code>（630 KB）</b>，
+      意味着一次额外跳转 + 一次到图片域的 TLS 握手，最终下载一张未按展示尺寸裁剪的原图。
+      同一资源的缩略图变体 <code>/images/thumb/card/i_tvrehtqGZco89Q6Q.webp</code> 仅 49 KB（直出 200，无跳转），
+      <b>体积相差约 12.9 倍</b>。<br>
+      轨迹显示该请求 t+951 ms 发起、耗时 <b>6.35 s</b> 才结束，
+      而 LCP 记录 <code>loadTime 7304 ms</code>、
+      <code>renderTime 7340 ms</code>，
+      与页面 <code>load</code> 事件（7304 ms）几乎同时 ——
+      <b>即整页的 LCP 与 load 都在等这一张图</b>。
+      代码层根因在 <code>features/article-detail/components/CoverImage.vue</code>：
+      <code>coverImageUrl || thumbnailUrl</code> 的优先级让「原生大图」永远压过「缩略图」。
+    </li>
+    <li>
+      <b>LCP 底图的「图片已就绪」与「实际绘制」之间有 2711 ms（桌面）/ 4955 ms（移动）的空窗。</b>
+      LCP 候选的完整时序是：<code>imageDiscoveryTime 1838</code>
+      → <code>imageLoadStart 2018</code>
+      → <code>imageLoadEnd 2717</code>
+      → <code>renderTime 5428 ms</code>。
+      对照同页一个普通 <code>&lt;img&gt;</code>（<code>loading.gif</code>）的对应值为
+      866 → 2252 → 2780，
+      即普通图片在加载完成后约 <b>528 ms</b> 就完成绘制，
+      而 <code>.hero-girl</code> 这一 CSS <code>mask</code> 元素要多等数秒。
+      该元素带 <code>will-change: transform</code> 与无限 <code>hero-girl-float</code> 动画（合成层），
+      推测其绘制被推迟到后续某次主线程重绘帧。
+      <b>这一项需在 preload 修复后复测确认是否随之消失</b>，因此本报告把它列为待验证的次生现象。
+    </li>
+    <li>
+      <b>首张 LCP 候选其实是「加载中」占位 GIF。</b>
+      首页 LCP 候选序列为：先 <code>loading.gif</code>（桌面 t+2777 ms，面积 20033 px²），
+      后 <code>.hero-girl</code>（t+5427 ms）。
+      也就是说在 hero 剪影绘制出来之前，<b>页面献给 LCP 的最大内容块是一个 58 KB 的占位动图</b>——
+      它既拖慢网络（移动端 Slow 4G 下 5.6 s），又占着首屏最大绘制面积。
+    </li>
+    <li>
+      <b>关键资源的缓存策略不一致，两个「非哈希、首屏必需」的资源反而是最短缓存。</b>
+      实测响应头：<code>/hero/girl-full-silhouette.webp</code> 为
+      <code>Cache-Control: public, max-age=0, must-revalidate</code>（每次访问都要发条件请求），
+      <code>/fonts/open-sans-400.woff2</code> 同样为 <code>max-age=0, must-revalidate</code>；
+      而 <code>/_nuxt/*</code>、<code>/icon/logo.webp</code>、<code>/flower/*.webp</code>、
+      <code>/Picture/loading.gif</code>、<code>/images/thumb/*</code> 都是 <code>max-age=31536000, immutable</code>。
+      hero 图恰好是 LCP 底图，却要每次重新验证，是<b>可直接消除的一次往返</b>。
+    </li>
+    <li>
+      <b>占位图被当成文章配图写进了 sitemap。</b>
+      <code>sitemap.xml</code> 共 312 条 <code>image:loc</code>，其中
+      <b>74 条指向 <code>/Picture/loading.gif</code></b>。
+      搜索引擎会把「加载中」动图当作这些页面的代表性图片，属于可避免的 SEO 缺陷。
+      根因同上：占位图被服务端渲染进了页面 HTML，被 sitemap 模块自动采集。
+    </li>
+    <li>
+      <b>文章页 CLS 0.0788 有明确可定位的来源。</b>
+      位移集中在 t+6041 / 7309 / 7557 / 9057 / 10608 ms 五处（合计约 0.053，占总量的 68%）。
+      其中 <code>t+7309 ms</code> 一次位移的来源是 <code>DIV,SPAN,SPAN,SPAN,BUTTON</code>，
+      与封面图加载完成时刻（7340 ms）吻合 ——
+      根因是 <code>CoverImage.vue</code> 先以固定 <code>aspect-ratio: 1.5</code> 渲染容器，图片 onload 后再用
+      <code>Math.max(imageRatio, 1.5)</code> 改写比例，<b>容器高度在收到图片后发生变化</b>，必然产生位移。
+      其余四处来源为空（<code>""</code>），发生在水合与异步内容插入之后，需要在真实浏览器里逐个复现定位。
+    </li>
+    <li>
+      <b>TTFB 高企 624–663 ms，是整条链路的起点损耗。</b>
+      HTML 首字节在桌面与移动端几乎一致（663 / 624 ms），
+      说明它与设备无关，属于网络往返 + 边缘节点分发成本。所有子资源要等到
+      669 ms 才开始请求，也就是
+      <b>FCP 之前已有约 0.67 s 纯粹消耗在"等 HTML"上</b>
+      （占桌面 FCP 的 25%，占桌面 LCP 的 12%）。
+      站点经 Cloudflare 分发，这段延迟与访客到边缘节点的物理距离直接相关；
+      若主要访客在中国大陆，值得实测确认是否存在就近节点缺失导致的绕行。
+    </li>
+    <li>
+      <b>8 个渲染阻塞 CSS 串在关键路径上（共 57 KB）。</b>
+      桌面端它们几乎同时发起（669 ms），每个耗时 603–1154 ms 才完成，
+      把首次渲染推到 2664 ms；移动端在 Slow 4G 下单文件耗时
+      1.94–2.74 s。<br>
+      清单：<code>entry.B1P0OSUR.css</code> <code>vendor-katex.Dn67XXJ1.css</code> <code>default.CTsR2ryP.css</code> <code>index.CaJfzrfq.css</code> <code>HomeWelcomeSection.Dnw1vJve.css</code> <code>ImageLoadingPlaceholder.BBEVY2Xd.css</code> <code>SearchBar.BnUd7MYy.css</code> <code>SideBar.DFxdOTzK.css</code>。<br>
+      其中 <code>vendor-katex.css</code>（8 KB）属于文章公式渲染所需，
+      <b>出现在与公式无关的首页首屏关键路径上完全没有必要</b>；
+      <code>SideBar.css</code> / <code>SearchBar.css</code> / <code>ImageLoadingPlaceholder.css</code>
+      分别是侧边栏、搜索框、图片占位这些非首屏或不关键部件的样式，同样被无条件阻塞加载。
+      8 个文件也意味着 8 次额外往返，<b>合并 + 按需拆分是本项收益最大的改动</b>。
+    </li>
+    <li>
+      <b>LCP 元素被推迟到 FCP 之后 2764 ms（桌面）/ 5668 ms（移动）才呈现。</b>
+      LCP 元素是 <code>DIV.hero-girl</code>（面积 203877 px²），
+      其底图 <code>girl-full-silhouette.webp</code> 只被 CSS 的 <code>mask-image</code> 引用，
+      浏览器<b>在 CSS 解析完成前无法发现它</b>：桌面端 1838 ms 才发起请求，
+      移动端 3461 ms。
+      该图为 <code>mask</code> 使用、只取 alpha 通道，体积本身仅 16 KB，
+      真正的问题是<b>发现时机</b>而非体积。
+    </li>
+    <li>
+      <b>一个 58 KB 的「加载中」占位 GIF 出现在首屏资源里。</b>
+      <code>Picture/loading.gif</code> 实测体积 <b>58 KB</b>，
+      桌面端耗时 1386 ms，移动端 5585 ms
+      ——在 Slow 4G 上这是最慢的单个请求。占位图完全可以用内联 SVG / CSS 骨架屏替代，
+      属于"零成本砍掉的一块带宽"。另外它还被写进了 <code>sitemap.xml</code> 的 <code>image:image</code>（见附录）。
+    </li>
+    <li>
+      <b>JS 总量偏大，且大 chunk 被排到 CSS 之后才发起。</b>
+      首页 JS 编码体积合计 573 KB，前三名：
+      <code>D2mlwmgT.js</code> 227 KB、<code>B1PWenEp.js</code> 185 KB、<code>BmQ9923M.js</code> 78 KB。
+      最大 chunk 的请求时刻是 2026 ms（移动端 4074 ms），
+      <b>即 CSS 下载完之后</b>——首屏 HTML 里没有对它们做 <code>modulepreload</code>，
+      白白浪费了 CSS 阻塞的那段时间。移动端每个大 chunk 下载
+      2.8–4.1 s。
+    </li>
+    <li>
+      <b>客户端二次请求 <code>/api/articles?summary=true&amp;page=1&amp;limit=100</code> 落在 LCP 附近。</b>
+      该请求 42 KB，桌面端 5257 ms 发出、耗时 1100 ms；
+      移动端 9904 ms 发出、耗时 1534 ms。
+      它是一个 SSG 站点上完全可以在构建期注入的数据请求，却发生在运行时，
+      并紧接着触发了移动端 t+9876 ms 的 <code>UpdateLayoutTree</code> 长任务（120 ms）。
+      桌面端 5428 ms 的 LCP 与它同处一段窗口，<b>存在因果嫌疑</b>。
+    </li>
+    <li>
+      <b>两个第三方运行时依赖。</b>
+      <code>api.iconify.design</code>（图标 JSON，731 ms）与
+      <code>static.cloudflareinsights.com/beacon.min.js</code>（1078 ms）。
+      前者是运行时跨域图标拉取，等于把首屏图标渲染绑在了第三方请求上；
+      后者虽小，但移动端解析执行占用了约 51 ms 主线程时间。
+    </li>
+    <li>
+      <b>移动端主线程被样式/布局/绘制主导，TBT 达 1207 ms。</b>
+      4 倍 CPU 降速 + Slow 4G 下，主线程忙 4480 ms
+      （占 35.5%），共 8 个长任务，
+      最长 593 ms。而 JS 执行本身（V8 采样，仅统计 <code>/_nuxt/</code> 下的代码）
+      约 877 ms，<b>其余时间消耗在 Style(818.6 ms) /
+      Layout(598.8 ms) / Paint(847.9 ms)</b>。
+      这指向 CSS 选择器复杂度、DOM 规模（469 个节点）与图片解码，
+      而不是"JS 太慢"。
+    </li>
+    <li>
+      <b>热缓存收益有限。</b>
+      首页热缓存轮次的 FCP/LCP 与冷缓存基本同量级
+      （3160 / 5708 ms vs
+      2664 / 5428 ms），
+      说明瓶颈不在回访缓存，而在首屏关键路径的编排本身。
+    </li>
+  </ol>
+  
+  <h2 id="waterfall">三、首屏资源瀑布（首页 · 桌面端 · 冷缓存）</h2>
+  <p class="note">时间轴以导航开始为 0。可见所有阻塞 CSS 集中在 669 ms 一代齐发，形成约 1 s 的渲染空窗；大 JS chunk 直到 2026 ms 才开始下载。</p>
+  <div class="waterfall">
+    <div class="waxis"><div class="wmark mk-ttfb" style="left:calc(300px + (100% - 300px - 130px) * 0.1197)"><span>TTFB 663ms</span></div><div class="wmark mk-fcp" style="left:calc(300px + (100% - 300px - 130px) * 0.4812)"><span>FCP 2664ms</span></div><div class="wmark mk-lcp" style="left:calc(300px + (100% - 300px - 130px) * 0.9804)"><span>LCP 5428ms</span></div><div class="wmark mk-load" style="left:calc(300px + (100% - 300px - 130px) * 0.6990)"><span>Load 3870ms</span></div></div>
+    <div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/entry.B1P0OSUR.css">wasd09090030.top/_nuxt/entry.B1P0OSUR.css</div>
+      <div class="wtrack">
+        <div class="wbar r-css" style="left:12.08%;width:10.88%" title="start 669ms · dur 603ms · 36 KB"></div>
+      </div>
+      <div class="wmeta">669→1271ms · 36 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/vendor-katex.Dn67XXJ1.css">wasd09090030.top/_nuxt/vendor-katex.Dn67XXJ1.css</div>
+      <div class="wtrack">
+        <div class="wbar r-css" style="left:12.08%;width:14.10%" title="start 669ms · dur 781ms · 8 KB"></div>
+      </div>
+      <div class="wmeta">669→1450ms · 8 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/default.CTsR2ryP.css">wasd09090030.top/_nuxt/default.CTsR2ryP.css</div>
+      <div class="wtrack">
+        <div class="wbar r-css" style="left:12.09%;width:14.10%" title="start 669ms · dur 781ms · 2 KB"></div>
+      </div>
+      <div class="wmeta">669→1450ms · 2 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/index.CaJfzrfq.css">wasd09090030.top/_nuxt/index.CaJfzrfq.css</div>
+      <div class="wtrack">
+        <div class="wbar r-css" style="left:12.09%;width:14.10%" title="start 669ms · dur 781ms · 3 KB"></div>
+      </div>
+      <div class="wmeta">669→1450ms · 3 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/HomeWelcomeSection.Dnw1vJve.css">wasd09090030.top/_nuxt/HomeWelcomeSection.Dnw1vJve.css</div>
+      <div class="wtrack">
+        <div class="wbar r-css" style="left:12.09%;width:14.11%" title="start 669ms · dur 781ms · 2 KB"></div>
+      </div>
+      <div class="wmeta">669→1450ms · 2 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/ImageLoadingPlaceholder.BBEVY2Xd.css">wasd09090030.top/_nuxt/ImageLoadingPlaceholder.BBEVY2Xd.css</div>
+      <div class="wtrack">
+        <div class="wbar r-css" style="left:12.09%;width:14.10%" title="start 669ms · dur 781ms · 227 B"></div>
+      </div>
+      <div class="wmeta">669→1450ms · 227 B</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/SearchBar.BnUd7MYy.css">wasd09090030.top/_nuxt/SearchBar.BnUd7MYy.css</div>
+      <div class="wtrack">
+        <div class="wbar r-css" style="left:12.09%;width:14.11%" title="start 669ms · dur 781ms · 892 B"></div>
+      </div>
+      <div class="wmeta">669→1450ms · 892 B</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/SideBar.DFxdOTzK.css">wasd09090030.top/_nuxt/SideBar.DFxdOTzK.css</div>
+      <div class="wtrack">
+        <div class="wbar r-css" style="left:12.09%;width:20.84%" title="start 670ms · dur 1154ms · 4 KB"></div>
+      </div>
+      <div class="wmeta">670→1823ms · 4 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_payload.json?39b90030-26b5-4755-bb8d-8aa255a0be1e">wasd09090030.top/_payload.json?39b90030-26b5-4755-bb8d-8aa255…</div>
+      <div class="wtrack">
+        <div class="wbar r-json" style="left:12.09%;width:20.84%" title="start 670ms · dur 1154ms · 7 KB"></div>
+      </div>
+      <div class="wmeta">670→1824ms · 7 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/D7rAhObJ.js">wasd09090030.top/_nuxt/D7rAhObJ.js</div>
+      <div class="wtrack">
+        <div class="wbar r-js" style="left:12.09%;width:20.84%" title="start 670ms · dur 1154ms · 26 KB"></div>
+      </div>
+      <div class="wmeta">670→1824ms · 26 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/icon/logo.webp">wasd09090030.top/icon/logo.webp</div>
+      <div class="wtrack">
+        <div class="wbar r-img" style="left:12.10%;width:20.86%" title="start 670ms · dur 1155ms · 21 KB"></div>
+      </div>
+      <div class="wmeta">670→1825ms · 21 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/images/thumb/card/i_tvrehtqGZco89Q6Q.webp">wasd09090030.top/images/thumb/card/i_tvrehtqGZco89Q6Q.webp</div>
+      <div class="wtrack">
+        <div class="wbar r-img" style="left:15.65%;width:17.32%" title="start 866ms · dur 959ms · 49 KB"></div>
+      </div>
+      <div class="wmeta">866→1825ms · 49 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/Picture/loading.gif">wasd09090030.top/Picture/loading.gif</div>
+      <div class="wtrack">
+        <div class="wbar r-img" style="left:15.65%;width:25.03%" title="start 866ms · dur 1386ms · 58 KB"></div>
+      </div>
+      <div class="wmeta">866→2252ms · 58 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/images/thumb/card/i_iWzlDBTyFQN2haqO.webp">wasd09090030.top/images/thumb/card/i_iWzlDBTyFQN2haqO.webp</div>
+      <div class="wtrack">
+        <div class="wbar r-img" style="left:15.65%;width:24.35%" title="start 866ms · dur 1348ms · 51 KB"></div>
+      </div>
+      <div class="wmeta">866→2214ms · 51 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/images/thumb/card/i_-s3FETCwrh73T7wo.webp">wasd09090030.top/images/thumb/card/i_-s3FETCwrh73T7wo.webp</div>
+      <div class="wtrack">
+        <div class="wbar r-img" style="left:15.65%;width:25.00%" title="start 866ms · dur 1384ms · 36 KB"></div>
+      </div>
+      <div class="wmeta">866→2250ms · 36 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495">static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85…</div>
+      <div class="wtrack">
+        <div class="wbar r-other" style="left:18.71%;width:18.67%" title="start 1036ms · dur 1034ms · 0 B"></div>
+      </div>
+      <div class="wmeta">1036→2070ms · 0 B</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/hero/girl-full-silhouette.webp">wasd09090030.top/hero/girl-full-silhouette.webp</div>
+      <div class="wtrack">
+        <div class="wbar r-img" style="left:33.19%;width:15.87%" title="start 1838ms · dur 879ms · 16 KB"></div>
+      </div>
+      <div class="wmeta">1838→2717ms · 16 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/fonts/open-sans-400.woff2">wasd09090030.top/fonts/open-sans-400.woff2</div>
+      <div class="wtrack">
+        <div class="wbar r-font" style="left:33.49%;width:22.36%" title="start 1854ms · dur 1238ms · 18 KB"></div>
+      </div>
+      <div class="wmeta">1854→3092ms · 18 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/images/thumb/card/i_ldH1_iRk_sjp_Yqf.webp">wasd09090030.top/images/thumb/card/i_ldH1_iRk_sjp_Yqf.webp</div>
+      <div class="wtrack">
+        <div class="wbar r-img" style="left:36.56%;width:25.43%" title="start 2024ms · dur 1408ms · 35 KB"></div>
+      </div>
+      <div class="wmeta">2024→3432ms · 35 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/images/thumb/card/i_UUtUBrMgJiayOaZo.webp">wasd09090030.top/images/thumb/card/i_UUtUBrMgJiayOaZo.webp</div>
+      <div class="wtrack">
+        <div class="wbar r-img" style="left:36.56%;width:33.32%" title="start 2024ms · dur 1845ms · 61 KB"></div>
+      </div>
+      <div class="wmeta">2024→3869ms · 61 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/images/thumb/card/i__vBkaW6-peLSf1Hz.webp">wasd09090030.top/images/thumb/card/i__vBkaW6-peLSf1Hz.webp</div>
+      <div class="wtrack">
+        <div class="wbar r-img" style="left:36.56%;width:33.74%" title="start 2024ms · dur 1868ms · 33 KB"></div>
+      </div>
+      <div class="wmeta">2024→3892ms · 33 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/images/thumb/card/i_VMNP6yHcsnXcTcfS.webp">wasd09090030.top/images/thumb/card/i_VMNP6yHcsnXcTcfS.webp</div>
+      <div class="wtrack">
+        <div class="wbar r-img" style="left:36.56%;width:32.85%" title="start 2024ms · dur 1819ms · 7 KB"></div>
+      </div>
+      <div class="wmeta">2024→3843ms · 7 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/D2mlwmgT.js">wasd09090030.top/_nuxt/D2mlwmgT.js</div>
+      <div class="wtrack">
+        <div class="wbar r-js" style="left:36.59%;width:31.32%" title="start 2026ms · dur 1734ms · 227 KB"></div>
+      </div>
+      <div class="wmeta">2026→3760ms · 227 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/BmQ9923M.js">wasd09090030.top/_nuxt/BmQ9923M.js</div>
+      <div class="wtrack">
+        <div class="wbar r-js" style="left:36.59%;width:20.84%" title="start 2026ms · dur 1154ms · 78 KB"></div>
+      </div>
+      <div class="wmeta">2026→3179ms · 78 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/B1PWenEp.js">wasd09090030.top/_nuxt/B1PWenEp.js</div>
+      <div class="wtrack">
+        <div class="wbar r-js" style="left:36.59%;width:28.43%" title="start 2026ms · dur 1574ms · 185 KB"></div>
+      </div>
+      <div class="wmeta">2026→3600ms · 185 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/cdn-cgi/rum?">wasd09090030.top/cdn-cgi/rum?</div>
+      <div class="wtrack">
+        <div class="wbar r-other" style="left:68.80%;width:4.61%" title="start 3809ms · dur 255ms · 0 B"></div>
+      </div>
+      <div class="wmeta">3809→4064ms · 0 B</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/cdn-cgi/rum?">wasd09090030.top/cdn-cgi/rum?</div>
+      <div class="wtrack">
+        <div class="wbar r-other" style="left:68.81%;width:4.59%" title="start 3810ms · dur 254ms · 0 B"></div>
+      </div>
+      <div class="wmeta">3810→4064ms · 0 B</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/ftkxx39_.js">wasd09090030.top/_nuxt/ftkxx39_.js</div>
+      <div class="wtrack">
+        <div class="wbar r-js" style="left:68.88%;width:8.72%" title="start 3813ms · dur 483ms · 6 KB"></div>
+      </div>
+      <div class="wmeta">3813→4296ms · 6 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/BThcEzf5.js">wasd09090030.top/_nuxt/BThcEzf5.js</div>
+      <div class="wtrack">
+        <div class="wbar r-js" style="left:68.88%;width:4.66%" title="start 3814ms · dur 258ms · 2 KB"></div>
+      </div>
+      <div class="wmeta">3814→4072ms · 2 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/C9aFBPy0.js">wasd09090030.top/_nuxt/C9aFBPy0.js</div>
+      <div class="wtrack">
+        <div class="wbar r-js" style="left:68.89%;width:4.65%" title="start 3814ms · dur 258ms · 776 B"></div>
+      </div>
+      <div class="wmeta">3814→4072ms · 776 B</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/CzUCORPo.js">wasd09090030.top/_nuxt/CzUCORPo.js</div>
+      <div class="wtrack">
+        <div class="wbar r-js" style="left:68.89%;width:4.64%" title="start 3814ms · dur 257ms · 1 KB"></div>
+      </div>
+      <div class="wmeta">3814→4071ms · 1 KB</div>
+    </div><div class="wrow">
+      <div class="wlbl" title="https://wasd09090030.top/_nuxt/DbuHp9j-.js">wasd09090030.top/_nuxt/DbuHp9j-.js</div>
+      <div class="wtrack">
+        <div class="wbar r-js" style="left:68.89%;width:8.62%" title="start 3814ms · dur 477ms · 775 B"></div>
+      </div>
+      <div class="wmeta">3814→4291ms · 775 B</div>
+    </div>
+  </div>
+  <div class="legend2">
+    <span><i class="sw r-css"></i>CSS</span><span><i class="sw r-js"></i>JS</span>
+    <span><i class="sw r-img"></i>图片</span><span><i class="sw r-font"></i>字体</span>
+    <span><i class="sw r-json"></i>数据</span><span><i class="sw r-other"></i>其他</span>
+  </div>
+  
+  <h2 id="bytes">四、资源构成与体积分布</h2>
+  <div class="tablewrap"><table class="datatable">
+    <thead><tr><th>样本</th><th>请求数</th><th>传输量</th><th>渲染阻塞资源</th><th>第三方请求</th><th>域名数</th></tr></thead>
+    <tbody><tr><td>首页·桌面</td><td>78</td><td>1.12 MB</td><td>8（57 KB）</td><td>2（0 B）</td><td>3</td></tr><tr><td>首页·桌面</td><td>78</td><td>1.11 MB</td><td>8（57 KB）</td><td>2（0 B）</td><td>3</td></tr><tr><td>文章详情页·桌面</td><td>67</td><td>821 KB</td><td>7（51 KB）</td><td>2（0 B）</td><td>3</td></tr><tr><td>画廊页·桌面</td><td>42</td><td>692 KB</td><td>5（55 KB）</td><td>1（0 B）</td><td>2</td></tr><tr><td>首页·移动</td><td>73</td><td>1.16 MB</td><td>8（58 KB）</td><td>2（0 B）</td><td>3</td></tr></tbody>
+  </table></div>
+  <h3>按资源类型的解码体积</h3>
+  <div class="bars"><div class="grp"><div class="grp-t">JavaScript</div><div class="brow">
+    <div class="blabel" title="首页·桌面·冷缓存">首页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-js" style="width:100.00%"></div></div>
+    <div class="bval">573 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·桌面·热缓存">首页·桌面·热缓存</div>
+    <div class="btrack"><div class="bfill f-js" style="width:99.86%"></div></div>
+    <div class="bval">573 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="文章详情页·桌面·冷缓存">文章详情页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-js" style="width:99.28%"></div></div>
+    <div class="bval">569 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="画廊页·桌面·冷缓存">画廊页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-js" style="width:94.69%"></div></div>
+    <div class="bval">543 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·移动·冷缓存">首页·移动·冷缓存</div>
+    <div class="btrack"><div class="bfill f-js" style="width:98.52%"></div></div>
+    <div class="bval">565 KB</div>
+  </div></div><div class="grp"><div class="grp-t">图片</div><div class="brow">
+    <div class="blabel" title="首页·桌面·冷缓存">首页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-img" style="width:74.52%"></div></div>
+    <div class="bval">427 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·桌面·热缓存">首页·桌面·热缓存</div>
+    <div class="btrack"><div class="bfill f-img" style="width:74.52%"></div></div>
+    <div class="bval">427 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="文章详情页·桌面·冷缓存">文章详情页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-img" style="width:20.22%"></div></div>
+    <div class="bval">116 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="画廊页·桌面·冷缓存">画廊页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-img" style="width:6.51%"></div></div>
+    <div class="bval">37 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·移动·冷缓存">首页·移动·冷缓存</div>
+    <div class="btrack"><div class="bfill f-img" style="width:79.18%"></div></div>
+    <div class="bval">454 KB</div>
+  </div></div><div class="grp"><div class="grp-t">CSS</div><div class="brow">
+    <div class="blabel" title="首页·桌面·冷缓存">首页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-css" style="width:11.34%"></div></div>
+    <div class="bval">65 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·桌面·热缓存">首页·桌面·热缓存</div>
+    <div class="btrack"><div class="bfill f-css" style="width:11.34%"></div></div>
+    <div class="bval">65 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="文章详情页·桌面·冷缓存">文章详情页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-css" style="width:10.33%"></div></div>
+    <div class="bval">59 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="画廊页·桌面·冷缓存">画廊页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-css" style="width:9.75%"></div></div>
+    <div class="bval">56 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·移动·冷缓存">首页·移动·冷缓存</div>
+    <div class="btrack"><div class="bfill f-css" style="width:10.72%"></div></div>
+    <div class="bval">61 KB</div>
+  </div></div><div class="grp"><div class="grp-t">其他</div><div class="brow">
+    <div class="blabel" title="首页·桌面·冷缓存">首页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-other" style="width:7.77%"></div></div>
+    <div class="bval">45 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·桌面·热缓存">首页·桌面·热缓存</div>
+    <div class="btrack"><div class="bfill f-other" style="width:7.74%"></div></div>
+    <div class="bval">44 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="文章详情页·桌面·冷缓存">文章详情页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-other" style="width:0.90%"></div></div>
+    <div class="bval">5 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="画廊页·桌面·冷缓存">画廊页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-other" style="width:0.60%"></div></div>
+    <div class="bval">2 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·移动·冷缓存">首页·移动·冷缓存</div>
+    <div class="btrack"><div class="bfill f-other" style="width:7.79%"></div></div>
+    <div class="bval">45 KB</div>
+  </div></div><div class="grp"><div class="grp-t">JSON/数据</div><div class="brow">
+    <div class="blabel" title="首页·桌面·冷缓存">首页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-json" style="width:6.48%"></div></div>
+    <div class="bval">37 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·桌面·热缓存">首页·桌面·热缓存</div>
+    <div class="btrack"><div class="bfill f-json" style="width:6.48%"></div></div>
+    <div class="bval">37 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="文章详情页·桌面·冷缓存">文章详情页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-json" style="width:4.21%"></div></div>
+    <div class="bval">24 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="画廊页·桌面·冷缓存">画廊页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-json" style="width:4.46%"></div></div>
+    <div class="bval">26 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·移动·冷缓存">首页·移动·冷缓存</div>
+    <div class="btrack"><div class="bfill f-json" style="width:5.38%"></div></div>
+    <div class="bval">31 KB</div>
+  </div></div><div class="grp"><div class="grp-t">字体</div><div class="brow">
+    <div class="blabel" title="首页·桌面·冷缓存">首页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-font" style="width:3.17%"></div></div>
+    <div class="bval">18 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·桌面·热缓存">首页·桌面·热缓存</div>
+    <div class="btrack"><div class="bfill f-font" style="width:3.17%"></div></div>
+    <div class="bval">18 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="文章详情页·桌面·冷缓存">文章详情页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-font" style="width:6.46%"></div></div>
+    <div class="bval">37 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="画廊页·桌面·冷缓存">画廊页·桌面·冷缓存</div>
+    <div class="btrack"><div class="bfill f-font" style="width:3.17%"></div></div>
+    <div class="bval">18 KB</div>
+  </div><div class="brow">
+    <div class="blabel" title="首页·移动·冷缓存">首页·移动·冷缓存</div>
+    <div class="btrack"><div class="bfill f-font" style="width:3.17%"></div></div>
+    <div class="bval">18 KB</div>
+  </div></div></div>
+  
+  <h2 id="main">五、主线程分析（DevTools Performance 同源 trace）</h2>
+  <p class="note">trace 已按 <code>CrRendererMain</code> 线程解析（CSS/布局/绘制的自耗时之和为主线程总忙时）。CPU 采样取自该渲染进程的主 isolate。<code>RunTask</code> 作为容器事件不计入阶段。</p>
+  <div class="tablewrap"><table class="datatable">
+    <thead><tr><th>样本</th><th>观察窗口</th><th>主线程忙时</th><th>忙碌占比</th><th>TBT</th><th>长任务</th><th>主线程帧数</th></tr></thead>
+    <tbody><tr>
+    <td>首页·桌面·冷缓存</td>
+    <td>8008 ms</td><td>1123 ms</td><td>14%</td>
+    <td>163 ms</td><td>2</td><td>936</td></tr><tr>
+    <td>首页·桌面·热缓存</td>
+    <td>8596 ms</td><td>1157 ms</td><td>13.5%</td>
+    <td>164 ms</td><td>2</td><td>957</td></tr><tr>
+    <td>文章详情页·桌面·冷缓存</td>
+    <td>11515 ms</td><td>1311 ms</td><td>11.4%</td>
+    <td>77 ms</td><td>3</td><td>822</td></tr><tr>
+    <td>画廊页·桌面·冷缓存</td>
+    <td>6768 ms</td><td>695 ms</td><td>10.3%</td>
+    <td>20 ms</td><td>1</td><td>844</td></tr><tr>
+    <td>首页·移动·冷缓存</td>
+    <td>12623 ms</td><td>4480 ms</td><td>35.5%</td>
+    <td>1218 ms</td><td>8</td><td>1227</td></tr></tbody>
+  </table></div>
+
+  <h3>阶段自耗时对比</h3>
+  <div class="bars"><div class="grp"><div class="grp-t">Scripting</div>
+      <div class="brow">
+    <div class="blabel" title="桌面 · 首页冷缓存">桌面 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-desk" style="width:6.64%"></div></div>
+    <div class="bval">56 ms</div>
+  </div>
+      <div class="brow">
+    <div class="blabel" title="移动 · 首页冷缓存">移动 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-mob" style="width:30.77%"></div></div>
+    <div class="bval">261 ms</div>
+  </div></div><div class="grp"><div class="grp-t">Style</div>
+      <div class="brow">
+    <div class="blabel" title="桌面 · 首页冷缓存">桌面 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-desk" style="width:24.43%"></div></div>
+    <div class="bval">207 ms</div>
+  </div>
+      <div class="brow">
+    <div class="blabel" title="移动 · 首页冷缓存">移动 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-mob" style="width:96.54%"></div></div>
+    <div class="bval">819 ms</div>
+  </div></div><div class="grp"><div class="grp-t">Layout</div>
+      <div class="brow">
+    <div class="blabel" title="桌面 · 首页冷缓存">桌面 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-desk" style="width:31.95%"></div></div>
+    <div class="bval">271 ms</div>
+  </div>
+      <div class="brow">
+    <div class="blabel" title="移动 · 首页冷缓存">移动 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-mob" style="width:70.62%"></div></div>
+    <div class="bval">599 ms</div>
+  </div></div><div class="grp"><div class="grp-t">Painting</div>
+      <div class="brow">
+    <div class="blabel" title="桌面 · 首页冷缓存">桌面 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-desk" style="width:21.09%"></div></div>
+    <div class="bval">179 ms</div>
+  </div>
+      <div class="brow">
+    <div class="blabel" title="移动 · 首页冷缓存">移动 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-mob" style="width:100.00%"></div></div>
+    <div class="bval">848 ms</div>
+  </div></div><div class="grp"><div class="grp-t">Compositing</div>
+      <div class="brow">
+    <div class="blabel" title="桌面 · 首页冷缓存">桌面 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-desk" style="width:16.81%"></div></div>
+    <div class="bval">143 ms</div>
+  </div>
+      <div class="brow">
+    <div class="blabel" title="移动 · 首页冷缓存">移动 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-mob" style="width:65.28%"></div></div>
+    <div class="bval">554 ms</div>
+  </div></div><div class="grp"><div class="grp-t">ParseHTML</div>
+      <div class="brow">
+    <div class="blabel" title="桌面 · 首页冷缓存">桌面 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-desk" style="width:0.66%"></div></div>
+    <div class="bval">6 ms</div>
+  </div>
+      <div class="brow">
+    <div class="blabel" title="移动 · 首页冷缓存">移动 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-mob" style="width:3.68%"></div></div>
+    <div class="bval">31 ms</div>
+  </div></div><div class="grp"><div class="grp-t">GC</div>
+      <div class="brow">
+    <div class="blabel" title="桌面 · 首页冷缓存">桌面 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-desk" style="width:0.60%"></div></div>
+    <div class="bval">0 ms</div>
+  </div>
+      <div class="brow">
+    <div class="blabel" title="移动 · 首页冷缓存">移动 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-mob" style="width:0.60%"></div></div>
+    <div class="bval">1 ms</div>
+  </div></div><div class="grp"><div class="grp-t">Loading</div>
+      <div class="brow">
+    <div class="blabel" title="桌面 · 首页冷缓存">桌面 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-desk" style="width:0.60%"></div></div>
+    <div class="bval">0 ms</div>
+  </div>
+      <div class="brow">
+    <div class="blabel" title="移动 · 首页冷缓存">移动 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-mob" style="width:0.60%"></div></div>
+    <div class="bval">0 ms</div>
+  </div></div><div class="grp"><div class="grp-t">Events</div>
+      <div class="brow">
+    <div class="blabel" title="桌面 · 首页冷缓存">桌面 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-desk" style="width:0.60%"></div></div>
+    <div class="bval">1 ms</div>
+  </div>
+      <div class="brow">
+    <div class="blabel" title="移动 · 首页冷缓存">移动 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-mob" style="width:0.60%"></div></div>
+    <div class="bval">1 ms</div>
+  </div></div><div class="grp"><div class="grp-t">Other</div>
+      <div class="brow">
+    <div class="blabel" title="桌面 · 首页冷缓存">桌面 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-desk" style="width:5.74%"></div></div>
+    <div class="bval">49 ms</div>
+  </div>
+      <div class="brow">
+    <div class="blabel" title="移动 · 首页冷缓存">移动 · 首页冷缓存</div>
+    <div class="btrack"><div class="bfill f-mob" style="width:21.98%"></div></div>
+    <div class="bval">186 ms</div>
+  </div></div></div>
+
+  <h3>移动端长任务时间线（&gt;50 ms）</h3>
+  <div class="ltwrap"><div class="lttrack"><div class="lttick" style="left:0.00%"><span>0s</span></div><div class="lttick" style="left:18.99%"><span>2s</span></div><div class="lttick" style="left:37.97%"><span>4s</span></div><div class="lttick" style="left:56.96%"><span>6s</span></div><div class="lttick" style="left:75.95%"><span>8s</span></div><div class="lttick" style="left:94.93%"><span>10s</span></div><div class="lt" style="left:32.57%;width:5.66%" title="t+3430.6ms · 596ms :: ProxyMain::BeginMainFrame:591"><span>596ms</span></div><div class="lt" style="left:51.24%;width:0.71%" title="t+5397.3ms · 75ms :: ProxyMain::BeginMainFrame:75"><span>75ms</span></div><div class="lt" style="left:77.50%;width:1.24%" title="t+8163.6ms · 131ms :: v8.evaluateModule:109, v8.evaluateModule:15, UpdateLayoutTree:1, EventDispatch:1, EventDispatch:0, EventDispatch:0, EventDispatch:0, RenderFrameImpl::DidDispatchDOMContentLoadedEvent:0"><span>131ms</span></div><div class="lt" style="left:83.98%;width:1.68%" title="t+8846.1ms · 177ms :: v8.callFunction:5, v8.callFunction:4, v8.evaluateModule:3, v8.newInstance:0"><span>177ms</span></div><div class="lt" style="left:88.52%;width:3.33%" title="t+9324.1ms · 351ms :: MinorGC:3, MinorGC:3, v8.evaluateModule:0, v8.newInstance:0, v8.newInstance:0, v8.newInstance:0, v8.newInstance:0, v8.newInstance:0"><span>351ms</span></div><div class="lt" style="left:93.76%;width:1.14%" title="t+9876.2ms · 120ms :: UpdateLayoutTree:1, v8.evaluateModule:0, v8.newInstance:0, v8.callFunction:0, v8.callFunction:0, V8.DeoptimizeCode:0, V8.DeoptimizeCode:0, V8.DeoptimizeCode:0"><span>120ms</span></div><div class="lt" style="left:94.90%;width:0.77%" title="t+9996.1ms · 81ms :: ProxyMain::BeginMainFrame:80"><span>81ms</span></div><div class="lt" style="left:99.17%;width:0.83%" title="t+10446.8ms · 87ms :: ProxyMain::BeginMainFrame:86"><span>87ms</span></div></div></div>
+  <div class="lttable">
+    <div class="ltrow"><b>t+3430.6 → 4027 ms</b>（596 ms）：ProxyMain::BeginMainFrame 591ms</div><div class="ltrow"><b>t+5397.3 → 5472.6 ms</b>（75 ms）：ProxyMain::BeginMainFrame 75ms</div><div class="ltrow"><b>t+8163.6 → 8294.1 ms</b>（131 ms）：v8.evaluateModule 109ms、v8.evaluateModule 15ms、UpdateLayoutTree 1ms、EventDispatch 1ms、EventDispatch 0ms、EventDispatch 0ms、EventDispatch 0ms、RenderFrameImpl::DidDispatchDOMContentLoadedEvent 0ms</div><div class="ltrow"><b>t+8846.1 → 9023.5 ms</b>（177 ms）：v8.callFunction 5ms、v8.callFunction 4ms、v8.evaluateModule 3ms、v8.newInstance 0ms</div><div class="ltrow"><b>t+9324.1 → 9675.3 ms</b>（351 ms）：MinorGC 3ms、MinorGC 3ms、v8.evaluateModule 0ms、v8.newInstance 0ms、v8.newInstance 0ms、v8.newInstance 0ms、v8.newInstance 0ms、v8.newInstance 0ms</div><div class="ltrow"><b>t+9876.2 → 9996.1 ms</b>（120 ms）：UpdateLayoutTree 1ms、v8.evaluateModule 0ms、v8.newInstance 0ms、v8.callFunction 0ms、v8.callFunction 0ms、V8.DeoptimizeCode 0ms、V8.DeoptimizeCode 0ms、V8.DeoptimizeCode 0ms</div><div class="ltrow"><b>t+9996.1 → 10076.7 ms</b>（81 ms）：ProxyMain::BeginMainFrame 80ms</div><div class="ltrow"><b>t+10446.8 → 10533.8 ms</b>（87 ms）：ProxyMain::BeginMainFrame 86ms</div>
+  </div>
+
+  <h3>JS 执行热点（按文件自耗时，V8 CPU 采样）</h3>
+  <div class="two">
+    <div><h4>桌面 · 首页冷缓存</h4><div class="tablewrap"><table class="datatable small"><thead><tr><th>文件</th><th>自耗时</th><th>占比</th></tr></thead><tbody><tr><td class="mono">/_nuxt/D2mlwmgT.js</td><td>116.7 ms</td><td>1.60%</td></tr><tr><td class="mono">/_nuxt/D7rAhObJ.js</td><td>20.6 ms</td><td>0.30%</td></tr><tr><td class="mono">/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba178…</td><td>10.3 ms</td><td>0.10%</td></tr><tr><td class="mono">/_nuxt/ftkxx39_.js</td><td>8.5 ms</td><td>0.10%</td></tr><tr><td class="mono">/_nuxt/B1PWenEp.js</td><td>7.2 ms</td><td>0.10%</td></tr><tr><td class="mono">/_nuxt/BmQ9923M.js</td><td>3.3 ms</td><td>0.00%</td></tr><tr><td class="mono">/_nuxt/BThcEzf5.js</td><td>1.7 ms</td><td>0.00%</td></tr><tr><td class="mono">/_nuxt/CnQRysni.js</td><td>1.2 ms</td><td>0.00%</td></tr><tr><td class="mono">/_nuxt/articleSearch.worker-DBXRMTyz.js</td><td>1.1 ms</td><td>0.00%</td></tr><tr><td class="mono">/_nuxt/-jj5267a.js</td><td>0.6 ms</td><td>0.00%</td></tr></tbody></table></div></div>
+    <div><h4>移动 · 首页冷缓存</h4><div class="tablewrap"><table class="datatable small"><thead><tr><th>文件</th><th>自耗时</th><th>占比</th></tr></thead><tbody><tr><td class="mono">/_nuxt/D2mlwmgT.js</td><td>642.2 ms</td><td>5.40%</td></tr><tr><td class="mono">/_nuxt/D7rAhObJ.js</td><td>101.8 ms</td><td>0.80%</td></tr><tr><td class="mono">/_nuxt/ftkxx39_.js</td><td>53.1 ms</td><td>0.40%</td></tr><tr><td class="mono">/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba178…</td><td>50.6 ms</td><td>0.40%</td></tr><tr><td class="mono">/_nuxt/B1PWenEp.js</td><td>38.8 ms</td><td>0.30%</td></tr><tr><td class="mono">/_nuxt/BmQ9923M.js</td><td>11.5 ms</td><td>0.10%</td></tr><tr><td class="mono">/_nuxt/D0xbFbTL.js</td><td>8.9 ms</td><td>0.10%</td></tr><tr><td class="mono">/_nuxt/BThcEzf5.js</td><td>7.2 ms</td><td>0.10%</td></tr><tr><td class="mono">/</td><td>5.0 ms</td><td>0.00%</td></tr><tr><td class="mono">/_nuxt/gjw7Q2aj.js</td><td>2.9 ms</td><td>0.00%</td></tr></tbody></table></div></div>
+  </div>
+  <h4>移动端 Top 函数自耗时</h4>
+  <div class="tablewrap"><table class="datatable small"><thead><tr><th>函数</th><th>位置</th><th>自耗时</th><th>占比</th></tr></thead><tbody><tr><td class="mono">(anonymous)</td><td class="mono">/_nuxt/D2mlwmgT.js:0</td><td>163.6 ms</td><td>1.40%</td></tr><tr><td class="mono">(anonymous)</td><td class="mono">/_nuxt/D7rAhObJ.js:1</td><td>60.3 ms</td><td>0.50%</td></tr><tr><td class="mono">(anonymous)</td><td class="mono">/_nuxt/ftkxx39_.js:1</td><td>49.1 ms</td><td>0.40%</td></tr><tr><td class="mono">t</td><td class="mono">/_nuxt/D2mlwmgT.js:0</td><td>35.5 ms</td><td>0.30%</td></tr><tr><td class="mono">gn</td><td class="mono">/_nuxt/D2mlwmgT.js:0</td><td>28.9 ms</td><td>0.20%</td></tr><tr><td class="mono">(anonymous)</td><td class="mono">/_nuxt/B1PWenEp.js:0</td><td>25.6 ms</td><td>0.20%</td></tr><tr><td class="mono">set</td><td class="mono">/_nuxt/D2mlwmgT.js:0</td><td>19.0 ms</td><td>0.20%</td></tr><tr><td class="mono">Jr</td><td class="mono">/_nuxt/D2mlwmgT.js:0</td><td>18.7 ms</td><td>0.20%</td></tr><tr><td class="mono">appendChild</td><td class="mono">:-1</td><td>17.7 ms</td><td>0.10%</td></tr><tr><td class="mono">(anonymous)</td><td class="mono">/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9b…:0</td><td>17.4 ms</td><td>0.10%</td></tr><tr><td class="mono">o</td><td class="mono">/_nuxt/D2mlwmgT.js:0</td><td>15.2 ms</td><td>0.10%</td></tr><tr><td class="mono">get</td><td class="mono">/_nuxt/D2mlwmgT.js:0</td><td>15.0 ms</td><td>0.10%</td></tr></tbody></table></div>
+  
+  <h2 id="advice">六、优化建议（按优先级）</h2>
+  <div class="advice">
+    <div class="adv v-p0">
+      <div class="adv-head"><span class="pill">P0</span><b>文章封面图改用按展示尺寸的变体（收益最大、改动最小）</b></div>
+      <div class="adv-why"><span class="k">为什么</span>文章页 LCP 元素直接引用 /images/i_xxx，实测 302 → cfimg 上的 630 KB 原图，单请求耗时 —，导致 LCP 7340 ms、load 与之几乎同时。同一资源的 thumb 变体只有 49 KB（直出、无跳转），体积相差约 12.9 倍。</div>
+      <div class="adv-how"><span class="k">怎么做</span><ul><li>修 <code>features/article-detail/components/CoverImage.vue</code>：把 <code>coverImageUrl || thumbnailUrl</code> 改为优先 <code>thumbnailUrl</code>，或新增一个按容器实际宽度（桌面约 1160px、移动约 390px）生成的 hero 变体字段</li><li>用 <code>&lt;img srcset/sizes&gt;</code> 提供多档位，让浏览器按 DPR 与视口选择，避免移动端下载桌面尺寸原图</li><li>若必须使用原图，则至少让 <code>/images/:id</code> 直接 200 返回（去掉 302），省掉一次跨域 TLS 握手</li></ul></div>
+      <div class="adv-verify"><span class="k">怎么验证</span>文章页封面请求编码体积 ≤100 KB、无 3xx 跳转；LCP ≤2500 ms（桌面），CLS 同步复测。</div>
+    </div><div class="adv v-p0">
+      <div class="adv-head"><span class="pill">P0</span><b>消除封面图容器比例在 onload 后被改写导致的布局位移</b></div>
+      <div class="adv-why"><span class="k">为什么</span>CoverImage.vue 先以 aspect-ratio 1.5 渲染容器，图片 onload 后用 Math.max(imageRatio, 1.5) 改写容器比例，容器高度在图片到达后变化。轨迹中 t+7309 ms 的 0.00813 位移来源为 DIV/SPAN/BUTTON，与该时刻吻合；文章页 CLS 合计 0.0788（占比超过「良好」阈值 0.1 的一半以上）。</div>
+      <div class="adv-how"><span class="k">怎么做</span><ul><li>在构建期或 API 中提供封面图的 width/height（或宽高比），SSR 阶段就写出正确的 <code>aspect-ratio</code> 与 <code>width</code>/<code>height</code> 属性，而不是等 onload 再算</li><li>若无法预知比例，则固定容器比例（不回写），用 <code>object-fit: cover</code> 裁切，避免高度变化</li><li>对 t+6041 / 7557 / 9057 / 10608 ms 四处 <code>sources: []</code> 的位移，用 DevTools Performance 面板开启 Layout Shift 区域逐个定位（水合期插入的区块、按钮、异步内容）</li></ul></div>
+      <div class="adv-verify"><span class="k">怎么验证</span>文章页 CLS ≤0.1，且不再出现 onload 时刻的位移条目。</div>
+    </div><div class="adv v-p0">
+      <div class="adv-head"><span class="pill">P0</span><b>拆出首页关键路径上的非必需阻塞 CSS</b></div>
+      <div class="adv-why"><span class="k">为什么</span>渲染阻塞样式共 8 个文件、57 KB，且包含首页根本用不到的 vendor-katex.css、侧边栏/搜索框样式。它们把 FCP 推到 2664 ms。</div>
+      <div class="adv-how"><span class="k">怎么做</span><ul><li>把 vendor-katex.css 从全局入口移除，改为在文章详情页按需引入（或 <code>media="print" onload</code> 的异步加载模式）</li><li>SideBar / SearchBar / ImageLoadingPlaceholder 等非首屏组件样式一并改为路由级或异步加载</li><li>把首屏必需的样式合并为 1–2 个文件，减少往返次数</li></ul></div>
+      <div class="adv-verify"><span class="k">怎么验证</span>重新采集首页 trace，确认 <code>renderBlockingStatus=blocking</code> 的请求数从 8 降到 ≤2，FCP 目标 ≤1800 ms。</div>
+    </div><div class="adv v-p0">
+      <div class="adv-head"><span class="pill">P0</span><b>让 LCP 底图提前可发现，并修正它的缓存策略</b></div>
+      <div class="adv-why"><span class="k">为什么</span>girl-full-silhouette.webp 仅由 CSS mask 引用，浏览器要到 CSS 解析后才发起请求（桌面 1838 ms，移动 3461 ms）。LCP 比 FCP 晚 2764 ms（桌面）/ 5668 ms（移动）。该图响应头为 max-age=0, must-revalidate，是站内少数几个不享受长缓存的静态资源之一，恰好又是 LCP 底图。</div>
+      <div class="adv-how"><span class="k">怎么做</span><ul><li>在 <code>&lt;head&gt;</code> 中加 <code>&lt;link rel="preload" as="image" href="/hero/girl-full-silhouette.webp"&gt;</code></li><li>或改为 <code>&lt;img&gt;</code> + <code>fetchpriority="high"</code> 参与 LCP 发现机制（同页普通 img 从发现到绘制只需数十 ms，而当前 mask 元素存在数秒空窗）</li><li>为 <code>/hero/**</code> 与 <code>/fonts/**</code> 补上 <code>Cache-Control: public, max-age=31536000, immutable</code>（文件名带内容哈希或加版本参数），与 <code>/_nuxt/*</code> 保持一致</li><li>确认它与 CSS 的 <code>aspect-ratio: 1365/1617</code> 约定保持一致，避免 mask 缩放位移</li></ul></div>
+      <div class="adv-verify"><span class="k">怎么验证</span>LCP 元素开始时间应前移到 FCP 附近；LCP 目标 ≤2500 ms（桌面）/ ≤4000 ms（移动）；复测确认「加载完成 → 绘制」空窗是否随之消失。</div>
+    </div><div class="adv v-p1">
+      <div class="adv-head"><span class="pill">P1</span><b>替换 58 KB 的 loading.gif 占位图（同时修掉 sitemap 污染）</b></div>
+      <div class="adv-why"><span class="k">为什么</span>首屏出现一个 58 KB 的 GIF 仅用于占位，移动端 Slow 4G 下单请求耗时超过 5 s；且它是首页第一个 LCP 候选（面积最大的一块绘制）。此外 sitemap.xml 的 312 条 image:loc 中有 74 条指向它，搜索引擎会把「加载中」动图当作页面配图。</div>
+      <div class="adv-how"><span class="k">怎么做</span><ul><li>改 <code>shared/ui/ImageLoadingPlaceholder.vue</code>：用内联 SVG 或纯 CSS 骨架屏替代 <code>&lt;img src="/Picture/loading.gif"&gt;</code>（额外请求 0 字节）</li><li>确保占位元素不参与 LCP 判定（避免大尺寸绘制），例如使用背景色/渐变而非大图</li><li>在 sitemap 配置中排除占位图，或改为只用文章 thumbnailUrl 作为 <code>image:loc</code></li></ul></div>
+      <div class="adv-verify"><span class="k">怎么验证</span>首屏请求数 −1，移动端最慢资源排名中不再出现该文件；sitemap.xml 中不再出现 loading.gif。</div>
+    </div><div class="adv v-p1">
+      <div class="adv-head"><span class="pill">P1</span><b>把 /api/articles 的首屏数据挪到构建期</b></div>
+      <div class="adv-why"><span class="k">为什么</span>SSG 站点在首屏运行时额外请求 42 KB 数据，并伴随一次长任务（移动端 t+9876 ms，120 ms）。</div>
+      <div class="adv-how"><span class="k">怎么做</span><ul><li>用 Nuxt 的 <code>useAsyncData</code> + prerender 产出静态 JSON，让首屏零运行时请求</li><li>若非首屏所需，改为进入视口再加载（IntersectionObserver 懒加载）</li></ul></div>
+      <div class="adv-verify"><span class="k">怎么验证</span>首屏不再出现 <code>/api/articles</code> 请求；该时刻附近的长任务消失。</div>
+    </div><div class="adv v-p1">
+      <div class="adv-head"><span class="pill">P1</span><b>为大 JS chunk 增加 preload 并检查拆分</b></div>
+      <div class="adv-why"><span class="k">为什么</span>首页 JS 编码体积约 573 KB；最大的两个 chunk（232 KB / 190 KB）直到 CSS 下载完（2026 ms）才发起，HTML 中 modulepreload 数量为 0 —— 根因是 nuxt.config.ts 里 vitalizer 的 disablePreloadLinks: true。</div>
+      <div class="adv-how"><span class="k">怎么做</span><ul><li>对首屏必需 chunk 加 <code>&lt;link rel="modulepreload"&gt;</code>，与 CSS 并行下载（可保留 vitalizer 对其它链接的处理）</li><li>检查 232 KB chunk 是否可拆（例如把编辑器/KaTeX 等重依赖移出首屏 bundle）</li><li>通过 <code>build.rollupOptions.output.manualChunks</code> 复核 vendor-katex / vendor-ui 的实际拆分结果</li></ul></div>
+      <div class="adv-verify"><span class="k">怎么验证</span>大 chunk 的 <code>startTime</code> 前移到 CSS 请求同期；移动端 JS 下载窗口缩短。</div>
+    </div><div class="adv v-p1">
+      <div class="adv-head"><span class="pill">P1</span><b>降低移动端样式与布局成本</b></div>
+      <div class="adv-why"><span class="k">为什么</span>移动端主线程 Style 818.6 ms / Layout 598.8 ms / Paint 847.9 ms，TBT 1207 ms，而 JS 执行不足 1 s。</div>
+      <div class="adv-how"><span class="k">怎么做</span><ul><li>检查卡片的阴影/圆角/滤镜与 <code>mask</code> 用法，避免大范围重绘</li><li>图片统一 <code>width/height</code> + <code>content-visibility: auto</code> 减少首屏外的布局与解码</li><li>避免在滚动/首屏阶段读取会强制同步布局的属性</li></ul></div>
+      <div class="adv-verify"><span class="k">怎么验证</span>移动端 TBT 目标 ≤600 ms；Style/Layout/Paint 自耗时显著下降。</div>
+    </div><div class="adv v-p2">
+      <div class="adv-head"><span class="pill">P2</span><b>移除或延后运行时第三方依赖</b></div>
+      <div class="adv-why"><span class="k">为什么</span>api.iconify.design 图标 JSON 与 cloudflareinsights beacon 都在关键窗口内。</div>
+      <div class="adv-how"><span class="k">怎么做</span><ul><li>图标改为构建期打包为本地 SVG sprite，去掉运行时跨域请求</li><li>分析脚本改为 <code>defer</code> 且在 <code>load</code> 之后再注入</li></ul></div>
+      <div class="adv-verify"><span class="k">怎么验证</span>首屏第三方请求数降为 0；跨域 RTT 从关键路径消失。</div>
+    </div><div class="adv v-p2">
+      <div class="adv-head"><span class="pill">P2</span><b>确认边缘节点与 HTML 压缩</b></div>
+      <div class="adv-why"><span class="k">为什么</span>TTFB 稳定在 663–624 ms，且与设备无关。HTML 传输 59 KB / 解码 190 KB。</div>
+      <div class="adv-how"><span class="k">怎么做</span><ul><li>核对 Cloudflare 缓存规则：首页 HTML 是否走了边缘缓存而非每次都回源</li><li>确认 Brotli 已开启（当前 HTML 压缩比约 0.31）</li><li>若主要访客在中国大陆，评估就近加速方案对 TTFB 的影响</li></ul></div>
+      <div class="adv-verify"><span class="k">怎么验证</span>重复测量 TTFB，目标 ≤800 ms。</div>
+    </div>
+  </div>
+  
+  
+  <h2 id="appendix">附录 · 方法与原始数据</h2>
+  <h3>测量方法</h3>
+  <ul class="method">
+    <li>通过 <b>Chrome DevTools Protocol</b> 直连无头 Chromium，采集与 DevTools Performance 面板同源的 trace（分类含 <code>devtools.timeline</code>、<code>blink.user_timing</code>、<code>disabled-by-default-v8.cpu_profiler</code>、<code>loading</code>、<code>v8</code> 等），同时注入 PerformanceObserver 采集 LCP / CLS / longtask / event timing。</li>
+    <li>主线程取 <code>CrRendererMain</code>；阶段自耗时由 trace 事件嵌套树计算（子事件递归扣除）；JS 热点来自 V8 CPU 采样落到渲染进程主 isolate。</li>
+    <li>每轮使用全新的浏览器 profile 目录（冷缓存）；热缓存轮次复用上一轮 profile。</li>
+    <li>事件数 140086，主线程 CrRendererMain（13196:29576），CPU 采样线程 13196:28256，采样总时长 7321 ms。</li>
+  </ul>
+  <h3>已知局限</h3>
+  <ul class="method">
+    <li>无头 Chromium 的合成器/GPU 路径与带界面 Chrome 存在差异，<b>帧率类指标（如动画流畅度）不宜直接外推</b>；LCP/FCP/CLS/TBT 类指标影响较小。</li>
+    <li>每档条件为单次采样，未做多次取中位数，存在 ±10% 级别波动。</li>
+    <li>移动端为模拟条件（4× CPU、Slow 4G），非真实设备。</li>
+    <li>样本未包含交互指标 INP（本次未模拟真实交互）。</li>
+  </ul>
+  <h3>附带发现（非性能）</h3>
+  <ul class="method">
+    <li><code>sitemap.xml</code> 中首页的 <code>image:image</code> 第一条指向 <code>/Picture/loading.gif</code>。占位图不应作为内容图片进入站点地图，建议连同占位图改造一并移除。</li>
+    <li>首页首屏客户端请求 <code>/api/articles</code>（详见关键发现第 6 条），对 SSG 站点而言属于可消除的运行时依赖。</li>
+  </ul>
+  <h3>原始 trace 文件（可直接拖入 DevTools Performance 面板）</h3>
+  <div class="tablewrap"><table class="datatable">
+    <thead><tr><th>样本</th><th>trace 文件</th><th>体积</th></tr></thead>
+    <tbody><tr><td>首页·桌面·冷缓存</td><td class="mono">tmp\perf\home-desktop-cold.trace.json</td><td>27.0 MB</td></tr><tr><td>首页·桌面·热缓存</td><td class="mono">tmp\perf\home-desktop-warm.trace.json</td><td>28.2 MB</td></tr><tr><td>文章详情页·桌面·冷缓存</td><td class="mono">tmp\perf\article-desktop-cold.trace.json</td><td>33.0 MB</td></tr><tr><td>画廊页·桌面·冷缓存</td><td class="mono">tmp\perf\gallery-desktop-cold.trace.json</td><td>21.2 MB</td></tr><tr><td>首页·移动·冷缓存</td><td class="mono">tmp\perf\home-mobile-cold.trace.json</td><td>40.0 MB</td></tr></tbody>
+  </table></div>
+  <p class="note">打开方式：Chrome → F12 → Performance 面板 → 左上角载入按钮（或直接把 .json 拖进面板）。</p>
+  
+
+  <footer>由 Chrome DevTools Protocol 采集与解析生成 · 单次实验室测量结果，生产环境实际表现随网络与设备分布而异</footer>
+</div>
+</body>
+</html>

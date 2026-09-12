@@ -139,9 +139,28 @@ async function ensureKatexStylesIfNeeded() {
   if (!hasMathSyntax(props.markdown)) return
 
   if (!katexStylesPromise) {
-    katexStylesPromise = import('katex/dist/katex.min.css')
-      .then(() => {
-        katexStylesReady = true
+    // 用 ?url 拿到资源地址后自行挂 <link>，而不是 import('katex/dist/katex.min.css')。
+    // 后者会让 Vite 把该 CSS 归入名 chunk（vendor-katex），并出现在**所有**页面
+    // 预渲染 HTML 的 <head> 阻塞样式里 —— 首页/画廊/关于/归档实测都带着一个
+    // 完全用不到的 katex 样式表（7.9 KB + 一次额外往返）。改成运行时注入后，
+    // 只有真正含公式的文章页才会请求它。
+    katexStylesPromise = import('katex/dist/katex.min.css?url')
+      .then(({ default: href }) => new Promise((resolve) => {
+        const existing = document.querySelector(`link[data-katex-styles][href="${href}"]`)
+        if (existing) {
+          resolve(true)
+          return
+        }
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = href
+        link.setAttribute('data-katex-styles', '')
+        link.addEventListener('load', () => resolve(true), { once: true })
+        link.addEventListener('error', () => resolve(false), { once: true })
+        document.head.appendChild(link)
+      }))
+      .then((ok) => {
+        katexStylesReady = ok
       })
       .catch((e) => {
         console.warn('[KaTeX] 样式加载失败:', e)

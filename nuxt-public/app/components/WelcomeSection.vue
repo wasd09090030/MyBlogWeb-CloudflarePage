@@ -56,6 +56,17 @@ const { navigateToArticle } = useArticleNavigation()
 // API composable
 const { getAllArticles } = useArticlesFeature()
 
+// 该底图只被 CSS 的 mask-image 引用，浏览器要等样式表解析完才「发现」它
+// （实测桌面 t+1838 ms、移动 t+3461 ms 才发起请求，而页面首个资源在 869 ms 就开始下载）。
+// 声明 preload 让它与样式表并行开始下载，而不是排在其后。
+// 注意：路径必须与 WelcomeSection.desktop.css / mobile.css 中的 mask-image 保持一致。
+const HERO_MASK_IMAGE = '/hero/girl-full-silhouette.webp'
+useHead({
+  link: [
+    { rel: 'preload', as: 'image', href: HERO_MASK_IMAGE, fetchpriority: 'high' }
+  ]
+})
+
 // 标题逐字浮现（杂志编辑动效）：模板直接渲染字符 span，em 部分保持斜体强调色
 const titleChars = computed(() => {
   const chars = []

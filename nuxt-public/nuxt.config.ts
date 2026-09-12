@@ -80,8 +80,29 @@ export default defineNuxtConfig({
   },
 
   vitalizer: {
+    // 去掉「当前页不会挂载的动态 import」的 prefetch。
+    // 注意 disablePreloadLinks: true 会连带把 script prefetch 也清空
+    // （Nuxt 的 prefetch 集合是从 preload 集合推导出来的），所以首页 HTML 里
+    // 既没有 modulepreload 也没有 prefetch。
     disablePrefetchLinks: 'dynamicImports',
+    // 【2026-09-11 复核后保留，未改动】关掉全部 modulepreload <link>。
+    // nuxt-vitalizer 官方文档对这项有明确警告：「这是唯一一个可能让 LCP 变差的选项」，
+    // 无 modulepreload 时浏览器要等 chunk 下载并解析完才知道它依赖什么，
+    // 深依赖图会退化成请求瀑布；它「在受限网络上赢，在高延迟上输」，
+    // 且官方建议用 CrUX 实测后再决定。
+    // 本站现状的两面证据：
+    //   · 支持关闭：移动端（4x CPU + Slow 4G）实测 JS 到达很晚但主线程 JS 自耗时
+    //     总计只约 180 ms，TBT 161 ms（桌面）/ 1207 ms（移动），LCP 元素是
+    //     纯 CSS mask 的 DIV.hero-girl，JS 不在 LCP 关键路径上；
+    //     且 Slow 4G 下带宽已被 8 个阻塞 CSS + 首屏图占满。
+    //   · 支持打开：实测存在瀑布 —— entry 段 t=827→3502 ms，
+    //     232 KB 的 vendor-ui 段要等到 t=4073 才开始，t≈8148 才到。
+    // 结论：收益无法在当前环境验证，而文档警告的 LCP 变差风险是真实的，
+    // 因此保持现状不动。若要改，请先按官方建议做 CrUX / 真机前后对比。
     disablePreloadLinks: true,
+    // 该分支只在 features.inlineStyles 为真时才生效；本项目的
+    // experimental.inlineSSRStyles 明确为 false（见下方说明：Tailwind v4 的
+    // @layer 分层语义会被内联副本破坏），所以这项实际是空操作。
     disableStylesheets: false
   },
 
@@ -342,9 +363,15 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
+    // 静态资源长缓存。注意：这些目录下的文件名不带内容哈希，
+    // 因此替换内容时必须同时改名（或加版本查询参数），否则回访用户会一直拿到旧文件。
     '/icon/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
     '/Picture/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
     '/flower/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    // /hero 是首屏 LCP 底图，/fonts 是首屏字体；此前两者回落到默认的
+    // max-age=0, must-revalidate，导致每次访问都要发条件请求（多一次往返）。
+    '/hero/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/fonts/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
   },
 
   // 静态生成核心配置
@@ -384,7 +411,12 @@ export default defineNuxtConfig({
     'build:done': () => {
       console.log('✅ Static build completed')
     },
-    // 新增：生成 Cloudflare Pages 专用 _headers 文件
+    // 生成 Cloudflare Pages 专用 _headers 文件。
+    // 注意：这里是 writeFileSync **整文件覆盖**，它是本站实际生效的那份缓存/安全头
+    // 配置 —— 线上实测 / 返回 x-frame-options、permissions-policy 都来自下面的 /* 段，
+    // 证明本 hook 的内容最终落地。因此：新增缓存规则必须同时写进这里，
+    // 只写上面的 routeRules 是不够的（/hero/** 与 /fonts/** 就曾因此一直回落到
+    // 默认的 max-age=0, must-revalidate，已在本文件两处同时补上）。
     'nitro:build:public-assets'(nitro) {
       const headersContent = `
 # 静态资源强缓存（1年）
@@ -399,6 +431,12 @@ export default defineNuxtConfig({
   Cache-Control: public, max-age=31536000, immutable
 
 /flower/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/hero/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
   Cache-Control: public, max-age=31536000, immutable
 
 # HTML 页面缓存（5分钟，CDN 1小时）

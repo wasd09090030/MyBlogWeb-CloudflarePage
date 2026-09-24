@@ -33,6 +33,10 @@
 </template>
 
 <script setup>
+import MarkdownRenderer from '~/features/article-detail/components/MarkdownRenderer.vue'
+import RelatedArticles from '~/features/article-detail/components/RelatedArticles.vue'
+import CommentSection from '~/features/article-detail/components/CommentSection.vue'
+
 const props = defineProps({
   article: {
     type: Object,

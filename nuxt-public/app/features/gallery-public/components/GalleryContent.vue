@@ -160,6 +160,7 @@
 
 <script setup>
 import GalleryHeroSection from '~/features/gallery-public/components/GalleryHeroSection.vue'
+import GalleryLoadingAnimation from '~/features/gallery-public/components/GalleryLoadingAnimation.vue'
 import GalleryTimelineLayout from '~/features/gallery-public/components/GalleryTimelineLayout.vue'
 import GalleryMasonryList from '~/features/gallery-public/components/GalleryMasonryList.vue'
 import GameGallerySection from '~/features/gallery-public/components/GameGallerySection.vue'

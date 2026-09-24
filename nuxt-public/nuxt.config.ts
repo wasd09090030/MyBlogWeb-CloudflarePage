@@ -1,6 +1,7 @@
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath } from 'node:url'
 import { buildArticleRoute, fetchAllArticleRoutes, toIsoLastmod } from './build/article-route-data'
+import { writeCloudflareHeaders } from './build/cloudflare-headers'
 
 // Editorial 字体仅作用于画廊时间线月份标题
 
@@ -411,60 +412,7 @@ export default defineNuxtConfig({
     'build:done': () => {
       console.log('✅ Static build completed')
     },
-    // 生成 Cloudflare Pages 专用 _headers 文件。
-    // 注意：这里是 writeFileSync **整文件覆盖**，它是本站实际生效的那份缓存/安全头
-    // 配置 —— 线上实测 / 返回 x-frame-options、permissions-policy 都来自下面的 /* 段，
-    // 证明本 hook 的内容最终落地。因此：新增缓存规则必须同时写进这里，
-    // 只写上面的 routeRules 是不够的（/hero/** 与 /fonts/** 就曾因此一直回落到
-    // 默认的 max-age=0, must-revalidate，已在本文件两处同时补上）。
-    'nitro:build:public-assets'(nitro) {
-      const headersContent = `
-# 静态资源强缓存（1年）
-/_nuxt/*
-  Cache-Control: public, max-age=31536000, immutable
-  X-Content-Type-Options: nosniff
-
-/icon/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/Picture/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/flower/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/hero/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/fonts/*
-  Cache-Control: public, max-age=31536000, immutable
-
-# HTML 页面缓存（5分钟，CDN 1小时）
-/*.html
-  Cache-Control: public, max-age=300, s-maxage=3600
-  X-Frame-Options: SAMEORIGIN
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-
-# 首页特殊处理（更短缓存）
-/index.html
-  Cache-Control: public, max-age=60, s-maxage=300
-  Link: </icon/Myfavicon.ico>; rel=preload; as=image
-  Link: <https://cfimg.wasd09090030.top>; rel=preconnect; crossorigin
-
-# 安全头（全局）
-/*
-  X-Frame-Options: SAMEORIGIN
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
-`.trim()
-
-      const fs = require('fs')
-      const path = require('path')
-      const headersPath = path.join(nitro.options.output.publicDir, '_headers')
-      fs.writeFileSync(headersPath, headersContent)
-      console.log('✅ Generated _headers for Cloudflare Pages')
-    }
+    // 生成 Cloudflare Pages 专用 _headers 文件，具体规则集中在 build helper。
+    'nitro:build:public-assets': writeCloudflareHeaders
   }
 })

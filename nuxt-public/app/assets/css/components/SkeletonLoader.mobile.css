@@ -1,0 +1,10 @@
+@media (max-width: 768px) {
+  .skeleton-card {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .skeleton-image {
+    height: 200px;
+  }
+}

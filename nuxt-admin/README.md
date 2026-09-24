@@ -38,4 +38,4 @@ npx wrangler secret put SESSION_PEPPER --config wrangler.toml
 npx wrangler secret put ADMIN_RESET_TOKEN --config wrangler.toml
 ```
 
-`IMAGE_API_TOKEN` 永远不会进入 SPA、D1 或 API 响应。完整的 D1 迁移、SQLite 导入、Free-plan 检查、切换、冒烟和回滚清单见 [DEPLOYMENT.md](DEPLOYMENT.md)；中文逐步操作指南见 [Cloudflare-Free-Production-Operations.zh-CN.md](../docs/Cloudflare-Free-Production-Operations.zh-CN.md)。
+`IMAGE_API_TOKEN` 永远不会进入 SPA、D1 或 API 响应。D1 迁移、构建、冒烟和回滚步骤见 [DEPLOYMENT.md](DEPLOYMENT.md)。

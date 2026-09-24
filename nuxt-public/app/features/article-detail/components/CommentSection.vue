@@ -171,169 +171,31 @@
   </section>
 </template>
 
-<script setup>
-import { useComments } from '~/composables/useComments'
-import { getAvatarUrl, getDiceBearUrl } from '~/utils/avatar'
-// `shared/ui/` 不在 components.dirs 自动导入范围内（见 nuxt.config.ts 的 components 配置），
-// 所以显式 import 三个共享状态组件。参考 Content.vue:46 的同款用法。
+<script setup lang="ts">
 import StateEmpty from '~/shared/ui/StateEmpty.vue'
-import * as v from 'valibot'
+import { useCommentSection } from '~/features/article-detail/composables/useCommentSection'
 
-const props = defineProps({
-  articleId: {
-    type: [Number, String],
-    required: true
-  }
-})
-
+const props = defineProps<{ articleId: string | number }>()
 const toast = useToast()
-
-// 表单 schema：author/content 必填，email/website 可选
-const schema = v.object({
-  author: v.pipe(v.string(), v.trim(), v.minLength(1, 'Name is required')),
-  email: v.optional(v.string()),
-  website: v.optional(v.string()),
-  content: v.pipe(v.string(), v.trim(), v.minLength(1, 'Content is required'))
-})
-
-// 状态
-const comments = ref([])
-const submitting = ref(false)
-const submitSuccess = ref(false)
-const loadingComments = ref(true)
-const loadError = ref(false)
-const avatarFallbackIds = ref(new Set()) // 已经回退到 DiceBear 的评论 id
-
-const newComment = ref({
-  author: '',
-  email: '',
-  website: '',
-  content: ''
-})
-
-// 字符计数颜色：>800 警告，>950 危险
-const charCountClass = computed(() => {
-  const len = newComment.value.content.length
-  if (len > 950) return 'text-[var(--accent-danger)]'
-  if (len > 800) return 'text-[var(--accent-warning)]'
-  return 'text-[var(--text-muted)]'
-})
-
-// 沿用项目主题令牌
-const inputClass = {
-  root: 'w-full',
-  base: 'w-full rounded-lg bg-[var(--input-bg)]! border! border-[var(--input-border)]! focus:border-[var(--input-focus-border)]! transition-colors px-4! py-2.5! text-sm!'
-}
-const textareaClass = {
-  root: 'w-full',
-  base: 'w-full rounded-lg bg-[var(--input-bg)]! border! border-[var(--input-border)]! focus:border-[var(--input-focus-border)]! transition-colors px-4! py-2.5! text-sm! leading-relaxed!'
-}
-const websiteInputClass = {
-  root: 'w-full',
-  base: 'w-full rounded-lg bg-transparent! border! border-[var(--input-border)]! focus:border-[var(--input-focus-border)]! transition-colors px-3! py-2! text-sm!'
-}
-
-// 头像策略：优先 Gravatar（精确 md5 匹配），404 切 DiceBear
-const currentAvatarSrc = (comment) => {
-  if (avatarFallbackIds.value.has(comment.id)) {
-    return getDiceBearUrl(comment.author)
-  }
-  return getAvatarUrl(comment.email, comment.author)
-}
-
-const onAvatarError = (commentId, event) => {
-  if (avatarFallbackIds.value.has(commentId)) return
-  avatarFallbackIds.value.add(commentId)
-  // 触发响应式更新：把新的 Set 替换（Vue 不会监听 Set 内部变更）
-  avatarFallbackIds.value = new Set(avatarFallbackIds.value)
-  // 强制 UAvatar 重新拉取新 src
-  if (event?.target) {
-    event.target.src = getDiceBearUrl(comments.value.find(c => c.id === commentId)?.author ?? '')
-  }
-}
-
-// API
-const { getCommentsByArticle, submitComment: submitCommentApi, likeComment: likeCommentApi } = useComments()
-
-const fetchComments = async () => {
-  loadingComments.value = true
-  loadError.value = false
-  try {
-    const data = await getCommentsByArticle(props.articleId)
-    comments.value = data || []
-    avatarFallbackIds.value = new Set()
-  } catch (error) {
-    console.error('获取评论失败:', error)
-    loadError.value = true
-  } finally {
-    loadingComments.value = false
-  }
-}
-const handleSubmit = async (event) => {
-  const commentData = {
-    articleId: props.articleId,
-    author: event.data.author,
-    email: event.data.email?.trim() || '',
-    website: event.data.website?.trim() || '',
-    content: event.data.content
-  }
-  submitting.value = true
-  submitSuccess.value = false
-  try {
-    await submitCommentApi(commentData)
-    newComment.value = { author: '', email: '', website: '', content: '' }
-    submitSuccess.value = true
-    toast.add({ title: '评论发布成功！', color: 'success' })
-    await fetchComments()
-  } catch (error) {
-    console.error('提交评论失败:', error)
-    toast.add({ title: '评论发布失败', color: 'error' })
-  } finally {
-    submitting.value = false
-  }
-}
-const likeComment = async (commentId) => {
-  try {
-    await likeCommentApi(commentId)
-    const comment = comments.value.find(c => c.id === commentId)
-    if (comment) {
-      comment.likes = (comment.likes || 0) + 1
-      comment.isLiked = true
-    }
-  } catch (error) {
-    console.error('点赞评论失败:', error)
-  }
-}
-
-// 相对时间格式化
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  if (Number.isNaN(date.getTime())) return ''
-  const now = new Date()
-  const diff = now - date
-  if (diff < 0) {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
-  const mins = Math.floor(diff / (60 * 1000))
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(diff / (60 * 60 * 1000))
-  if (hours < 24 && date.getDate() === now.getDate()) return `${hours}h ago`
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-  })
-}
-
-watch(() => props.articleId, (newId, oldId) => {
-  if (newId !== oldId) fetchComments()
-})
-
-onMounted(() => {
-  fetchComments()
-})
+const {
+  schema,
+  comments,
+  submitting,
+  submitSuccess,
+  loadingComments,
+  loadError,
+  newComment,
+  charCountClass,
+  inputClass,
+  textareaClass,
+  websiteInputClass,
+  fetchComments,
+  handleSubmit,
+  likeComment,
+  currentAvatarSrc,
+  onAvatarError,
+  formatDate
+} = useCommentSection(toRef(props, 'articleId'), toast)
 </script>
 
 <style scoped>

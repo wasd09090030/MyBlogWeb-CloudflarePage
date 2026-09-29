@@ -23,11 +23,15 @@
             <img
               :src="image.thumbnailUrl || ''"
               :alt="image.title || '画廊图片'"
+              :width="getImageDimensions(image).width"
+              :height="getImageDimensions(image).height"
               :class="[
                 'gallery-hero__preview-image',
                 { 'gallery-hero__preview-image--contain': index === 1 }
               ]"
-              loading="lazy"
+              :loading="index === 0 ? 'eager' : 'lazy'"
+              :fetchpriority="index === 0 ? 'high' : 'low'"
+              decoding="async"
               @load="handlePreviewLoad(image, index, $event)"
               @error="handlePreviewError(image, index, $event)"
             />
@@ -56,8 +60,12 @@
             <img
               :src="getPreviewImageUrl(featuredPreviewImage)"
               :alt="featuredPreviewImage.title || '画廊图片'"
+              :width="getImageDimensions(featuredPreviewImage).width"
+              :height="getImageDimensions(featuredPreviewImage).height"
               class="gallery-hero__preview-image"
-              loading="lazy"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
               @load="handlePreviewLoad(featuredPreviewImage, 2, $event)"
               @error="handlePreviewError(featuredPreviewImage, 2, $event)"
             />
@@ -124,6 +132,7 @@ const featuredPreviewImage = computed(() => props.previewImages[2] ?? props.prev
 
 const getImageKey = (image, index) => getGalleryImageKey(image, index)
 const getPreviewImageUrl = (image) => image?.lightboxUrl || image?.thumbnailUrl || ''
+const getImageDimensions = (image) => getGalleryImageDimensions(image) ?? { width: 1, height: 1 }
 
 const hasImage = (image, index) => {
   const thumbnailUrl = getPreviewImageUrl(image)

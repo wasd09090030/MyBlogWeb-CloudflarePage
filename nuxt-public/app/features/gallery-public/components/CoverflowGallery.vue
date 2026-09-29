@@ -26,7 +26,10 @@
               <img
                 :src="item.thumbnailUrl || ''"
                 class="carousel-image"
+                :width="getImageDimensions(item).width"
+                :height="getImageDimensions(item).height"
                 loading="lazy"
+                decoding="async"
                 @error="handleImageError(item, index)"
               />
             </template>
@@ -59,6 +62,13 @@ const emit = defineEmits(['image-click'])
 const imageErrorMap = ref({})
 
 const getImageKey = (image, index) => String(image?._uniqueKey ?? image?.id ?? image?.thumbnailUrl ?? index)
+const getImageDimensions = (image) => {
+  const width = Number(image?.imageWidth)
+  const height = Number(image?.imageHeight)
+  return Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0
+    ? { width, height }
+    : { width: 1, height: 1 }
+}
 const hasImage = (image, index) => {
   const thumbnailUrl = image?.thumbnailUrl
   if (!thumbnailUrl) return false
@@ -87,7 +97,9 @@ const internalImages = computed(() => {
   const original = props.images
   if (!original || original.length === 0) return []
   
-  const minLength = 15
+  // 7 张足够覆盖中心卡两侧各 3 张的可视范围，避免为循环复制 15 个
+  // DOM 节点并重复请求同一批缩略图。
+  const minLength = 7
   let result = [...original]
   
   // 复制数组直到满足最小长度

@@ -15,6 +15,11 @@
               :src="(gallery.lightboxUrl || gallery.thumbnailUrl) || ''"
               alt="画廊图片"
               class="fade-image"
+              :width="getImageDimensions(gallery).width"
+              :height="getImageDimensions(gallery).height"
+              :loading="index === 0 ? 'eager' : 'lazy'"
+              :fetchpriority="index === 0 ? 'high' : 'low'"
+              decoding="async"
               @error="handleImageError(gallery, index)"
             />
           </template>
@@ -39,6 +44,13 @@ defineEmits(['image-click'])
 const imageErrorMap = ref({})
 
 const getImageKey = (image, index) => String(image?.id ?? image?.thumbnailUrl ?? index)
+const getImageDimensions = (image) => {
+  const width = Number(image?.imageWidth)
+  const height = Number(image?.imageHeight)
+  return Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0
+    ? { width, height }
+    : { width: 1, height: 1 }
+}
 const hasImage = (image, index) => {
   const thumbnailUrl = image?.lightboxUrl || image?.thumbnailUrl
   if (!thumbnailUrl) return false

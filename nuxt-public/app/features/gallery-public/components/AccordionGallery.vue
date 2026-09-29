@@ -14,7 +14,10 @@
             :src="gallery.thumbnailUrl || ''"
             alt="画廊图片"
             class="accordion-image"
+            :width="getImageDimensions(gallery).width"
+            :height="getImageDimensions(gallery).height"
             loading="lazy"
+            decoding="async"
             @error="handleImageError(gallery)"
           />
         </template>
@@ -42,6 +45,13 @@ const expandedIndex = ref(0)
 const imageErrorMap = ref({})
 
 const getImageKey = (image) => String(image?.id ?? image?.thumbnailUrl ?? '')
+const getImageDimensions = (image) => {
+  const width = Number(image?.imageWidth)
+  const height = Number(image?.imageHeight)
+  return Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0
+    ? { width, height }
+    : { width: 1, height: 1 }
+}
 const hasImage = (image) => {
   const thumbnailUrl = image?.thumbnailUrl
   if (!thumbnailUrl) return false

@@ -17,6 +17,7 @@ const tagFilter = ref('all')
 const visibilityFilter = ref('all')
 const sortMode = ref('manual')
 const orderDirty = ref(false)
+const dimensionsRefreshing = ref(false)
 const backfilling = ref(false)
 const heroSaving = ref(false)
 const heroSections = reactive<Record<GalleryHeroSection, GalleryHeroItem[]>>({
@@ -228,6 +229,61 @@ async function saveHeroConfiguration() {
   }
 }
 async function toggle(item: GalleryItem) { await api.patch(`gallery/${item.id}/toggle-active`); await refresh() }
+function loadImageDimensions(url: string): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const image = new Image()
+    const timeout = window.setTimeout(() => {
+      image.onload = null
+      image.onerror = null
+      resolve(null)
+    }, 10_000)
+    image.onload = () => {
+      window.clearTimeout(timeout)
+      const width = image.naturalWidth
+      const height = image.naturalHeight
+      resolve(width > 0 && height > 0 ? { width, height } : null)
+    }
+    image.onerror = () => {
+      window.clearTimeout(timeout)
+      resolve(null)
+    }
+    image.src = url
+  })
+}
+async function refreshDimensions() {
+  const galleryItems = items.value || []
+  if (!galleryItems.length) return
+  dimensionsRefreshing.value = true
+  try {
+    const dimensions: Array<{ id: number; width: number; height: number }> = []
+    let nextIndex = 0
+    async function worker() {
+      while (nextIndex < galleryItems.length) {
+        const item = galleryItems[nextIndex++]
+        if (!item) continue
+        const urls = [...new Set([item.sourceImageUrl, item.imageUrl].filter((url): url is string => Boolean(url)))]
+        let measured: { width: number; height: number } | null = null
+        for (const url of urls) {
+          measured = await loadImageDimensions(url)
+          if (measured) break
+        }
+        if (measured) dimensions.push({ id: item.id, ...measured })
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(8, galleryItems.length) }, () => worker()))
+    if (!dimensions.length) {
+      toast.add({ title: '没有成功读取到图片尺寸，请检查图片地址', color: 'warning' })
+      return
+    }
+    const result = await api.post<{ total: number; updated: number; failed: number }>('gallery/refresh-dimensions', { dimensions })
+    await refresh()
+    toast.add({ title: `已更新 ${result.updated} 张图片尺寸${result.failed ? `，${result.failed} 张读取失败` : ''}`, color: result.failed ? 'warning' : 'success' })
+  } catch {
+    toast.add({ title: '刷新图片尺寸失败，请稍后重试', color: 'error' })
+  } finally {
+    dimensionsRefreshing.value = false
+  }
+}
 async function backfillImageAssets() {
   backfilling.value = true
   try {
@@ -256,7 +312,7 @@ async function remove(item: GalleryItem) {
   <div class="space-y-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div><p class="text-sm text-muted">视觉内容</p><h2 class="text-2xl font-semibold">画廊</h2></div>
-      <div class="flex flex-wrap gap-2"><UButton color="neutral" variant="soft" icon="i-lucide-ruler" @click="api.post('gallery/refresh-dimensions').then(() => refresh())">刷新尺寸</UButton><UButton v-if="orderDirty" color="neutral" variant="soft" icon="i-lucide-save" @click="saveOrder">保存手动排序</UButton><UButton color="neutral" variant="soft" icon="i-lucide-import" @click="importOpen = true">批量导入</UButton><UButton icon="i-lucide-plus" @click="edit()">添加图片</UButton></div>
+      <div class="flex flex-wrap gap-2"><UButton color="neutral" variant="soft" icon="i-lucide-ruler" :loading="dimensionsRefreshing" @click="refreshDimensions">刷新尺寸</UButton><UButton v-if="orderDirty" color="neutral" variant="soft" icon="i-lucide-save" @click="saveOrder">保存手动排序</UButton><UButton color="neutral" variant="soft" icon="i-lucide-import" @click="importOpen = true">批量导入</UButton><UButton icon="i-lucide-plus" @click="edit()">添加图片</UButton></div>
     </div>
 
     <div class="flex justify-end"><UButton color="neutral" variant="soft" icon="i-lucide-refresh-cw" :loading="backfilling" @click="backfillImageAssets">迁移永久缩略图</UButton></div>

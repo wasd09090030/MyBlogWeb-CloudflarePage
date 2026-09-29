@@ -32,6 +32,10 @@ export type GalleryBatchUpdateInput = {
   createdAt?: unknown
 }
 
+export type GalleryDimensionsInput = {
+  dimensions?: unknown
+}
+
 const select = `
   SELECT g.id, g.image_url, g.image_asset_id,
          ia.public_id AS image_asset_public_id,
@@ -288,7 +292,52 @@ export async function backfillGalleryAssets(event: H3Event) {
   return { total: rows.length, updated, skipped: rows.length - updated }
 }
 
-export async function refreshGalleryDimensions(event: H3Event) {
-  const total = await queryFirst<{ count: number }>(getDb(event), 'SELECT COUNT(*) AS count FROM galleries')
-  return { total: Number(total?.count || 0), updated: 0, failed: 0, message: 'Image dimensions are provider-managed and are not read by blog-api' }
+export async function refreshGalleryDimensions(event: H3Event, input: GalleryDimensionsInput) {
+  if (!Array.isArray(input.dimensions) || input.dimensions.length < 1 || input.dimensions.length > 2000) {
+    throw createError({ statusCode: 400, statusMessage: 'Provide between 1 and 2000 image dimensions' })
+  }
+
+  const dimensions = new Map<number, { width: number; height: number }>()
+  for (const value of input.dimensions) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw createError({ statusCode: 400, statusMessage: 'Each image dimension must be an object' })
+    }
+    const item = value as Record<string, unknown>
+    const id = requireId(item.id, 'gallery id')
+    const width = Number(item.width)
+    const height = Number(item.height)
+    if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height) || width < 1 || height < 1 || width > 100_000 || height > 100_000) {
+      throw createError({ statusCode: 400, statusMessage: 'Image dimensions must be integers between 1 and 100000' })
+    }
+    dimensions.set(id, { width, height })
+  }
+
+  const ids = [...dimensions.keys()]
+  const existing: Array<{ id: number }> = []
+  for (let index = 0; index < ids.length; index += 100) {
+    const chunk = ids.slice(index, index + 100)
+    const placeholders = chunk.map(() => '?').join(', ')
+    existing.push(...await queryAll<{ id: number }>(getDb(event), `SELECT id FROM galleries WHERE id IN (${placeholders})`, ...chunk))
+  }
+  const existingIds = new Set(existing.map(row => row.id))
+  const now = nowIso()
+  const statements = ids
+    .filter(id => existingIds.has(id))
+    .map(id => {
+      const value = dimensions.get(id)!
+      return {
+        sql: 'UPDATE galleries SET image_width = ?, image_height = ?, updated_at = ? WHERE id = ?',
+        values: [value.width, value.height, now, id]
+      }
+    })
+  for (let index = 0; index < statements.length; index += 100) {
+    await batch(getDb(event), statements.slice(index, index + 100))
+  }
+
+  return {
+    total: dimensions.size,
+    updated: statements.length,
+    failed: dimensions.size - statements.length,
+    message: 'Image dimensions updated successfully'
+  }
 }

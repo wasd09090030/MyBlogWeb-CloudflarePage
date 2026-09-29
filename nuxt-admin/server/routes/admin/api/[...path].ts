@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
       const row = await getAdminGallery(event, parts[1]!)
       return { id: row.id, imageWidth: row.imageWidth, imageHeight: row.imageHeight }
     }
-    if (parts.length === 2 && parts[1] === 'refresh-dimensions' && currentMethod === 'POST') return await refreshGalleryDimensions(event)
+    if (parts.length === 2 && parts[1] === 'refresh-dimensions' && currentMethod === 'POST') return await refreshGalleryDimensions(event, body || {})
     if (parts.length === 2 && parts[1] === 'backfill-image-assets' && currentMethod === 'POST') return await backfillGalleryAssets(event)
     if (parts.length === 3 && parts[1] === 'batch' && parts[2] === 'update' && currentMethod === 'PATCH') return await updateGalleryBatch(event, body || {})
     if (parts.length === 3 && parts[1] === 'batch' && parts[2] === 'sort-order' && currentMethod === 'PATCH') return await updateGallerySortOrder(event, body)

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { Comment } from '~/types/admin'
-definePageMeta({ layout: 'admin', middleware: 'admin-auth', keepalive: true })
+definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 const api = useAdminApi(); const toast = useToast(); const pendingOnly = ref(false)
-const { data: comments, refresh } = await useAsyncData('admin-comments', () => api.get<Comment[]>('comments/admin/all'))
+const { data: comments, refresh } = useLazyAsyncData('admin-comments', () => api.get<Comment[]>('comments/admin/all'))
 const visible = computed(() => (comments.value || []).filter(comment => !pendingOnly.value || comment.status === 'pending'))
 async function status(comment: Comment, value: string) { await api.patch(`comments/admin/${comment.id}/status`, { status: value }); toast.add({ title: '评论状态已更新', color: 'success' }); await refresh() }
 async function remove(comment: Comment) { if (!confirm('删除这条评论？')) return; await api.del(`comments/admin/${comment.id}`); await refresh() }

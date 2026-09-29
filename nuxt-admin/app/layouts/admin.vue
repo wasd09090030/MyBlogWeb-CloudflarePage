@@ -4,6 +4,7 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const auth = useAdminAuthState()
 const mobileOpen = ref(false)
 const collapsed = useCookie('admin-sidebar-collapsed', { default: () => false })
 const colorMode = useColorMode()
@@ -32,6 +33,7 @@ const title = computed(() => allLinks.find(link => route.path === link.to)?.labe
 function closeMobileNavigation() { mobileOpen.value = false }
 async function logout() {
   await $fetch('/admin/api/auth/logout', { method: 'POST', credentials: 'include' })
+  auth.clear()
   toast.add({ title: '已退出登录', color: 'success' })
   await router.push('/admin/login')
 }

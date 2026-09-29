@@ -2,7 +2,7 @@
 import type { DiaryEntry, DiaryMood, DiaryWeather } from '~/types/admin'
 import { markdownCommands, type MarkdownCommand } from '~/composables/useMarkdownTemplates'
 
-definePageMeta({ layout: 'admin', middleware: 'admin-auth', keepalive: true })
+definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 
 const api = useAdminApi()
 const toast = useToast()
@@ -26,14 +26,7 @@ const WEATHERS: Array<{ key: DiaryWeather; label: string }> = [
   { key: 'haze', label: '雾霾' }
 ]
 
-const { data: entries, refresh } = await useAsyncData('admin-diary', () => api.get<DiaryEntry[]>('diary/admin', { cache: false }))
-
-// keepalive 页面从缓存恢复时重新拉取数据
-let hasActivated = false
-onActivated(() => {
-  if (!hasActivated) { hasActivated = true; return }
-  refresh()
-})
+const { data: entries, refresh } = useLazyAsyncData('admin-diary', () => api.get<DiaryEntry[]>('diary/admin', { cache: false }))
 
 function todayStr(): string {
   const d = new Date()

@@ -3,6 +3,7 @@ import * as v from 'valibot'
 definePageMeta({ layout: 'login', middleware: 'admin-auth' })
 const toast = useToast()
 const router = useRouter()
+const auth = useAdminAuthState()
 const pending = ref(false)
 const errorMessage = ref('')
 const state = reactive({ username: '', password: '' })
@@ -17,6 +18,7 @@ async function submit() {
   errorMessage.value = ''
   try {
     await $fetch('/admin/api/auth/login', { method: 'POST', body: state, credentials: 'include' })
+    auth.markAuthenticated()
     await router.push('/admin')
   } catch (error: any) {
     errorMessage.value = error?.data?.statusMessage || error?.message || '登录失败，请检查凭据'

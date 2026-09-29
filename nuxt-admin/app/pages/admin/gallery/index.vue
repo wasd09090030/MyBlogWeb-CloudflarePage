@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { GalleryHeroConfiguration, GalleryHeroItem, GalleryHeroSection, GalleryItem } from '~/types/admin'
 
-definePageMeta({ layout: 'admin', middleware: 'admin-auth', keepalive: true })
+definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 
 const api = useAdminApi()
 const toast = useToast()
@@ -47,22 +47,11 @@ const sortOptions = [
   { label: '排序号：从大到小', value: 'order-desc' },
   { label: '最新创建', value: 'newest' }
 ]
-const { data: items, refresh } = await useAsyncData('admin-gallery', () => api.get<GalleryItem[]>('gallery/admin', { cache: false }))
-const { data: heroConfiguration, refresh: refreshHeroConfiguration } = await useAsyncData(
+const { data: items, refresh } = useLazyAsyncData('admin-gallery', () => api.get<GalleryItem[]>('gallery/admin', { cache: false }))
+const { data: heroConfiguration, refresh: refreshHeroConfiguration } = useLazyAsyncData(
   'admin-gallery-hero',
   () => api.get<GalleryHeroConfiguration>('gallery/hero', { cache: false })
 )
-
-// keepalive 页面从缓存恢复时重新拉取数据，避免列表残留已被删除的行
-let hasActivated = false
-onActivated(() => {
-  if (!hasActivated) {
-    hasActivated = true
-    return
-  }
-  refresh()
-  refreshHeroConfiguration()
-})
 
 function applyHeroConfiguration(configuration: GalleryHeroConfiguration) {
   for (const definition of heroDefinitions) {
@@ -310,7 +299,7 @@ async function remove(item: GalleryItem) {
 
     <div v-if="visibleItems.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <UCard v-for="item in visibleItems" :key="item.id" :ui="{ body: 'p-0' }">
-        <img :src="item.imageUrl" :alt="item.tag || 'gallery image'" class="aspect-square w-full object-cover" />
+        <img :src="item.imageUrl" :alt="item.tag || 'gallery image'" loading="lazy" decoding="async" class="aspect-square w-full object-cover" />
         <div class="space-y-3 p-3">
           <div class="flex items-center justify-between gap-2"><UBadge variant="subtle" color="primary">{{ item.tag === 'game' ? 'Game' : 'Artwork' }}</UBadge><UBadge :color="item.isActive ? 'success' : 'neutral'">{{ item.isActive ? '显示' : '隐藏' }}</UBadge></div>
           <div class="flex items-center justify-between gap-2">

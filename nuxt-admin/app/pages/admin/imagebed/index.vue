@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'admin', middleware: 'admin-auth', keepalive: true })
+definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 
 type FileItem = { name: string; url?: string; metadata?: Record<string, string> }
 type Listing = { files: FileItem[]; directories: string[]; domain: string; totalCount: number }
@@ -14,9 +14,9 @@ const directory = ref('')
 const search = ref('')
 const config = reactive({ domain: '', uploadFolder: '' })
 
-const { data: settings, refresh: refreshSettings } = await useAsyncData('imagebed-config', () => api.get<{ domain: string; uploadFolder: string; configured: boolean }>('imagebed/config'))
+const { data: settings, refresh: refreshSettings } = useLazyAsyncData('imagebed-config', () => api.get<{ domain: string; uploadFolder: string; configured: boolean }>('imagebed/config'))
 const emptyListing: Listing = { files: [], directories: [], domain: '', totalCount: 0 }
-const { data: listing, refresh, status } = await useAsyncData<Listing>(
+const { data: listing, refresh, status } = useLazyAsyncData<Listing>(
   'imagebed-files',
   () => settings.value?.configured
     ? api.get(`imagebed/files?dir=${encodeURIComponent(directory.value)}&search=${encodeURIComponent(search.value)}&count=50`)
@@ -48,7 +48,7 @@ watch(settings, value => { if (value) { config.domain = value.domain || ''; conf
     <div v-if="status === 'pending'" class="grid place-items-center py-16"><USkeleton class="h-32 w-full" /></div>
     <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <UCard v-for="folder in listing?.directories || []" :key="folder" class="cursor-pointer transition hover:border-primary" @click="openDirectory(folder)"><div class="flex items-center gap-3"><UIcon name="i-lucide-folder" class="size-8 text-primary" /><span class="truncate">{{ folder.split('/').pop() }}</span></div></UCard>
-      <UCard v-for="file in listing?.files || []" :key="file.name" :ui="{ body: 'p-0' }"><img :src="fileUrl(file)" :alt="file.name" class="aspect-square w-full cursor-zoom-in object-cover" @click="preview = fileUrl(file); previewOpen = true" /><div class="flex items-center gap-2 p-3"><UCheckbox :model-value="selected.includes(file.name)" @update:model-value="value => selected = value ? [...selected, file.name] : selected.filter(item => item !== file.name)" /><span class="min-w-0 flex-1 truncate text-sm">{{ file.name.split('/').pop() }}</span><UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-copy" aria-label="复制链接" @click="copy(fileUrl(file))" /><UButton size="xs" color="error" variant="ghost" icon="i-lucide-trash-2" aria-label="删除" @click="remove(file.name)" /></div></UCard>
+      <UCard v-for="file in listing?.files || []" :key="file.name" :ui="{ body: 'p-0' }"><img :src="fileUrl(file)" :alt="file.name" loading="lazy" decoding="async" class="aspect-square w-full cursor-zoom-in object-cover" @click="preview = fileUrl(file); previewOpen = true" /><div class="flex items-center gap-2 p-3"><UCheckbox :model-value="selected.includes(file.name)" @update:model-value="value => selected = value ? [...selected, file.name] : selected.filter(item => item !== file.name)" /><span class="min-w-0 flex-1 truncate text-sm">{{ file.name.split('/').pop() }}</span><UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-copy" aria-label="复制链接" @click="copy(fileUrl(file))" /><UButton size="xs" color="error" variant="ghost" icon="i-lucide-trash-2" aria-label="删除" @click="remove(file.name)" /></div></UCard>
     </div>
     <UEmpty v-if="status !== 'pending' && !(listing?.files.length || listing?.directories.length)" title="当前目录为空" />
     <UModal v-model:open="configOpen" title="图床配置"><template #body><UForm :state="config" class="space-y-4" @submit="saveConfig"><UFormField label="图床域名"><UInput v-model="config.domain" class="w-full" placeholder="https://images.example.com" /></UFormField><UFormField label="上传目录"><UInput v-model="config.uploadFolder" class="w-full" /></UFormField><UButton type="submit" block>保存配置</UButton></UForm></template></UModal>

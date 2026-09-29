@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Article, Comment } from '~/types/admin'
 
-definePageMeta({ layout: 'admin', middleware: 'admin-auth', keepalive: true })
+definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 
 const api = useAdminApi()
 const toast = useToast()

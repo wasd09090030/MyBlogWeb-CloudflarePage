@@ -8,7 +8,12 @@ export function useAdminApi() {
   // credentials or server-rendered business data.
   const cacheEntries = useState<Record<string, CacheEntry>>('admin-api-cache', () => ({}))
   const request = async <T>(path: string, options: Record<string, unknown> = {}) => {
-    return await $fetch<T>(`/admin/api/${path.replace(/^\//, '')}`, { credentials: 'include', cache: 'no-store', ...options } as any)
+    try {
+      return await $fetch<T>(`/admin/api/${path.replace(/^\//, '')}`, { credentials: 'include', cache: 'no-store', ...options } as any)
+    } catch (error: any) {
+      if (error?.response?.status === 401 || error?.statusCode === 401) useAdminAuthState().clear()
+      throw error
+    }
   }
 
   const get = async <T>(path: string, options: GetOptions = {}) => {

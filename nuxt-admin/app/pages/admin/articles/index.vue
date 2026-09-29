@@ -2,13 +2,13 @@
 import { h, resolveComponent } from 'vue'
 import type { Article } from '~/types/admin'
 
-definePageMeta({ layout: 'admin', middleware: 'admin-auth', keepalive: true })
+definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 const api = useAdminApi()
 const toast = useToast()
 const query = ref('')
 const page = ref(1)
 const pageSize = 10
-const { data: articles, refresh, status } = await useAsyncData('admin-articles', () => api.get<Article[]>('articles'))
+const { data: articles, refresh, status } = useLazyAsyncData('admin-articles', () => api.get<Article[]>('articles'))
 const filtered = computed(() => (articles.value || []).filter(article => article.title.toLowerCase().includes(query.value.toLowerCase())))
 const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize)))
 const rows = computed(() => filtered.value.slice((page.value - 1) * pageSize, page.value * pageSize))

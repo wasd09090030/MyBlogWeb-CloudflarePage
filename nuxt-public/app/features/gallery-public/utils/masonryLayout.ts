@@ -1,6 +1,7 @@
 export type GalleryLike = {
   id?: string | number | null
   thumbnailUrl?: string | null
+  heroUrl?: string | null
   imageWidth?: number | string | null
   imageHeight?: number | string | null
   width?: number | string | null
@@ -28,6 +29,18 @@ export type MasonryColumn<T> = {
   index: number
   height: number
   items: Array<MasonryDistributedItem<T>>
+}
+
+export const getGalleryHeroImageUrl = (image: GalleryLike | null | undefined): string | null => {
+  if (image?.heroUrl) return image.heroUrl
+
+  const thumbnailUrl = image?.thumbnailUrl
+  if (!thumbnailUrl) return null
+
+  const match = thumbnailUrl.match(/^(.*\/images\/thumb\/)(?:(?:card|grid|hero|lightbox)\/)?([^/?#]+\.webp)([?#].*)?$/i)
+  if (!match) return thumbnailUrl
+
+  return `${match[1]}hero/${match[2]}${match[3] || ''}`
 }
 
 const DEFAULT_ASPECT_RATIO = 1

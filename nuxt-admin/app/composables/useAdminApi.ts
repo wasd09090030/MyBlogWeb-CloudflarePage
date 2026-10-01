@@ -7,11 +7,19 @@ export function useAdminApi() {
   // The Admin is a static SPA. This state is browser-local and never contains
   // credentials or server-rendered business data.
   const cacheEntries = useState<Record<string, CacheEntry>>('admin-api-cache', () => ({}))
+  const cacheVersion = useState<number>('admin-api-cache-version', () => 0)
+  const nuxtApp = useNuxtApp()
+  const auth = useAdminAuthState()
+  const route = useRoute()
+  const router = useRouter()
   const request = async <T>(path: string, options: Record<string, unknown> = {}) => {
     try {
       return await $fetch<T>(`/admin/api/${path.replace(/^\//, '')}`, { credentials: 'include', cache: 'no-store', ...options } as any)
     } catch (error: any) {
-      if (error?.response?.status === 401 || error?.statusCode === 401) useAdminAuthState().clear()
+      if (error?.response?.status === 401 || error?.statusCode === 401) {
+        resetSession()
+        if (route.path !== '/admin/login') await router.replace('/admin/login')
+      }
       throw error
     }
   }
@@ -22,14 +30,23 @@ export function useAdminApi() {
     const cacheEnabled = options.cache !== false
     if (cacheEnabled && entry && entry.expiresAt > Date.now()) return entry.value as T
 
+    const requestVersion = cacheVersion.value
     const value = await request<T>(path)
-    if (cacheEnabled) {
+    if (cacheEnabled && requestVersion === cacheVersion.value) {
       cacheEntries.value[cacheKey] = { value, expiresAt: Date.now() + (options.ttl ?? defaultCacheTtl) }
     }
     return value
   }
 
-  const invalidate = () => { cacheEntries.value = {} }
+  const invalidate = () => {
+    cacheVersion.value += 1
+    cacheEntries.value = {}
+  }
+  const resetSession = () => {
+    invalidate()
+    nuxtApp.runWithContext(() => clearNuxtData())
+    auth.clear()
+  }
   const mutate = async <T>(path: string, options: Record<string, unknown>) => {
     // 先清缓存再发请求：即使请求失败（如 404），后续 refresh() 也拿不到过期列表
     invalidate()
@@ -40,6 +57,7 @@ export function useAdminApi() {
   return {
     get,
     invalidate,
+    resetSession,
     post: <T>(path: string, body?: unknown) => mutate<T>(path, { method: 'POST', body }),
     put: <T>(path: string, body?: unknown) => mutate<T>(path, { method: 'PUT', body }),
     patch: <T>(path: string, body?: unknown) => mutate<T>(path, { method: 'PATCH', body }),

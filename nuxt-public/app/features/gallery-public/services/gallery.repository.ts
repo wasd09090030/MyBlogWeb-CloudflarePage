@@ -5,6 +5,7 @@ import { buildGalleryCacheKey } from '~/shared/cache/keys'
 export type GalleryItem = {
   id: number
   thumbnailUrl?: string | null
+  heroUrl?: string | null
   lightboxUrl?: string | null
   imageWidth?: number | null
   imageHeight?: number | null

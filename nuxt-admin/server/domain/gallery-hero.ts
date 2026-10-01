@@ -47,11 +47,14 @@ function mapHeroItem(row: GalleryHeroRow, publicOnly = false) {
   const thumbnailUrl = row.image_asset_public_id
     ? `/images/thumb/${encodeURIComponent(row.image_asset_public_id)}.webp`
     : row.image_url
+  const heroUrl = row.image_asset_public_id
+    ? thumbnailVariantUrl(row.image_asset_public_id, 'hero')
+    : row.image_url
   const lightboxUrl = row.image_asset_public_id
     ? thumbnailVariantUrl(row.image_asset_public_id, 'lightbox')
     : row.image_url
 
-  if (publicOnly) return { id: row.id, thumbnailUrl, lightboxUrl }
+  if (publicOnly) return { id: row.id, thumbnailUrl, heroUrl, lightboxUrl }
 
   return {
     id: row.id,

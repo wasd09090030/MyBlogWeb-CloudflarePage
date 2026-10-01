@@ -26,7 +26,7 @@ const WEATHERS: Array<{ key: DiaryWeather; label: string }> = [
   { key: 'haze', label: '雾霾' }
 ]
 
-const { data: entries, refresh } = useLazyAsyncData('admin-diary', () => api.get<DiaryEntry[]>('diary/admin', { cache: false }))
+const { data: entries, refresh, status, error } = useLazyAsyncData('admin-diary', () => api.get<DiaryEntry[]>('diary/admin', { cache: false }))
 
 function todayStr(): string {
   const d = new Date()
@@ -177,7 +177,9 @@ async function remove() {
       </div>
     </div>
 
-    <div class="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
+    <UAlert v-if="status === 'error'" color="error" title="日记加载失败" :description="error?.message" />
+    <div v-else-if="status === 'pending' || status === 'idle'" class="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]"><USkeleton class="h-[32rem] w-full" /><USkeleton class="h-[32rem] w-full" /></div>
+    <div v-else class="grid gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
       <!-- 左：日历 + 近期记录 -->
       <div class="space-y-5">
         <UCard>

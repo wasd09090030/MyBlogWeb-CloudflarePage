@@ -28,4 +28,24 @@ const columns = [
 ]
 </script>
 
-<template><div class="space-y-5"><div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-sm text-muted">内容库</p><h2 class="text-2xl font-semibold">文章</h2></div><UButton to="/admin/articles/create" icon="i-lucide-plus">新建文章</UButton></div><UInput v-model="query" icon="i-lucide-search" placeholder="搜索标题" class="max-w-md" /><UCard :ui="{ body: 'p-0 sm:p-0' }"><UTable :loading="status === 'pending'" :data="rows" :columns="columns" /><template #footer><div class="flex flex-wrap items-center justify-between gap-3"><span class="text-sm text-muted">共 {{ filtered.length }} 篇</span><UPagination v-model:page="page" :total="filtered.length" :items-per-page="pageSize" /></div></template></UCard></div></template>
+<template>
+  <div class="space-y-5">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div><p class="text-sm text-muted">内容库</p><h2 class="text-2xl font-semibold">文章</h2></div>
+      <UButton to="/admin/articles/create" icon="i-lucide-plus">新建文章</UButton>
+    </div>
+    <UInput v-model="query" icon="i-lucide-search" placeholder="搜索标题" class="max-w-md" />
+    <UAlert v-if="status === 'error'" color="error" title="文章加载失败" />
+    <UCard v-else :ui="{ body: 'p-0 sm:p-0' }">
+      <UTable :loading="status === 'pending' || status === 'idle'" :data="rows" :columns="columns">
+        <template #loading><USkeleton class="h-24 w-full" /></template>
+      </UTable>
+      <template #footer>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <span class="text-sm text-muted">{{ status === 'pending' || status === 'idle' ? '正在加载文章…' : `共 ${filtered.length} 篇` }}</span>
+          <UPagination v-if="status !== 'pending' && status !== 'idle'" v-model:page="page" :total="filtered.length" :items-per-page="pageSize" />
+        </div>
+      </template>
+    </UCard>
+  </div>
+</template>

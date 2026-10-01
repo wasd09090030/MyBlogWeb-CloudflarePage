@@ -13,6 +13,7 @@ if (!/images\s*\.input\(sourceResponse\.body\)/.test(route)) failures.push('thum
 //   nuxt-public/app/features/article-detail/components/CoverImage.vue 的 srcset 描述符
 if (!/card:\s*\{\s*width:\s*720,\s*quality:\s*75\s*\}/.test(route)) failures.push('card variant must be 720px at quality 75')
 if (!/grid:\s*\{\s*width:\s*1024,\s*quality:\s*85\s*\}/.test(route)) failures.push('grid variant must be 1024px at quality 85')
+if (!/hero:\s*\{\s*width:\s*1280,\s*quality:\s*80\s*\}/.test(route)) failures.push('hero variant must be 1280px at quality 80')
 if (!/lightbox:\s*\{\s*width:\s*2048,\s*quality:\s*82\s*\}/.test(route)) failures.push('lightbox variant must be 2048px at quality 82')
 if (!/DEFAULT_VARIANT:\s*ThumbnailVariant\s*=\s*['"]grid['"]/.test(route)) failures.push('old-format default variant must be grid')
 if (!/fit:\s*['"]scale-down['"]/.test(route)) failures.push('thumbnail route must keep scale-down fit')
@@ -29,5 +30,5 @@ if (failures.length) {
   console.error(JSON.stringify({ ok: false, failures }, null, 2))
   process.exitCode = 1
 } else {
-  console.log(JSON.stringify({ ok: true, transform: 'card 720/q75 | grid 1024/q85 | lightbox 2048/q82', default: 'grid', cache: 'worker' }, null, 2))
+  console.log(JSON.stringify({ ok: true, transform: 'card 720/q75 | grid 1024/q85 | hero 1280/q80 | lightbox 2048/q82', default: 'grid', cache: 'worker' }, null, 2))
 }

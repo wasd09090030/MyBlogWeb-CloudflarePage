@@ -12,7 +12,7 @@
         >
           <template v-if="hasImage(gallery, index)">
             <img
-              :src="(gallery.lightboxUrl || gallery.thumbnailUrl) || ''"
+              :src="getGalleryHeroImageUrl(gallery) || ''"
               alt="画廊图片"
               class="fade-image"
               :width="getImageDimensions(gallery).width"
@@ -33,6 +33,8 @@
 </template>
 
 <script setup>
+import { getGalleryHeroImageUrl } from '~/features/gallery-public/utils/masonryLayout'
+
 const props = defineProps({
   images: {
     type: Array,
@@ -52,7 +54,7 @@ const getImageDimensions = (image) => {
     : { width: 1, height: 1 }
 }
 const hasImage = (image, index) => {
-  const thumbnailUrl = image?.lightboxUrl || image?.thumbnailUrl
+  const thumbnailUrl = getGalleryHeroImageUrl(image)
   if (!thumbnailUrl) return false
   return !imageErrorMap.value[getImageKey(image, index)]
 }

@@ -12,11 +12,13 @@ const THUMBNAIL_CACHE_CONTROL = 'public, max-age=31536000, immutable'
 // 不放大下限 = 槽位宽度 × DPR：
 //   card     720  → 文章卡 480 CSS，覆盖 QHD@150%（需 720）
 //   grid    1024  → 画廊最宽消费者是 Accordion 展开卡 494 CSS，覆盖 QHD@200%（需 987）
-//   lightbox 2048 → hero Fade 主视觉 2032×1152 CSS，QHD@100% 需 2032
-// 三档的消费方绑定见 GalleryHeroSection / gallery.ts / gallery-hero.ts / articles.ts。
+//   hero    1280 → Hero 首屏 Fade / preview，避免首屏直接解码 lightbox
+//   lightbox 2048 → 全屏查看，按需加载
+// 四档的消费方绑定见 GalleryHeroSection / gallery.ts / gallery-hero.ts / articles.ts。
 const THUMBNAIL_VARIANTS: Record<ThumbnailVariant, { width: number; quality: number }> = {
   card: { width: 720, quality: 75 },
   grid: { width: 1024, quality: 85 },
+  hero: { width: 1280, quality: 80 },
   lightbox: { width: 2048, quality: 82 }
 }
 const DEFAULT_VARIANT: ThumbnailVariant = 'grid'

@@ -81,15 +81,18 @@ const handleImageError = (image, index) => {
 const activeIndex = ref(0)
 const autoplayTimer = ref(null)
 const isDragging = ref(false)
-const startX = ref(0)
-const currentX = ref(0)
-const isClickValid = ref(true)
+let isClickValid = true
 
 // 拖拽跟随：dragProgress 的单位是「卡片宽度」，与 getItemStyle 里的 offset
 // 同一量纲，直接相加即可得到连续的循环偏移量，从而实现 1:1 跟手。
 const stageRef = ref(null)
 const cardWidth = ref(400)
 const dragProgress = ref(0)
+let startX = 0
+let currentX = 0
+let pendingDragProgress = 0
+let liveDragProgress = 0
+let dragFrame = 0
 
 // 构造内部循环数组：确保数量足够以实现无缝无限滚动
 // 至少需要 10 个元素来保证视口外的元素跳转不可见（避免"飞过"屏幕）
@@ -125,6 +128,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   stopAutoplay()
+  if (dragFrame) cancelAnimationFrame(dragFrame)
 })
 
 const startAutoplay = () => {
@@ -168,35 +172,65 @@ const measureCardWidth = () => {
 
 const startDrag = (e) => {
   isDragging.value = true
-  isClickValid.value = true
-  startX.value = getClientX(e)
-  currentX.value = startX.value
+  isClickValid = true
+  startX = getClientX(e)
+  currentX = startX
+  pendingDragProgress = 0
+  liveDragProgress = 0
   dragProgress.value = 0
   measureCardWidth()
   pauseAutoplay()
 }
 
+const applyDragStyles = (progress) => {
+  const items = stageRef.value?.querySelectorAll('.carousel-item')
+  if (!items) return
+
+  items.forEach((element, index) => {
+    const style = getItemStyle(index, progress)
+    element.style.transform = style.transform || ''
+    element.style.zIndex = String(style.zIndex ?? '')
+    element.style.opacity = String(style.opacity ?? '')
+    element.style.visibility = style.visibility || ''
+    element.style.pointerEvents = style.pointerEvents || ''
+  })
+}
+
+const scheduleDragFrame = () => {
+  if (dragFrame) return
+  dragFrame = requestAnimationFrame(() => {
+    dragFrame = 0
+    if (isDragging.value) applyDragStyles(pendingDragProgress)
+  })
+}
+
 const onDrag = (e) => {
   if (!isDragging.value) return
-  currentX.value = getClientX(e)
+  currentX = getClientX(e)
 
-  const delta = currentX.value - startX.value
+  const delta = currentX - startX
 
   // 卡片整体跟随指针位移（向右拖 delta > 0，卡片跟着向右走）
-  dragProgress.value = delta / cardWidth.value
+  pendingDragProgress = delta / cardWidth.value
+  liveDragProgress = pendingDragProgress
+  scheduleDragFrame()
 
   // check for drag distance to invalidate click
   if (Math.abs(delta) > 5) {
-    isClickValid.value = false
+    isClickValid = false
   }
 }
 
 const endDrag = () => {
   if (!isDragging.value) return
+  if (dragFrame) {
+    cancelAnimationFrame(dragFrame)
+    dragFrame = 0
+  }
   isDragging.value = false
 
   // 拖过的格数 = 位移换算成卡片宽度后四舍五入；不足半格自然回弹 0 格
-  const steps = Math.round(dragProgress.value)
+  const steps = Math.round(liveDragProgress)
 
   if (steps !== 0) {
     // 向右拖（steps > 0）→ 回到上一张，与原有 diff > threshold → prev() 语义一致
@@ -206,6 +240,8 @@ const endDrag = () => {
   // 归零拖拽位移：activeIndex 已吸收整数格，剩下的不足一格部分
   // 交给 .carousel-item 的 0.5s 缓动平滑吸附（is-dragging 已移除，过渡恢复）
   dragProgress.value = 0
+  pendingDragProgress = 0
+  liveDragProgress = 0
   resumeAutoplay()
 }
 
@@ -226,7 +262,7 @@ const stepBy = (delta) => {
 }
 
 const handleItemClick = (index, item) => {
-  if (!isClickValid.value) return
+  if (!isClickValid) return
   
   if (index === activeIndex.value) {
     emit('image-click', item)
@@ -252,7 +288,7 @@ const handleItemClick = (index, item) => {
 //   a=0 → scale 1.1 / z 100  / opacity 1   / zIndex 1000
 //   a=1 → scale 0.9 / z -120 / opacity 0.9 / zIndex 99
 //   a=2 → scale 0.8 / z -240 / opacity 0.9 / zIndex 98
-const getItemStyle = (index) => {
+const getItemStyle = (index, progress = dragProgress.value) => {
   const len = internalImages.value.length
   if (len === 0) return {}
 
@@ -262,7 +298,7 @@ const getItemStyle = (index) => {
   if (offset > len / 2) offset -= len
   else if (offset < -len / 2) offset += len
 
-  const eff = offset + dragProgress.value
+  const eff = offset + progress
   const a = Math.abs(eff)
 
   // 配置参数

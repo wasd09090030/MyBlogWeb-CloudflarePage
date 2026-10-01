@@ -5,9 +5,11 @@
 
 import type { Ref } from 'vue'
 import type { ImagePreloadProgress } from '~/utils/workers/types'
+import { getGalleryHeroImageUrl } from '~/features/gallery-public/utils/masonryLayout'
 
 type GalleryItem = {
   thumbnailUrl?: string | null
+  heroUrl?: string | null
   [key: string]: unknown
 }
 
@@ -44,10 +46,10 @@ export async function preloadAllImagesWithWorker(
   if (galleries.length === 0) return
 
   const imagesToPreload = galleries
-    .filter((gallery) => Boolean(gallery.thumbnailUrl))
+    .filter((gallery) => Boolean(getGalleryHeroImageUrl(gallery)))
     .slice(0, preloadCount)
   const urls = imagesToPreload
-    .map((gallery) => gallery.thumbnailUrl)
+    .map((gallery) => getGalleryHeroImageUrl(gallery))
     .filter((url): url is string => Boolean(url))
 
   loadingState.totalImagesToLoad.value = urls.length
@@ -97,10 +99,10 @@ export async function preloadAllImages(
   if (galleries.length === 0) return
 
   const imagesToPreload = galleries
-    .filter((gallery) => Boolean(gallery.thumbnailUrl))
+    .filter((gallery) => Boolean(getGalleryHeroImageUrl(gallery)))
     .slice(0, preloadCount)
   const urls = imagesToPreload
-    .map((gallery) => gallery.thumbnailUrl)
+    .map((gallery) => getGalleryHeroImageUrl(gallery))
     .filter((url): url is string => Boolean(url))
 
   loadingState.totalImagesToLoad.value = urls.length
@@ -118,7 +120,7 @@ export async function preloadAllImages(
 
     for (const chunk of chunks) {
       await Promise.allSettled(
-        chunk.map((gallery) => preloadImage(gallery.thumbnailUrl!, loadingState, loadingProgressRef))
+        chunk.map((gallery) => preloadImage(getGalleryHeroImageUrl(gallery)!, loadingState, loadingProgressRef))
       )
     }
 

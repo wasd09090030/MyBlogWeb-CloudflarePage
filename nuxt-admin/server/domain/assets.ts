@@ -5,7 +5,7 @@ import { sha256Id } from '~~/server/utils/asset-id'
 
 export type AssetKind = 'article_cover' | 'gallery' | 'other'
 
-export type ThumbnailVariant = 'card' | 'grid' | 'lightbox'
+export type ThumbnailVariant = 'card' | 'grid' | 'hero' | 'lightbox'
 
 export type ImageAssetRow = {
   id: number

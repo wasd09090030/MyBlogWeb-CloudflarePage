@@ -4,6 +4,7 @@ definePageMeta({ layout: 'login', middleware: 'admin-auth' })
 const toast = useToast()
 const router = useRouter()
 const auth = useAdminAuthState()
+const api = useAdminApi()
 const pending = ref(false)
 const errorMessage = ref('')
 const state = reactive({ username: '', password: '' })
@@ -18,6 +19,7 @@ async function submit() {
   errorMessage.value = ''
   try {
     await $fetch('/admin/api/auth/login', { method: 'POST', body: state, credentials: 'include' })
+    api.resetSession()
     auth.markAuthenticated()
     await router.push('/admin')
   } catch (error: any) {

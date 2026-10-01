@@ -48,8 +48,8 @@ const sortOptions = [
   { label: '排序号：从大到小', value: 'order-desc' },
   { label: '最新创建', value: 'newest' }
 ]
-const { data: items, refresh } = useLazyAsyncData('admin-gallery', () => api.get<GalleryItem[]>('gallery/admin', { cache: false }))
-const { data: heroConfiguration, refresh: refreshHeroConfiguration } = useLazyAsyncData(
+const { data: items, refresh, status: itemsStatus, error: itemsError } = useLazyAsyncData('admin-gallery', () => api.get<GalleryItem[]>('gallery/admin', { cache: false }))
+const { data: heroConfiguration, refresh: refreshHeroConfiguration, status: heroStatus, error: heroError } = useLazyAsyncData(
   'admin-gallery-hero',
   () => api.get<GalleryHeroConfiguration>('gallery/hero', { cache: false })
 )
@@ -210,6 +210,7 @@ function removeHeroItem(section: GalleryHeroSection, index: number) {
   heroSections[section].splice(index, 1)
 }
 async function saveHeroConfiguration() {
+  if (heroStatus.value !== 'success' || !heroConfiguration.value) return
   const sections = Object.fromEntries(heroDefinitions.map(({ key }) => [
     key,
     heroSections[key].map(item => ({ imageUrl: item.imageUrl.trim() }))
@@ -321,10 +322,12 @@ async function remove(item: GalleryItem) {
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div><p class="text-sm text-muted">独立于瀑布流</p><h3 class="text-lg font-semibold">Artwork Hero</h3></div>
-          <UButton icon="i-lucide-save" :loading="heroSaving" @click="saveHeroConfiguration">保存 Hero 配置</UButton>
+          <UButton icon="i-lucide-save" :loading="heroSaving" :disabled="heroStatus !== 'success'" @click="saveHeroConfiguration">保存 Hero 配置</UButton>
         </div>
       </template>
-      <div class="grid gap-5 lg:grid-cols-2">
+      <UAlert v-if="heroStatus === 'error'" color="error" title="Hero 配置加载失败" :description="heroError?.message" />
+      <div v-else-if="heroStatus === 'pending' || heroStatus === 'idle'" class="grid gap-5 lg:grid-cols-2"><USkeleton v-for="item in 4" :key="item" class="h-40 w-full" /></div>
+      <div v-else class="grid gap-5 lg:grid-cols-2">
         <section v-for="definition in heroDefinitions" :key="definition.key" class="space-y-3 rounded-md border border-default p-4">
           <div class="flex items-center justify-between gap-2"><h4 class="font-medium">{{ definition.label }}</h4><span class="text-sm text-muted">{{ heroSections[definition.key].length }} / {{ definition.limit }}</span></div>
           <div v-for="(item, index) in heroSections[definition.key]" :key="item.id || `${definition.key}-${index}`" class="flex items-center gap-2">
@@ -353,7 +356,9 @@ async function remove(item: GalleryItem) {
       </div>
     </UCard>
 
-    <div v-if="visibleItems.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <UAlert v-if="itemsStatus === 'error'" color="error" title="画廊加载失败" :description="itemsError?.message" />
+    <div v-else-if="itemsStatus === 'pending' || itemsStatus === 'idle'" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><USkeleton v-for="item in 8" :key="item" class="h-64 w-full" /></div>
+    <div v-else-if="visibleItems.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <UCard v-for="item in visibleItems" :key="item.id" :ui="{ body: 'p-0' }">
         <img :src="item.imageUrl" :alt="item.tag || 'gallery image'" loading="lazy" decoding="async" class="aspect-square w-full object-cover" />
         <div class="space-y-3 p-3">

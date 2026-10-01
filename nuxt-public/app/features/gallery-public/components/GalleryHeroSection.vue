@@ -95,7 +95,8 @@ import FadeSlideshow from '~/features/gallery-public/components/FadeSlideshow.vu
 import {
   getGalleryAspectRatioStyle,
   getGalleryImageDimensions,
-  getGalleryImageKey
+  getGalleryImageKey,
+  getGalleryHeroImageUrl
 } from '~/features/gallery-public/utils/masonryLayout'
 
 const props = defineProps({
@@ -131,7 +132,8 @@ const railPreviewImages = computed(() => props.previewImages.slice(0, 2))
 const featuredPreviewImage = computed(() => props.previewImages[2] ?? props.previewImages[0] ?? null)
 
 const getImageKey = (image, index) => getGalleryImageKey(image, index)
-const getPreviewImageUrl = (image) => image?.lightboxUrl || image?.thumbnailUrl || ''
+const getPreviewImageUrl = (image) => getGalleryHeroImageUrl(image) || ''
+const getPreviewBackgroundUrl = (image) => image?.thumbnailUrl || image?.heroUrl || ''
 const getImageDimensions = (image) => getGalleryImageDimensions(image) ?? { width: 1, height: 1 }
 
 const hasImage = (image, index) => {
@@ -184,7 +186,7 @@ const getPreviewCardStyle = (image, index, options = {}) => {
   }
 
   if (options.useImageBackground) {
-    const thumbnailUrl = getPreviewImageUrl(image)
+    const thumbnailUrl = getPreviewBackgroundUrl(image)
     if (thumbnailUrl) {
       style.backgroundImage = `url("${thumbnailUrl}")`
       style.backgroundPosition = 'center'
@@ -245,7 +247,8 @@ defineExpose({
   border-radius: 16px;
   background: var(--gallery-card-bg, rgba(255, 255, 255, 0.92));
   border: 1px solid var(--gallery-border, rgba(157, 23, 77, 0.16));
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   box-shadow: 0 18px 44px rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.08);
   z-index: 1;
 }
@@ -278,7 +281,8 @@ defineExpose({
   border-radius: 18px;
   background: var(--gallery-card-bg, rgba(255, 255, 255, 0.52));
   border: 1px solid var(--gallery-border, rgba(157, 23, 77, 0.16));
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .gallery-hero__accordion {
@@ -294,7 +298,8 @@ defineExpose({
   border-radius: 18px;
   background: var(--gallery-card-bg, rgba(255, 255, 255, 0.56));
   border: 1px solid var(--gallery-border, rgba(157, 23, 77, 0.16));
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .gallery-hero__coverflow {

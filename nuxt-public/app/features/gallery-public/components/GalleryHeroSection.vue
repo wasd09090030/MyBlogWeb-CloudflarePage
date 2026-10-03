@@ -42,12 +42,19 @@
         </article>
       </div>
 
-      <div class="embedded-card gallery-hero__accordion">
+      <div
+        class="embedded-card gallery-hero__accordion"
+        @pointerenter="activateInteractivePanels"
+        @focusin="activateInteractivePanels"
+        @touchstart.passive="activateInteractivePanels"
+      >
         <AccordionGallery
+          v-if="interactivePanelsReady"
           ref="accordionGalleryRef"
           :images="accordionImages"
           @image-click="$emit('image-click', $event)"
         />
+        <div v-else class="gallery-hero__interactive-placeholder" aria-hidden="true"></div>
       </div>
 
       <div class="gallery-hero__preview gallery-hero__preview--wide">
@@ -76,21 +83,27 @@
         </article>
       </div>
 
-      <div class="embedded-card gallery-hero__coverflow">
+      <div
+        class="embedded-card gallery-hero__coverflow"
+        @pointerenter="activateInteractivePanels"
+        @focusin="activateInteractivePanels"
+        @touchstart.passive="activateInteractivePanels"
+      >
         <CoverflowGallery
+          v-if="interactivePanelsReady"
           ref="coverflowGalleryRef"
           :images="coverflowImages"
           @image-click="$emit('image-click', $event)"
         />
+        <div v-else class="gallery-hero__interactive-placeholder" aria-hidden="true"></div>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
+import { defineAsyncComponent } from 'vue'
 import ImageLoadingPlaceholder from '~/shared/ui/ImageLoadingPlaceholder.vue'
-import AccordionGallery from '~/features/gallery-public/components/AccordionGallery.vue'
-import CoverflowGallery from '~/features/gallery-public/components/CoverflowGallery.vue'
 import FadeSlideshow from '~/features/gallery-public/components/FadeSlideshow.vue'
 import {
   getGalleryAspectRatioStyle,
@@ -118,7 +131,10 @@ const props = defineProps({
   }
 })
 
-defineEmits(['image-click'])
+const emit = defineEmits(['image-click', 'interactive-ready'])
+
+const AccordionGallery = defineAsyncComponent(() => import('~/features/gallery-public/components/AccordionGallery.vue'))
+const CoverflowGallery = defineAsyncComponent(() => import('~/features/gallery-public/components/CoverflowGallery.vue'))
 
 const fadeSlideshowRef = ref(null)
 const accordionGalleryRef = ref(null)
@@ -127,6 +143,9 @@ const coverflowGalleryRef = ref(null)
 const previewLoadedMap = ref({})
 const previewErrorMap = ref({})
 const previewSizeMap = ref({})
+const interactivePanelsReady = ref(false)
+let interactiveIdleId = null
+let interactiveFallbackTimer = null
 
 const railPreviewImages = computed(() => props.previewImages.slice(0, 2))
 const featuredPreviewImage = computed(() => props.previewImages[2] ?? props.previewImages[0] ?? null)
@@ -198,6 +217,31 @@ const getPreviewCardStyle = (image, index, options = {}) => {
   return style
 }
 
+const activateInteractivePanels = () => {
+  if (interactivePanelsReady.value) return
+  interactivePanelsReady.value = true
+  emit('interactive-ready')
+}
+
+onMounted(() => {
+  if (typeof window === 'undefined') return
+
+  if ('requestIdleCallback' in window) {
+    interactiveIdleId = window.requestIdleCallback(activateInteractivePanels, { timeout: 1200 })
+  } else {
+    interactiveFallbackTimer = window.setTimeout(activateInteractivePanels, 700)
+  }
+})
+
+onUnmounted(() => {
+  if (interactiveIdleId !== null && 'cancelIdleCallback' in window) {
+    window.cancelIdleCallback(interactiveIdleId)
+  }
+  if (interactiveFallbackTimer !== null) {
+    window.clearTimeout(interactiveFallbackTimer)
+  }
+})
+
 watch(
   () => props.previewImages.map((image, index) => getImageKey(image, index)).join('|'),
   () => {
@@ -251,6 +295,12 @@ defineExpose({
   backdrop-filter: none;
   box-shadow: 0 18px 44px rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.08);
   z-index: 1;
+}
+
+.gallery-hero__interactive-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.04), transparent 65%);
 }
 
 .embedded-card :deep(.accordion-fill),

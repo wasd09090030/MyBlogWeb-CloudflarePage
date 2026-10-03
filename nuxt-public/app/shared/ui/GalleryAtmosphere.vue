@@ -1,5 +1,5 @@
 <template>
-  <div class="gallery-atmosphere" aria-hidden="true">
+  <div class="gallery-atmosphere" :class="{ 'is-paused': isPaused }" aria-hidden="true">
     <svg class="gallery-atmosphere__svg" viewBox="0 0 1440 820" preserveAspectRatio="none">
       <defs>
         <linearGradient id="gallery-ribbon-a" x1="0" y1="0" x2="1" y2="0">
@@ -29,7 +29,31 @@
 </template>
 
 <script setup>
+import { onMounted, onUnmounted, ref } from 'vue'
+
 defineOptions({ name: 'GalleryAtmosphere' })
+
+const isPaused = ref(false)
+let heroObserver = null
+
+onMounted(() => {
+  const hero = document.querySelector('.gallery-hero')
+  if (!hero) {
+    isPaused.value = true
+    return
+  }
+  if (typeof IntersectionObserver === 'undefined') return
+
+  heroObserver = new IntersectionObserver(([entry]) => {
+    isPaused.value = !entry.isIntersecting
+  }, { threshold: 0.05 })
+  heroObserver.observe(hero)
+})
+
+onUnmounted(() => {
+  heroObserver?.disconnect()
+  heroObserver = null
+})
 </script>
 
 <style scoped>
@@ -89,6 +113,12 @@ defineOptions({ name: 'GalleryAtmosphere' })
 .gallery-atmosphere__sparkles circle:nth-child(3n) {
   fill: var(--gallery-orbit, #fb923c);
   animation-delay: -3.2s;
+}
+
+.gallery-atmosphere.is-paused .gallery-atmosphere__ribbon,
+.gallery-atmosphere.is-paused .gallery-atmosphere__orbit,
+.gallery-atmosphere.is-paused .gallery-atmosphere__sparkles circle {
+  animation-play-state: paused;
 }
 
 /* 位移量取「恰好一个虚线周期」，首尾无缝衔接：

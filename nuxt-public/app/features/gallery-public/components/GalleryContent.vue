@@ -57,6 +57,7 @@
             :coverflow-images="coverflowImages"
             :preview-images="heroPreviewImages"
             @image-click="$emit('open-fullscreen', $event)"
+            @interactive-ready="$emit('interactive-ready')"
           />
 
           <GalleryTimelineLayout :groups="artworkMonthGroups">
@@ -207,7 +208,8 @@ const emit = defineEmits([
   'wheel',
   'start-drag',
   'image-load',
-  'gallery-visible'
+  'gallery-visible',
+  'interactive-ready'
 ])
 
 const galleryHeroSectionRef = ref(null)

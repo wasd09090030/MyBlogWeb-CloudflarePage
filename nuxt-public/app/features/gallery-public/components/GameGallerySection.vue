@@ -85,7 +85,7 @@ const getImageKey = (image, index) => getGalleryImageKey(image, index)
 const layout = computed(() => buildGameBentoLayout(props.images, props.monthKey))
 
 const hasImage = (image, index) => {
-  const thumbnailUrl = image?.lightboxUrl || image?.thumbnailUrl
+  const thumbnailUrl = image?.thumbnailUrl
   return Boolean(thumbnailUrl) && !imageErrorMap.value[getImageKey(image, index)]
 }
 
@@ -125,7 +125,7 @@ const GameTileImage = {
       return [
         h(ImageLoadingPlaceholder, { show: !isImageLoaded(image, index) }),
         h('img', {
-          src: image.lightboxUrl || image.thumbnailUrl || '',
+          src: image.thumbnailUrl || '',
           alt: image.title || '游戏截屏',
           class: 'game-tile__image',
           draggable: false,

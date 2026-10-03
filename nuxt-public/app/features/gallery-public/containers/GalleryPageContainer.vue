@@ -32,13 +32,14 @@
     @start-drag="startDrag"
     @image-load="onImageLoad"
     @gallery-visible="onGalleryVisible"
+    @interactive-ready="initGallerySliders"
   />
 </template>
 
 <script setup>
 import GalleryContent from '~/features/gallery-public/components/GalleryContent.vue'
 import { createGalleryRepository } from '~/features/gallery-public/services/gallery.repository'
-import { preloadAllImagesWithWorker, ensureMinLoadingTime } from '~/features/gallery-public/utils/imageLoader'
+import { preloadAllImagesWithWorker } from '~/features/gallery-public/utils/imageLoader'
 import { zoomIn as zoomInFn, zoomOut as zoomOutFn, resetZoom as resetZoomFn, handleWheel as handleWheelFn, createDragHandler } from '~/features/gallery-public/utils/zoomAndDrag'
 import { initSliders, destroySliders, getGallerySlice as getSlice } from '~/features/gallery-public/utils/sliderManager'
 import { normalizeTag, bodyScrollManager } from '~/features/gallery-public/utils/utils'
@@ -128,6 +129,14 @@ const heroFadeImages = computed(() => heroSlices.value.fade)
 const heroAccordionImages = computed(() => heroSlices.value.accordion)
 const heroCoverflowImages = computed(() => heroSlices.value.coverflow)
 const heroPreviewImages = computed(() => heroSlices.value.preview)
+const heroCriticalImages = computed(() => {
+  const firstImage = heroFadeImages.value[0]
+    ?? heroPreviewImages.value[0]
+    ?? heroAccordionImages.value[0]
+    ?? heroCoverflowImages.value[0]
+
+  return firstImage ? [firstImage] : []
+})
 
 /*
  * Hero 是否在后台被配置了内容。
@@ -163,15 +172,13 @@ const preloadAllImagesHandler = async () => {
 
   try {
     await preloadAllImagesWithWorker(
-      galleries.value,
+      heroCriticalImages.value,
       loadingState,
       loadingProgress,
       previewImages,
-      5,
-      5
+      1,
+      1
     )
-
-    await ensureMinLoadingTime(startTime, 800)
 
     isInitialLoading.value = false
     await nextTick()
@@ -187,8 +194,6 @@ const preloadAllImagesHandler = async () => {
     }, 100)
   }
 }
-
-let startTime = Date.now()
 
 const getSliderRefs = () => {
   return galleryContentRef.value?.getSliderRefs?.() || {
@@ -272,7 +277,6 @@ onMounted(async () => {
     isInitialLoading.value = false
     return
   }
-  startTime = Date.now()
   if (galleries.value.length > 0) {
     await preloadAllImagesHandler()
   } else {

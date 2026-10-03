@@ -544,6 +544,11 @@ onUnmounted(() => {
   min-width: 0;
 }
 
+.gallery-month-section:not(:first-child) .gallery-month-section__content {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1000px;
+}
+
 /* gallery-timeline-editorial-minimal · 已移除 .gallery-month-section__count（原数字埋点） */
 
 /* ====== Dark theme overrides ====== */

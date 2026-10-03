@@ -1,6 +1,9 @@
 <template>
   <div class="accordion-fill">
-    <div class="accordion-gallery">
+    <div
+      class="accordion-gallery"
+      :style="{ '--accordion-template': getGridTemplate() }"
+    >
       <div
         v-for="(gallery, index) in images"
         :key="`accordion-${gallery.id}-${index}`"
@@ -61,6 +64,14 @@ const handleImageError = (image) => {
   imageErrorMap.value[getImageKey(image)] = true
 }
 
+const getGridTemplate = () => {
+  return props.images
+    .map((_, index) => index === expandedIndex.value
+      ? 'var(--accordion-expanded-track)'
+      : 'var(--accordion-collapsed-track)')
+    .join(' ')
+}
+
 // 切换展开项
 const toggleAccordion = (index) => {
   expandedIndex.value = index
@@ -83,20 +94,22 @@ watch(
 }
 
 .accordion-gallery {
-  display: flex;
+  --accordion-collapsed-track: 1fr;
+  --accordion-expanded-track: 2fr;
+  display: grid;
+  grid-template-columns: var(--accordion-template, repeat(5, minmax(0, 1fr)));
   width: 100%;
   height: 100%;
   gap: 10px;
+  transition: grid-template-columns 0.5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .accordion-item {
   position: relative;
-  flex: 1; /* 默认收缩状态 */
   height: 100%;
   border-radius: 15px;
   overflow: hidden;
   cursor: pointer;
-  transition: flex 0.5s cubic-bezier(0.25, 1, 0.5, 1);
   min-width: 0; /* 防止内容撑开 flex item */
 }
 
@@ -108,10 +121,6 @@ watch(
   justify-content: center;
   color: rgba(255, 255, 255, 0.75);
   background: var(--gallery-fallback, linear-gradient(140deg, rgba(157, 23, 77, 0.6), rgba(61, 47, 43, 0.4)));
-}
-
-.accordion-item.expanded {
-  flex: 2; /* 展开状态，比例 1:4 */
 }
 
 .accordion-image {
@@ -147,11 +156,10 @@ watch(
 /* 响应式调整 */
 @media (max-width: 768px) {
   .accordion-gallery {
-    flex-direction: column;
-  }
-  
-  .accordion-item.expanded {
-    flex: 3;
+    --accordion-expanded-track: 3fr;
+    grid-template-columns: 1fr;
+    grid-template-rows: var(--accordion-template, repeat(5, minmax(0, 1fr)));
+    transition-property: grid-template-rows;
   }
 }
 

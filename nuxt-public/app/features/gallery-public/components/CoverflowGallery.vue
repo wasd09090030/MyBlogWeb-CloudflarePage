@@ -100,9 +100,9 @@ const internalImages = computed(() => {
   const original = props.images
   if (!original || original.length === 0) return []
   
-  // 7 张足够覆盖中心卡两侧各 3 张的可视范围，避免为循环复制 15 个
-  // DOM 节点并重复请求同一批缩略图。
-  const minLength = 7
+  // 当前视觉范围是中心卡两侧各 2 张，5 张即可覆盖完整可见区域。
+  // 避免额外创建隐藏卡片和重复请求同一批缩略图。
+  const minLength = 5
   let result = [...original]
   
   // 复制数组直到满足最小长度
@@ -113,7 +113,7 @@ const internalImages = computed(() => {
   // 添加唯一 Key 以便 v-for 渲染
   return result.map((img, i) => ({
     ...img,
-    _uniqueKey: `clone-${i}-${img.id || Math.random()}`
+    _uniqueKey: `clone-${i}-${img.id ?? img.thumbnailUrl ?? 'image'}`
   }))
 })
 

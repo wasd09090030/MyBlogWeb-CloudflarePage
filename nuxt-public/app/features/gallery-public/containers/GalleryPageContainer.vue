@@ -39,7 +39,6 @@
 <script setup>
 import GalleryContent from '~/features/gallery-public/components/GalleryContent.vue'
 import { createGalleryRepository } from '~/features/gallery-public/services/gallery.repository'
-import { preloadAllImagesWithWorker } from '~/features/gallery-public/utils/imageLoader'
 import { zoomIn as zoomInFn, zoomOut as zoomOutFn, resetZoom as resetZoomFn, handleWheel as handleWheelFn, createDragHandler } from '~/features/gallery-public/utils/zoomAndDrag'
 import { initSliders, destroySliders, getGallerySlice as getSlice } from '~/features/gallery-public/utils/sliderManager'
 import { normalizeTag, bodyScrollManager } from '~/features/gallery-public/utils/utils'
@@ -68,11 +67,11 @@ const selectedImage = ref(null)
 const fullscreenOriginRect = ref(null)
 const activeTag = ref('artwork')
 
-const isInitialLoading = ref(true)
+// SSG payload 已经提供画廊数据，不再阻塞整页等待首图预加载。
+// Hero 首图自身使用 eager + fetchpriority=high，其他图片按视口懒加载。
+const isInitialLoading = ref(false)
 const loadingProgress = ref(0)
 const previewImages = ref([])
-const loadedImagesCount = ref(0)
-const totalImagesToLoad = ref(0)
 const isGalleryReady = ref(false)
 
 const galleryContentRef = ref(null)
@@ -162,39 +161,6 @@ const setActiveTag = (tag) => {
   activeTag.value = tag
 }
 
-const preloadAllImagesHandler = async () => {
-  if (galleries.value.length === 0) return
-
-  const loadingState = {
-    loadedImagesCount,
-    totalImagesToLoad
-  }
-
-  try {
-    await preloadAllImagesWithWorker(
-      heroCriticalImages.value,
-      loadingState,
-      loadingProgress,
-      previewImages,
-      1,
-      1
-    )
-
-    isInitialLoading.value = false
-    await nextTick()
-    setTimeout(() => {
-      initGallerySliders()
-    }, 100)
-  } catch (preloadError) {
-    console.error('预加载图片失败:', preloadError)
-    isInitialLoading.value = false
-    await nextTick()
-    setTimeout(() => {
-      initGallerySliders()
-    }, 100)
-  }
-}
-
 const getSliderRefs = () => {
   return galleryContentRef.value?.getSliderRefs?.() || {
     fadeSlideshowRef: ref(null),
@@ -277,11 +243,10 @@ onMounted(async () => {
     isInitialLoading.value = false
     return
   }
-  if (galleries.value.length > 0) {
-    await preloadAllImagesHandler()
-  } else {
-    isInitialLoading.value = false
-  }
+  await nextTick()
+  setTimeout(() => {
+    initGallerySliders()
+  }, 100)
 })
 
 onUnmounted(() => {

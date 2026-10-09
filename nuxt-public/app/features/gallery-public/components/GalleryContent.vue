@@ -1,6 +1,6 @@
 <template>
   <div class="gallery-fullscreen">
-    <GalleryAtmosphere />
+    <GalleryAtmosphere :paused="showFullscreen" />
 
     <Transition name="loading-fade" mode="out-in">
       <GalleryLoadingAnimation

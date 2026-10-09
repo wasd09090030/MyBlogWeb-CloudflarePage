@@ -1,5 +1,5 @@
 <template>
-  <div class="gallery-atmosphere" :class="{ 'is-paused': isPaused }" aria-hidden="true">
+  <div class="gallery-atmosphere" :class="{ 'is-paused': isPaused || isDocumentHidden || props.paused }" aria-hidden="true">
     <svg class="gallery-atmosphere__svg" viewBox="0 0 1440 820" preserveAspectRatio="none">
       <defs>
         <linearGradient id="gallery-ribbon-a" x1="0" y1="0" x2="1" y2="0">
@@ -34,9 +34,23 @@ import { onMounted, onUnmounted, ref } from 'vue'
 defineOptions({ name: 'GalleryAtmosphere' })
 
 const isPaused = ref(false)
+const isDocumentHidden = ref(false)
+const props = defineProps({
+  paused: {
+    type: Boolean,
+    default: false
+  }
+})
 let heroObserver = null
 
+const handleVisibilityChange = () => {
+  isDocumentHidden.value = document.visibilityState === 'hidden'
+}
+
 onMounted(() => {
+  handleVisibilityChange()
+  document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true })
+
   const hero = document.querySelector('.gallery-hero')
   if (!hero) {
     isPaused.value = true
@@ -51,6 +65,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
   heroObserver?.disconnect()
   heroObserver = null
 })

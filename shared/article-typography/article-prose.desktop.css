@@ -1,36 +1,27 @@
 .article-prose {
-  --article-prose-text: #444b55;
-  --article-prose-heading: #20252c;
-  --article-prose-muted: #737b87;
-  --article-prose-border: #d9dde3;
-  --article-prose-surface: #f3f4f6;
-  --article-prose-accent: #2563eb;
+  --article-prose-text: var(--text-primary, var(--ui-text, #3d2f2b));
+  --article-prose-heading: var(--text-primary, var(--ui-text-highlighted, #3d2f2b));
+  --article-prose-muted: var(--text-secondary, var(--ui-text-muted, #8a7368));
+  --article-prose-border: var(--border-color, var(--ui-border, #f2e4da));
+  --article-prose-surface: var(--bg-secondary, var(--ui-bg-muted, #f7e8e1));
+  --article-prose-accent: var(--accent-primary, var(--ui-primary, #e11d48));
   --article-prose-accent-soft: color-mix(in srgb, var(--article-prose-accent) 9%, transparent);
-  --article-prose-link: #374151;
+  --article-prose-link: var(--article-prose-heading);
+  --article-prose-card: var(--card-bg, var(--ui-bg, #fff));
+  --article-prose-hover: var(--bg-hover, var(--ui-bg-elevated, #fbeae7));
+  --article-prose-radius: 0.375rem;
+  --article-prose-success: var(--accent-success, var(--ui-success, #0d9488));
+  --article-prose-warning: var(--accent-warning, var(--ui-warning, #f59e0b));
+  --article-prose-error: var(--accent-danger, var(--ui-error, #e11d48));
   width: 100%;
   max-width: none;
   margin-inline: auto;
   color: var(--article-prose-text);
 }
 
-.dark .article-prose {
-  --article-prose-text: #c9ced6;
-  --article-prose-heading: #f1f3f5;
-  --article-prose-muted: #929aa6;
-  --article-prose-border: #363d47;
-  --article-prose-surface: #242a32;
-  --article-prose-accent: #60a5fa;
-  --article-prose-link: #d7dce3;
-}
-
 .article-detail-header {
-  --article-prose-heading: #20252c;
-  --article-prose-muted: #737b87;
-}
-
-.dark .article-detail-header {
-  --article-prose-heading: #f1f3f5;
-  --article-prose-muted: #929aa6;
+  --article-prose-heading: var(--text-primary, var(--ui-text-highlighted));
+  --article-prose-muted: var(--text-secondary, var(--ui-text-muted));
 }
 
 .article-prose-heading {

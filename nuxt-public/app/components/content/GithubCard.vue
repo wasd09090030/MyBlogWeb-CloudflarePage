@@ -1,12 +1,12 @@
 <template>
   <div class="github-card-mdc my-6">
-    <div v-if="loading" class="loading-skeleton p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md">
+    <div v-if="loading" class="loading-skeleton p-4 rounded-md">
       <div class="skeleton-line w-3/4 h-6 mb-3 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
       <div class="skeleton-line w-full h-4 mb-2 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
       <div class="skeleton-line w-5/6 h-4 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
     </div>
     
-    <div v-else-if="repoData" class="github-card p-4 bg-[color:var(--article-prose-surface,#f3f4f6)] transition-all duration-200 overflow-hidden">
+    <div v-else-if="repoData" class="github-card p-4 transition-colors duration-200 overflow-hidden">
       <!-- 装饰性光晕效果 -->
       
       <!-- 内容区域 -->
@@ -17,29 +17,29 @@
             <Icon name="mdi:github" class="inline-block mr-2" />
             {{ repoData.full_name }}
           </a>
-          <p v-if="repoData.description" class="repo-description mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          <p v-if="repoData.description" class="repo-description mt-2 text-sm leading-relaxed">
             {{ repoData.description }}
           </p>
         </div>
         
         <!-- 统计信息 -->
-        <div class="repo-stats flex gap-4 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <div class="stat-item flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+        <div class="repo-stats flex gap-4 mb-4 pb-4 border-b">
+          <div class="stat-item flex items-center gap-1 text-sm">
             <Icon name="mdi:star-outline" class="w-4 h-4" />
             <span>{{ formatNumber(repoData.stargazers_count) }}</span>
           </div>
-          <div class="stat-item flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+          <div class="stat-item flex items-center gap-1 text-sm">
             <Icon name="mdi:source-fork" class="w-4 h-4" />
             <span>{{ formatNumber(repoData.forks_count) }}</span>
           </div>
-          <div v-if="repoData.open_issues_count" class="stat-item flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+          <div v-if="repoData.open_issues_count" class="stat-item flex items-center gap-1 text-sm">
             <Icon name="mdi:alert-circle-outline" class="w-4 h-4" />
             <span>{{ formatNumber(repoData.open_issues_count) }}</span>
           </div>
         </div>
         
         <!-- 底部信息 -->
-        <div class="repo-footer flex items-center gap-4 flex-wrap text-xs text-gray-600 dark:text-gray-400">
+        <div class="repo-footer flex items-center gap-4 flex-wrap text-xs">
           <div v-if="repoData.language" class="language flex items-center gap-2">
             <span class="language-dot w-3 h-3 rounded-full" :style="{ backgroundColor: getLanguageColor(repoData.language) }"></span>
             {{ repoData.language }}
@@ -170,7 +170,7 @@ watch(() => props.repo, () => {
 
 <style scoped>
 .github-card-mdc {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  font-family: inherit;
 }
 
 /* 暗色模式下语言点的外光晕 */

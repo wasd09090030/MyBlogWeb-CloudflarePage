@@ -1,0 +1,14 @@
+@media (max-width: 768px) {
+  .article-prose .steps-controls { justify-content: center; flex-wrap: wrap; }
+  .article-prose .tabs-header { gap: 0; }
+  .article-prose .tab-btn { padding-inline: 0.75rem; }
+  .article-prose .star-rating-inner { flex-wrap: wrap; row-gap: 0.75rem; }
+  .article-prose .spoiler-warning-bar { flex-wrap: wrap; }
+  .article-prose .spoiler-toggle-hint { display: none; }
+}
+
+@media (max-width: 576px) {
+  .article-prose .spoiler-body { padding: 0.875rem 1rem; }
+  .article-prose .spoiler-mask-content { max-width: calc(100% - 2rem); padding: 0.5rem 0.75rem; text-align: center; }
+  .article-prose .playground-header { padding-inline: 0.75rem; }
+}

@@ -132,6 +132,10 @@ export default defineNuxtConfig({
   },
 
   mdc: {
+    components: {
+      // Preserve blog MDC syntax when Nuxt UI registers its Prose defaults.
+      map: { tabs: 'Tabs', steps: 'Steps' }
+    },
     highlight: {
       // 静态站不存在运行时 /api/_mdc/highlight，避免首访先 404 再回退。
       noApiRoute: true,

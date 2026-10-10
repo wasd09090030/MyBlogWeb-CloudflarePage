@@ -1,24 +1,24 @@
 <template>
   <div class="spoiler-mdc my-4" :class="{ 'is-revealed': revealed }">
     <!-- 警告条 -->
-    <div class="spoiler-warning-bar" @click="toggle" role="button" :aria-expanded="revealed">
-      <span class="spoiler-warning-icon">⚠️</span>
+    <button type="button" class="spoiler-warning-bar" @click="toggle" :aria-expanded="revealed">
+      <Icon name="heroicons:exclamation-triangle" class="spoiler-warning-icon shrink-0" />
       <span class="spoiler-warning-label">{{ label }}</span>
       <span class="spoiler-toggle-hint">{{ revealed ? '点击隐藏' : '点击查看' }}</span>
-      <span class="spoiler-chevron" :class="{ 'is-open': revealed }">▼</span>
-    </div>
+      <Icon name="heroicons:chevron-down" class="spoiler-chevron shrink-0" :class="{ 'is-open': revealed }" />
+    </button>
 
     <!-- 内容区 -->
-    <div class="spoiler-body" :aria-hidden="!revealed">
+    <div class="spoiler-body">
       <!-- 遮罩层（未展开时） -->
-      <div v-if="!revealed" class="spoiler-mask" @click="toggle">
+      <button v-if="!revealed" type="button" class="spoiler-mask" @click="toggle" :aria-label="clickText">
         <div class="spoiler-mask-content">
-          <span class="spoiler-mask-icon">👁</span>
+          <Icon name="heroicons:eye" class="spoiler-mask-icon" />
           <span>{{ clickText }}</span>
         </div>
-      </div>
+      </button>
       <!-- 实际内容（模糊 or 显示） -->
-      <div class="spoiler-content" :class="{ blurred: !revealed }">
+      <div class="spoiler-content" :class="{ blurred: !revealed }" :aria-hidden="!revealed" :inert="!revealed">
         <slot />
       </div>
     </div>
@@ -58,17 +58,20 @@ const toggle = () => {
 /* 警告条 */
 .spoiler-warning-bar {
   display: flex;
+  width: 100%;
+  border: 0;
+  text-align: start;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: var(--article-prose-surface, #f3f4f6);
+  background: var(--article-prose-surface);
   cursor: pointer;
   user-select: none;
   transition: background 0.2s;
 }
 
 .spoiler-warning-bar:hover {
-  background: var(--article-prose-accent-soft, #e9eef8);
+  background: var(--article-prose-hover);
 }
 
 .spoiler-warning-icon {
@@ -78,27 +81,19 @@ const toggle = () => {
 .spoiler-warning-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #b45309;
+  color: var(--article-prose-heading);
   flex: 1;
-}
-
-:global(.dark) .spoiler-warning-label {
-  color: #fbbf24;
 }
 
 .spoiler-toggle-hint {
   font-size: 0.75rem;
-  color: #78716c;
+  color: var(--article-prose-muted);
   opacity: 0.8;
-}
-
-:global(.dark) .spoiler-toggle-hint {
-  color: #a8a29e;
 }
 
 .spoiler-chevron {
   font-size: 0.7rem;
-  color: #b45309;
+  color: var(--article-prose-muted);
   transition: transform 0.25s ease;
   display: inline-block;
 }
@@ -129,12 +124,16 @@ const toggle = () => {
 .spoiler-mask {
   position: absolute;
   inset: 0;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 var(--article-prose-radius) var(--article-prose-radius);
 }
 
 .spoiler-mask-content {
@@ -142,26 +141,19 @@ const toggle = () => {
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid #f59e0b44;
+  background: var(--article-prose-card);
+  border: 1px solid var(--article-prose-border);
   padding: 0.6rem 1.4rem;
-  border-radius: 999px;
+  border-radius: var(--article-prose-radius);
   font-size: 0.85rem;
   font-weight: 500;
-  color: #b45309;
+  color: var(--article-prose-accent);
   backdrop-filter: blur(2px);
   transition: background 0.15s, transform 0.15s;
 }
 
-:global(.dark) .spoiler-mask-content {
-  color: #fbbf24;
-  background: rgba(251, 191, 36, 0.1);
-  border-color: #fbbf2444;
-}
-
 .spoiler-mask-content:hover {
-  background: rgba(245, 158, 11, 0.2);
-  transform: scale(1.04);
+  background: var(--article-prose-hover);
 }
 
 .spoiler-mask-icon {

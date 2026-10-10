@@ -1,8 +1,9 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 @import '../../../../shared/article-typography/article-prose.desktop.css';
-@import '../../../../shared/article-typography/mdc-contract.css';
+@import '../../../../shared/article-typography/mdc-contract.desktop.css';
 @import '../../../../shared/article-typography/article-prose.mobile.css';
+@import '../../../../shared/article-typography/mdc-contract.mobile.css';
 
 @source '../../../../shared/article-typography/prose-preset.ts';
 

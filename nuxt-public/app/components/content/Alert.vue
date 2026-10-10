@@ -1,15 +1,15 @@
 <template>
-  <div :class="alertClasses" class="alert-mdc my-4 p-4">
+  <div :class="`alert-mdc--${type}`" class="alert-mdc my-4 p-4">
     <div class="flex items-start gap-3">
       <!-- 图标 -->
       <div class="shrink-0 mt-0.5">
-        <Icon :name="iconName" :class="iconColorClass" size="xl" />
+        <Icon :name="iconName" class="alert-icon" size="xl" />
       </div>
       
       <!-- 内容 -->
       <div class="flex-1 min-w-0">
         <!-- 标题 -->
-        <h4 v-if="$slots.title" class="font-semibold mb-1 text-lg">
+        <h4 v-if="$slots.title" class="font-semibold mb-1 text-base">
           <slot name="title" />
         </h4>
         
@@ -47,38 +47,30 @@ const props = defineProps({
 
 const alertConfig = {
   info: {
-    bg: 'bg-blue-50 dark:bg-blue-900/20',
-    border: 'border-blue-500',
     icon: 'heroicons:information-circle',
-    iconColor: 'text-blue-600 dark:text-blue-400'
   },
   success: {
-    bg: 'bg-green-50 dark:bg-green-900/20',
-    border: 'border-green-500',
     icon: 'heroicons:check-circle',
-    iconColor: 'text-green-600 dark:text-green-400'
   },
   warning: {
-    bg: 'bg-yellow-50 dark:bg-yellow-900/20',
-    border: 'border-yellow-500',
     icon: 'heroicons:exclamation-triangle',
-    iconColor: 'text-yellow-600 dark:text-yellow-400'
   },
   error: {
-    bg: 'bg-red-50 dark:bg-red-900/20',
-    border: 'border-red-500',
     icon: 'heroicons:x-circle',
-    iconColor: 'text-red-600 dark:text-red-400'
   }
 }
 
 const config = computed(() => alertConfig[props.type])
-const alertClasses = computed(() => [config.value.bg, config.value.border])
 const iconName = computed(() => config.value.icon)
-const iconColorClass = computed(() => config.value.iconColor)
 </script>
 
 <style scoped>
+.alert-mdc--info { --mdc-tone: var(--article-prose-accent); }
+.alert-mdc--success { --mdc-tone: var(--article-prose-success); }
+.alert-mdc--warning { --mdc-tone: var(--article-prose-warning); }
+.alert-mdc--error { --mdc-tone: var(--article-prose-error); }
+.alert-icon { color: var(--mdc-tone); }
+
 .alert-content :deep(p:last-child) {
   margin-bottom: 0;
 }

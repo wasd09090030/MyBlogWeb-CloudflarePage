@@ -3,7 +3,7 @@
     class="image-enhanced-mdc my-6"
     :class="[
       `align-${align}`,
-      { 'has-border': border, 'rounded-sm': rounded }
+      { 'has-border': border, 'rounded': rounded }
     ]"
     :style="containerStyle"
   >
@@ -231,19 +231,15 @@ onMounted(() => {
 
 
 .has-border .image-wrapper {
-  border: 2px solid rgb(229 231 235);
-}
-
-:global(.dark) .has-border .image-wrapper {
-  border-color: rgb(55 65 81);
+  border: 1px solid var(--article-prose-border);
 }
 
 .rounded .image-wrapper {
-  border-radius: 0.5rem;
+  border-radius: var(--article-prose-radius);
 }
 
 .rounded .enhanced-image {
-  border-radius: 0.5rem;
+  border-radius: var(--article-prose-radius);
 }
 
 
@@ -252,13 +248,9 @@ onMounted(() => {
 .image-caption {
   margin-top: 0.75rem;
   font-size: 0.875rem;
-  color: rgb(107 114 128);
+  color: var(--article-prose-muted);
   text-align: center;
   font-style: italic;
-}
-
-:global(.dark) .image-caption {
-  color: rgb(156 163 175);
 }
 
 /* Lightbox 样式 */

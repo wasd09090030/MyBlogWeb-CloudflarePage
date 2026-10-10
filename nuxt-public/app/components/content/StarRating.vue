@@ -158,11 +158,7 @@ const maxStars = computed(() => {
   align-items: center;
   font-size: 0.95rem;
   line-height: 1;
-  color: rgb(75 85 99);
-}
-
-.dark .star-rating-label {
-  color: rgb(156 163 175);
+  color: var(--article-prose-muted);
 }
 
 .star-rating-score {
@@ -170,11 +166,7 @@ const maxStars = computed(() => {
   align-items: center;
   font-size: 0.85rem;
   line-height: 1;
-  color: rgb(107 114 128);
-}
-
-.dark .star-rating-score {
-  color: rgb(156 163 175);
+  color: var(--article-prose-muted);
 }
 
 .star-rating-row {
@@ -197,6 +189,8 @@ const maxStars = computed(() => {
 
 .star-cell {
   position: relative;
+  width: 1em;
+  height: 1em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -205,7 +199,7 @@ const maxStars = computed(() => {
   background: transparent;
   border: 0;
   cursor: default;
-  color: rgb(209 213 219);
+  color: var(--article-prose-border);
   line-height: 1;
   transition: color 0.15s ease;
 }
@@ -215,7 +209,7 @@ const maxStars = computed(() => {
 }
 
 .star-rating-interactive .star-cell:hover {
-  color: rgb(250 204 21);
+  color: var(--article-prose-warning);
 }
 
 .star-cell:disabled {
@@ -234,7 +228,7 @@ const maxStars = computed(() => {
 .star-overlay {
   overflow: hidden;
   width: 0;
-  color: rgb(250 204 21);
+  color: var(--article-prose-warning);
 }
 
 .star-icon {

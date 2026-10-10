@@ -3,14 +3,14 @@
     class="collapse-mdc my-4 overflow-hidden"
     :open="defaultOpen"
   >
-    <summary class="collapse-summary px-4 py-3 bg-gray-50 dark:bg-gray-800 cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
+    <summary class="collapse-summary px-4 py-3 cursor-pointer select-none transition-colors flex items-center justify-between">
       <span class="font-medium">
         <slot name="title">{{ title }}</slot>
       </span>
       <Icon name="heroicons:chevron-down" class="collapse-icon transition-transform duration-200" size="md" />
     </summary>
     
-    <div class="collapse-content px-4 py-3 bg-white dark:bg-gray-900">
+    <div class="collapse-content px-4 py-3">
       <slot />
     </div>
   </details>

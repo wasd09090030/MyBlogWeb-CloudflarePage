@@ -4,11 +4,11 @@
       :href="url"
       target="_blank"
       rel="noopener noreferrer"
-      color="info"
-      variant="solid"
+      color="primary"
+      variant="ghost"
       class="link-card-button"
     >
-      <Icon name="heroicons:cloud-arrow-down" size="36px" class="text-white" />
+      <Icon :name="icon" size="24px" class="shrink-0" />
       <span class="link-text">{{ text }}</span>
     </UButton>
   </div>
@@ -46,29 +46,34 @@ defineProps({
 
 <style scoped>
 .link-card-wrapper {
-  display: inline-block;
+  display: block;
   margin: 1rem 0;
 }
 
 .link-card-button {
-  /* 2:5 aspect ratio (Height:Width) */
-  /* Setting explicit dimensions to ensure it's not a thin strip */
-  height: 60px;
-  width: 160px;
+  min-height: 60px;
+  width: 100%;
+  justify-content: flex-start;
+  gap: 0.75rem;
   padding-inline: 1rem;
-
-  /* Styling */
-  border-radius: 0.375rem;
-  transition: transform 0.2s ease;
+  white-space: normal;
+  background: var(--article-prose-card);
+  color: var(--article-prose-accent);
+  border-radius: var(--article-prose-radius);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
 }
 
 .link-card-button:hover {
-  transform: translateY(-2px);
+  background: var(--article-prose-hover);
 }
 
 .link-text {
-  font-size: 1.1rem; /* Slightly larger */
-  font-weight: 600;  /* Slightly bold (semi-bold) */
-  color: white;      /* White text */
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: start;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--article-prose-heading);
 }
 </style>

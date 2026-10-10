@@ -13,7 +13,7 @@
       />
 
       <!-- 控制按钮（可选） -->
-      <div v-if="showControls" class="steps-controls flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700" :class="{ 'justify-center': vertical }">
+      <div v-if="showControls" class="steps-controls flex justify-end gap-3 mt-6 pt-4 border-t" :class="{ 'justify-center': vertical }">
         <UButton
           :disabled="currentStep <= 1"
           color="neutral"
@@ -175,13 +175,3 @@ const onComplete = () => {
   emit('complete')
 }
 </script>
-
-<style scoped>
-/* UStepper 暗色模式配色由组件内置类处理，无需 :deep 覆写 */
-
-@media (max-width: 640px) {
-  .steps-controls {
-    justify-content: center;
-  }
-}
-</style>

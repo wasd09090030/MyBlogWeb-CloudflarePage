@@ -10,10 +10,10 @@
 
     <!-- 头部 -->
     <template #header>
-      <div class="playground-header flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div class="playground-header flex items-center justify-between px-4 py-2 border-b">
         <div class="flex items-center gap-2">
-          <Icon name="heroicons:code-bracket" size="md" class="text-gray-600 dark:text-gray-400" />
-          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ title }}</span>
+          <Icon name="heroicons:code-bracket" size="md" />
+          <span class="text-sm font-medium">{{ title }}</span>
           <UBadge size="xs" variant="subtle" color="neutral" class="lang-tag">{{ lang }}</UBadge>
         </div>
         <div class="flex items-center gap-2">
@@ -51,18 +51,18 @@
       <Transition name="output-slide">
         <div
           v-if="output !== null"
-          class="output-panel border-t border-gray-200 dark:border-gray-700"
+          class="output-panel border-t"
         >
-          <div class="output-header flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900">
+          <div class="output-header flex items-center justify-between px-4 py-2">
             <div class="flex items-center gap-2">
               <Icon name="heroicons:chevron-right" size="sm" class="text-green-500" />
-              <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">输出结果</span>
+              <span class="text-xs font-semibold">输出结果</span>
             </div>
             <UButton color="neutral" variant="ghost" size="xs" class="text-gray-400" @click="output = null">
               <Icon name="heroicons:x-mark" size="sm" />
             </UButton>
           </div>
-          <pre class="output-content text-sm text-gray-200 dark:text-gray-200 whitespace-pre-wrap px-4 py-3 dark:bg-gray-950">{{ output }}</pre>
+          <pre class="output-content text-sm whitespace-pre-wrap px-4 py-3">{{ output }}</pre>
         </div>
       </Transition>
     </div>

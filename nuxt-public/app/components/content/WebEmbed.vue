@@ -1,6 +1,6 @@
 <template>
   <div class="web-embed-mdc my-6">
-    <div class="embed-container rounded-md overflow-hidden border border-gray-200 dark:border-gray-700" :style="containerStyle">
+    <div class="embed-container rounded-md overflow-hidden" :style="containerStyle">
       <div v-if="embedHtml" v-html="embedHtml" class="embed-content" />
       
       <iframe
@@ -15,7 +15,7 @@
         class="w-full h-full"
       />
       
-      <div v-else class="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800 text-gray-500">
+      <div v-else class="embed-empty flex items-center justify-center h-full">
         <div class="text-center p-8">
           <Icon name="mdi:film" size="3xl" class="mb-3 mx-auto" />
           <p class="text-sm">无效的 URL</p>
@@ -23,7 +23,7 @@
       </div>
     </div>
     
-    <p v-if="caption" class="text-sm text-gray-600 dark:text-gray-400 text-center mt-2">
+    <p v-if="caption" class="embed-caption text-sm text-center mt-2">
       {{ caption }}
     </p>
   </div>
@@ -163,7 +163,7 @@ const parseUrl = (url) => {
 <style scoped>
 .embed-container {
   position: relative;
-  background: #000;
+  background: var(--article-prose-surface);
 }
 
 .embed-content :deep(iframe) {

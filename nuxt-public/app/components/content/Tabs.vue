@@ -1,16 +1,14 @@
 <template>
   <div class="tabs-mdc my-6">
     <!-- 标签头 -->
-    <div class="tabs-header flex gap-2 border-b border-gray-200 dark:border-gray-700 mb-4">
+    <div class="tabs-header border-b mb-4" role="tablist">
       <button
         v-for="(tab, index) in tabs"
         :key="index"
-        :class="[
-          'tab-btn px-4 py-2 font-medium transition-all duration-200 border-b-2',
-          activeTab === index
-            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-            : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-        ]"
+        class="tab-btn font-medium transition-colors duration-200 border-b-2"
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === index"
         @click="activeTab = index"
       >
         {{ tab.label }}
@@ -24,6 +22,7 @@
         :key="index"
         v-show="activeTab === index"
         class="tab-panel"
+        role="tabpanel"
       >
         <slot :name="tab.slot" />
       </div>
@@ -78,7 +77,7 @@ const tabs = computed(() => {
 }
 
 .tab-btn:focus-visible {
-  outline: 2px solid rgb(59 130 246);
+  outline: 2px solid var(--article-prose-accent);
   outline-offset: 2px;
 }
 

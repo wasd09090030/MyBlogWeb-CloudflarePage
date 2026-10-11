@@ -8,8 +8,12 @@
         class="tab-btn font-medium transition-colors duration-200 border-b-2"
         type="button"
         role="tab"
+        :id="tabId(index)"
         :aria-selected="activeTab === index"
+        :aria-controls="panelId(index)"
+        :tabindex="activeTab === index ? 0 : -1"
         @click="activeTab = index"
+        @keydown="handleTabKeydown($event, index)"
       >
         {{ tab.label }}
       </button>
@@ -23,6 +27,9 @@
         v-show="activeTab === index"
         class="tab-panel"
         role="tabpanel"
+        :id="panelId(index)"
+        :aria-labelledby="tabId(index)"
+        tabindex="0"
       >
         <slot :name="tab.slot" />
       </div>
@@ -50,6 +57,8 @@
  * ::
  */
 
+import { getCurrentInstance } from 'vue'
+
 const props = defineProps({
   labels: {
     type: Array,
@@ -57,12 +66,29 @@ const props = defineProps({
   }
 })
 
-const slots = useSlots()
 const activeTab = ref(0)
+const tabsId = `mdc-tabs-${getCurrentInstance()?.uid ?? 0}`
+
+const tabId = (index) => `${tabsId}-tab-${index}`
+const panelId = (index) => `${tabsId}-panel-${index}`
+
+const handleTabKeydown = (event, index) => {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) || tabs.value.length === 0) return
+
+  event.preventDefault()
+
+  const nextIndex = event.key === 'Home'
+    ? 0
+    : event.key === 'End'
+      ? tabs.value.length - 1
+      : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.value.length) % tabs.value.length
+
+  activeTab.value = nextIndex
+  nextTick(() => document.getElementById(tabId(nextIndex))?.focus())
+}
 
 // 根据 slots 和 labels 生成标签配置
 const tabs = computed(() => {
-  const slotNames = Object.keys(slots).filter(name => name.startsWith('tab-'))
   return props.labels.map((label, index) => ({
     label,
     slot: `tab-${index}`

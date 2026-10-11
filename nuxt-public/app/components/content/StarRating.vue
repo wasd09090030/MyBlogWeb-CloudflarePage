@@ -6,22 +6,51 @@
       </span>
 
       <div
+        v-if="readonly"
         class="star-rating-row"
-        :class="[`star-rating-size-${size}`, { 'star-rating-interactive': !readonly }]"
+        :class="`star-rating-size-${size}`"
         role="img"
         :aria-label="`Rating: ${displayRating} of ${maxStars}`"
+      >
+        <span
+          v-for="i in maxStars"
+          :key="i"
+          class="star-cell star-cell-readonly"
+          aria-hidden="true"
+        >
+          <span class="star-base">
+            <Icon name="heroicons:star" class="star-icon star-empty" />
+          </span>
+          <span
+            class="star-overlay"
+            :style="{ width: fillWidthForStar(i) }"
+          >
+            <Icon name="heroicons:star-solid" class="star-icon star-filled" />
+          </span>
+        </span>
+      </div>
+
+      <div
+        v-else
+        class="star-rating-row star-rating-interactive"
+        :class="`star-rating-size-${size}`"
+        role="radiogroup"
+        :aria-label="`Set rating, current rating ${displayRating} of ${maxStars}`"
       >
         <button
           v-for="i in maxStars"
           :key="i"
           type="button"
           class="star-cell"
-          :class="{ 'star-cell-readonly': readonly }"
-          :disabled="readonly"
-          :aria-label="readonly ? `${i} star${i > 1 ? 's' : ''}` : `Set rating to ${i}`"
+          role="radio"
+          :aria-checked="Math.round(displayRating) === i"
+          :tabindex="interactiveTabIndex(i)"
+          :data-rating="i"
+          :aria-label="`Set rating to ${i}`"
           @click="handleClick(i)"
-          @mouseenter="!readonly && (hoverIndex = i)"
-          @mouseleave="!readonly && (hoverIndex = 0)"
+          @keydown="handleKeydown($event, i)"
+          @mouseenter="hoverIndex = i"
+          @mouseleave="hoverIndex = 0"
         >
           <span class="star-base">
             <!-- 空星（背景） -->
@@ -123,6 +152,27 @@ const handleClick = (value) => {
   const next = normalizeRating(value, props.maxStars)
   currentRating.value = next
   emit('update:rating', next)
+}
+
+const interactiveTabIndex = (index) => {
+  const selected = Math.round(currentRating.value)
+  return (selected === 0 ? index === 1 : selected === index) ? 0 : -1
+}
+
+const handleKeydown = (event, index) => {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+
+  event.preventDefault()
+
+  const nextIndex = event.key === 'Home'
+    ? 1
+    : event.key === 'End'
+      ? maxStars.value
+      : Math.max(1, Math.min(maxStars.value, index + (event.key === 'ArrowRight' ? 1 : -1)))
+
+  handleClick(nextIndex)
+  const target = event.currentTarget
+  nextTick(() => target?.parentElement?.querySelector(`[data-rating="${nextIndex}"]`)?.focus())
 }
 
 // 计算第 i 颗星的填充百分比（0% / 50% / 100%）

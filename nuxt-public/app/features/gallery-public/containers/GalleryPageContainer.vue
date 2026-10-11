@@ -72,7 +72,9 @@ const activeTag = ref('artwork')
 const isInitialLoading = ref(false)
 const loadingProgress = ref(0)
 const previewImages = ref([])
-const isGalleryReady = ref(false)
+// SSG 直接渲染画廊内容时不会触发 Transition 的 after-enter；
+// 与当前 isInitialLoading=false 保持一致，避免 .gallery-content 被 CSS 永久隐藏。
+const isGalleryReady = ref(!isInitialLoading.value)
 
 const galleryContentRef = ref(null)
 

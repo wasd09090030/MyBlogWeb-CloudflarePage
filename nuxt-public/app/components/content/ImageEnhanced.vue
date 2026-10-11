@@ -9,7 +9,16 @@
   >
     <figure class="image-figure">
       <!-- 图片容器 -->
-      <div class="image-wrapper" @click="handleImageClick">
+      <div
+        ref="triggerRef"
+        class="image-wrapper mdc-image-frame"
+        :role="zoomable ? 'button' : undefined"
+        :tabindex="zoomable ? 0 : -1"
+        :aria-disabled="zoomable ? undefined : 'true'"
+        :aria-label="zoomable ? `查看大图：${alt || title || '图片'}` : undefined"
+        @click="handleImageClick"
+        @keydown="handleImageKeydown"
+      >
         <ImageLoadingPlaceholder :show="!imageLoaded" />
         <img
           :src="src"
@@ -32,10 +41,10 @@
     <!-- Lightbox 预览 -->
     <Teleport to="body">
       <Transition name="fade">
-        <div v-if="showLightbox" class="lightbox-overlay" @click="closeLightbox">
+        <div v-if="showLightbox" class="lightbox-overlay" role="dialog" aria-modal="true" :aria-label="caption || alt || '图片预览'" @click.self="closeLightbox">
           <div class="lightbox-content" @click.stop>
             <img :src="src" :alt="alt" class="lightbox-image" />
-            <button class="lightbox-close" @click="closeLightbox" aria-label="关闭">
+            <button ref="closeButtonRef" type="button" class="lightbox-close" @click="closeLightbox" aria-label="关闭图片预览">
               <Icon name="mdi:close" />
             </button>
           </div>
@@ -125,6 +134,9 @@ const props = defineProps({
 
 const showLightbox = ref(false)
 const imageLoaded = ref(false)
+const triggerRef = ref(null)
+const closeButtonRef = ref(null)
+const lastFocusedElement = ref(null)
 
 const containerStyle = computed(() => {
   const width = typeof props.width === 'number' ? `${props.width}px` : props.width
@@ -144,12 +156,28 @@ const containerStyle = computed(() => {
 
 const handleImageClick = () => {
   if (props.zoomable) {
+    lastFocusedElement.value = document.activeElement
     showLightbox.value = true
+    nextTick(() => closeButtonRef.value?.focus())
+  }
+}
+
+const handleImageKeydown = (event) => {
+  if (props.zoomable && (event.key === 'Enter' || event.key === ' ')) {
+    event.preventDefault()
+    handleImageClick()
   }
 }
 
 const closeLightbox = () => {
   showLightbox.value = false
+  nextTick(() => {
+    if (lastFocusedElement.value instanceof HTMLElement) {
+      lastFocusedElement.value.focus()
+    } else {
+      triggerRef.value?.focus()
+    }
+  })
 }
 
 const handleImageLoad = () => {
@@ -211,6 +239,11 @@ onMounted(() => {
   display: inline-block;
   overflow: hidden;
   transition: transform 0.3s ease;
+}
+
+.image-wrapper:focus-visible {
+  outline: 2px solid var(--article-prose-accent);
+  outline-offset: 3px;
 }
 
 .image-wrapper:hover .zoom-hint {

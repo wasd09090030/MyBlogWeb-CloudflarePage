@@ -12,6 +12,9 @@
         frameborder="0"
         :allow="allow"
         :allowfullscreen="allowFullscreen"
+        loading="lazy"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
+        referrerpolicy="strict-origin-when-cross-origin"
         class="w-full h-full"
       />
       
@@ -75,6 +78,16 @@ const props = defineProps({
 })
 
 const embedHtml = ref('')
+const allowedEmbedHosts = ['bilibili.com', 'youtube.com', 'youtu.be', 'codepen.io', 'codesandbox.io', 'stackblitz.com']
+
+const isAllowedEmbedUrl = (value) => {
+  try {
+    const hostname = new URL(value).hostname.toLowerCase()
+    return allowedEmbedHosts.some(host => hostname === host || hostname.endsWith(`.${host}`))
+  } catch {
+    return false
+  }
+}
 
 const containerStyle = computed(() => {
   if (props.aspectRatio) {
@@ -152,7 +165,7 @@ const parseUrl = (url) => {
     }
     
     // 其他情况直接返回 URL
-    return url
+    return isAllowedEmbedUrl(url) ? url : ''
   } catch (e) {
     console.error('解析 URL 失败:', e)
     return ''

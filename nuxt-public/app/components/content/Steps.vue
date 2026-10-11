@@ -7,7 +7,7 @@
       <UStepper
         v-model="stepperIndex"
         :items="stepperItems"
-        :orientation="vertical ? 'vertical' : 'horizontal'"
+        :orientation="stepOrientation"
         :size="size === 'small' ? 'sm' : 'md'"
         :disabled="!clickable"
       />
@@ -123,6 +123,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:current', 'change', 'complete'])
+const isMobile = ref(false)
+const stepOrientation = computed(() => props.vertical || isMobile.value ? 'vertical' : 'horizontal')
 
 // 对外 API 维持 1-based；UStepper 内部是 0-based，转换放在 stepperIndex
 const currentStep = ref(Number(props.current) || 1)
@@ -174,4 +176,12 @@ const nextStep = () => {
 const onComplete = () => {
   emit('complete')
 }
+
+onMounted(() => {
+  const mediaQuery = window.matchMedia('(max-width: 768px)')
+  const updateMobileState = () => { isMobile.value = mediaQuery.matches }
+  updateMobileState()
+  mediaQuery.addEventListener('change', updateMobileState)
+  onUnmounted(() => mediaQuery.removeEventListener('change', updateMobileState))
+})
 </script>

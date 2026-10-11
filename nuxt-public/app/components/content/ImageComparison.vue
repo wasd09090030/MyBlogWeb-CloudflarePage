@@ -22,8 +22,17 @@
       <div 
         class="slider-handle absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize"
         :style="{ left: `${sliderPosition}%` }"
-        @mousedown="startDrag"
-        @touchstart="startDrag"
+        role="slider"
+        tabindex="0"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-orientation="horizontal"
+        :aria-valuenow="Math.round(sliderPosition)"
+        :aria-valuetext="`${Math.round(sliderPosition)}%`"
+        :aria-label="`${beforeLabel} 与 ${afterLabel} 对比位置`"
+        @pointerdown="startDrag"
+        @pointercancel="stopDrag"
+        @keydown="handleSliderKeydown"
       >
         <div class="slider-button absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full border border-gray-300 flex items-center justify-center">
           <div class="flex gap-1">
@@ -102,33 +111,42 @@ const startDrag = (e) => {
 
 const onDrag = (e) => {
   if (!isDragging.value) return
-  
-  const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX
-  updateSliderPosition(clientX)
+
+  updateSliderPosition(e.clientX)
 }
 
 const stopDrag = () => {
   isDragging.value = false
 }
 
+const handleSliderKeydown = (e) => {
+  const step = e.shiftKey ? 10 : 1
+
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault()
+    const direction = e.key === 'ArrowRight' ? 1 : -1
+    sliderPosition.value = Math.max(0, Math.min(100, sliderPosition.value + direction * step))
+  } else if (e.key === 'Home' || e.key === 'End') {
+    e.preventDefault()
+    sliderPosition.value = e.key === 'Home' ? 0 : 100
+  }
+}
+
 onMounted(() => {
-  document.addEventListener('mousemove', onDrag)
-  document.addEventListener('mouseup', stopDrag)
-  document.addEventListener('touchmove', onDrag)
-  document.addEventListener('touchend', stopDrag)
+  document.addEventListener('pointermove', onDrag)
+  document.addEventListener('pointerup', stopDrag)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('mousemove', onDrag)
-  document.removeEventListener('mouseup', stopDrag)
-  document.removeEventListener('touchmove', onDrag)
-  document.removeEventListener('touchend', stopDrag)
+  document.removeEventListener('pointermove', onDrag)
+  document.removeEventListener('pointerup', stopDrag)
 })
 </script>
 
 <style scoped>
 .slider-handle {
   z-index: 10;
+  touch-action: none;
 }
 
 .slider-button {

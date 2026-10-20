@@ -10,13 +10,15 @@ const pageCount = computed(() => Math.max(1, Math.ceil(entries.value.length / pa
 const candidates = computed(() => state.candidates.slice((page.value - 1) * pageSize, page.value * pageSize))
 const pairs = computed(() => state.pairs.slice((page.value - 1) * pageSize, page.value * pageSize))
 const selected = computed(() => state.candidates.filter(item => item.keep).length)
+const exactGroups = computed(() => state.groups)
+const exactRemovals = computed(() => state.groups.reduce((sum, group) => sum + group.remove.length, 0))
 watch(() => [state.open, state.busy, entries.value.length], () => { page.value = 1 })
 function updateOpen(value: boolean) { if (!value) props.review.cancel() }
 function sourceLabel(item: DuplicateImage) { return item.sourceUrl }
 </script>
 
 <template>
-  <UModal :open="state.open" :dismissible="!state.busy && !state.deleting" :close="!state.busy && !state.deleting"
+  <UModal :open="state.open" :dismissible="!state.busy && !state.deleting && !state.purging" :close="!state.busy && !state.deleting && !state.purging"
     :title="state.mode === 'scan' ? '检查画廊重复图片' : '导入前检查'"
     description="按图片内容查重。压缩或缩放后的同图可能被识别，请结合预览确认。"
     :ui="{ content: 'sm:max-w-4xl' }" @update:open="updateOpen">
@@ -29,12 +31,14 @@ function sourceLabel(item: DuplicateImage) { return item.sourceUrl }
         </div>
         <UAlert v-if="state.fatal" color="error" title="检查未完成" :description="state.fatal" />
         <UAlert v-if="state.cacheWarning" color="warning" title="操作提示" :description="state.cacheWarning" />
+        <UAlert v-if="state.notice" color="success" title="批量删除完成" :description="state.notice" />
 
         <template v-if="state.ready && !state.busy">
           <div class="flex flex-wrap items-center gap-2" aria-live="polite">
             <UBadge variant="subtle" color="neutral">已检查 {{ state.catalog.length }} 条画廊记录</UBadge>
             <UBadge v-if="state.mode === 'scan'" :color="state.pairs.length ? 'warning' : 'success'">{{ state.pairs.length }} 项疑似重复</UBadge>
             <UBadge v-else color="primary">准备保留 {{ selected }} / {{ state.candidates.length }} 张</UBadge>
+            <UBadge v-if="state.mode === 'scan' && exactGroups.length" color="error" variant="subtle">完全相同 {{ exactGroups.length }} 组</UBadge>
             <UBadge v-if="state.failures.length" color="warning">{{ state.failures.length }} 项读取失败</UBadge>
           </div>
 
@@ -52,6 +56,23 @@ function sourceLabel(item: DuplicateImage) { return item.sourceUrl }
           </div>
 
           <template v-if="state.mode === 'scan'">
+            <section v-if="exactGroups.length" class="space-y-3 rounded-lg border border-error/40 bg-error/5 p-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 class="font-medium text-error">完全相同图片（视觉距离 0 / 64）</h3>
+                <UBadge color="error" variant="subtle">{{ exactGroups.length }} 组 · 可删除 {{ exactRemovals }} 张</UBadge>
+              </div>
+              <p class="text-sm text-muted">每组保留创建时间最早的一条，删除其余较晚的记录；指向同一文件的重复记录也计入。删除前请展开核对。</p>
+              <details>
+                <summary class="cursor-pointer text-sm">查看将保留与删除的记录（{{ exactGroups.length }} 组）</summary>
+                <ul class="mt-3 max-h-64 space-y-3 overflow-y-auto text-sm">
+                  <li v-for="group in exactGroups" :key="group.keep.key" class="space-y-1">
+                    <p class="break-all"><span class="font-medium text-success">保留 {{ group.keep.label }}</span><span class="text-muted"> · {{ group.keep.sourceUrl }}</span></p>
+                    <p v-for="item in group.remove" :key="item.key" class="break-all text-error">删除 {{ item.label }}<span class="text-muted"> · {{ item.sourceUrl }}</span></p>
+                  </li>
+                </ul>
+              </details>
+              <UButton color="error" icon="i-lucide-trash-2" :loading="state.purging" :disabled="state.busy || state.deleting" @click="review.purge">批量删除较晚的重复图片</UButton>
+            </section>
             <UEmpty v-if="!pairs.length" icon="i-lucide-scan-line" :title="state.failures.length ? '已读取的图片中未发现疑似重复' : '未发现疑似重复图片'" description="识别结果受图片内容影响，裁剪、加水印或大幅修改可能无法识别。" />
             <section v-for="pair in pairs" :key="`${pair.left.key}-${pair.right.key}`" class="space-y-3 rounded-lg border border-default p-4">
               <div class="flex flex-wrap items-center justify-between gap-2"><h3 class="font-medium">疑似重复</h3><UBadge color="warning" variant="subtle">{{ pair.exact ? '相同地址' : `视觉距离 ${pair.distance} / 64` }}</UBadge></div>
@@ -61,7 +82,7 @@ function sourceLabel(item: DuplicateImage) { return item.sourceUrl }
                   <p class="text-sm font-medium">{{ item.label }}</p>
                   <p class="truncate text-xs text-muted" :title="sourceLabel(item)">{{ item.sourceUrl }}</p>
                   <p v-if="item.fingerprint" class="text-xs text-muted">{{ item.fingerprint.width }} × {{ item.fingerprint.height }}</p>
-                  <UButton color="error" variant="soft" size="sm" icon="i-lucide-trash-2" :disabled="state.deleting" @click="review.removeRecord(item)">删除图片及记录</UButton>
+                  <UButton color="error" variant="soft" size="sm" icon="i-lucide-trash-2" :disabled="state.deleting || state.purging" @click="review.removeRecord(item)">删除图片及记录</UButton>
                 </div>
               </div>
               <p class="text-xs text-muted">删除会同时移除画廊记录和图床原文件，无法撤销。文件仍有其他画廊、封面或 Hero 引用时将阻止删除。</p>
@@ -103,9 +124,9 @@ function sourceLabel(item: DuplicateImage) { return item.sourceUrl }
     </template>
     <template #footer>
       <div class="flex w-full flex-wrap justify-end gap-2">
-        <UButton v-if="!state.busy" color="neutral" variant="soft" :disabled="state.deleting" icon="i-lucide-refresh-cw" @click="review.rescan">强制重新读取全部图片</UButton>
+        <UButton v-if="!state.busy" color="neutral" variant="soft" :disabled="state.deleting || state.purging" icon="i-lucide-refresh-cw" @click="review.rescan">强制重新读取全部图片</UButton>
         <UButton v-if="state.fatal" color="neutral" variant="soft" @click="review.retry">重试检查</UButton>
-        <UButton color="neutral" variant="ghost" :disabled="state.deleting" @click="review.cancel">{{ state.busy ? '取消检查' : '关闭' }}</UButton>
+        <UButton color="neutral" variant="ghost" :disabled="state.deleting || state.purging" @click="review.cancel">{{ state.busy ? '取消检查' : '关闭' }}</UButton>
         <UButton v-if="state.mode === 'import'" :disabled="!state.ready || state.busy || !!state.fatal || (!!state.failures.length && !state.allowIncomplete)" @click="review.confirmSelection">确认保留 {{ selected }} 张</UButton>
       </div>
     </template>

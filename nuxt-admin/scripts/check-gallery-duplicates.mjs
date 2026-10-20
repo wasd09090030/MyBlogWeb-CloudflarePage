@@ -4,7 +4,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { createRequire } from 'node:module'
 import { build } from 'esbuild'
 import { createError } from 'h3'
-import { FINGERPRINT_VERSION, fingerprintPixels, fingerprintKey, compareImages, hammingDistance, reviewCandidates } from '../shared/gallery-duplicates.ts'
+import { FINGERPRINT_VERSION, fingerprintPixels, fingerprintKey, compareImages, exactDuplicateGroups, hammingDistance, reviewCandidates } from '../shared/gallery-duplicates.ts'
 import { readBoundedImage, MAX_DUPLICATE_IMAGE_BYTES } from '../server/utils/gallery-image-source.ts'
 
 const root = new URL('../', import.meta.url)
@@ -33,6 +33,31 @@ assert.equal(batch[1].matches[0].right.key, 'one')
 assert.equal(reviewCandidates([image('new', compressed)], [image('hidden', fingerprint)])[0].keep, false)
 const sameAddress = reviewCandidates([{ ...image('one'), error: 'unreadable' }, { ...image('two', undefined, 'https://images.example/one.jpg'), error: 'unreadable' }], [])
 assert.equal(sameAddress[1].matches[0].exact, true)
+// Exact-duplicate grouping keeps the oldest gallery record of every identical group.
+const dated = (key, createdAt, fp = fingerprint, sourceUrl) => ({ ...image(key, fp, sourceUrl), createdAt })
+const exactGroups = exactDuplicateGroups([
+  { ...dated('a', '2026-10-01T00:00:00Z'), id: 10 },
+  { ...dated('b', '2026-10-02T00:00:00Z'), id: 11 },
+  { ...dated('c', '2026-10-03T00:00:00Z'), id: 12 },
+  { ...dated('d', '2026-10-04T00:00:00Z', differentPattern), id: 13 }
+])
+assert.equal(exactGroups.length, 1)
+assert.equal(exactGroups[0].keep.key, 'a')
+assert.deepEqual(exactGroups[0].remove.map(item => item.key), ['b', 'c'])
+const sameFile = exactDuplicateGroups([
+  { ...dated('one', '2026-10-02T00:00:00Z', undefined, 'https://images.example/shared.jpg'), id: 1 },
+  { ...dated('two', '2026-10-01T00:00:00Z', undefined, 'https://images.example/shared.jpg#view'), id: 2 }
+])
+assert.equal(sameFile.length, 1, 'records pointing at the same file are exact duplicates without fingerprints')
+assert.equal(sameFile[0].keep.id, 2)
+assert.equal(sameFile[0].remove[0].id, 1)
+assert.equal(exactDuplicateGroups([dated('tie-a', '2026-10-01T00:00:00Z'), { ...dated('tie-b', '2026-10-01T00:00:00Z'), id: 1 }]).length, 0, 'items without an id cannot be grouped')
+const tieBreak = exactDuplicateGroups([{ ...dated('tie-one', '2026-10-01T00:00:00Z'), id: 7 }, { ...dated('tie-two', '2026-10-01T00:00:00Z'), id: 3 }])
+assert.equal(tieBreak[0].keep.id, 3, 'the smaller id breaks a creation-time tie')
+assert.equal(exactDuplicateGroups([{ ...dated('broken', '2026-10-01T00:00:00Z'), id: 1, error: 'unreadable' }, { ...dated('intact', '2026-10-02T00:00:00Z'), id: 2 }]).length, 0)
+const nearA = { ...fingerprint, hash: 'ffffffffffffffff' }, nearB = { ...fingerprint, hash: 'fffffffffffffffe' }
+assert.equal(compareImages(image('near-a', nearA), image('near-b', nearB)).distance, 1)
+assert.equal(exactDuplicateGroups([{ ...dated('near-a', '2026-10-01T00:00:00Z', nearA), id: 1 }, { ...dated('near-b', '2026-10-02T00:00:00Z', nearB), id: 2 }]).length, 0, 'only distance 0 is an exact duplicate')
 
 const allowed = url => {
   if (new URL(url).host !== 'images.example') throw createError({ statusCode: 422, statusMessage: 'Unsupported host' })
@@ -249,6 +274,61 @@ try {
   await deleteGallery(event, 3040)
   assert.equal(hasGallery(3040), false, 'retry must finish even when the remote file is absent and the asset is inactive')
   assert.equal((await domain.lookupGalleryFingerprints(event, { imageUrls: ['/images/i_delete_retry'] })).fingerprints.length, 0)
+  // Exact-duplicate purge keeps the oldest record and deletes only the later copies.
+  const addAssetFile = (id, key) => { const publicId = addAsset(id, key); remoteFiles.add(key); return publicId }
+  addAssetFile(4001, 'dup/old.jpg')
+  addAssetFile(4002, 'dup/new.jpg')
+  addGallery(4001, '/images/i_delete_4001', 4001)
+  addGallery(4002, '/images/i_delete_4002', 4002)
+  db.prepare("UPDATE galleries SET created_at = '2026-10-01T00:00:00Z' WHERE id = 4001").run()
+  db.prepare("UPDATE galleries SET created_at = '2026-10-02T00:00:00Z' WHERE id = 4002").run()
+  let callsBefore = providerCalls.length
+  let purge = await domain.purgeExactGalleryDuplicates(event, { groups: [{ keepId: 4001, deleteIds: [4002] }] })
+  assert.equal(purge.deleted, 1)
+  assert.equal(purge.mediaDeleted, 1)
+  assert.equal(purge.recordsDeleted, 0)
+  assert.deepEqual(purge.skipped, [])
+  assert.deepEqual(purge.failed, [])
+  assert.equal(providerCalls.at(-1), 'dup/new.jpg')
+  assert.equal(providerCalls.length, callsBefore + 1)
+  assert.equal(hasGallery(4002), false)
+  assert.ok(hasGallery(4001), 'the kept record must survive')
+  assert.equal(remoteFiles.has('dup/new.jpg'), false)
+  assert.ok(remoteFiles.has('dup/old.jpg'))
+
+  // A record sharing the kept file loses only its row; the shared file stays on the host.
+  const sharedPublicId = addAssetFile(4010, 'dup/shared.jpg')
+  addGallery(4010, `/images/${sharedPublicId}`, 4010)
+  addGallery(4011, `/images/${sharedPublicId}`, 4010)
+  db.prepare("UPDATE galleries SET created_at = '2026-10-01T00:00:00Z' WHERE id = 4010").run()
+  db.prepare("UPDATE galleries SET created_at = '2026-10-03T00:00:00Z' WHERE id = 4011").run()
+  callsBefore = providerCalls.length
+  purge = await domain.purgeExactGalleryDuplicates(event, { groups: [{ keepId: 4010, deleteIds: [4011] }] })
+  assert.equal(purge.recordsDeleted, 1)
+  assert.equal(purge.mediaDeleted, 0)
+  assert.equal(providerCalls.length, callsBefore, 'a shared file must not be deleted')
+  assert.ok(remoteFiles.has('dup/shared.jpg'))
+  assert.equal(hasGallery(4011), false)
+  assert.ok(hasGallery(4010))
+
+  // An older record must never be removed in favour of a newer kept record.
+  addAssetFile(4020, 'dup/keeper.jpg')
+  addAssetFile(4021, 'dup/older.jpg')
+  addGallery(4020, '/images/i_delete_4020', 4020)
+  addGallery(4021, '/images/i_delete_4021', 4021)
+  db.prepare("UPDATE galleries SET created_at = '2026-10-05T00:00:00Z' WHERE id = 4020").run()
+  db.prepare("UPDATE galleries SET created_at = '2026-10-04T00:00:00Z' WHERE id = 4021").run()
+  callsBefore = providerCalls.length
+  purge = await domain.purgeExactGalleryDuplicates(event, { groups: [{ keepId: 4020, deleteIds: [4021] }] })
+  assert.equal(purge.skipped[0].id, 4021)
+  assert.equal(providerCalls.length, callsBefore)
+  assert.ok(hasGallery(4020) && hasGallery(4021))
+  await assert.rejects(domain.purgeExactGalleryDuplicates(event, { groups: [] }), /duplicate groups/)
+  await assert.rejects(domain.purgeExactGalleryDuplicates(event, { groups: [{ keepId: 4001, deleteIds: [4001] }] }), /kept record/)
+  await assert.rejects(domain.purgeExactGalleryDuplicates(event, { groups: [{ keepId: 4001, deleteIds: [] }] }), /later record/)
+  await assert.rejects(domain.purgeExactGalleryDuplicates(event, { groups: [{ keepId: 99999, deleteIds: [4002] }] }), /no longer exists/)
+  await assert.rejects(domain.purgeExactGalleryDuplicates(event, { groups: [{ keepId: 4001, deleteIds: [4002] }, { keepId: 4002, deleteIds: [4001] }] }), /more than once/)
+  await assert.rejects(domain.purgeExactGalleryDuplicates(event, { groups: Array.from({ length: 41 }, (_, index) => ({ keepId: 4001, deleteIds: [index + 1] })) }), /40/)
 } finally { globalThis.fetch = originalFetch }
 db.close()
-console.log('Gallery duplicate checks passed: pHash, sources, catalog, fingerprints, remote deletion, shared references and retry after D1 rollback.')
+console.log('Gallery duplicate checks passed: pHash, sources, catalog, fingerprints, remote deletion, exact-duplicate purge, shared references and retry after D1 rollback.')

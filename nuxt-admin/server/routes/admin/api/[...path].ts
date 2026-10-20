@@ -4,7 +4,7 @@ import { listAdminComments, deleteComment, updateCommentStatus } from '~~/server
 import { deleteDiaryEntry, getAdminDiaryEntry, listAdminDiaryEntries, upsertDiaryEntry } from '~~/server/domain/diary'
 import { batchImportGallery, backfillGalleryAssets, createGallery, deleteGallery, getAdminGallery, listAdminGallery, refreshGalleryDimensions, toggleGalleryActive, updateGallery, updateGalleryBatch, updateGallerySortOrder } from '~~/server/domain/gallery'
 import { listAdminGalleryHero, replaceGalleryHero } from '~~/server/domain/gallery-hero'
-import { galleryDuplicateCatalog, galleryDuplicateSource, lookupGalleryFingerprints, saveGalleryFingerprints } from '~~/server/domain/gallery-duplicates'
+import { galleryDuplicateCatalog, galleryDuplicateSource, lookupGalleryFingerprints, purgeExactGalleryDuplicates, saveGalleryFingerprints } from '~~/server/domain/gallery-duplicates'
 import { generateArticleSummary } from '~~/server/domain/operations'
 import { assertSafeMutation } from '~~/server/utils/request-security'
 
@@ -48,6 +48,7 @@ export default defineEventHandler(async (event) => {
       if (parts[2] === 'source' && currentMethod === 'POST') return await galleryDuplicateSource(event, body || {})
       if (parts[2] === 'lookup' && currentMethod === 'POST') return await lookupGalleryFingerprints(event, body || {})
       if (parts[2] === 'fingerprints' && currentMethod === 'POST') return await saveGalleryFingerprints(event, body || {})
+      if (parts[2] === 'purge' && currentMethod === 'POST') return await purgeExactGalleryDuplicates(event, body || {})
     }
     if (parts.length === 2 && parts[1] === 'hero' && currentMethod === 'GET') return await listAdminGalleryHero(event)
     if (parts.length === 2 && parts[1] === 'hero' && currentMethod === 'PUT') return await replaceGalleryHero(event, body || {})

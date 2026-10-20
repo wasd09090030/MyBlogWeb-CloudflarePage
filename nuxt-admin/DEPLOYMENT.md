@@ -94,6 +94,15 @@ database failures after remote deletion can be retried because the provider's
 file deletion is idempotent. Only an explicit provider success response permits
 database cleanup. This extension needs no additional migration or secret.
 
+**批量删除较晚的重复图片** removes the later records of exact duplicates: identical
+stored files or zero perceptual distance (0 / 64). Every group keeps its oldest record,
+and a record older than the kept one is never deleted. Deletion runs only after explicit
+confirmation, in batches of 20 records per request, to stay inside the Free plan's
+50-subrequest limit. A duplicate whose file is still shared with the kept record, an
+article cover, or a Hero item loses only its gallery row, so the shared file survives;
+an exclusively owned file is deleted from the image host. The result reports records
+removed with file deletion, records removed without it, and any skipped or failed items.
+
 The file deletion is permanent: rolling back code does not restore deleted files.
 Reference checks cover the fields above; free-form article/diary body links and
 links outside this database are not tracked. A concurrent write after the

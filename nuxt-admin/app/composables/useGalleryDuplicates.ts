@@ -1,15 +1,15 @@
 import { fingerprintBlob } from '~/features/gallery-duplicates/fingerprint'
-import { compareImages, fingerprintKey, FINGERPRINT_VERSION, reviewCandidates,
-  type DuplicateCandidate, type DuplicateImage, type DuplicateMatch, type GalleryDuplicateCatalog, type ImageFingerprint } from '~~/shared/gallery-duplicates'
+import { compareImages, exactDuplicateGroups, fingerprintKey, FINGERPRINT_VERSION, reviewCandidates,
+  type DuplicateCandidate, type DuplicateImage, type DuplicateMatch, type ExactDuplicateGroup, type GalleryDuplicateCatalog, type ImageFingerprint } from '~~/shared/gallery-duplicates'
 
 export function useGalleryDuplicates(onRemoved: () => Promise<unknown>) {
   const api = useAdminApi()
   const state = reactive({
-    open: false, mode: 'scan' as 'scan' | 'import', busy: false, deleting: false,
-    progress: 0, total: 0, phase: '', fatal: '', cacheWarning: '',
+    open: false, mode: 'scan' as 'scan' | 'import', busy: false, deleting: false, purging: false,
+    progress: 0, total: 0, phase: '', fatal: '', cacheWarning: '', notice: '',
     ready: false, allowIncomplete: false,
     catalog: [] as DuplicateImage[], incoming: [] as DuplicateImage[],
-    candidates: [] as DuplicateCandidate[], pairs: [] as DuplicateMatch[], failures: [] as DuplicateImage[]
+    candidates: [] as DuplicateCandidate[], pairs: [] as DuplicateMatch[], groups: [] as ExactDuplicateGroup[], failures: [] as DuplicateImage[]
   })
   let generation = 0
   let controller: AbortController | undefined
@@ -53,6 +53,7 @@ export function useGalleryDuplicates(onRemoved: () => Promise<unknown>) {
     }
     state.candidates = candidates
     state.pairs = pairs
+    state.groups = state.mode === 'scan' ? exactDuplicateGroups(state.catalog) : []
   }
 
   async function run(force = false) {
@@ -64,11 +65,13 @@ export function useGalleryDuplicates(onRemoved: () => Promise<unknown>) {
     state.ready = false
     state.fatal = ''
     state.cacheWarning = ''
+    state.notice = ''
     state.allowIncomplete = false
     state.progress = 0
     state.total = 0
     state.phase = '读取完整画廊目录'
     state.pairs = []
+    state.groups = []
     state.candidates = []
     state.failures = []
     if (force) { successful.clear(); forceRefresh = true }
@@ -82,7 +85,7 @@ export function useGalleryDuplicates(onRemoved: () => Promise<unknown>) {
         snapshot = page.snapshot
         catalog.push(...page.items.filter(item => item.id !== excludedId).map(item => ({
           key: `gallery-${item.id}`, id: item.id, imageUrl: item.imageUrl, sourceUrl: item.sourceUrl,
-          sourceKey: fingerprintKey(item.sourceUrl),
+          sourceKey: fingerprintKey(item.sourceUrl), createdAt: item.createdAt,
           label: `画廊 #${item.id}${item.isActive ? '' : ' · 已隐藏'}${item.createdAt ? ` · ${item.createdAt.slice(0, 10)}` : ''}`
         })))
         if (page.nextCursor === null) break
@@ -156,7 +159,7 @@ export function useGalleryDuplicates(onRemoved: () => Promise<unknown>) {
   }
 
   function cancel() {
-    if (state.deleting) return
+    if (state.deleting || state.purging) return
     generation++
     controller?.abort()
     state.busy = false
@@ -202,9 +205,10 @@ export function useGalleryDuplicates(onRemoved: () => Promise<unknown>) {
   }
 
   async function removeRecord(item: DuplicateImage) {
-    if (!item.id || state.deleting || !window.confirm(`删除画廊图片 #${item.id}？将同时删除图床原文件，此操作无法撤销。`)) return
+    if (!item.id || state.deleting || state.purging || !window.confirm(`删除画廊图片 #${item.id}？将同时删除图床原文件，此操作无法撤销。`)) return
     state.deleting = true
     state.cacheWarning = ''
+    state.notice = ''
     try {
       await api.del(`gallery/${item.id}`)
       successful.delete(fingerprintKey(item.sourceUrl))
@@ -216,6 +220,65 @@ export function useGalleryDuplicates(onRemoved: () => Promise<unknown>) {
     } finally { state.deleting = false }
   }
 
+  type PurgeResult = {
+    deleted: number
+    mediaDeleted: number
+    recordsDeleted: number
+    skipped: Array<{ id: number; reason: string }>
+    failed: Array<{ id: number; message: string }>
+  }
+
+  /** Removes later copies of exact duplicates; the oldest record of every group survives. */
+  async function purge() {
+    if (state.busy || state.deleting || state.purging || !state.ready) return
+    const groups = state.groups.filter(group => group.keep.id && group.remove.length)
+    const total = groups.reduce((sum, group) => sum + group.remove.length, 0)
+    if (!total) return
+    const preview = groups.slice(0, 5)
+      .map(group => `保留 #${group.keep.id}，删除 ${group.remove.map(item => `#${item.id}`).join('、')}`).join('；')
+    const confirmed = window.confirm([
+      `将删除 ${total} 张完全相同的重复图片，共 ${groups.length} 组，每组只保留创建时间最早的一张。`,
+      `${preview}${groups.length > 5 ? ' …' : ''}`,
+      '重复图片的图床文件会一并删除；被保留记录、文章封面或 Hero 共用的文件只移除画廊记录。此操作无法撤销。'
+    ].join('\n'))
+    if (!confirmed) return
+    state.purging = true
+    state.cacheWarning = ''
+    state.notice = ''
+    const removed = new Set<number>()
+    const problems: string[] = []
+    let mediaDeleted = 0, recordsDeleted = 0
+    try {
+      // Free plan: 50 subrequests per invocation and one fetch per media file.
+      const requests: Array<{ keepId: number; deleteIds: number[] }> = []
+      for (const group of groups) {
+        let chunk: number[] = []
+        for (const item of group.remove) {
+          chunk.push(item.id!)
+          if (chunk.length === 20) { requests.push({ keepId: group.keep.id!, deleteIds: chunk }); chunk = [] }
+        }
+        if (chunk.length) requests.push({ keepId: group.keep.id!, deleteIds: chunk })
+      }
+      for (const request of requests) {
+        const result = await api.post<PurgeResult>('gallery/duplicates/purge', { groups: [request] })
+        mediaDeleted += result.mediaDeleted
+        recordsDeleted += result.recordsDeleted
+        for (const entry of result.skipped) problems.push(`#${entry.id} 未删除：${entry.reason}`)
+        for (const entry of result.failed) problems.push(`#${entry.id} 失败：${entry.message}`)
+        const unresolved = new Set([...result.skipped, ...result.failed].map(entry => entry.id))
+        for (const id of request.deleteIds) if (!unresolved.has(id)) removed.add(id)
+      }
+      state.catalog = state.catalog.filter(item => !item.id || !removed.has(item.id))
+      await rebuild()
+      await onRemoved()
+      state.notice = `已删除 ${mediaDeleted + recordsDeleted} 条重复记录：图床文件 ${mediaDeleted} 个，仅记录 ${recordsDeleted} 条。`
+        + (problems.length ? ` ${problems.length} 项未完成，例如 ${problems.slice(0, 3).join('；')}。` : '')
+    } catch (error) {
+      state.cacheWarning = `批量删除失败：${errorMessage(error)}`
+      if (removed.size) { state.catalog = state.catalog.filter(item => !item.id || !removed.has(item.id)); await rebuild() }
+    } finally { state.purging = false }
+  }
+
   onBeforeUnmount(cancel)
-  return { state, check, scan: () => start('scan', []), retry: () => run(), rescan: () => run(true), cancel, confirmSelection, removeRecord }
+  return { state, check, scan: () => start('scan', []), retry: () => run(), rescan: () => run(true), cancel, confirmSelection, removeRecord, purge }
 }

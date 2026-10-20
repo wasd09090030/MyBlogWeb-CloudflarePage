@@ -19,6 +19,8 @@ export type DuplicateImage = {
   sourceKey?: string
   label: string
   id?: number
+  /** Gallery creation time; used to keep the oldest copy of an exact duplicate. */
+  createdAt?: string
   fingerprint?: ImageFingerprint
   error?: string
 }
@@ -114,6 +116,59 @@ export function compareImages(left: DuplicateImage, right: DuplicateImage): Dupl
   const maximumDistance = Math.min(8, Math.max(2, Math.floor(detailBits * 0.3)))
   if (Math.abs(a.deviation - b.deviation) > 20 || distance > maximumDistance) return null
   return { left, right, distance, exact: false }
+}
+
+export type ExactDuplicateGroup = { keep: DuplicateImage; remove: DuplicateImage[] }
+
+/** Oldest gallery record first; the id breaks ties and orders records sharing a timestamp. */
+function olderRecordFirst(left: DuplicateImage, right: DuplicateImage): number {
+  const a = left.createdAt ?? '', b = right.createdAt ?? ''
+  if (a !== b) return a < b ? -1 : 1
+  return (left.id ?? 0) - (right.id ?? 0)
+}
+
+/**
+ * Groups gallery records that are the same picture: identical stored file or a zero
+ * perceptual distance. The oldest record of every group is kept, so a batch purge
+ * removes only later copies.
+ */
+export function exactDuplicateGroups(items: DuplicateImage[]): ExactDuplicateGroup[] {
+  const entries = items.filter(item => !item.error && typeof item.id === 'number')
+  const parent = entries.map((_, index) => index)
+  const find = (index: number): number => {
+    let root = index
+    while (parent[root] !== root) root = parent[root]!
+    let current = index
+    while (parent[current] !== root) {
+      const next = parent[current]!
+      parent[current] = root
+      current = next
+    }
+    return root
+  }
+  for (let index = 0; index < entries.length; index++) {
+    for (let previous = 0; previous < index; previous++) {
+      const match = compareImages(entries[index]!, entries[previous]!)
+      if (!match || match.distance !== 0) continue
+      const left = find(index), right = find(previous)
+      if (left !== right) parent[right] = left
+    }
+  }
+  const buckets = new Map<number, DuplicateImage[]>()
+  for (let index = 0; index < entries.length; index++) {
+    const root = find(index)
+    const bucket = buckets.get(root)
+    if (bucket) bucket.push(entries[index]!)
+    else buckets.set(root, [entries[index]!])
+  }
+  const groups: ExactDuplicateGroup[] = []
+  for (const members of buckets.values()) {
+    if (members.length < 2) continue
+    const sorted = [...members].sort(olderRecordFirst)
+    const keep = sorted[0]!
+    groups.push({ keep, remove: sorted.slice(1) })
+  }
+  return groups.sort((left, right) => olderRecordFirst(left.keep, right.keep))
 }
 
 export function reviewCandidates(incoming: DuplicateImage[], existing: DuplicateImage[]): DuplicateCandidate[] {

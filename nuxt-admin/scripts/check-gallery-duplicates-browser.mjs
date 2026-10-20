@@ -16,7 +16,7 @@ const profile = mkdtempSync(join(tmpdir(), 'gallery-duplicate-browser-'))
 const bundle = await build({ stdin: { contents: `export { fingerprintBlob } from './app/features/gallery-duplicates/fingerprint'; export { compareImages } from './shared/gallery-duplicates'`, resolveDir: root },
   bundle: true, write: false, format: 'esm', platform: 'browser', alias: { '~~': root } })
 let fixtures = {}, gallery = [], imports = [], deleted = [], failImage = false, catalogFailure = false, deleteFailure = false
-const duplicateCalls = { catalog: 0, lookup: 0, source: 0, fingerprints: 0 }
+const duplicateCalls = { catalog: 0, lookup: 0, source: 0, fingerprints: 0, purge: 0 }
 const fingerprintCache = new Map()
 const emptyHero = { sections: { fade: [], accordion: [], coverflow: [], preview: [] } }
 const server = createServer(async (req, res) => {
@@ -52,6 +52,13 @@ const server = createServer(async (req, res) => {
     if (failImage || !fixtures[path]) return json({ statusMessage: 'Fixture read failed' }, 422)
     res.setHeader('content-type', fixtures[path].type)
     return res.end(Buffer.from(fixtures[path].base64, 'base64'))
+  }
+  if (url.pathname === '/admin/api/gallery/duplicates/purge') {
+    duplicateCalls.purge++
+    const ids = body.groups.flatMap(group => group.deleteIds)
+    for (const id of ids) deleted.push(id)
+    gallery = gallery.filter(item => !ids.includes(item.id))
+    return json({ deleted: ids.length, mediaDeleted: ids.length, recordsDeleted: 0, skipped: [], failed: [] })
   }
   if (url.pathname === '/admin/api/gallery/batch/import') {
     imports.push(...body.imageUrls)
@@ -297,6 +304,29 @@ try {
   await click('确认保留 1 张')
   await waitFor(`!![...document.querySelectorAll('button')].find(el => el.textContent.trim() === '检查重复图片' && !el.disabled)`)
   assert.equal(imports.length, beforeUncheckedEditWrites + 2)
+  // Bulk purge keeps the oldest copy of exact duplicates and deletes only later records.
+  gallery = [
+    { id: 900, imageUrl: '/fixtures/unique.png', sourceImageUrl: '/fixtures/unique.png', tag: 'artwork', isActive: true, createdAt: '2026-10-01' },
+    { id: 901, imageUrl: '/fixtures/unique.png', sourceImageUrl: '/fixtures/unique.png', tag: 'artwork', isActive: true, createdAt: '2026-10-02' },
+    { id: 902, imageUrl: '/fixtures/unique.png', sourceImageUrl: '/fixtures/unique.png', tag: 'artwork', isActive: true, createdAt: '2026-10-03' }
+  ]
+  const beforePurge = duplicateCalls.purge
+  await click('检查重复图片')
+  await waitFor('document.body.innerText.includes("完全相同图片（视觉距离 0 / 64）")')
+  await waitFor('document.body.innerText.includes("可删除 2 张")')
+  await evaluate(`(() => { const details = [...document.querySelectorAll('details')].find(el => el.textContent.includes('查看将保留与删除的记录')); if (!details) throw new Error('purge preview missing'); details.open = true })()`)
+  await waitFor('document.body.innerText.includes("保留 画廊 #900")')
+  const purgePreview = await evaluate('document.body.innerText')
+  assert.ok(purgePreview.includes('删除 画廊 #901') && purgePreview.includes('删除 画廊 #902'), 'later copies must be listed for deletion')
+  assert.equal(duplicateCalls.purge, beforePurge, 'nothing may be deleted before confirmation')
+  await click('批量删除较晚的重复图片')
+  await waitFor('document.body.innerText.includes("已删除 2 条重复记录")')
+  assert.equal(duplicateCalls.purge, beforePurge + 1)
+  assert.deepEqual([...deleted].slice(-2).sort((left, right) => left - right), [901, 902])
+  assert.deepEqual(gallery.map(item => item.id), [900])
+  assert.ok((await evaluate('window.lastDeleteConfirmation')).includes('无法撤销'))
+  await click('关闭')
+  console.log('Browser exact-duplicate bulk purge keeps the oldest record.')
   console.log(JSON.stringify({ ok: true, metrics, imported: imports.length, removedRecords: deleted.length, duplicateCalls, forcedFailureRetry: 'incomplete' }, null, 2))
 } finally {
   ws?.close()

@@ -261,6 +261,19 @@ export async function deleteGallery(event: H3Event, idValue: unknown) {
   return null
 }
 
+/**
+ * Removes one gallery record without touching its media file. Batch duplicate cleanup
+ * uses this when the removed record shares its stored file with the copy that is kept.
+ */
+export async function deleteGalleryRecordOnly(event: H3Event, idValue: unknown) {
+  const id = requireId(idValue, 'gallery id')
+  const db = getDb(event)
+  const row = await queryFirst<{ id: number }>(db, 'SELECT id FROM galleries WHERE id = ?', id)
+  if (!row) throw createError({ statusCode: 404, statusMessage: 'Gallery item not found' })
+  await execute(db, 'DELETE FROM galleries WHERE id = ?', id)
+  return null
+}
+
 export async function toggleGalleryActive(event: H3Event, idValue: unknown) {
   const id = requireId(idValue, 'gallery id')
   const result = await execute(getDb(event), 'UPDATE galleries SET is_active = CASE is_active WHEN 1 THEN 0 ELSE 1 END, updated_at = ? WHERE id = ?', nowIso(), id)

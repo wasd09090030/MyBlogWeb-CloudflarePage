@@ -59,6 +59,7 @@ export function useAdminApi() {
     invalidate,
     resetSession,
     post: <T>(path: string, body?: unknown) => mutate<T>(path, { method: 'POST', body }),
+    postBlob: (path: string, body: unknown, signal?: AbortSignal) => request<Blob>(path, { method: 'POST', body, responseType: 'blob', signal, timeout: 25_000, retry: 0 }),
     put: <T>(path: string, body?: unknown) => mutate<T>(path, { method: 'PUT', body }),
     patch: <T>(path: string, body?: unknown) => mutate<T>(path, { method: 'PATCH', body }),
     del: <T>(path: string) => mutate<T>(path, { method: 'DELETE' })

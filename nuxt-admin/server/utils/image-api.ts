@@ -111,7 +111,7 @@ export async function listFromImageApi(event: H3Event, query: { start: number; c
 export async function deleteFromImageApi(event: H3Event, storageKey: string, folder = false): Promise<void> {
   const response = await providerRequest(event, `api/manage/delete/${encodeURIComponent(storageKey)}`, { method: 'GET' }, folder ? { folder: 'true' } : undefined)
   const payload = await readJson(response)
-  if (!response.ok || (payload && typeof payload === 'object' && (payload as Record<string, unknown>).success === false)) {
+  if (!response.ok || !payload || typeof payload !== 'object' || (payload as Record<string, unknown>).success !== true) {
     throw createError({ statusCode: 502, statusMessage: 'Image provider delete failed' })
   }
 }

@@ -68,6 +68,74 @@ npm run check:image-transform
 
 ## Data cutover
 
+### Gallery duplicate detection
+
+Apply `migrations/0006_gallery_image_fingerprints.sql` before releasing the updated
+`blog-api` and Admin Pages. It adds a cache table only; existing gallery rows and
+image files are unchanged. Deployment remains manual; use the normal migration,
+API, then Admin Pages order below. This change requires no public-site or router
+deployment, additional bindings, provider secrets, image transformations, or AI service.
+
+In the gallery, use **检查重复图片** to build the initial fingerprint cache. The
+scan includes hidden records and paginates beyond the ordinary 2000-row management
+list. Single additions, changed image URLs, and batches (up to 500) are submitted
+directly by default and do not read image contents. Select **保存前可选检查重复图片**
+or **导入前可选检查重复图片** to run a preflight; batch candidates are compared to
+both existing records and earlier candidates. Duplicates and unreadable candidates
+default to skipped. Explicitly select images to retain; incomplete results also
+require acknowledgement. Both scan results and the gallery list use the same
+gallery DELETE API. After explicit confirmation, it deletes the provider file,
+then deactivates matching assets and removes the gallery record and related
+fingerprints in one D1 transaction. Other gallery entries (including hidden
+entries), article covers and Hero items referencing the same storage key block
+deletion, including legacy URLs and public/thumbnail shortlinks. Unsupported
+external sources are rejected. Provider failures preserve the gallery record;
+database failures after remote deletion can be retried because the provider's
+file deletion is idempotent. Only an explicit provider success response permits
+database cleanup. This extension needs no additional migration or secret.
+
+The file deletion is permanent: rolling back code does not restore deleted files.
+Reference checks cover the fields above; free-form article/diary body links and
+links outside this database are not tracked. A concurrent write after the
+reference check can still add a reference; avoid editing the same files during
+cleanup. Deploy API and Admin Pages together so the confirmation matches the
+server behavior, and rebuild the public SSG after gallery content changes.
+
+Fingerprints are computed in the browser using versioned DCT pHash with color,
+detail, and aspect-ratio checks. Successful fingerprints are reused for 30 days.
+**强制重新读取全部图片** refreshes originals when a URL's content has changed;
+retries after a forced refresh continue to ignore stale cached fingerprints.
+Read failures remain visible and retryable. A catalog/API failure stops preflight.
+
+Source reads use session-protected `/admin/api/gallery/duplicates/*` endpoints.
+Only `IMAGE_API_BASE_URL` / `PUBLIC_ASSET_ORIGIN` hosts and resolvable registered
+`/images/*` links are supported. Every redirect is checked (maximum three).
+The reader accepts JPEG/PNG/WebP/GIF/AVIF, at most 20 MB, within 20 seconds;
+browser fingerprints reject decoded images above 40 million pixels. Animations
+use their first frame. Unsupported hosts, SVG, failed downloads, and unsupported
+browser decoders appear as explicit failures, rather than unique images.
+
+Detection is advisory admin preflight. It permits deliberate retention and does
+not enforce uniqueness against concurrent imports or direct API callers. Cropping,
+watermarks, transparency/background changes, large edits, and very low-detail
+images can produce misses or false matches; review the side-by-side images.
+First scans download originals and can take time. Comparisons run in the browser
+and yield periodically; very large collections may require a later indexed approach.
+
+Validation (Node 22.18+; verified with Node 24):
+
+```powershell
+npm run check:gallery-duplicates
+npm run generate
+npm run check:gallery-duplicates:browser
+```
+
+The browser check uses a fresh temporary headless Edge profile and local mocked
+APIs; set `CHROMIUM_BIN` for another Chromium installation. It does not access the
+production database or provider. Core checks run all SQL migrations against an
+isolated in-memory SQLite database. For rollback, restore the previous API and
+Admin Pages together; the additive fingerprint cache table may remain in D1.
+
 The export utility imports active blog/admin tables only: articles, comments, likes, galleries, image metadata, imagebed metadata, and administrator tables. It omits image bytes, provider tokens, `cf_image_configs`, and Beatmap data. Existing migration history is retained; `0003_remove_retired_tables.sql` removes the retired tables.
 
 ```powershell

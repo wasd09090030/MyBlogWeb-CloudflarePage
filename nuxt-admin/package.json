@@ -15,6 +15,8 @@
     "check:free-config": "node scripts/check-free-worker-config.mjs",
     "check:image-api": "node scripts/check-image-api-contract.mjs",
     "check:image-transform": "node scripts/check-image-transform-contract.mjs",
+    "check:gallery-duplicates": "node --experimental-strip-types scripts/check-gallery-duplicates.mjs",
+    "check:gallery-duplicates:browser": "node scripts/check-gallery-duplicates-browser.mjs",
     "db:export": "node scripts/sqlite-d1-export.mjs",
     "db:import": "node scripts/sqlite-d1-import.mjs --config wrangler.toml",
     "db:verify": "node scripts/sqlite-d1-verify.mjs",

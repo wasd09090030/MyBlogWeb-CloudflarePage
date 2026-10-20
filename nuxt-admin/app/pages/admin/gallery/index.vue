@@ -5,6 +5,10 @@ definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 
 const api = useAdminApi()
 const toast = useToast()
+const submitting = ref(false)
+const duplicates = useGalleryDuplicates(async () => { await refresh() })
+const checkDuplicatesBeforeSave = ref(false)
+const checkDuplicatesBeforeImport = ref(false)
 const open = ref(false)
 const importOpen = ref(false)
 const batchUpdateOpen = ref(false)
@@ -153,30 +157,65 @@ async function saveBatchUpdate() {
 
 function edit(item?: GalleryItem) {
   editing.value = item || null
+  checkDuplicatesBeforeSave.value = false
   Object.assign(form, item
     ? { imageUrl: item.imageUrl, tag: item.tag === 'game' ? 'game' : 'artwork', isActive: item.isActive !== false, sortOrder: item.sortOrder || 0, createdAt: toShanghaiDateTimeLocal(item.createdAt) }
     : { imageUrl: '', tag: 'artwork', isActive: true, sortOrder: (items.value?.length || 0) + 1, createdAt: '' })
   open.value = true
 }
 async function save() {
-  const { createdAt, ...galleryInput } = form
-  if (editing.value) await api.patch(`gallery/${editing.value.id}`, { ...galleryInput, createdAt: toCreatedAtUtc(createdAt) })
-  else await api.post('gallery', galleryInput)
-  open.value = false
-  toast.add({ title: '画廊已保存', color: 'success' })
-  await refresh()
-}
-async function importBatch() {
-  const imageUrls = batch.imageUrls.split('\n').map(value => value.trim()).filter(Boolean)
-  if (!imageUrls.length) {
-    toast.add({ title: '请至少填写一个图片地址', color: 'warning' })
+  if (submitting.value) return
+  const { createdAt, ...galleryInput } = { ...form, imageUrl: form.imageUrl.trim() }
+  if (!galleryInput.imageUrl || galleryInput.imageUrl.length > 2048) {
+    toast.add({ title: '请填写有效图片地址（最多 2048 字符）', color: 'warning' })
     return
   }
-  await api.post('gallery/batch/import', { imageUrls, tag: batch.tag, isActive: batch.isActive })
-  importOpen.value = false
-  batch.imageUrls = ''
-  toast.add({ title: `已导入 ${imageUrls.length} 张${batch.tag === 'game' ? '游戏' : '作品'}图片`, color: 'success' })
-  await refresh()
+  const editingItem = editing.value
+  submitting.value = true
+  try {
+    if (checkDuplicatesBeforeSave.value && (!editingItem || (galleryInput.imageUrl !== editingItem.imageUrl && galleryInput.imageUrl !== editingItem.sourceImageUrl))) {
+      const selected = await duplicates.check([galleryInput.imageUrl], editingItem?.id)
+      if (!selected?.length) return
+    }
+    if (editingItem) await api.patch(`gallery/${editingItem.id}`, { ...galleryInput, createdAt: toCreatedAtUtc(createdAt) })
+    else await api.post('gallery', galleryInput)
+    open.value = false
+    toast.add({ title: '画廊已保存', color: 'success' })
+    await refresh()
+  } catch {
+    toast.add({ title: '保存失败，请检查后重试', color: 'error' })
+  } finally { submitting.value = false }
+}
+async function importBatch() {
+  if (submitting.value) return
+  const imageUrls = batch.imageUrls.split('\n').map(value => value.trim()).filter(Boolean)
+  if (!imageUrls.length || imageUrls.length > 500 || imageUrls.some(url => url.length > 2048)) {
+    toast.add({ title: '每批请填写 1–500 个图片地址，每个最多 2048 字符', color: 'warning' })
+    return
+  }
+  const input = { tag: batch.tag, isActive: batch.isActive }
+  submitting.value = true
+  try {
+    let urlsToImport = imageUrls
+    let skipped = 0
+    if (checkDuplicatesBeforeImport.value) {
+      const selected = await duplicates.check(imageUrls)
+      if (!selected?.length) return
+      urlsToImport = selected
+      skipped = imageUrls.length - selected.length
+    }
+    await api.post('gallery/batch/import', { imageUrls: urlsToImport, ...input })
+    importOpen.value = false
+    batch.imageUrls = ''
+    toast.add({ title: `已导入 ${urlsToImport.length} 张${skipped ? `，跳过 ${skipped} 张` : ''}`, color: 'success' })
+    await refresh()
+  } catch {
+    toast.add({ title: '导入失败，请检查后重试', color: 'error' })
+  } finally { submitting.value = false }
+}
+function openBatchImport() {
+  checkDuplicatesBeforeImport.value = false
+  importOpen.value = true
 }
 function move(item: GalleryItem, direction: -1 | 1) {
   const list = [...(items.value || [])].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
@@ -298,12 +337,15 @@ async function backfillImageAssets() {
   }
 }
 async function remove(item: GalleryItem) {
-  if (!confirm('删除该画廊项？')) return
+  if (!confirm('删除该画廊图片？将同时删除图床原文件，此操作无法撤销。文件仍被其他画廊、文章封面或 Hero 引用时将阻止删除。')) return
   try {
     await api.del(`gallery/${item.id}`)
-  } catch {
-    // 行可能已在其他会话/标签页被删除（如 404），刷新列表让残留项消失
-    toast.add({ title: '该图片可能已被删除，列表已刷新', color: 'warning' })
+    toast.add({ title: '图片及画廊记录已删除', color: 'success' })
+  } catch (error) {
+    const value = error as { data?: { data?: { message?: string }; statusMessage?: string }; statusCode?: number }
+    toast.add({ title: value.statusCode === 404 ? '该画廊项已不存在，列表已刷新' : '删除失败',
+      description: value.data?.data?.message || value.data?.statusMessage,
+      color: value.statusCode === 404 ? 'warning' : 'error' })
   }
   await refresh()
 }
@@ -313,10 +355,12 @@ async function remove(item: GalleryItem) {
   <div class="space-y-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div><p class="text-sm text-muted">视觉内容</p><h2 class="text-2xl font-semibold">画廊</h2></div>
-      <div class="flex flex-wrap gap-2"><UButton color="neutral" variant="soft" icon="i-lucide-ruler" :loading="dimensionsRefreshing" @click="refreshDimensions">刷新尺寸</UButton><UButton v-if="orderDirty" color="neutral" variant="soft" icon="i-lucide-save" @click="saveOrder">保存手动排序</UButton><UButton color="neutral" variant="soft" icon="i-lucide-import" @click="importOpen = true">批量导入</UButton><UButton icon="i-lucide-plus" @click="edit()">添加图片</UButton></div>
+      <div class="flex flex-wrap gap-2"><UButton color="neutral" variant="soft" icon="i-lucide-ruler" :loading="dimensionsRefreshing" @click="refreshDimensions">刷新尺寸</UButton><UButton v-if="orderDirty" color="neutral" variant="soft" icon="i-lucide-save" @click="saveOrder">保存手动排序</UButton><UButton color="neutral" variant="soft" icon="i-lucide-import" @click="openBatchImport">批量导入</UButton><UButton icon="i-lucide-plus" @click="edit()">添加图片</UButton></div>
     </div>
 
-    <div class="flex justify-end"><UButton color="neutral" variant="soft" icon="i-lucide-refresh-cw" :loading="backfilling" @click="backfillImageAssets">迁移永久缩略图</UButton></div>
+    <div class="flex flex-wrap justify-end gap-2"><UButton color="neutral" variant="soft" icon="i-lucide-scan-line" :disabled="submitting || duplicates.state.busy" @click="duplicates.scan">检查重复图片</UButton><UButton color="neutral" variant="soft" icon="i-lucide-refresh-cw" :loading="backfilling" @click="backfillImageAssets">迁移永久缩略图</UButton></div>
+
+    <GalleryDuplicateReview :review="duplicates" />
 
     <UCard>
       <template #header>
@@ -373,8 +417,8 @@ async function remove(item: GalleryItem) {
     </div>
     <UEmpty v-else icon="i-lucide-images" title="没有符合条件的图片" description="调整筛选条件或导入新的图片。" />
 
-    <UModal v-model:open="open" title="画廊项">
-      <template #body><UForm :state="form" class="space-y-4" @submit="save"><UFormField label="图片地址"><UInput v-model="form.imageUrl" class="w-full" /></UFormField><UFormField label="素材类型"><USelect v-model="form.tag" :items="tagOptions" class="w-full" /></UFormField><UFormField v-if="editing" label="展示时间（UTC+8）"><UInput v-model="form.createdAt" type="datetime-local" class="w-full" /></UFormField><UFormField label="排序"><UInput v-model.number="form.sortOrder" type="number" class="w-full" /></UFormField><UCheckbox v-model="form.isActive" label="公开显示" /><UButton type="submit" block>保存</UButton></UForm></template>
+    <UModal v-model:open="open" title="画廊项" :dismissible="!submitting" :close="!submitting">
+      <template #body><UForm :state="form" class="space-y-4" @submit="save"><UFormField label="图片地址"><UInput v-model="form.imageUrl" class="w-full" /></UFormField><UFormField label="素材类型"><USelect v-model="form.tag" :items="tagOptions" class="w-full" /></UFormField><UFormField v-if="editing" label="展示时间（UTC+8）"><UInput v-model="form.createdAt" type="datetime-local" class="w-full" /></UFormField><UFormField label="排序"><UInput v-model.number="form.sortOrder" type="number" class="w-full" /></UFormField><UCheckbox v-model="form.isActive" label="公开显示" /><UCheckbox v-model="checkDuplicatesBeforeSave" label="保存前可选检查重复图片（将读取图片内容）" /><UButton type="submit" block :loading="submitting">{{ checkDuplicatesBeforeSave ? '检查重复并保存' : '保存图片' }}</UButton></UForm></template>
     </UModal>
     <UModal v-model:open="batchUpdateOpen" title="批量修改图片">
       <template #body>
@@ -392,6 +436,6 @@ async function remove(item: GalleryItem) {
         </UForm>
       </template>
     </UModal>
-    <UModal v-model:open="importOpen" title="批量导入图片"><template #body><UForm :state="batch" class="space-y-4" @submit="importBatch"><UFormField label="每行一个图片地址"><UTextarea v-model="batch.imageUrls" :rows="8" class="w-full" /></UFormField><UFormField label="素材类型"><USelect v-model="batch.tag" :items="tagOptions" class="w-full" /></UFormField><UCheckbox v-model="batch.isActive" label="导入后公开显示" /><UButton type="submit" block icon="i-lucide-import">导入图片</UButton></UForm></template></UModal>
+    <UModal v-model:open="importOpen" title="批量导入图片" :dismissible="!submitting" :close="!submitting"><template #body><UForm :state="batch" class="space-y-4" @submit="importBatch"><UFormField label="每行一个图片地址"><UTextarea v-model="batch.imageUrls" :rows="8" class="w-full" /></UFormField><UFormField label="素材类型"><USelect v-model="batch.tag" :items="tagOptions" class="w-full" /></UFormField><UCheckbox v-model="batch.isActive" label="导入后公开显示" /><UCheckbox v-model="checkDuplicatesBeforeImport" label="导入前可选检查重复图片（将读取图片内容）" /><UButton type="submit" block icon="i-lucide-import" :loading="submitting">{{ checkDuplicatesBeforeImport ? '检查重复并导入' : '直接导入' }}</UButton></UForm></template></UModal>
   </div>
 </template>

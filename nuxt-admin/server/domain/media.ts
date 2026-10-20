@@ -160,9 +160,15 @@ export async function listMedia(event: H3Event, query: Record<string, unknown>) 
 export async function deleteMedia(event: H3Event, fileValue: unknown) {
   const key = providerFileName(String(fileValue || ''))
   if (!key) throw createError({ statusCode: 400, statusMessage: 'Invalid media key' })
-  await deleteFromImageApi(event, key)
+  await deleteMediaFile(event, key)
   await execute(getDb(event), 'UPDATE image_assets SET is_active = 0, updated_at = ? WHERE storage_key = ?', nowIso(), key)
   return { success: true, deleted: key }
+}
+
+/** Delete a canonical storage key; callers own their database cleanup transaction. */
+export async function deleteMediaFile(event: H3Event, storageKey: string) {
+  if (!isValidStorageKey(storageKey)) throw createError({ statusCode: 400, statusMessage: 'Invalid media key' })
+  await deleteFromImageApi(event, storageKey)
 }
 
 export async function bulkDeleteMedia(event: H3Event, files: unknown) {

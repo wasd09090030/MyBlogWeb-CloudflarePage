@@ -1,5 +1,9 @@
 import type { H3Event } from 'h3'
-import { assetUpsertStatement, resolveAssetReference, thumbnailVariantUrl } from './assets'
+import { assetUpsertStatement, extractPublicIdFromImageUrl, extractStorageKey, isValidStorageKey, resolveAssetReference, thumbnailVariantUrl, type ImageAssetRow } from './assets'
+import { deleteMediaFile } from './media'
+import { getRequestOrigin } from '~~/server/utils/cloudflare'
+import { getImageApiBaseUrl, normalizeImageSourceUrl } from '~~/server/utils/image-api'
+import { fingerprintKey } from '~~/shared/gallery-duplicates'
 import { batch, execute, getDb, nowIso, parseNonNegativeInt, parsePositiveInt, queryAll, queryFirst, requireId } from '~~/server/utils/d1'
 
 type GalleryRow = {
@@ -190,8 +194,70 @@ export async function updateGallery(event: H3Event, idValue: unknown, input: Gal
 }
 
 export async function deleteGallery(event: H3Event, idValue: unknown) {
-  const result = await execute(getDb(event), 'DELETE FROM galleries WHERE id = ?', requireId(idValue, 'gallery id'))
-  if (!result.meta?.changes) throw createError({ statusCode: 404, statusMessage: 'Gallery item not found' })
+  const id = requireId(idValue, 'gallery id')
+  const db = getDb(event)
+  const row = await queryFirst<GalleryRow>(db, 'SELECT * FROM galleries WHERE id = ?', id)
+  if (!row) throw createError({ statusCode: 404, statusMessage: 'Gallery item not found' })
+  const base = getImageApiBaseUrl(event)
+  // Include inactive assets so a retry can finish cleanup after a prior remote deletion.
+  const assets = await queryAll<ImageAssetRow>(db, 'SELECT * FROM image_assets')
+  const byId = new Map(assets.map(asset => [asset.id, asset]))
+  const byPublicId = new Map(assets.map(asset => [asset.public_id, asset]))
+  function mediaKey(value: string | null, assetId?: number | null): string | null {
+    try {
+      const linked = assetId ? byId.get(assetId) : undefined
+      if (linked) return isValidStorageKey(linked.storage_key) ? linked.storage_key : null
+      const source = value?.trim() || ''
+      const publicId = extractPublicIdFromImageUrl(source)
+      if (publicId) {
+        if (/^https?:\/\//i.test(source) && new URL(source).origin !== new URL(getRequestOrigin(event)).origin) return null
+      } else if (/^https?:\/\//i.test(source)) {
+        normalizeImageSourceUrl(event, source, base)
+      } else if (!source || source.startsWith('//') || /^[a-z][a-z\d+.-]*:/i.test(source)) {
+        return null
+      }
+      const asset = publicId ? byPublicId.get(publicId) : undefined
+      if (asset) {
+        return isValidStorageKey(asset.storage_key) ? asset.storage_key : null
+      }
+      if (publicId) return null
+      return extractStorageKey(/^https?:\/\//i.test(source) ? source : decodeURIComponent(source.split(/[?#]/)[0]!).replace(/^\/?file\//i, ''))
+    } catch { return null }
+  }
+  const key = mediaKey(row.image_url, row.image_asset_id)
+  if (!key) throw createError({ statusCode: 422, statusMessage: 'Unsupported gallery media', data: { message: '无法识别已配置图床中的图片文件，未删除画廊记录。' } })
+  const targetAsset = row.image_asset_id ? byId.get(row.image_asset_id) : byPublicId.get(extractPublicIdFromImageUrl(row.image_url) || '')
+  if (targetAsset?.source_url) {
+    try { normalizeImageSourceUrl(event, targetAsset.source_url, base) } catch {
+      throw createError({ statusCode: 422, statusMessage: 'Unsupported gallery media', data: { message: '素材源地址不属于已配置图床，未删除画廊记录。' } })
+    }
+  }
+  const references = await queryAll<{ url: string | null; asset_id: number | null }>(db, `
+    SELECT image_url AS url, image_asset_id AS asset_id FROM galleries WHERE id <> ?
+    UNION ALL SELECT cover_image, cover_image_asset_id FROM articles
+    UNION ALL SELECT image_url, image_asset_id FROM gallery_hero_items
+  `, id)
+  if (references.some(reference => mediaKey(reference.url, reference.asset_id) === key)) {
+    throw createError({ statusCode: 409, statusMessage: 'Gallery media is still referenced', data: { message: '此文件仍被其他画廊项、文章封面或 Hero 引用，请先解除引用，再删除图片。' } })
+  }
+  const fingerprints = await queryAll<{ source_url: string }>(db, 'SELECT DISTINCT source_url FROM gallery_image_fingerprints')
+  const urls = fingerprints.filter(item => mediaKey(item.source_url) === key || item.source_url === fingerprintKey(row.image_url)).map(item => item.source_url)
+  const cleanup = [
+    { sql: 'UPDATE image_assets SET is_active = 0, updated_at = ? WHERE storage_key = ?', values: [nowIso(), key] },
+    { sql: 'DELETE FROM galleries WHERE id = ?', values: [id] }
+  ]
+  for (let offset = 0; offset < urls.length; offset += 50) {
+    const chunk = urls.slice(offset, offset + 50)
+    cleanup.push({ sql: `DELETE FROM gallery_image_fingerprints WHERE source_url IN (${chunk.map(() => '?').join(',')})`, values: chunk })
+  }
+  // Remote storage and D1 cannot share a transaction. The provider's delete is
+  // idempotent, so a database failure preserves the record and can be retried.
+  try { await deleteMediaFile(event, key) } catch {
+    throw createError({ statusCode: 502, statusMessage: 'Gallery media deletion failed', data: { message: '图床文件删除失败，画廊记录已保留，请稍后重试。' } })
+  }
+  try { await batch(db, cleanup) } catch {
+    throw createError({ statusCode: 503, statusMessage: 'Gallery cleanup failed', data: { message: '图床文件已删除，但数据库清理失败，请再次删除以完成清理。' } })
+  }
   return null
 }
 

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MDC Style Contract Showcase</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page-bg: #f8f5f1;
+      --page-grid: rgba(54, 42, 37, .055);
+      --page-ink: #2f2825;
+      --page-muted: #82736b;
+      --page-line: #e5d9d0;
+      --page-accent: #d9435f;
+      --page-accent-soft: #fbe7eb;
+      --page-card: #fffdfa;
+      --page-shadow: 0 20px 70px rgba(72, 47, 38, .11);
+      --article-prose-text: #40332e;
+      --article-prose-heading: #302622;
+      --article-prose-muted: #8a756a;
+      --article-prose-border: #eaded5;
+      --article-prose-surface: #f7eae4;
+      --article-prose-accent: #d9435f;
+      --article-prose-accent-soft: #fbe7eb;
+      --article-prose-card: #fffdfa;
+      --article-prose-hover: #fcedea;
+      --article-prose-radius: .375rem;
+      --article-prose-success: #0d9488;
+      --article-prose-warning: #d88912;
+      --article-prose-error: #d9435f;
+      --code-bg: #1d2026;
+      --code-ink: #eef1f5;
+      --code-string: #a9d7b1;
+      --code-function: #a9c8f1;
+      --code-keyword: #f2a6ba;
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --page-bg: #191617;
+      --page-grid: rgba(255, 242, 234, .045);
+      --page-ink: #f4e9e3;
+      --page-muted: #ad9690;
+      --page-line: #3b2f2c;
+      --page-accent: #f07b92;
+      --page-accent-soft: #39232a;
+      --page-card: #241e1c;
+      --page-shadow: 0 20px 70px rgba(0, 0, 0, .26);
+      --article-prose-text: #eadfd9;
+      --article-prose-heading: #fff5ef;
+      --article-prose-muted: #aa9690;
+      --article-prose-border: #473936;
+      --article-prose-surface: #302522;
+      --article-prose-accent: #f07b92;
+      --article-prose-accent-soft: #39232a;
+      --article-prose-card: #241e1c;
+      --article-prose-hover: #3a2926;
+      --article-prose-success: #4fc5b7;
+      --article-prose-warning: #f1b757;
+      --article-prose-error: #f07b92;
+      --code-bg: #111316;
+      --code-ink: #edf1f5;
+      --code-string: #b6e2bd;
+      --code-function: #b2cff5;
+      --code-keyword: #f6a9c2;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      min-width: 320px;
+      margin: 0;
+      color: var(--page-ink);
+      background: linear-gradient(var(--page-grid) 1px, transparent 1px), linear-gradient(90deg, var(--page-grid) 1px, transparent 1px), var(--page-bg);
+      background-size: 32px 32px;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, summary { font: inherit; }
+    button { color: inherit; }
+    .page-shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 26px 0 18px; border-bottom: 1px solid var(--page-line); }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--page-ink); font-size: 12px; font-weight: 800; letter-spacing: .13em; text-decoration: none; text-transform: uppercase; }
+    .brand-mark { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; color: #fff; background: var(--page-accent); font-family: Georgia, serif; font-size: 17px; font-style: italic; }
+    .topbar-tools { display: flex; align-items: center; gap: 10px; }
+    .tool-button { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border: 1px solid var(--page-line); border-radius: 999px; background: var(--page-card); cursor: pointer; font-size: 12px; font-weight: 700; text-decoration: none; transition: border-color 160ms ease, background 160ms ease, transform 160ms ease; }
+    .tool-button:hover { border-color: var(--page-accent); background: var(--page-accent-soft); transform: translateY(-1px); }
+    .hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); gap: 80px; align-items: end; padding: 86px 0 72px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--page-accent); font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    .eyebrow::before { width: 28px; height: 1px; background: currentColor; content: ""; }
+    h1, h2, h3, p { margin: 0; }
+    .hero h1 { max-width: 730px; margin-top: 20px; color: var(--page-ink); font-family: Georgia, "Times New Roman", serif; font-size: clamp(48px, 7vw, 92px); font-weight: 400; letter-spacing: -.065em; line-height: .93; }
+    .hero h1 em { color: var(--page-accent); font-weight: 400; }
+    .hero-copy { max-width: 360px; justify-self: end; color: var(--page-muted); font-size: 14px; line-height: 1.8; }
+    .hero-copy strong { color: var(--page-ink); }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+    .meta-chip { padding: 6px 9px; border: 1px solid var(--page-line); border-radius: 999px; color: var(--page-muted); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; }
+    .showcase { position: relative; overflow: hidden; margin: 0 0 70px; border: 1px solid var(--page-line); border-radius: 12px; background: var(--page-card); box-shadow: var(--page-shadow); }
+    .showcase::before { position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(90deg, var(--page-accent), #f0b45d, var(--article-prose-success)); content: ""; }
+    .showcase-header { display: flex; align-items: start; justify-content: space-between; gap: 24px; padding: 34px 42px 30px; border-bottom: 1px solid var(--page-line); }
+    .showcase-kicker { margin-bottom: 8px; color: var(--page-muted); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    .showcase-header h2 { font-size: 22px; letter-spacing: -.03em; }
+    .showcase-header p { max-width: 480px; margin-top: 8px; color: var(--page-muted); font-size: 13px; line-height: 1.6; }
+    .status-dot { display: inline-flex; align-items: center; gap: 7px; color: var(--article-prose-success); font-family: monospace; font-size: 11px; white-space: nowrap; }
+    .status-dot::before { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 16%, transparent); content: ""; }
+    .showcase-body { padding: 42px; }
+    .article-prose { color: var(--article-prose-text); font-family: Georgia, "Times New Roman", serif; line-height: 1.75; }
+    .article-prose h3 { margin: 0 0 10px; color: var(--article-prose-heading); font-size: 24px; line-height: 1.25; }
+    .article-prose > p { max-width: 720px; color: var(--article-prose-muted); font-size: 15px; }
+    .section-label { display: flex; align-items: center; gap: 12px; margin: 46px 0 18px; color: var(--article-prose-muted); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    .section-label::after { height: 1px; flex: 1; background: var(--article-prose-border); content: ""; }
+    .component-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .component-grid .full { grid-column: 1 / -1; }
+    .article-prose :where(.alert-mdc, .collapse-mdc, .steps-mdc, .spoiler-mdc, .code-playground-mdc, .image-comparison-mdc, .web-embed-mdc, .link-card-wrapper, .github-card-mdc, .mdc-preview-card) { border: 1px solid var(--article-prose-border); border-radius: var(--article-prose-radius); box-shadow: none; }
+    .article-prose :where(.alert-mdc, .collapse-mdc, .steps-mdc, .spoiler-mdc, .code-playground-mdc, .link-card-wrapper, .github-card-mdc, .mdc-preview-card) { margin-block: 1.25rem; }
+    .alert-mdc { --mdc-tone: var(--article-prose-accent); display: flex; gap: 14px; padding: 16px 18px; border-inline-start: 3px solid var(--mdc-tone); background: color-mix(in srgb, var(--mdc-tone) 6%, var(--article-prose-card)); }
+    .alert-mdc.success { --mdc-tone: var(--article-prose-success); }
+    .alert-mdc.warning { --mdc-tone: var(--article-prose-warning); }
+    .alert-mdc.error { --mdc-tone: var(--article-prose-error); }
+    .alert-icon { color: var(--mdc-tone); font-family: "SFMono-Regular", Consolas, monospace; font-size: 14px; font-weight: 800; }
+    .alert-content strong { display: block; margin-bottom: 3px; color: var(--article-prose-heading); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 13px; }
+    .alert-content span { color: var(--article-prose-muted); font-size: 13px; }
+    .collapse-mdc { overflow: hidden; }
+    .collapse-summary { display: flex; align-items: center; gap: 12px; width: 100%; padding: 15px 17px; border: 0; background: var(--article-prose-surface); color: var(--article-prose-heading); cursor: pointer; font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 13px; font-weight: 750; text-align: start; }
+    .collapse-summary:hover { background: var(--article-prose-hover); }
+    .collapse-icon { flex-shrink: 0; color: var(--article-prose-muted); transition: transform 160ms ease; }
+    details[open] .collapse-icon { transform: rotate(90deg); }
+    .collapse-content { padding: 16px 18px; background: var(--article-prose-card); color: var(--article-prose-muted); font-size: 13px; }
+    .collapse-content p { margin: 0; }
+    .tabs-mdc { margin-block: 1.5rem; }
+    .tabs-header { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--article-prose-border); }
+    .tab-btn { flex-shrink: 0; padding: 10px 15px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--article-prose-muted); cursor: pointer; font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 12px; font-weight: 700; }
+    .tab-btn:hover { color: var(--article-prose-heading); background: var(--article-prose-accent-soft); }
+    .tab-btn[aria-selected="true"] { border-color: var(--article-prose-accent); color: var(--article-prose-accent); }
+    .tab-panel { padding: 17px 2px 1px; color: var(--article-prose-muted); font-size: 13px; }
+    .tab-panel strong { color: var(--article-prose-heading); }
+    .steps-mdc { padding: 20px; background: var(--article-prose-surface); }
+    .steps-track { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+    .step { position: relative; min-width: 0; }
+    .step:not(:last-child)::after { position: absolute; top: 15px; left: 32px; width: calc(100% - 32px); height: 1px; background: var(--article-prose-border); content: ""; }
+    .step-dot { position: relative; z-index: 1; display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid var(--article-prose-border); border-radius: 50%; background: var(--article-prose-card); color: var(--article-prose-muted); cursor: pointer; font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; }
+    .step.is-active .step-dot, .step.is-done .step-dot { border-color: var(--article-prose-accent); background: var(--article-prose-accent); color: #fff; }
+    .step-title { display: block; margin-top: 10px; color: var(--article-prose-heading); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 12px; font-weight: 750; }
+    .step-copy { display: block; margin-top: 3px; color: var(--article-prose-muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 11px; line-height: 1.5; }
+    .spoiler-mdc { overflow: hidden; background: var(--article-prose-card); }
+    .spoiler-warning-bar { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 14px; border: 0; background: var(--article-prose-surface); color: var(--article-prose-heading); cursor: pointer; font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 12px; font-weight: 750; text-align: start; }
+    .spoiler-warning-bar:hover { background: var(--article-prose-hover); }
+    .spoiler-toggle-hint { margin-left: auto; color: var(--article-prose-muted); font-size: 10px; font-weight: 500; }
+    .spoiler-body { position: relative; padding: 17px 18px; }
+    .spoiler-content { color: var(--article-prose-muted); font-size: 13px; transition: filter 180ms ease, opacity 180ms ease; }
+    .spoiler-content.blurred { filter: blur(6px); opacity: .48; user-select: none; }
+    .spoiler-mask { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; width: 100%; border: 0; background: transparent; cursor: pointer; }
+    .spoiler-mask-content { display: grid; gap: 3px; place-items: center; padding: 8px 14px; border: 1px solid var(--article-prose-border); border-radius: var(--article-prose-radius); background: var(--article-prose-card); color: var(--article-prose-accent); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 11px; font-weight: 750; }
+    .spoiler-mask-content:hover { background: var(--article-prose-hover); }
+    .code-playground-mdc { overflow: hidden; background: var(--article-prose-card); }
+    .playground-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--article-prose-border); background: var(--article-prose-surface); color: var(--article-prose-heading); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 11px; font-weight: 750; }
+    .window-dots { display: flex; gap: 5px; }
+    .window-dots i { display: block; width: 7px; height: 7px; border-radius: 50%; background: var(--page-line); }
+    .window-dots i:first-child { background: var(--article-prose-error); }
+    .window-dots i:nth-child(2) { background: var(--article-prose-warning); }
+    .window-dots i:nth-child(3) { background: var(--article-prose-success); }
+    pre { margin: 0; padding: 19px; overflow: auto; background: var(--code-bg); color: var(--code-ink); font: 12px/1.8 "SFMono-Regular", Consolas, monospace; }
+    .syntax-keyword { color: var(--code-keyword); }
+    .syntax-string { color: var(--code-string); }
+    .syntax-function { color: var(--code-function); }
+    .output-header { padding: 9px 14px; border-top: 1px solid var(--article-prose-border); background: var(--article-prose-surface); color: var(--article-prose-muted); font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; }
+    .output-content { padding: 15px; background: var(--code-bg); color: var(--code-ink); font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; }
+    .output-content .prompt { color: var(--code-string); }
+    .link-card-wrapper { display: flex; align-items: center; gap: 16px; padding: 17px; background: var(--article-prose-card); text-decoration: none; }
+    .link-card-icon { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border: 1px solid var(--article-prose-border); border-radius: var(--article-prose-radius); background: var(--article-prose-surface); color: var(--article-prose-accent); font-family: Georgia, serif; font-size: 22px; }
+    .link-card-content { min-width: 0; }
+    .link-card-title { display: block; overflow: hidden; color: var(--article-prose-heading); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 13px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+    .link-card-description { display: block; margin-top: 3px; overflow: hidden; color: var(--article-prose-muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .link-card-arrow { margin-left: auto; color: var(--article-prose-muted); font-size: 18px; transition: transform 160ms ease; }
+    .link-card-wrapper:hover .link-card-arrow { color: var(--article-prose-accent); transform: translateX(3px); }
+    .github-card-mdc { padding: 18px; background: var(--article-prose-card); }
+    .repo-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+    .repo-name { color: var(--article-prose-heading); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 14px; font-weight: 800; }
+    .repo-owner { display: block; margin-top: 2px; color: var(--article-prose-muted); font-family: monospace; font-size: 10px; }
+    .repo-badge { padding: 4px 7px; border: 1px solid var(--article-prose-border); border-radius: 999px; color: var(--article-prose-success); font-family: monospace; font-size: 10px; }
+    .repo-description { margin-top: 15px; color: var(--article-prose-muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 12px; line-height: 1.55; }
+    .repo-stats { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 17px; padding-top: 14px; border-top: 1px solid var(--article-prose-border); color: var(--article-prose-muted); font-family: monospace; font-size: 10px; }
+    .repo-stats strong { color: var(--article-prose-heading); }
+    .media-placeholder { display: grid; min-height: 180px; place-items: center; overflow: hidden; border: 1px solid var(--article-prose-border); border-radius: var(--article-prose-radius); background: linear-gradient(135deg, var(--article-prose-surface), var(--article-prose-card)); }
+    .media-art { position: relative; width: min(280px, 70%); aspect-ratio: 16 / 8; border: 1px solid color-mix(in srgb, var(--article-prose-accent) 40%, var(--article-prose-border)); background: color-mix(in srgb, var(--article-prose-accent) 12%, transparent); transform: rotate(-3deg); }
+    .media-art::before, .media-art::after { position: absolute; content: ""; }
+    .media-art::before { inset: 18% 12%; border: 1px solid color-mix(in srgb, var(--article-prose-accent) 60%, transparent); }
+    .media-art::after { right: 12%; bottom: 18%; width: 38%; height: 1px; background: var(--article-prose-accent); box-shadow: -34px -8px 0 color-mix(in srgb, var(--article-prose-accent) 50%, transparent), -16px 8px 0 color-mix(in srgb, var(--article-prose-accent) 35%, transparent); }
+    .media-caption { margin-top: 8px; color: var(--article-prose-muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 11px; text-align: center; }
+    .rating-row { display: flex; align-items: center; gap: 14px; padding: 15px 17px; border: 1px solid var(--article-prose-border); border-radius: var(--article-prose-radius); background: var(--article-prose-card); }
+    .rating-label { color: var(--article-prose-muted); font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 12px; }
+    .rating-stars { display: flex; gap: 2px; }
+    .star-cell { padding: 0; border: 0; background: transparent; color: var(--article-prose-border); cursor: pointer; font-size: 21px; line-height: 1; }
+    .star-cell.is-active, .star-cell:hover { color: var(--article-prose-warning); }
+    .rating-score { margin-left: auto; color: var(--article-prose-heading); font-family: monospace; font-size: 12px; font-weight: 800; }
+    .token-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 18px; }
+    .token { min-width: 0; padding: 10px; border: 1px solid var(--article-prose-border); border-radius: var(--article-prose-radius); background: var(--article-prose-card); }
+    .token-swatch { height: 30px; margin-bottom: 8px; border-radius: 3px; background: var(--token); }
+    .token-name { display: block; overflow: hidden; color: var(--article-prose-muted); font-family: monospace; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+    .footer { display: flex; justify-content: space-between; gap: 24px; padding: 0 0 36px; color: var(--page-muted); font-family: monospace; font-size: 10px; }
+    .footer a { color: var(--page-accent); text-decoration: none; }
+    :where(button, summary, a):focus-visible { outline: 2px solid var(--article-prose-accent); outline-offset: 3px; }
+    @media (max-width: 768px) {
+      .page-shell { width: min(100% - 28px, 680px); }
+      .topbar { padding-top: 18px; }
+      .hero { grid-template-columns: 1fr; gap: 25px; padding: 60px 0 48px; }
+      .hero-copy { justify-self: start; }
+      .hero h1 { font-size: clamp(50px, 16vw, 78px); }
+      .showcase-header { display: block; padding: 28px 22px 24px; }
+      .status-dot { margin-top: 18px; }
+      .showcase-body { padding: 28px 20px; }
+      .component-grid { grid-template-columns: 1fr; gap: 14px; }
+      .component-grid .full { grid-column: auto; }
+      .token-strip { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 576px) {
+      .page-shell { width: calc(100% - 24px); }
+      .brand { font-size: 10px; letter-spacing: .08em; }
+      .tool-button span { display: none; }
+      .tool-button { width: 36px; justify-content: center; padding: 0; }
+      .hero { padding-top: 48px; }
+      .showcase { margin-bottom: 48px; border-radius: 8px; }
+      .showcase-body { padding: 25px 14px; }
+      .token-strip { grid-template-columns: repeat(2, 1fr); }
+      .steps-track { gap: 10px; }
+      .step:not(:last-child)::after { left: 27px; width: calc(100% - 27px); }
+      .step-dot { width: 26px; height: 26px; }
+      .step-copy { display: none; }
+      .rating-row { flex-wrap: wrap; gap: 8px; }
+      .rating-score { margin-left: 0; }
+      .footer { display: block; line-height: 1.8; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="MDC Style Contract Showcase"><span class="brand-mark">m</span><span>MDC Style Contract</span></a>
+      <div class="topbar-tools"><button class="tool-button" id="theme-toggle" type="button" aria-label="切换主题"><span aria-hidden="true">◐</span><span>Theme</span></button><a class="tool-button" href="#components"><span aria-hidden="true">↓</span><span>Explore</span></a></div>
+    </header>
+    <main id="top">
+      <section class="hero">
+        <div><span class="eyebrow">Unified component language</span><h1>Rich content,<br><em>quiet surfaces.</em></h1></div>
+        <div class="hero-copy"><p>这是提交 <strong>1320167</strong> 的独立视觉验收页。它把最新 MDC 组件契约放进一张可交互的“文章画布”，方便快速检查边框、间距、状态色、暗色模式和移动端收缩行为。</p><div class="hero-meta"><span class="meta-chip">border: 1px</span><span class="meta-chip">radius: 6px</span><span class="meta-chip">shadow: none</span></div></div>
+      </section>
+      <section class="showcase" id="components">
+        <div class="showcase-header"><div><div class="showcase-kicker">/ article-prose / mdc-contract</div><h2>Component field guide</h2><p>统一外框，保留语义差异。点击页面里的交互组件，观察它们如何在同一套 token 下表达不同状态。</p></div><span class="status-dot">contract loaded</span></div>
+        <div class="showcase-body article-prose">
+          <h3>One system, many voices.</h3><p>组件不再各自携带一套颜色和阴影，而是共享文章排版层的视觉语义。下面的样例采用与生产组件相同的 MDC class 命名和 token 名称。</p>
+          <div class="section-label">01 / tones & notices</div>
+          <div class="component-grid">
+            <div class="alert-mdc"><div class="alert-icon">i</div><div class="alert-content"><strong>信息提示</strong><span>边框、底色和正文都跟随文章主题，不再单独维护一套蓝色。</span></div></div>
+            <div class="alert-mdc success"><div class="alert-icon">✓</div><div class="alert-content"><strong>保存成功</strong><span>成功状态只改变 tone，其余结构保持一致。</span></div></div>
+            <div class="alert-mdc warning"><div class="alert-icon">!</div><div class="alert-content"><strong>需要留意</strong><span>状态色承担提示职责，不再依赖厚重阴影制造层级。</span></div></div>
+            <div class="alert-mdc error"><div class="alert-icon">×</div><div class="alert-content"><strong>请求失败</strong><span>错误色与焦点轮廓保持同一套语义来源。</span></div></div>
+          </div>
+          <div class="section-label">02 / progressive disclosure</div>
+          <div class="component-grid">
+            <details class="collapse-mdc" open><summary class="collapse-summary"><span class="collapse-icon">›</span><span>Collapse / 点击查看内容</span></summary><div class="collapse-content"><p>标题使用 surface，内容使用 card；两层之间通过边框和间距建立秩序，而不是额外投影。</p></div></details>
+            <div class="spoiler-mdc"><button class="spoiler-warning-bar" type="button" aria-expanded="false"><span>◉</span><span>敏感内容</span><span class="spoiler-toggle-hint">点击揭示</span></button><div class="spoiler-body"><button class="spoiler-mask" type="button" aria-label="点击揭示内容"><span class="spoiler-mask-content"><span>◌</span><span>点击揭示内容</span></span></button><div class="spoiler-content blurred" aria-hidden="true" inert>平静的表面不意味着信息贫乏。模糊层只负责隐藏内容，交互仍然由清晰的按钮语义承担。</div></div></div>
+            <div class="tabs-mdc full"><div class="tabs-header" role="tablist"><button class="tab-btn" type="button" role="tab" aria-selected="true" data-tab="0">视觉契约</button><button class="tab-btn" type="button" role="tab" aria-selected="false" data-tab="1">交互语义</button><button class="tab-btn" type="button" role="tab" aria-selected="false" data-tab="2">响应式</button></div><div class="tab-panel" role="tabpanel" data-panel="0"><strong>同一外框。</strong> border、radius、margin 和 surface 在所有组件上保持稳定，状态色只作为局部 accent。</div><div class="tab-panel" role="tabpanel" data-panel="1" hidden><strong>同一焦点。</strong> button、tab、summary 都有可见的 focus-visible 轮廓，交互状态不依赖鼠标悬停。</div><div class="tab-panel" role="tabpanel" data-panel="2" hidden><strong>同一收缩。</strong> 移动端只覆盖必要的 gap、padding 和 wrap，不复制一套新的组件样式。</div></div>
+          </div>
+          <div class="section-label">03 / structured content</div>
+          <div class="component-grid">
+            <div class="steps-mdc full"><div class="steps-track" aria-label="示例步骤条"><div class="step is-active" data-step="0"><button class="step-dot" type="button">01</button><span class="step-title">Compose</span><span class="step-copy">写下内容与结构</span></div><div class="step" data-step="1"><button class="step-dot" type="button">02</button><span class="step-title">Refine</span><span class="step-copy">统一视觉与语义</span></div><div class="step" data-step="2"><button class="step-dot" type="button">03</button><span class="step-title">Publish</span><span class="step-copy">在真实页面验收</span></div></div></div>
+            <div class="code-playground-mdc"><div class="playground-header"><span class="window-dots"><i></i><i></i><i></i></span><span>mdc-contract.ts</span><span>● live</span></div><pre><span class="syntax-keyword">const</span> contract = {
+  <span class="syntax-function">radius</span>: <span class="syntax-string">"0.375rem"</span>,
+  <span class="syntax-function">shadow</span>: <span class="syntax-string">"none"</span>,
+  <span class="syntax-function">tone</span>: <span class="syntax-string">"semantic"</span>
+}</pre><div class="output-header">OUTPUT / normalized surface</div><div class="output-content"><span class="prompt">✓</span> all components share the same frame</div></div>
+            <a class="link-card-wrapper" href="#tokens"><span class="link-card-icon">↗</span><span class="link-card-content"><span class="link-card-title">Read the component contract</span><span class="link-card-description">shared/article-typography/mdc-contract.desktop.css</span></span><span class="link-card-arrow">→</span></a>
+            <div class="github-card-mdc"><div class="repo-head"><div><div class="repo-name">MyBlogWeb / content-system</div><span class="repo-owner">github.com / internal</span></div><span class="repo-badge">main</span></div><p class="repo-description">A small contract for a calmer article surface: fewer surprises, clearer hierarchy.</p><div class="repo-stats"><span>★ <strong>128</strong></span><span>⑂ <strong>24</strong></span><span>last update <strong>today</strong></span></div></div>
+          </div>
+          <div class="section-label">04 / media & feedback</div>
+          <div class="component-grid">
+            <div class="full"><div class="media-placeholder"><div class="media-art"></div></div><div class="media-caption">Image / embed frame keeps the caption outside the media border.</div></div>
+            <div class="rating-row full" id="rating"><span class="rating-label">这套统一风格的完成度</span><div class="rating-stars" role="group" aria-label="评分"><button class="star-cell is-active" type="button" data-rating="1" aria-label="1 星">★</button><button class="star-cell is-active" type="button" data-rating="2" aria-label="2 星">★</button><button class="star-cell is-active" type="button" data-rating="3" aria-label="3 星">★</button><button class="star-cell is-active" type="button" data-rating="4" aria-label="4 星">★</button><button class="star-cell" type="button" data-rating="5" aria-label="5 星">★</button></div><span class="rating-score">4.0 / 5</span></div>
+          </div>
+          <div class="section-label" id="tokens">05 / shared tokens</div>
+          <div class="token-strip"><div class="token"><div class="token-swatch" style="--token: var(--article-prose-card)"></div><span class="token-name">card</span></div><div class="token"><div class="token-swatch" style="--token: var(--article-prose-surface)"></div><span class="token-name">surface</span></div><div class="token"><div class="token-swatch" style="--token: var(--article-prose-border)"></div><span class="token-name">border</span></div><div class="token"><div class="token-swatch" style="--token: var(--article-prose-accent)"></div><span class="token-name">accent</span></div><div class="token"><div class="token-swatch" style="--token: var(--article-prose-success)"></div><span class="token-name">success</span></div></div>
+        </div>
+      </section>
+    </main>
+    <footer class="footer"><span>Visual reference only · commit 1320167 · 2026-10-10</span><a href="#top">back to top ↑</a></footer>
+  </div>
+  <script>
+    const root = document.documentElement
+    const themeToggle = document.querySelector('#theme-toggle')
+    themeToggle.addEventListener('click', () => { root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark' })
+
+    document.querySelectorAll('.tabs-mdc').forEach((tabs) => {
+      const buttons = tabs.querySelectorAll('[data-tab]')
+      const panels = tabs.querySelectorAll('[data-panel]')
+      buttons.forEach((button) => button.addEventListener('click', () => {
+        const activeTab = button.dataset.tab
+        buttons.forEach((item) => item.setAttribute('aria-selected', String(item === button)))
+        panels.forEach((panel) => { panel.hidden = panel.dataset.panel !== activeTab })
+      }))
+    })
+
+    document.querySelectorAll('.spoiler-mdc').forEach((spoiler) => {
+      const controls = spoiler.querySelectorAll('.spoiler-warning-bar, .spoiler-mask')
+      const content = spoiler.querySelector('.spoiler-content')
+      const hint = spoiler.querySelector('.spoiler-toggle-hint')
+      const mask = spoiler.querySelector('.spoiler-mask')
+      const toggle = () => {
+        const revealed = content.classList.toggle('blurred') === false
+        content.toggleAttribute('inert', !revealed)
+        content.setAttribute('aria-hidden', String(!revealed))
+        spoiler.querySelector('.spoiler-warning-bar').setAttribute('aria-expanded', String(revealed))
+        hint.textContent = revealed ? '点击隐藏' : '点击揭示'
+        mask.hidden = revealed
+      }
+      controls.forEach((control) => control.addEventListener('click', toggle))
+    })
+
+    document.querySelectorAll('.step-dot').forEach((button) => button.addEventListener('click', () => {
+      const activeStep = Number(button.closest('.step').dataset.step)
+      document.querySelectorAll('.step').forEach((step) => {
+        const stepIndex = Number(step.dataset.step)
+        step.classList.toggle('is-active', stepIndex === activeStep)
+        step.classList.toggle('is-done', stepIndex < activeStep)
+      })
+    }))
+
+    document.querySelectorAll('.star-cell').forEach((button) => button.addEventListener('click', () => {
+      const rating = Number(button.dataset.rating)
+      document.querySelectorAll('.star-cell').forEach((star) => star.classList.toggle('is-active', Number(star.dataset.rating) <= rating))
+      document.querySelector('.rating-score').textContent = `${rating}.0 / 5`
+    }))
+  </script>
+</body>
+</html>

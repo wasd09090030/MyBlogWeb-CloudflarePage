@@ -27,9 +27,9 @@
 
     <!-- 三张重叠导航卡 -->
     <div class="peach-cards">
-      <button type="button" class="peach-card" @click="goToArticles">
-        <span class="card-ic ic-article"><Icon name="heroicons:document-text" size="22" /></span>
-        <span class="card-body"><b>文章</b><span>阅读精选内容</span></span>
+      <button type="button" class="peach-card" @click="goToGames">
+        <span class="card-ic ic-games"><Icon name="ph:game-controller-fill" size="22" /></span>
+        <span class="card-body"><b>游戏</b><span>Steam 游玩档案</span></span>
         <span class="card-more" aria-hidden="true">→</span>
       </button>
       <button type="button" class="peach-card" @click="goToGallery">
@@ -76,23 +76,8 @@ const titleChars = computed(() => {
 })
 
 // 页面导航功能
-const goToArticles = () => {
-  // 优先尝试滚动到文章列表容器
-  const articleListContainer = document.querySelector('.article-list-page')
-  if (articleListContainer) {
-    articleListContainer.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    return
-  }
-
-  // 如果找不到文章列表容器，尝试滚动到主内容区域
-  const mainContent = document.querySelector('.main-content')
-  if (mainContent) {
-    mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    return
-  }
-
-  // 最后的备选方案：滚动到页面适当位置
-  window.scrollTo({ top: window.innerHeight * 0.6, behavior: 'smooth' })
+const goToGames = () => {
+  router.push('/games')
 }
 
 const goToGallery = () => {

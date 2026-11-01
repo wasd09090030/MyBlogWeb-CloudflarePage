@@ -17,7 +17,8 @@ const workspaceLinks: NavigationMenuItem[] = [
 ]
 const assetLinks: NavigationMenuItem[] = [
   { label: '画廊', icon: 'i-lucide-images', to: '/admin/gallery' },
-  { label: '图床', icon: 'i-lucide-folder-up', to: '/admin/imagebed' }
+  { label: '图床', icon: 'i-lucide-folder-up', to: '/admin/imagebed' },
+  { label: '游戏', icon: 'i-lucide-gamepad-2', to: '/admin/gaming' }
 ]
 const accountLinks: NavigationMenuItem[] = [
   { label: '账户安全', icon: 'i-lucide-shield-check', to: '/admin/password' }

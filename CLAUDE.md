@@ -51,6 +51,51 @@ npm run generate
 npx wrangler pages deploy .output/public --project-name myblogweb-cloudflarepage
 ```
 
+## Steam 游戏档案同步（公开站 `/games`）
+
+数据由 `blog-api` 定时抓取并落 D1，公开页只读快照。凭证有**两条路径**，二选一或同时保留（D1 优先）：
+
+| 名称 | 位置 | 说明 |
+| --- | --- | --- |
+| 后台填写 | `/admin/gaming` → Steam 凭证 | 推荐。`steam_id` 明文、`api_key` 经 AES-GCM 加密后存 D1；保存前会用一次 Steam 调用校验 |
+| `STEAM_ID` / `STEAM_API_KEY` | `wrangler.toml` `[vars]` + Worker Secret | 兜底/引导用。D1 没有可用凭证时生效 |
+| `STEAM_SYNC_TOKEN` | `blog-api` 与 `blog-router` 两个 Worker Secret | 必须完全一致，router 的 cron 用它调用内部同步端点 |
+| `STEAM_CREDENTIAL_KEY` | `blog-api` Worker Secret（可选） | 凭证加密密钥；不配时回退用 `SESSION_PEPPER` 做域分离派生 |
+
+```powershell
+cd nuxt-admin
+npm run db:migrate:remote                                     # 应用 0007 / 0008 / 0009 / 0010 迁移
+npx wrangler secret put STEAM_SYNC_TOKEN --config wrangler.toml
+npx wrangler secret put STEAM_CREDENTIAL_KEY --config wrangler.toml   # 可选，建议配置
+npm run deploy:api
+
+cd ../cloudflare-worker
+npx wrangler secret put STEAM_SYNC_TOKEN --config wrangler.toml
+npx wrangler deploy --config wrangler.toml                    # 带 crons = ["17 * * * *"]
+```
+
+部署后登录后台「游戏」页填 SteamID + API Key，点保存（会自动校验），再点「立即同步」。
+
+**安全要点**：
+
+- API Key 只写不读，读取接口只返回 `••••后四位`；数据库导出里只有密文
+- 密文带 `key_id`（主密钥指纹）与 AAD（用途绑定），换字段或篡改都会解不开
+- 拥有 Worker 部署权限的人可以替换 secret 并解密，属于平台边界；不要把部署权限交给不受信任的人
+
+**轮换加密密钥**：
+
+1. `npx wrangler secret put STEAM_CREDENTIAL_KEY` 写入新值
+2. `npx wrangler secret put STEAM_CREDENTIAL_KEY_PREVIOUS` 填入旧值
+3. 重新部署 `blog-api`（新增 secret 后会重启）
+4. 登录后台「游戏」页，点一次「保存并验证」让凭证用新 key 重写
+5. 确认同步正常后删除旧值：`npx wrangler secret delete STEAM_CREDENTIAL_KEY_PREVIOUS`
+
+解密时会自动按 `key_id` 匹配当前或上一把钥匙；两把都对不上时按「无法解密」处理，页面提示重新填写，不会报 500。
+
+**为什么 cron 在 `blog-router`**：Nitro 的 `cloudflare_module` 产物只导出 `fetch`，无法接收 Cloudflare 的 `scheduled` 事件。因此定时任务挂在 `blog-router`，经 `BLOG_API` service binding 调用 `POST /api/steam/sync`。
+
+单轮最多 40 次上游请求（Free 计划 50 次子请求上限），成就按陈旧度轮转，一轮跑不完下一轮继续；同步失败保留上一次成功快照，页面标注「快照过期」而不是清空。未配置凭证时 `/api/steam/overview` 返回 `status: "unconfigured"`，页面显示说明而不报错。
+
 ## 公开站重建（后台 trigger 按钮）
 
 `myblogweb-cloudflarepage` 是 SSG 静态站，文章、画廊等**内容变更后不会自动更新**。有两种重建方式：
@@ -75,5 +120,6 @@ npx wrangler secret put CLOUDFLARE_ACCOUNT_ID --config wrangler.toml
 - `nuxt-admin/wrangler.toml` — `blog-api` Worker 与 D1 配置
 - `cloudflare-worker/wrangler.toml` — `blog-router` 与 Service Binding
 - `nuxt-admin/DEPLOYMENT.md` — 完整迁移、冒烟与回滚清单
+- `docs/Secrets-Encryption.md` — 密钥与加密存储：AES-GCM 设计、轮换步骤、故障排查、如何加密新字段
 - `docs/CloudflarePages-Deploy-Guide.md` — Pages 部署说明
 - `nuxt-admin/server/domain/operations.ts` — 后台 trigger 按钮（`triggerPagesDeploy`）实现

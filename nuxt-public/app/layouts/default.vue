@@ -16,6 +16,7 @@
         <nav class="navbar-center-nav hidden min-[992px]:flex" aria-label="主导航">
           <NuxtLink to="/" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:home" size="sm" class="me-1" />首页</NuxtLink>
           <NuxtLink to="/archive/diary" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:pencil-square" size="sm" class="me-1" />每日日记</NuxtLink>
+          <NuxtLink to="/games" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="ph:game-controller" size="sm" class="me-1" />游戏档案</NuxtLink>
           <NuxtLink to="/about" class="nav-link" exact-active-class="nav-link--exact-active"><Icon name="heroicons:user-circle" size="sm" class="me-1" />关于站长</NuxtLink>
         </nav>
         <button type="button" class="mobile-menu-btn min-[992px]:hidden" aria-label="打开导航菜单" @click="showMobileMenu = true">
@@ -36,6 +37,7 @@
           <nav class="drawer-nav" aria-label="移动端导航">
             <NuxtLink to="/" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:home" size="sm" />首页</NuxtLink>
             <NuxtLink to="/archive/diary" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:pencil-square" size="sm" />每日日记</NuxtLink>
+            <NuxtLink to="/games" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="ph:game-controller" size="sm" />游戏档案</NuxtLink>
             <NuxtLink to="/about" class="drawer-nav-item" exact-active-class="drawer-nav-item--exact-active" @click="showMobileMenu = false"><Icon name="heroicons:user-circle" size="sm" />关于站长</NuxtLink>
           </nav>
           <div class="drawer-footer">
@@ -50,8 +52,8 @@
 
     <div v-if="shouldShowWelcomeSection" class="welcome-section-container"><HomeWelcomeSection /></div>
     <div class="main-container">
-      <div class="main-content">
-        <div class="site-layout" :class="{ 'site-layout--with-sidebar': showSidebar }">
+      <div class="main-content" :class="{ 'main-content--wide': isGamesRoute }">
+        <div class="site-layout" :class="{ 'site-layout--with-sidebar': showSidebar, 'site-layout--wide': isGamesRoute }">
           <main class="site-layout__content"><slot /></main>
           <aside v-if="showSidebar" class="site-layout__sidebar sidebar-animate">
             <div class="sidebar-content"><LazySideBar /></div>
@@ -161,7 +163,9 @@ const isGalleryRoute = computed(() => route.path === '/gallery')
 const isArticleDetailRoute = computed(() => route.path.startsWith('/article/'))
 const isAboutRoute = computed(() => route.path === '/about')
 const isArchiveRoute = computed(() => route.path === '/archive' || route.path.startsWith('/archive/'))
-const showSidebar = computed(() => !isGalleryRoute.value && !isArticleDetailRoute.value && !isAboutRoute.value && !isArchiveRoute.value)
+// 游戏档案是 12 列展柜网格，侧边栏会把内容压到 ~770px，配对展柜会变得拥挤。
+const isGamesRoute = computed(() => route.path === '/games')
+const showSidebar = computed(() => !isGalleryRoute.value && !isGamesRoute.value && !isArticleDetailRoute.value && !isAboutRoute.value && !isArchiveRoute.value)
 
 onMounted(() => {
   isHydrated.value = true
@@ -203,9 +207,16 @@ onUnmounted(() => {
   margin: 10px auto 0;
   padding: 1.5rem 0 0;
 }
+/* 游戏档案是 12 列展柜网格：不加侧边栏，并放宽容器宽度让主体占比更大。 */
+.main-content--wide {
+  max-width: 1440px;
+}
 .site-layout {
   width: 100%;
   padding: 0 1rem;
+}
+.site-layout--wide {
+  padding: 0 clamp(1rem, 2.5vw, 2rem);
 }
 .site-layout__content {
   min-width: 0;

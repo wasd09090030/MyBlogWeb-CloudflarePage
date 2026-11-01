@@ -1,4 +1,5 @@
 const API_PATHS = ['/admin/api', '/api', '/images']
+const STEAM_SYNC_PATH = '/api/steam/sync'
 
 function isPath(pathname, prefixes) {
   return prefixes.some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`))
@@ -54,6 +55,22 @@ function publicPagesUrl(request, env) {
   return new URL(url.pathname + url.search, origin)
 }
 
+/**
+ * Cron entry point for the Steam snapshot.
+ *
+ * The Nitro-generated blog-api Worker only exports `fetch`, so the schedule lives
+ * here and is forwarded through the existing service binding with a shared token.
+ */
+export async function triggerSteamSync(env) {
+  if (!env.BLOG_API || typeof env.BLOG_API.fetch !== 'function') return null
+  const token = typeof env.STEAM_SYNC_TOKEN === 'string' ? env.STEAM_SYNC_TOKEN.trim() : ''
+  if (!token) return null
+  return await env.BLOG_API.fetch(new Request('https://blog-api' + STEAM_SYNC_PATH, {
+    method: 'POST',
+    headers: { 'x-steam-sync-token': token }
+  }))
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
@@ -66,6 +83,10 @@ export default {
 
     if (env.ASSETS) return env.ASSETS.fetch(request)
     return fetch(pagesRequest(request, publicPagesUrl(request, env)))
+  },
+
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(triggerSteamSync(env))
   }
 }
 

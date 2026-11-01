@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>游戏档案 · 改版原型</title>
+<style>
+  :root {
+    --bg-primary: #fdf6f1;
+    --bg-secondary: #f7e8e1;
+    --bg-tertiary: #f0ddd6;
+    --text-primary: #3d2f2b;
+    --text-secondary: #8a7368;
+    --text-tertiary: #bda89d;
+    --accent-primary: #e11d48;
+    --accent-secondary: #fb923c;
+    --accent-success: #0d9488;
+    --accent-warning: #f59e0b;
+    --card-bg: #ffffff;
+    --card-border: #f2e4da;
+    --border-color-dark: #d9b8a8;
+    --gradient-primary: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+    --gradient-warm: linear-gradient(135deg, #fb923c 0%, #fda4af 100%);
+    --serif: 'Playfair Display', 'Noto Serif SC', 'Songti SC', Georgia, serif;
+    --ink: #241a17;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img { display: block; max-width: 100%; }
+  a { color: inherit; text-decoration: none; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 44px clamp(14px, 3vw, 32px) 80px;
+  }
+
+  /* ---------- 页头 ---------- */
+  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 26px; }
+  .eyebrow {
+    display: inline-block; font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--accent-primary); font-weight: 700; margin-bottom: 10px;
+  }
+  .title {
+    font-family: var(--serif); font-size: clamp(34px, 5vw, 52px); line-height: 1.06;
+    margin: 0 0 12px; font-weight: 800; letter-spacing: -.01em;
+  }
+  .lead { margin: 0; color: var(--text-secondary); max-width: 48ch; font-size: 15px; line-height: 1.7; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px; border-radius: 999px;
+    font-size: 12.5px; background: var(--card-bg); border: 1px solid var(--card-border);
+    color: var(--text-secondary); white-space: nowrap;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-success); box-shadow: 0 0 0 3px rgba(13,148,136,.16); }
+  .link { font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--border-color-dark); padding-bottom: 1px; }
+
+  /* ---------- 档案条（hero 之前的细长条） ---------- */
+  .rail {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    padding: 12px 18px; border-radius: 16px;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    margin-bottom: 18px;
+  }
+  .rail__avatar {
+    width: 46px; height: 46px; border-radius: 13px; object-fit: cover; flex: none;
+    background: var(--gradient-warm);
+  }
+  .rail__id { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .rail__id strong { font-size: 16px; font-weight: 700; }
+  .lv {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .08em; padding: 2px 7px; border-radius: 6px;
+    color: var(--accent-primary); background: rgba(225,29,72,.1);
+  }
+  .rail__stats { display: flex; gap: 22px; margin: 0; padding: 0; list-style: none; margin-left: 6px; }
+  .rail__stats li { padding-left: 22px; border-left: 1px solid var(--card-border); }
+  .rail__stats li:first-child { border-left: 0; padding-left: 0; }
+  .rail__stats b { display: block; font-family: var(--serif); font-size: 19px; font-weight: 800; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .rail__stats b em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--text-tertiary); }
+  .rail__stats span { font-size: 11px; color: var(--text-tertiary); letter-spacing: .04em; }
+  .rail__end { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+
+  /* ---------- 1. 最爱游戏：居中英雄区 ---------- */
+  .hero {
+    position: relative; isolation: isolate; overflow: hidden;
+    border-radius: 26px; color: #fff;
+    padding: clamp(30px, 4vw, 52px) clamp(18px, 4vw, 56px) clamp(26px, 3vw, 38px);
+    display: grid; justify-items: center; text-align: center;
+  }
+  .hero__bg { position: absolute; inset: -40px; z-index: -2; }
+  .hero__bg img { width: 100%; height: 100%; object-fit: cover; filter: blur(26px) saturate(1.25) brightness(.62); transform: scale(1.15); }
+  .hero__scrim {
+    position: absolute; inset: 0; z-index: -1;
+    background:
+      radial-gradient(120% 90% at 50% 6%, rgba(251,146,60,.26), transparent 58%),
+      linear-gradient(180deg, rgba(36,26,23,.66) 0%, rgba(36,26,23,.9) 62%, rgba(36,26,23,.97) 100%);
+  }
+  .hero__eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase;
+    color: #fdba74; margin-bottom: 14px;
+  }
+  .hero__title {
+    font-family: var(--serif); font-weight: 800; margin: 0;
+    font-size: clamp(30px, 4.4vw, 56px); line-height: 1.05; letter-spacing: -.015em;
+    max-width: 22ch; text-wrap: balance;
+  }
+  .hero__quote {
+    margin: 14px 0 0; max-width: 44ch; font-size: 14.5px; line-height: 1.75;
+    color: rgba(255,255,255,.76);
+  }
+  .hero__art {
+    position: relative; margin: clamp(20px, 2.6vw, 30px) 0 0;
+    width: min(520px, 100%);
+  }
+  .hero__art-frame {
+    border-radius: 18px; overflow: hidden; background: rgba(0,0,0,.35);
+    box-shadow: 0 34px 60px -26px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.06);
+  }
+  .hero__art-frame img { width: 100%; aspect-ratio: 616 / 353; object-fit: cover; }
+  .medal {
+    position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 46%);
+    width: 84px; height: 84px; border-radius: 50%;
+    display: grid; place-content: center; gap: 0; text-align: center;
+    background: radial-gradient(circle at 32% 26%, #fb7185, #e11d48 62%, #9f1239 100%);
+    border: 3px solid rgba(255,255,255,.92);
+    box-shadow: 0 14px 34px -10px rgba(225,29,72,.75), 0 0 0 6px rgba(36,26,23,.55);
+  }
+  .medal b { font-family: var(--serif); font-size: 26px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  .medal span { font-size: 9px; letter-spacing: .12em; opacity: .8; margin-top: 2px; }
+
+  .hero__stats {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(18px, 3vw, 40px);
+    margin: clamp(40px, 4.4vw, 50px) 0 0; padding: 0; list-style: none;
+  }
+  .hero__stats li { display: grid; gap: 5px; justify-items: center; }
+  .hero__stats b { font-family: var(--serif); font-size: clamp(19px, 2vw, 23px); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .hero__stats b em { font-style: normal; font-size: 11.5px; color: rgba(255,255,255,.6); font-weight: 600; }
+  .hero__stats span { font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+  .hero__foot { margin-top: clamp(24px, 3vw, 32px); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px;
+    font-size: 11.5px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.07);
+    color: rgba(255,255,255,.8);
+  }
+  .chip--hot { border-color: rgba(251,146,60,.5); color: #fdba74; background: rgba(251,146,60,.12); }
+
+  /* ---------- 通用 section 头 ---------- */
+  .sec-head { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; }
+  .icon-chip {
+    width: 27px; height: 27px; border-radius: 9px; flex: none;
+    display: grid; place-items: center; background: rgba(225,29,72,.1); color: var(--accent-primary);
+  }
+  .icon-chip svg { width: 15px; height: 15px; }
+  .sec-title {
+    font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; font-weight: 700;
+    color: var(--text-secondary); margin: 0;
+  }
+  .sec-meta { margin-left: auto; font-size: 11.5px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ---------- 2. 我的评分 ---------- */
+  .score {
+    margin-top: 18px; background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 22px; padding: 22px 26px 8px;
+  }
+  .score__body { display: grid; grid-template-columns: 208px minmax(0, 1fr); gap: 34px; }
+  .peak { padding-bottom: 18px; }
+  .peak__num {
+    font-family: var(--serif); font-size: 58px; font-weight: 800; line-height: 1;
+    letter-spacing: -.03em; font-variant-numeric: tabular-nums; color: var(--accent-primary);
+  }
+  .peak__num em { font-style: normal; font-size: 15px; color: var(--text-tertiary); font-weight: 600; letter-spacing: 0; }
+  .peak__label { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-tertiary); margin-top: 8px; }
+  .peak__game { font-size: 12.5px; color: var(--text-secondary); margin-top: 6px; line-height: 1.5; }
+
+  .hist { margin-top: 18px; display: grid; gap: 8px; }
+  .hist__row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 20px; gap: 8px; align-items: center; }
+  .hist__key { font-size: 10.5px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+  .hist__track { height: 6px; border-radius: 999px; background: var(--bg-tertiary); overflow: hidden; }
+  .hist__track i { display: block; height: 100%; border-radius: 999px; background: var(--gradient-primary); }
+  .hist__val { font-size: 10.5px; color: var(--text-tertiary); text-align: right; font-variant-numeric: tabular-nums; }
+
+  .score__list { display: grid; gap: 0; min-width: 0; }
+  .srow {
+    display: grid; grid-template-columns: 92px minmax(0, 1fr) 150px 62px;
+    gap: 14px; align-items: center; padding: 11px 8px 11px 0; margin-right: -8px;
+    border-bottom: 1px dashed var(--card-border); border-radius: 10px;
+  }
+  .srow:last-child { border-bottom: 0; }
+  .srow:hover { background: rgba(247,232,225,.55); }
+  .srow__cover { width: 92px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: var(--bg-tertiary); }
+  .srow__cover img { width: 100%; height: 100%; object-fit: cover; }
+  .srow__name { min-width: 0; }
+  .srow__name b {
+    display: block; font-size: 13.5px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .srow__name span {
+    display: block; font-size: 11.5px; color: var(--text-tertiary); margin-top: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .scale { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
+  .scale i { height: 15px; border-radius: 3px; background: var(--bg-tertiary); }
+  .scale i.on { background: var(--tier, var(--accent-primary)); }
+  .srow__score {
+    font-family: var(--serif); font-size: 24px; font-weight: 800; text-align: right;
+    font-variant-numeric: tabular-nums; color: var(--tier, var(--accent-primary)); line-height: 1;
+  }
+  .srow__score span { font-size: 10px; color: var(--text-tertiary); font-weight: 600; }
+
+  .t9 { --tier: #e11d48; }
+  .t8 { --tier: #fb923c; }
+  .t7 { --tier: #0d9488; }
+
+  /* ---------- 3. 最近在玩：Now Playing 剧场 ---------- */
+  .now {
+    position: relative; overflow: hidden; margin-top: 18px; border-radius: 26px;
+    background: linear-gradient(158deg, #33241f 0%, #241a17 62%, #1e1512 100%);
+    color: #fdf5f1; padding: clamp(26px, 3.4vw, 42px) clamp(18px, 3vw, 44px) clamp(26px, 3vw, 40px);
+  }
+  .now::before {
+    content: ''; position: absolute; inset: -30% 40% 40% -20%;
+    background: radial-gradient(circle at 40% 40%, rgba(225,29,72,.24), transparent 62%);
+    pointer-events: none;
+  }
+  .now__head { position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 26px; margin-bottom: clamp(20px, 2.6vw, 30px); }
+  .now__eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: #fdba74; margin-bottom: 10px;
+  }
+  .now__title {
+    font-family: var(--serif); font-size: clamp(26px, 3.2vw, 38px); font-weight: 800;
+    margin: 0; letter-spacing: -.01em; line-height: 1.1;
+  }
+  .now__sub { margin: 8px 0 0; font-size: 12.5px; color: rgba(255,255,255,.55); }
+  .now__meta { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+  .now__grid {
+    position: relative; display: grid; gap: 14px;
+    grid-template-columns: 1.72fr 1fr 1fr;
+    height: clamp(360px, 36vw, 468px);
+  }
+  .ncard {
+    position: relative; overflow: hidden; border-radius: 18px; display: block; isolation: isolate;
+    background: #191110; transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease;
+  }
+  .ncard img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .55s cubic-bezier(.2,.7,.2,1), filter .35s ease; }
+  .ncard::after {
+    content: ''; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(180deg, rgba(20,12,10,.06) 0%, rgba(20,12,10,.34) 46%, rgba(20,12,10,.9) 100%);
+  }
+  .ncard:hover { transform: translateY(-4px); box-shadow: 0 26px 46px -22px rgba(0,0,0,.9); }
+  .ncard:hover img.art { transform: scale(1.05); }
+  .ncard__idx {
+    position: absolute; z-index: 2; top: 14px; left: 16px;
+    font-family: var(--serif); font-size: 12px; letter-spacing: .18em; color: rgba(255,255,255,.66);
+    padding: 3px 8px; border-radius: 6px; background: rgba(20,12,10,.42); backdrop-filter: blur(6px);
+  }
+  .ncard__flag {
+    position: absolute; z-index: 2; top: 13px; right: 14px;
+    display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
+    color: #fff; background: var(--gradient-primary); box-shadow: 0 6px 16px -6px rgba(225,29,72,.9);
+  }
+  .ncard__body { position: absolute; z-index: 2; inset: auto 0 0 0; padding: clamp(14px, 1.8vw, 22px); }
+  .ncard__name {
+    font-family: var(--serif); font-weight: 800; margin: 0 0 6px; line-height: 1.15; letter-spacing: -.01em;
+    font-size: clamp(16px, 1.5vw, 19px);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .ncard--feature .ncard__name { font-size: clamp(21px, 2.3vw, 30px); }
+  .ncard__hours { display: flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; }
+  .ncard__hours b { font-family: var(--serif); font-size: clamp(21px, 2.2vw, 27px); font-weight: 800; line-height: 1; }
+  .ncard__hours span { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+  .ncard__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; font-size: 11px; color: rgba(255,255,255,.6); }
+  .nprog { margin-top: 10px; height: 3px; border-radius: 999px; background: rgba(255,255,255,.18); overflow: hidden; }
+  .nprog i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #fb7185, #fb923c); }
+
+  /* ---------- 4. 其余展柜 ---------- */
+  .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+  .card {
+    background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px;
+    padding: 18px 20px 20px; display: flex; flex-direction: column; min-width: 0;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .card:hover { border-color: var(--border-color-dark); box-shadow: 0 12px 30px -18px rgba(61,47,43,.45); }
+  .sp-12 { grid-column: span 12; }
+  .sp-8 { grid-column: span 8; }
+  .sp-7 { grid-column: span 7; }
+  .sp-5 { grid-column: span 5; }
+  .sp-4 { grid-column: span 4; }
+
+  /* 收藏家 */
+  .shelf { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-top: 4px; }
+  .shelf a { position: relative; border-radius: 10px; overflow: hidden; background: var(--bg-tertiary); }
+  .shelf a img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; transition: transform .4s ease; }
+  .shelf a:hover img { transform: scale(1.06); }
+  .shelf a::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 52%, rgba(20,12,10,.72));
+  }
+  .shelf__name {
+    position: absolute; z-index: 1; left: 8px; right: 8px; bottom: 6px;
+    font-size: 10.5px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .collector { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 26px; align-items: center; }
+  .collector__big b { display: block; font-family: var(--serif); font-size: 46px; line-height: 1; font-weight: 800; letter-spacing: -.02em; }
+  .collector__big span { font-size: 11.5px; color: var(--text-tertiary); letter-spacing: .06em; }
+  .collector__rows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 22px; margin-bottom: 12px; }
+  .crow { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; padding: 5px 0; border-bottom: 1px dashed var(--card-border); }
+  .crow span { color: var(--text-tertiary); }
+  .crow b { font-weight: 650; font-variant-numeric: tabular-nums; }
+
+  /* 游玩时长 */
+  .rank { display: grid; gap: 1px; }
+  .rank__row {
+    display: grid; grid-template-columns: 20px 42px minmax(0, 1fr) 72px; gap: 12px; align-items: center;
+    padding: 7px 0; border-bottom: 1px dashed var(--card-border);
+  }
+  .rank__row:last-child { border-bottom: 0; }
+  .rank__no { font-family: var(--serif); font-size: 12.5px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+  .rank__row:first-child .rank__no { color: var(--accent-primary); font-weight: 700; }
+  .rank__thumb { width: 42px; aspect-ratio: 3 / 4; border-radius: 5px; overflow: hidden; background: var(--bg-tertiary); }
+  .rank__thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .rank__name { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; min-width: 0; }
+  .rank__name b { font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rank__name span { color: var(--text-tertiary); font-variant-numeric: tabular-nums; flex: none; }
+  .rank__track { margin-top: 6px; height: 5px; border-radius: 999px; background: var(--bg-tertiary); overflow: hidden; }
+  .rank__track i { display: block; height: 100%; border-radius: 999px; background: var(--gradient-primary); }
+  .rank__hours { text-align: right; font-variant-numeric: tabular-nums; }
+  .rank__hours b { font-family: var(--serif); font-size: 14px; font-weight: 800; }
+  .rank__hours span { display: block; font-size: 10px; color: var(--text-tertiary); }
+
+  /* 完美通关 */
+  .perfect { display: grid; gap: 8px; }
+  .prow { display: grid; grid-template-columns: 84px minmax(0, 1fr) 42px; gap: 12px; align-items: center; }
+  .prow__cover { position: relative; width: 84px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: var(--bg-tertiary); }
+  .prow__cover img { width: 100%; height: 100%; object-fit: cover; }
+  .prow__cover::after {
+    content: '100%'; position: absolute; inset: auto 0 0 0; text-align: center;
+    font-size: 9px; font-weight: 800; letter-spacing: .06em; color: #fff; padding: 2px 0;
+    background: linear-gradient(180deg, transparent, rgba(13,148,136,.92));
+  }
+  .prow__name { min-width: 0; }
+  .prow__name b { display: block; font-size: 12.5px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prow__name span { font-size: 10.5px; color: var(--text-tertiary); }
+  .prow__pct { text-align: right; font-size: 12px; font-weight: 800; color: var(--accent-success); font-variant-numeric: tabular-nums; }
+
+  /* 最稀有成就 */
+  .rarest { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 12px; }
+  .rare {
+    padding: 14px; border-radius: 14px; border: 1px solid var(--card-border); min-width: 0;
+    background: linear-gradient(180deg, rgba(251,146,60,.07), transparent 68%);
+    display: flex; flex-direction: column; gap: 9px;
+  }
+  .rare--hero { background: linear-gradient(135deg, rgba(225,29,72,.1), rgba(251,146,60,.07)); }
+  .rare__top { display: flex; gap: 11px; align-items: flex-start; }
+  .rare__icon {
+    width: 46px; height: 46px; flex: none; border-radius: 11px; display: grid; place-items: center;
+    background: radial-gradient(circle at 30% 25%, #fde68a, #f59e0b 60%, #b45309 100%);
+    color: #3d2f2b; box-shadow: 0 8px 18px -10px rgba(180,83,9,.9);
+  }
+  .rare__icon svg { width: 24px; height: 24px; }
+  .rare--hero .rare__icon { width: 58px; height: 58px; border-radius: 14px; }
+  .rare--hero .rare__icon svg { width: 30px; height: 30px; }
+  .rare__meta { min-width: 0; }
+  .rare__game { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-tertiary); }
+  .rare__name { font-family: var(--serif); font-size: 15px; font-weight: 700; line-height: 1.25; margin: 3px 0 0; }
+  .rare--hero .rare__name { font-size: 19px; }
+  .rare__desc { font-size: 11.5px; color: var(--text-secondary); margin: 0; line-height: 1.55; }
+  .rarity { display: flex; align-items: center; gap: 8px; margin-top: auto; }
+  .rarity__track { flex: 1; height: 4px; border-radius: 999px; background: var(--bg-tertiary); overflow: hidden; }
+  .rarity__track i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #a855f7, #38bdf8); }
+  .rarity__val { font-size: 10.5px; color: var(--text-tertiary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* 愿望单 */
+  .wish { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .wcard { position: relative; border-radius: 12px; overflow: hidden; background: var(--bg-tertiary); isolation: isolate; }
+  .wcard img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; transition: transform .4s ease; }
+  .wcard:hover img { transform: scale(1.05); }
+  .wcard::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(20,12,10,.28) 0%, transparent 38%, rgba(20,12,10,.86) 100%);
+  }
+  .wcard__wait {
+    position: absolute; z-index: 2; top: 10px; right: 10px;
+    font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+    color: #fff; background: rgba(20,12,10,.55); backdrop-filter: blur(6px);
+  }
+  .wcard__body { position: absolute; z-index: 2; inset: auto 0 0 0; padding: 12px 13px; color: #fff; }
+  .wcard__name {
+    font-family: var(--serif); font-size: 14px; font-weight: 700; margin: 0 0 3px; line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .wcard__sub { font-size: 10.5px; color: rgba(255,255,255,.68); }
+
+  /* 页脚 */
+  .prov {
+    margin: 22px 0 0; padding-top: 18px; border-top: 1px solid var(--card-border);
+    font-size: 12px; color: var(--text-tertiary); display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  .prov b { color: var(--text-secondary); font-weight: 600; }
+
+  /* 原型提示 */
+  .proto {
+    position: fixed; z-index: 99; left: 14px; bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px; border-radius: 999px; font-size: 11px;
+    background: rgba(61,47,43,.9); color: #fdf5f1; backdrop-filter: blur(8px);
+  }
+  .proto i { width: 6px; height: 6px; border-radius: 50%; background: #fdba74; }
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width: 992px) {
+    .rail__stats { order: 3; width: 100%; margin-left: 0; gap: 0; }
+    .rail__stats li { flex: 1; padding-left: 14px; }
+    .rail__end { margin-left: auto; }
+    .score__body { grid-template-columns: 1fr; gap: 8px; }
+    .peak { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; padding-bottom: 6px; }
+    .peak__label, .peak__game { margin-top: 0; }
+    .hist { grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+    .now__grid { grid-template-columns: 1fr 1fr; height: auto; }
+    .now__grid .ncard--feature { grid-column: span 2; aspect-ratio: 16 / 9; height: auto; }
+    .now__grid .ncard { height: 320px; }
+    .collector { grid-template-columns: 1fr; gap: 16px; }
+    .collector__rows { grid-template-columns: 1fr 1fr; }
+    .shelf { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .sp-12, .sp-8, .sp-7, .sp-5, .sp-4 { grid-column: span 12; }
+    .rarest { grid-template-columns: 1fr 1fr; }
+    .rare--hero { grid-column: span 2; }
+  }
+
+  @media (max-width: 768px) {
+    .head { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .rail { gap: 12px; }
+    .now__head { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .now__meta { justify-content: flex-start; }
+    .srow { grid-template-columns: 76px minmax(0, 1fr) 56px; }
+    .srow__cover { width: 76px; }
+    .scale { display: none; }
+  }
+
+  @media (max-width: 576px) {
+    .now__grid { grid-template-columns: 1fr; }
+    .now__grid .ncard--feature { grid-column: span 1; }
+    .now__grid .ncard { height: 240px; }
+    .shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .wish { grid-template-columns: 1fr; }
+    .rarest { grid-template-columns: 1fr; }
+    .rare--hero { grid-column: span 1; }
+    .collector__rows { grid-template-columns: 1fr; }
+    .hero__art { width: 100%; }
+    .hero__stats { gap: 18px 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="head">
+    <div>
+      <span class="eyebrow">Play Log · Showcase</span>
+      <h1 class="title">游戏档案</h1>
+      <p class="lead">像 Steam 个人资料页那样，把游玩记录摆进一个个展柜：收藏家、最爱、回不去的时长，还有那些没人拿到的成就。</p>
+    </div>
+    <div class="head__meta">
+      <span class="pill"><i class="dot"></i> 已同步 · 2 小时前</span>
+    </div>
+  </header>
+
+  <!-- 档案条 -->
+  <section class="rail">
+    <img class="rail__avatar" src="https://avatars.steamstatic.com/d9e44a9d59c16671383ba57746f89bc5f057f3f7_full.jpg" alt="" referrerpolicy="no-referrer" />
+    <div class="rail__id">
+      <strong>Vesper</strong>
+      <span class="lv">LV 50</span>
+    </div>
+    <ul class="rail__stats">
+      <li><b>708</b><span>游戏</span></li>
+      <li><b>8,309<em> h</em></b><span>总时长</span></li>
+      <li><b>39.9<em> h</em></b><span>近两周</span></li>
+      <li><b>1,104</b><span>成就</span></li>
+    </ul>
+    <div class="rail__end">
+      <a class="link" href="#">在 Steam 查看 ↗</a>
+    </div>
+  </section>
+
+  <!-- 1. 最爱游戏 · 居中英雄区 -->
+  <section class="hero">
+    <div class="hero__bg">
+      <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1449850/header.jpg" alt="" referrerpolicy="no-referrer" />
+    </div>
+    <div class="hero__scrim"></div>
+
+    <span class="hero__eyebrow">
+      <svg viewBox="0 0 256 256" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M239.75 90.81c0 .11 0 .21-.07.32L217 195a16 16 0 0 1-15.72 13H54.71A16 16 0 0 1 39 195L16.32 91.13c0-.11-.05-.21-.07-.32A16 16 0 0 1 44 77.39l33.67 36.29l35.8-80.29a1 1 0 0 0 0-.1a16 16 0 0 1 29.06 0a1 1 0 0 0 0 .1l35.8 80.29L212 77.39a16 16 0 0 1 27.71 13.42Z"/></svg>
+      All-time Favorite · 从 708 款里选出的这一款
+    </span>
+
+    <h2 class="hero__title">Yu-Gi-Oh! Master Duel</h2>
+    <p class="hero__quote">「八百多小时还在天梯里被打，大概这就是决斗者之魂。」</p>
+
+    <div class="hero__art">
+      <div class="hero__art-frame">
+        <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1449850/capsule_616x353.jpg" alt="Yu-Gi-Oh! Master Duel" referrerpolicy="no-referrer" />
+      </div>
+      <div class="medal" title="我为这款游戏打的分数">
+        <b>9.6</b>
+        <span>/ 10</span>
+      </div>
+    </div>
+
+    <ul class="hero__stats">
+      <li><b>881.0<em> h</em></b><span>总时长</span></li>
+      <li><b>11 / 11</b><span>成就</span></li>
+      <li><b>12.4<em> h</em></b><span>近两周</span></li>
+      <li><b>今天</b><span>上次游玩</span></li>
+    </ul>
+
+    <div class="hero__foot">
+      <span class="chip chip--hot">
+        <svg viewBox="0 0 256 256" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M143.38 17.85a8 8 0 0 0-12.63 3.41l-22 60.41l-24.16-23.41a8 8 0 0 0-11.93.89C51 87.53 40 116.08 40 144a88 88 0 0 0 176 0c0-59.45-50.79-108-72.62-126.15m40.51 135.49a57.6 57.6 0 0 1-46.56 46.55a7.7 7.7 0 0 1-1.33.11a8 8 0 0 1-1.32-15.89c16.57-2.79 30.63-16.85 33.44-33.45a8 8 0 0 1 15.78 2.68Z"/></svg>
+        生涯时长第一
+      </span>
+      <span class="chip">228 周未断更</span>
+      <span class="chip">全部成就已集齐</span>
+    </div>
+  </section>
+
+  <!-- 2. 我的评分 -->
+  <section class="score">
+    <div class="sec-head">
+      <span class="icon-chip">
+        <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M225.86 102.82c-3.77-3.94-7.67-8-9.14-11.57c-1.36-3.27-1.44-8.69-1.52-13.94c-.15-9.76-.31-20.82-8-28.51s-18.75-7.85-28.51-8c-5.25-.08-10.67-.16-13.94-1.52c-3.56-1.47-7.63-5.37-11.57-9.14C146.28 23.51 138.44 16 128 16s-18.27 7.51-25.18 14.14c-3.94 3.77-8 7.67-11.57 9.14c-3.25 1.36-8.69 1.44-13.94 1.52c-9.76.15-20.82.31-28.51 8s-7.8 18.75-8 28.51c-.08 5.25-.16 10.67-1.52 13.94c-1.47 3.56-5.37 7.63-9.14 11.57C23.51 109.72 16 117.56 16 128s7.51 18.27 14.14 25.18c3.77 3.94 7.67 8 9.14 11.57c1.36 3.27 1.44 8.69 1.52 13.94c.15 9.76.31 20.82 8 28.51s18.75 7.85 28.51 8c5.25.08 10.67.16 13.94 1.52c3.56 1.47 7.63 5.37 11.57 9.14c6.9 6.63 14.74 14.14 25.18 14.14s18.27-7.51 25.18-14.14c3.94-3.77 8-7.67 11.57-9.14c3.27-1.36 8.69-1.44 13.94-1.52c9.76-.15 20.82-.31 28.51-8s7.85-18.75 8-28.51c.08-5.25.16-10.67 1.52-13.94c1.47-3.56 5.37-7.63 9.14-11.57c6.63-6.9 14.14-14.74 14.14-25.18s-7.51-18.27-14.14-25.18m-52.2 6.84l-56 56a8 8 0 0 1-11.32 0l-24-24a8 8 0 0 1 11.32-11.32L112 148.69l50.34-50.35a8 8 0 0 1 11.32 11.32"/></svg>
+      </span>
+      <h2 class="sec-title">我的评分</h2>
+      <span class="sec-meta">已评 6 款 · 平均 8.9 · 更新于 3 天前</span>
+    </div>
+
+    <div class="score__body">
+      <aside class="peak">
+        <div class="peak__num">9.6<em> / 10</em></div>
+        <div class="peak__label">最高分</div>
+        <div class="peak__game">Yu-Gi-Oh! Master Duel</div>
+
+        <div class="hist">
+          <div class="hist__row"><span class="hist__key">9–10</span><span class="hist__track"><i style="width:100%"></i></span><span class="hist__val">3</span></div>
+          <div class="hist__row"><span class="hist__key">8–9</span><span class="hist__track"><i style="width:100%"></i></span><span class="hist__val">2</span></div>
+          <div class="hist__row"><span class="hist__key">7–8</span><span class="hist__track"><i style="width:33%"></i></span><span class="hist__val">1</span></div>
+          <div class="hist__row"><span class="hist__key">&lt; 7</span><span class="hist__track"><i style="width:0%"></i></span><span class="hist__val">0</span></div>
+        </div>
+      </aside>
+
+      <div class="score__list">
+        <div class="srow t9">
+          <div class="srow__cover"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1449850/header.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div class="srow__name"><b>Yu-Gi-Oh! Master Duel</b><span>规则硬核，但卡组构筑的自由度值回票价</span></div>
+          <div class="scale">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i>
+          </div>
+          <div class="srow__score">9.6</div>
+        </div>
+
+        <div class="srow t9">
+          <div class="srow__cover"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/582010/header.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div class="srow__name"><b>Monster Hunter: World</b><span>至今没有第二个能替代的狩猎手感</span></div>
+          <div class="scale">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i>
+          </div>
+          <div class="srow__score">9.3</div>
+        </div>
+
+        <div class="srow t9">
+          <div class="srow__cover"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/412830/header.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div class="srow__name"><b>STEINS;GATE</b><span>看完真结局之后会沉默很久的那种</span></div>
+          <div class="scale">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i>
+          </div>
+          <div class="srow__score">9.0</div>
+        </div>
+
+        <div class="srow t8">
+          <div class="srow__cover"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1113560/header.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div class="srow__name"><b>NieR Replicant ver.1.22</b><span>叙事一流，重复劳动扣一点分</span></div>
+          <div class="scale">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+            <i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+          </div>
+          <div class="srow__score">8.8</div>
+        </div>
+
+        <div class="srow t8">
+          <div class="srow__cover"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/579180/header.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div class="srow__name"><b>Ys VIII: Lacrimosa of Dana</b><span>老派动作 RPG 的舒服手感</span></div>
+          <div class="scale">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+            <i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+          </div>
+          <div class="srow__score">8.5</div>
+        </div>
+
+        <div class="srow t7">
+          <div class="srow__cover"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/803600/header.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div class="srow__name"><b>Disgaea 5 Complete</b><span>刷起来很爽，但剧情让我犯困</span></div>
+          <div class="scale">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+            <i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i>
+          </div>
+          <div class="srow__score">8.2</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 最近在玩 · Now Playing -->
+  <section class="now">
+    <div class="now__head">
+      <div>
+        <span class="now__eyebrow">
+          <svg viewBox="0 0 256 256" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M247.44 173.75a.7.7 0 0 0 0-.14l-16.39-84.17v-.18A60.08 60.08 0 0 0 172 40H83.89a59.88 59.88 0 0 0-59 49.52L8.58 173.61a.7.7 0 0 0 0 .14a36 36 0 0 0 60.9 31.71l.35-.37L109.52 160h37l39.71 45.09c.11.13.23.25.35.37A36.08 36.08 0 0 0 212 216a36 36 0 0 0 35.43-42.25ZM104 112h-8v8a8 8 0 0 1-16 0v-8h-8a8 8 0 0 1 0-16h8v-8a8 8 0 0 1 16 0v8h8a8 8 0 0 1 0 16m40-8a8 8 0 0 1 8-8h24a8 8 0 0 1 0 16h-24a8 8 0 0 1-8-8m84.37 87.47a19.84 19.84 0 0 1-12.9 8.23a20.09 20.09 0 0 1-17.47-5.39L167.8 160h4.2a60 60 0 0 0 51-28.38l8.74 45a19.82 19.82 0 0 1-3.37 14.85"/></svg>
+          Now Playing
+        </span>
+        <h2 class="now__title">最近在玩</h2>
+        <p class="now__sub">近 14 天有游玩的游戏，按时长排序 · 共 39.9 小时</p>
+      </div>
+      <div class="now__meta">
+        <span class="chip">3 款在玩</span>
+        <span class="chip chip--hot">比上周 +12%</span>
+      </div>
+    </div>
+
+    <div class="now__grid">
+      <a class="ncard ncard--feature" href="#">
+        <img class="art" src="https://cdn.cloudflare.steamstatic.com/steam/apps/582010/library_hero.jpg" alt="" referrerpolicy="no-referrer" />
+        <span class="ncard__idx">01</span>
+        <span class="ncard__flag">本周最久</span>
+        <div class="ncard__body">
+          <h3 class="ncard__name">Monster Hunter: World</h3>
+          <div class="ncard__hours"><b>25.3</b><span>小时 · 本周</span></div>
+          <div class="nprog"><i style="width:44%"></i></div>
+          <div class="ncard__row"><span>成就 44 / 100</span><span>昨天玩过</span></div>
+        </div>
+      </a>
+
+      <a class="ncard" href="#">
+        <img class="art" src="https://cdn.cloudflare.steamstatic.com/steam/apps/1449850/library_600x900_2x.jpg" alt="" referrerpolicy="no-referrer" />
+        <span class="ncard__idx">02</span>
+        <div class="ncard__body">
+          <h3 class="ncard__name">Yu-Gi-Oh! Master Duel</h3>
+          <div class="ncard__hours"><b>12.4</b><span>小时</span></div>
+          <div class="nprog"><i style="width:100%"></i></div>
+          <div class="ncard__row"><span>成就 11 / 11</span><span>今天</span></div>
+        </div>
+      </a>
+
+      <a class="ncard" href="#">
+        <img class="art" src="https://cdn.cloudflare.steamstatic.com/steam/apps/803600/library_600x900_2x.jpg" alt="" referrerpolicy="no-referrer" />
+        <span class="ncard__idx">03</span>
+        <div class="ncard__body">
+          <h3 class="ncard__name">Disgaea 5 Complete</h3>
+          <div class="ncard__hours"><b>1.2</b><span>小时</span></div>
+          <div class="nprog"><i style="width:4%"></i></div>
+          <div class="ncard__row"><span>成就 2 / 51</span><span>10 天前</span></div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- 4. 其余展柜 -->
+  <div class="grid">
+
+    <!-- 收藏家（12 栏：大数字 + 书架） -->
+    <section class="card sp-12">
+      <div class="sec-head">
+        <span class="icon-chip">
+          <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="m231.65 194.55l-33.19-157.8a16 16 0 0 0-19-12.39l-46.81 10.06a16.08 16.08 0 0 0-12.3 19l33.19 157.8A16 16 0 0 0 169.16 224a16.3 16.3 0 0 0 3.38-.36l46.81-10.06a16.09 16.09 0 0 0 12.3-19.03M136 50.15v-.09l46.8-10l3.33 15.87L139.33 66Zm10 47.38l-3.35-15.9l46.82-10.06l3.34 15.9Zm70 100.41l-46.8 10l-3.33-15.87l46.8-10.07l3.33 15.85zM104 32H56a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h48a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16M56 48h48v16H56Zm48 160H56v-16h48z"/></svg>
+        </span>
+        <h2 class="sec-title">游戏收藏家</h2>
+        <span class="sec-meta">最近入库 6 款</span>
+      </div>
+
+      <div class="collector">
+        <div class="collector__big">
+          <b>708</b>
+          <span>款游戏 · 8,309 小时</span>
+        </div>
+        <div>
+          <div class="collector__rows">
+            <div class="crow"><span>平均单款</span><b>11.7 小时</b></div>
+            <div class="crow"><span>完美通关</span><b>4 款</b></div>
+            <div class="crow"><span>成就完成度</span><b>35%</b></div>
+          </div>
+          <div class="shelf">
+            <a href="#"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1449850/header.jpg" alt="" referrerpolicy="no-referrer" /><span class="shelf__name">Master Duel</span></a>
+            <a href="#"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/582010/header.jpg" alt="" referrerpolicy="no-referrer" /><span class="shelf__name">Monster Hunter: World</span></a>
+            <a href="#"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1113560/header.jpg" alt="" referrerpolicy="no-referrer" /><span class="shelf__name">NieR Replicant</span></a>
+            <a href="#"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/803600/header.jpg" alt="" referrerpolicy="no-referrer" /><span class="shelf__name">Disgaea 5</span></a>
+            <a href="#"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/412830/header.jpg" alt="" referrerpolicy="no-referrer" /><span class="shelf__name">STEINS;GATE</span></a>
+            <a href="#"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/579180/header.jpg" alt="" referrerpolicy="no-referrer" /><span class="shelf__name">Ys VIII</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 游玩时长（7 栏） -->
+    <section class="card sp-7">
+      <div class="sec-head">
+        <span class="icon-chip">
+          <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M232 208a8 8 0 0 1-8 8H32a8 8 0 0 1 0-16h8v-64a8 8 0 0 1 8-8h24a8 8 0 0 1 8 8v64h16V88a8 8 0 0 1 8-8h32a8 8 0 0 1 8 8v112h16V40a8 8 0 0 1 8-8h40a8 8 0 0 1 8 8v160h8a8 8 0 0 1 8 8"/></svg>
+        </span>
+        <h2 class="sec-title">游玩时长</h2>
+        <span class="sec-meta">Top 6 · 8,309 小时</span>
+      </div>
+
+      <div class="rank">
+        <div class="rank__row">
+          <span class="rank__no">01</span>
+          <div class="rank__thumb"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1449850/library_600x900.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div>
+            <div class="rank__name"><b>Yu-Gi-Oh! Master Duel</b><span>10.6%</span></div>
+            <div class="rank__track"><i style="width:100%"></i></div>
+          </div>
+          <div class="rank__hours"><b>881.0</b><span>小时</span></div>
+        </div>
+        <div class="rank__row">
+          <span class="rank__no">02</span>
+          <div class="rank__thumb"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/2357570/library_600x900.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div>
+            <div class="rank__name"><b>Overwatch®</b><span>8.2%</span></div>
+            <div class="rank__track"><i style="width:77%"></i></div>
+          </div>
+          <div class="rank__hours"><b>680.7</b><span>小时</span></div>
+        </div>
+        <div class="rank__row">
+          <span class="rank__no">03</span>
+          <div class="rank__thumb"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/2344520/library_600x900.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div>
+            <div class="rank__name"><b>Diablo® IV</b><span>7.2%</span></div>
+            <div class="rank__track"><i style="width:68%"></i></div>
+          </div>
+          <div class="rank__hours"><b>598.0</b><span>小时</span></div>
+        </div>
+        <div class="rank__row">
+          <span class="rank__no">04</span>
+          <div class="rank__thumb"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/251570/library_600x900.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div>
+            <div class="rank__name"><b>7 Days to Die</b><span>4.3%</span></div>
+            <div class="rank__track"><i style="width:40%"></i></div>
+          </div>
+          <div class="rank__hours"><b>356.0</b><span>小时</span></div>
+        </div>
+        <div class="rank__row">
+          <span class="rank__no">05</span>
+          <div class="rank__thumb"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1761390/library_600x900.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div>
+            <div class="rank__name"><b>Hatsune Miku: Project DIVA Mega Mix+</b><span>3.8%</span></div>
+            <div class="rank__track"><i style="width:35%"></i></div>
+          </div>
+          <div class="rank__hours"><b>312.6</b><span>小时</span></div>
+        </div>
+        <div class="rank__row">
+          <span class="rank__no">06</span>
+          <div class="rank__thumb"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/779340/library_600x900.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div>
+            <div class="rank__name"><b>Total War: THREE KINGDOMS</b><span>1.8%</span></div>
+            <div class="rank__track"><i style="width:17%"></i></div>
+          </div>
+          <div class="rank__hours"><b>152.8</b><span>小时</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 完美通关（5 栏） -->
+    <section class="card sp-5">
+      <div class="sec-head">
+        <span class="icon-chip">
+          <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M232 64h-24V48a8 8 0 0 0-8-8H56a8 8 0 0 0-8 8v16H24A16 16 0 0 0 8 80v16a40 40 0 0 0 40 40h3.65A80.13 80.13 0 0 0 120 191.61V216H96a8 8 0 0 0 0 16h64a8 8 0 0 0 0-16h-24v-24.42c31.94-3.23 58.44-25.64 68.08-55.58H208a40 40 0 0 0 40-40V80a16 16 0 0 0-16-16M48 120a24 24 0 0 1-24-24V80h24v32q0 4 .39 8Zm184-24a24 24 0 0 1-24 24h-.5a82 82 0 0 0 .5-8.9V80h24Z"/></svg>
+        </span>
+        <h2 class="sec-title">完美通关</h2>
+        <span class="sec-meta">3 款 100%</span>
+      </div>
+
+      <div class="perfect">
+        <div class="prow">
+          <div class="prow__cover"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1449850/header.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div class="prow__name"><b>Yu-Gi-Oh! Master Duel</b><span>11 / 11 · 881.0 小时</span></div>
+          <div class="prow__pct">100%</div>
+        </div>
+        <div class="prow">
+          <div class="prow__cover"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/412830/header.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div class="prow__name"><b>STEINS;GATE</b><span>42 / 42 · 84.4 小时</span></div>
+          <div class="prow__pct">100%</div>
+        </div>
+        <div class="prow">
+          <div class="prow__cover"><img src="https://cdn.cloudflare.steamstatic.com/steam/apps/579180/header.jpg" alt="" referrerpolicy="no-referrer" /></div>
+          <div class="prow__name"><b>Ys VIII: Lacrimosa of Dana</b><span>54 / 54 · 76.7 小时</span></div>
+          <div class="prow__pct">100%</div>
+        </div>
+      </div>
+      <div class="prov" style="margin-top:auto;border-top:1px dashed var(--card-border);padding-top:12px;font-size:11.5px">
+        共 3 款 · 占库 0.4%
+      </div>
+    </section>
+
+    <!-- 最稀有成就（12 栏） -->
+    <section class="card sp-12">
+      <div class="sec-head">
+        <span class="icon-chip">
+          <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M240 128a15.85 15.85 0 0 1-4.67 11.28l-96.05 96.06a16 16 0 0 1-22.56 0l-96-96.06a16 16 0 0 1 0-22.56l96.05-96.06a16 16 0 0 1 22.56 0l96.05 96.06A15.85 15.85 0 0 1 240 128"/></svg>
+        </span>
+        <h2 class="sec-title">最稀有成就</h2>
+        <span class="sec-meta">按全球解锁率 · 最低 1.2%</span>
+      </div>
+
+      <div class="rarest">
+        <article class="rare rare--hero">
+          <div class="rare__top">
+            <span class="rare__icon">
+              <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216 96a88 88 0 1 0-144 67.83V240a8 8 0 0 0 11.58 7.16L128 225l44.43 22.21a8.1 8.1 0 0 0 3.57.79a8 8 0 0 0 8-8v-76.17A87.85 87.85 0 0 0 216 96M56 96a72 72 0 1 1 72 72a72.08 72.08 0 0 1-72-72m16 0a56 56 0 1 1 56 56a56.06 56.06 0 0 1-56-56"/></svg>
+            </span>
+            <div class="rare__meta">
+              <span class="rare__game">Tales of Berseria</span>
+              <h3 class="rare__name">Champion of Berseria</h3>
+            </div>
+          </div>
+          <p class="rare__desc">Proof of conquering the world with Velvet and company. Thank you for playing!</p>
+          <div class="rarity">
+            <div class="rarity__track"><i style="width:6%"></i></div>
+            <span class="rarity__val">1.2% 解锁</span>
+          </div>
+        </article>
+
+        <article class="rare">
+          <div class="rare__top">
+            <span class="rare__icon">
+              <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216 96a88 88 0 1 0-144 67.83V240a8 8 0 0 0 11.58 7.16L128 225l44.43 22.21a8.1 8.1 0 0 0 3.57.79a8 8 0 0 0 8-8v-76.17A87.85 87.85 0 0 0 216 96M56 96a72 72 0 1 1 72 72a72.08 72.08 0 0 1-72-72m16 0a56 56 0 1 1 56 56a56.06 56.06 0 0 1-56-56"/></svg>
+            </span>
+            <div class="rare__meta">
+              <span class="rare__game">Tales of Berseria</span>
+              <h3 class="rare__name">Witness to the Mystic</h3>
+            </div>
+          </div>
+          <p class="rare__desc">Proof of seeing every mystic arte. Luck is also a talent.</p>
+          <div class="rarity">
+            <div class="rarity__track"><i style="width:7%"></i></div>
+            <span class="rarity__val">1.3%</span>
+          </div>
+        </article>
+
+        <article class="rare">
+          <div class="rare__top">
+            <span class="rare__icon">
+              <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216 96a88 88 0 1 0-144 67.83V240a8 8 0 0 0 11.58 7.16L128 225l44.43 22.21a8.1 8.1 0 0 0 3.57.79a8 8 0 0 0 8-8v-76.17A87.85 87.85 0 0 0 216 96M56 96a72 72 0 1 1 72 72a72.08 72.08 0 0 1-72-72m16 0a56 56 0 1 1 56 56a56.06 56.06 0 0 1-56-56"/></svg>
+            </span>
+            <div class="rare__meta">
+              <span class="rare__game">Tales of Berseria</span>
+              <h3 class="rare__name">Item Collector</h3>
+            </div>
+          </div>
+          <p class="rare__desc">Gels, equipment, food, costumes, valuables.</p>
+          <div class="rarity">
+            <div class="rarity__track"><i style="width:8%"></i></div>
+            <span class="rarity__val">1.4%</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 愿望单（12 栏） -->
+    <section class="card sp-12">
+      <div class="sec-head">
+        <span class="icon-chip">
+          <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M240 98a57.63 57.63 0 0 1-17 41l-89.3 90.62a8 8 0 0 1-11.4 0L33 139a58 58 0 0 1 82-82.1l13 12.15l13.09-12.19A58 58 0 0 1 240 98"/></svg>
+        </span>
+        <h2 class="sec-title">愿望单</h2>
+        <span class="sec-meta">3 款 · 最久等待 1435 天</span>
+      </div>
+
+      <div class="wish">
+        <a class="wcard" href="#">
+          <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1326470/header.jpg" alt="" referrerpolicy="no-referrer" />
+          <span class="wcard__wait">等了 1435 天</span>
+          <div class="wcard__body">
+            <h3 class="wcard__name">Sons Of The Forest</h3>
+            <span class="wcard__sub">2022 年 11 月加入</span>
+          </div>
+        </a>
+        <a class="wcard" href="#">
+          <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1196590/header.jpg" alt="" referrerpolicy="no-referrer" />
+          <span class="wcard__wait">等了 1433 天</span>
+          <div class="wcard__body">
+            <h3 class="wcard__name">Resident Evil Village</h3>
+            <span class="wcard__sub">2022 年 11 月加入</span>
+          </div>
+        </a>
+        <a class="wcard" href="#">
+          <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/2058190/header.jpg" alt="" referrerpolicy="no-referrer" />
+          <span class="wcard__wait">等了 1330 天</span>
+          <div class="wcard__body">
+            <h3 class="wcard__name">审判之逝：湮灭的记忆</h3>
+            <span class="wcard__sub">2023 年 3 月加入</span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <p class="prov">
+    <span><b>数据来源</b> · Steam Web API</span>
+    <span>·</span>
+    <span>每小时自动同步一次，页面只读快照</span>
+    <span>·</span>
+    <span>最后成功同步 2 小时前</span>
+  </p>
+</div>
+
+<div class="proto"><i></i> 改版原型 · 评分为示例数据</div>
+
+</body>
+</html>

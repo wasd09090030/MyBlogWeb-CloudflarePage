@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>游戏档案 · 展柜设计稿 v2</title>
+<style>
+  /* ============ 变量：取自 nuxt-public/app/assets/css/theme-variables.css ============ */
+  :root {
+    --sans: 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    --serif: 'Playfair Display', 'Noto Serif SC', 'Songti SC', 'SimSun', Georgia, 'Times New Roman', serif;
+
+    --bg-primary: #fdf6f1;
+    --bg-secondary: #f7e8e1;
+    --bg-tertiary: #f0ddd6;
+    --bg-hover: #fbeae7;
+
+    --text-primary: #3d2f2b;
+    --text-secondary: #8a7368;
+    --text-tertiary: #bda89d;
+
+    --accent-primary: #e11d48;
+    --accent-secondary: #fb923c;
+    --accent-success: #0d9488;
+    --accent-warning: #f59e0b;
+
+    --card-bg: #ffffff;
+    --card-border: #f2e4da;
+    --border-color: #f2e4da;
+    --border-color-dark: #d9b8a8;
+
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, .06);
+    --shadow-md: 0 8px 24px rgba(61, 47, 43, .08);
+
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 24px;
+
+    --gradient-primary: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+    --gradient-warm: linear-gradient(135deg, #fb923c 0%, #fda4af 100%);
+  }
+
+  html[data-theme="dark"] {
+    --bg-primary: #241a17;
+    --bg-secondary: #2e211d;
+    --bg-tertiary: #2a1e1b;
+    --bg-hover: #4a322b;
+
+    --text-primary: #fdf5f1;
+    --text-secondary: #e7d9d2;
+    --text-tertiary: #cdb8ad;
+
+    --accent-primary: #fb7185;
+    --accent-secondary: #fb923c;
+    --accent-success: #2dd4bf;
+
+    --card-bg: #33241f;
+    --card-border: #4a332b;
+    --border-color: #4a332b;
+    --border-color-dark: #6b4c40;
+
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, .3);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, .45);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .3s ease, color .3s ease;
+  }
+  a { color: inherit; text-decoration: none; }
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 3px; border-radius: 6px; }
+  h1, h2, h3, h4, p { margin: 0; }
+
+  /* ============ 顶栏 ============ */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    backdrop-filter: blur(12px);
+    background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
+    border-bottom: 1px solid var(--card-border);
+  }
+  .topbar__inner { max-width: 1180px; margin: 0 auto; padding: 14px 28px; display: flex; align-items: center; gap: 28px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: .02em; }
+  .brand__mark { width: 30px; height: 30px; border-radius: 9px; background: var(--gradient-primary); color: #fff; display: grid; place-items: center; font-family: var(--serif); font-size: 17px; }
+  .nav { display: flex; gap: 4px; margin-left: 8px; }
+  .nav a { padding: 7px 12px; border-radius: 999px; font-size: 14px; color: var(--text-secondary); transition: background-color .2s ease, color .2s ease; }
+  .nav a:hover { background: var(--bg-hover); color: var(--accent-primary); }
+  .nav a[aria-current="page"] { color: var(--accent-primary); background: color-mix(in srgb, var(--accent-primary) 10%, transparent); font-weight: 600; }
+  .topbar__right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .icon-btn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-secondary); cursor: pointer; display: grid; place-items: center; font-size: 15px; line-height: 1; }
+  .icon-btn:hover { color: var(--accent-primary); border-color: var(--border-color-dark); }
+  .icon-btn.menu-btn { display: none; }
+  @media (max-width: 992px) { .icon-btn.menu-btn { display: grid; } }
+
+  /* ============ 布局 ============ */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 44px 28px 80px; }
+  .pagehead { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 26px; }
+  .eyebrow { display: inline-block; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--accent-primary); font-weight: 700; margin-bottom: 10px; }
+  .pagehead h1 { font-family: var(--serif); font-size: clamp(34px, 5vw, 52px); line-height: 1.08; margin: 0 0 12px; font-weight: 800; letter-spacing: -.01em; }
+  .lead { color: var(--text-secondary); max-width: 48ch; font-size: 15px; }
+  .pagehead__meta { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; padding-bottom: 6px; }
+  .sync { display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px; border-radius: 999px; font-size: 12.5px; background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-secondary); box-shadow: var(--shadow-sm); white-space: nowrap; }
+  .sync__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-success) 20%, transparent); }
+  .sync--stale .sync__dot { background: var(--accent-warning); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-warning) 22%, transparent); }
+  .link-arrow { font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--border-color-dark); padding-bottom: 1px; }
+  .link-arrow:hover { color: var(--accent-primary); border-color: var(--accent-primary); }
+
+  /* ============ 展柜网格 ============ */
+  .showcase-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+  .showcase {
+    grid-column: span 6;
+    background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-xl);
+    padding: 18px 20px 20px; box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; min-width: 0; position: relative;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .showcase:hover { border-color: var(--border-color-dark); box-shadow: var(--shadow-md); }
+  .showcase--full { grid-column: span 12; }
+  .showcase--hero { grid-column: span 7; }
+  .showcase--side { grid-column: span 5; }
+  .showcase--wide { grid-column: span 8; }
+  .showcase--narrow { grid-column: span 4; }
+  .showcase__head { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; min-width: 0; }
+  .showcase__icon {
+    width: 24px; height: 24px; border-radius: 7px; flex: none; display: grid; place-items: center;
+    background: color-mix(in srgb, var(--accent-primary) 10%, transparent); color: var(--accent-primary);
+    font-size: 12px;
+  }
+  .showcase__title { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
+  .showcase__meta { margin-left: auto; font-size: 11.5px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .showcase__edit {
+    position: absolute; top: 14px; right: 14px; width: 26px; height: 26px; border-radius: 8px;
+    border: 1px dashed var(--border-color-dark); background: transparent; color: var(--text-tertiary);
+    display: none; place-items: center; cursor: pointer; font-size: 12px;
+  }
+  body[data-mode="edit"] .showcase__edit { display: grid; }
+  body[data-mode="edit"] .showcase { border-style: dashed; }
+  body[data-mode="edit"] .showcase:hover { border-color: var(--accent-primary); }
+
+  /* ============ 档案条 ============ */
+  .profile { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 26px; align-items: center; }
+  .profile__id { display: flex; align-items: center; gap: 16px; min-width: 0; }
+  .avatar { width: 62px; height: 62px; border-radius: 18px; flex: none; background: var(--gradient-warm); color: #fff; display: grid; place-items: center; font-family: var(--serif); font-size: 27px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
+  .profile__name { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .profile__name h2 { font-size: 20px; font-weight: 700; letter-spacing: .01em; }
+  .lvl { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; padding: 2px 8px; border-radius: 6px; color: var(--accent-primary); background: color-mix(in srgb, var(--accent-primary) 12%, transparent); }
+  .profile__sub { color: var(--text-tertiary); font-size: 12.5px; margin-top: 4px; }
+  .profile__stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .stat { padding: 4px 0 4px 14px; border-left: 1px solid var(--card-border); min-width: 0; }
+  .stat:first-child { border-left: 0; padding-left: 0; }
+  .stat b { display: block; font-family: var(--serif); font-size: 25px; font-weight: 800; line-height: 1.15; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 11.5px; color: var(--text-tertiary); letter-spacing: .04em; }
+  .stat em { font-style: normal; font-size: 12.5px; color: var(--text-secondary); margin-left: 1px; }
+
+  /* ============ 收藏家 ============ */
+  .collector { display: flex; gap: 20px; align-items: center; }
+  .collector__big { flex: none; }
+  .collector__big b { font-family: var(--serif); font-size: 44px; line-height: 1; font-weight: 800; letter-spacing: -.02em; display: block; }
+  .collector__big span { font-size: 11.5px; color: var(--text-tertiary); letter-spacing: .06em; }
+  .collector__side { min-width: 0; flex: 1; }
+  .collector__row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 5px 0; border-bottom: 1px dashed var(--card-border); }
+  .collector__row:last-child { border-bottom: 0; }
+  .collector__row span { color: var(--text-tertiary); }
+  .collector__row b { font-variant-numeric: tabular-nums; }
+  .collector__shelf { display: flex; gap: 6px; margin-top: 10px; }
+  .chip-cover { width: 46px; height: 26px; border-radius: 5px; position: relative; overflow: hidden; flex: none; }
+  .chip-cover span { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.9); font-family: var(--serif); font-size: 11px; }
+
+  /* ============ 最爱游戏 ============ */
+  .favorite { position: relative; border-radius: var(--radius-lg); overflow: hidden; min-height: 236px; display: flex; align-items: flex-end; padding: 18px 20px; }
+  .favorite::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,12,8,.05) 0%, rgba(20,12,8,.78) 100%); }
+  .favorite__bg { position: absolute; inset: 0; }
+  .favorite__bg span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--serif); font-size: 92px; color: rgba(255,255,255,.2); }
+  .favorite__body { position: relative; z-index: 1; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; width: 100%; color: #fff; }
+  .favorite__body h3 { font-family: var(--serif); font-size: 27px; font-weight: 800; letter-spacing: -.01em; }
+  .favorite__body p { font-size: 12px; opacity: .82; margin-top: 3px; }
+  .ring { width: 58px; height: 58px; flex: none; position: relative; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring__label { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+
+  /* ============ 最近在玩 ============ */
+  .recent { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .game-card { border: 1px solid var(--card-border); border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column; transition: transform .2s ease, box-shadow .2s ease; }
+  .game-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .cover { position: relative; aspect-ratio: 16 / 9; background: var(--bg-tertiary); overflow: hidden; }
+  .cover::after { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 90% at 15% 10%, rgba(255,255,255,.28), transparent 60%); }
+  .cover__letter { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--serif); font-size: 40px; color: rgba(255,255,255,.9); text-shadow: 0 2px 18px rgba(0,0,0,.25); }
+  .cover--gold { background: linear-gradient(135deg, #e0a45a 0%, #8a5a23 55%, #3c2412 100%); }
+  .cover--red { background: linear-gradient(135deg, #ff6b6b 0%, #b91c1c 55%, #4c0f12 100%); }
+  .cover--teal { background: linear-gradient(135deg, #5eead4 0%, #0f766e 55%, #0b2b28 100%); }
+  .cover--violet { background: linear-gradient(135deg, #c4b5fd 0%, #6d28d9 55%, #2e1065 100%); }
+  .cover--slate { background: linear-gradient(135deg, #cbd5e1 0%, #475569 55%, #1e293b 100%); }
+  .cover--amber { background: linear-gradient(135deg, #fcd34d 0%, #b45309 55%, #451a03 100%); }
+  .cover--rose { background: linear-gradient(135deg, #fda4af 0%, #be123c 55%, #4c0519 100%); }
+  .cover--blue { background: linear-gradient(135deg, #93c5fd 0%, #1d4ed8 55%, #172554 100%); }
+  .game-card__body { padding: 12px 13px 13px; display: flex; flex-direction: column; gap: 8px; }
+  .game-card__title { font-size: 13.5px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .game-card__meta { font-size: 11.5px; color: var(--text-tertiary); display: flex; gap: 6px; align-items: center; }
+  .game-card__meta b { color: var(--text-secondary); font-weight: 600; }
+  .mini-bar { height: 4px; border-radius: 999px; background: var(--bg-tertiary); overflow: hidden; }
+  .mini-bar i { display: block; height: 100%; border-radius: 999px; background: var(--accent-primary); }
+  .mini-bar__label { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+
+  /* ============ 时长排行（紧凑） ============ */
+  .ranking { display: flex; flex-direction: column; gap: 2px; }
+  .rank-row { display: grid; grid-template-columns: 20px minmax(0, 1fr) 74px; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--card-border); }
+  .rank-row:last-child { border-bottom: 0; }
+  .rank-row__no { font-family: var(--serif); font-size: 13px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+  .rank-row:nth-child(1) .rank-row__no { color: var(--accent-primary); font-weight: 700; }
+  .rank-row__body { min-width: 0; }
+  .rank-row__name { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; }
+  .rank-row__name b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rank-row__name span { color: var(--text-tertiary); font-variant-numeric: tabular-nums; flex: none; }
+  .rank-row__track { margin-top: 5px; height: 5px; border-radius: 999px; background: var(--bg-tertiary); overflow: hidden; }
+  .rank-row__track i { display: block; height: 100%; border-radius: 999px; background: var(--gradient-primary); }
+  .rank-row__hours { text-align: right; font-variant-numeric: tabular-nums; }
+  .rank-row__hours b { font-family: var(--serif); font-size: 14px; font-weight: 800; }
+  .rank-row__hours span { display: block; font-size: 10.5px; color: var(--text-tertiary); }
+
+  /* ============ 完美通关 ============ */
+  .perfect { display: flex; flex-direction: column; gap: 10px; }
+  .perfect__row { display: grid; grid-template-columns: 34px minmax(0, 1fr) 46px; gap: 10px; align-items: center; }
+  .perfect__thumb { width: 34px; height: 20px; border-radius: 5px; position: relative; overflow: hidden; }
+  .perfect__thumb span { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.9); font-family: var(--serif); font-size: 10px; }
+  .perfect__name { min-width: 0; }
+  .perfect__name b { display: block; font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .perfect__name span { font-size: 10.5px; color: var(--text-tertiary); }
+  .perfect__pct { text-align: right; font-size: 12px; font-weight: 700; color: var(--accent-success); font-variant-numeric: tabular-nums; }
+  .perfect__foot { margin-top: auto; padding-top: 12px; border-top: 1px dashed var(--card-border); font-size: 11.5px; color: var(--text-tertiary); }
+
+  /* ============ 稀有成就 ============ */
+  .rarest { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 12px; }
+  .rare-card { padding: 14px; border-radius: var(--radius-lg); border: 1px solid var(--card-border); background: linear-gradient(180deg, color-mix(in srgb, var(--accent-secondary) 7%, transparent), transparent 70%); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .rare-card--hero { background: linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 10%, transparent), color-mix(in srgb, var(--accent-secondary) 8%, transparent)); }
+  .rare-card__game { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-tertiary); }
+  .rare-card__name { font-family: var(--serif); font-size: 15.5px; font-weight: 700; line-height: 1.25; }
+  .rare-card--hero .rare-card__name { font-size: 19px; }
+  .rare-card__desc { font-size: 11.5px; color: var(--text-secondary); }
+  .rarity { display: flex; align-items: center; gap: 8px; margin-top: auto; }
+  .rarity__track { flex: 1; height: 4px; border-radius: 999px; background: var(--bg-tertiary); overflow: hidden; }
+  .rarity__track i { display: block; height: 100%; border-radius: 999px; }
+  .rarity__val { font-size: 10.5px; color: var(--text-tertiary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .rarity--epic i { background: linear-gradient(90deg, #a855f7, #38bdf8); }
+  .rarity--rare i { background: linear-gradient(90deg, #f43f5e, #fb923c); }
+  .rarity--common i { background: linear-gradient(90deg, #0d9488, #34d399); }
+
+  /* ============ 愿望单 ============ */
+  .wishlist { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .wish { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: var(--radius-lg); background: var(--bg-primary); }
+  .wish__thumb { width: 34px; height: 20px; border-radius: 5px; position: relative; overflow: hidden; }
+  .wish__thumb span { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.9); font-family: var(--serif); font-size: 10px; }
+  .wish__meta { min-width: 0; }
+  .wish__meta b { display: block; font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wish__meta span { font-size: 10.5px; color: var(--text-tertiary); }
+
+  /* ============ 页脚说明 ============ */
+  .provenance { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--card-border); font-size: 12px; color: var(--text-tertiary); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .provenance b { color: var(--text-secondary); font-weight: 600; }
+
+  /* ============ 骨架 ============ */
+  .view-skeleton { display: none; }
+  body[data-view="loading"] .view-real { display: none; }
+  body[data-view="loading"] .view-skeleton { display: grid; }
+  body[data-view="loading"] .state-note { display: none; }
+  .sk { position: relative; overflow: hidden; background: var(--bg-secondary); border-radius: var(--radius-md); }
+  .sk::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--card-bg) 70%, transparent), transparent); transform: translateX(-100%); animation: shimmer 1.4s infinite; }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+
+  /* ============ 提示块 ============ */
+  .state-note { display: none; gap: 16px; align-items: flex-start; padding: 22px 24px; margin: 26px 0 0; border-radius: var(--radius-xl); border: 1px solid var(--border-color-dark); background: color-mix(in srgb, var(--accent-warning) 8%, var(--card-bg)); }
+  .state-note__icon { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--accent-warning) 18%, transparent); color: var(--accent-warning); }
+  .state-note h3 { font-size: 14.5px; margin-bottom: 4px; }
+  .state-note p { font-size: 13px; color: var(--text-secondary); }
+  .state-note a { color: var(--accent-primary); border-bottom: 1px solid currentColor; }
+  .state-note--error { background: color-mix(in srgb, var(--accent-primary) 8%, var(--card-bg)); border-color: color-mix(in srgb, var(--accent-primary) 30%, var(--card-border)); }
+  .state-note--error .state-note__icon { background: color-mix(in srgb, var(--accent-primary) 16%, transparent); color: var(--accent-primary); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--accent-primary); background: var(--accent-primary); color: #fff; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .btn:hover { filter: brightness(1.06); }
+  .btn--ghost { background: transparent; color: var(--text-secondary); border-color: var(--card-border); }
+  .btn--ghost:hover { border-color: var(--accent-primary); color: var(--accent-primary); filter: none; }
+
+  body[data-view="empty"] .view-real,
+  body[data-view="private"] .view-real { display: none; }
+  body[data-view="private"] .state-note--private { display: flex; }
+  body[data-view="empty"] .state-note--empty { display: flex; }
+  body[data-view="error"] .state-note--error { display: flex; }
+  body[data-view="private"] .pagehead__meta .sync,
+  body[data-view="empty"] .pagehead__meta .sync { display: none; }
+
+  /* ============ 展柜管理器 ============ */
+  .admin { display: none; }
+  body[data-mode="manage"] .public-view { display: none; }
+  body[data-mode="manage"] .admin { display: block; }
+
+  .admin__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+  .admin__head h2 { font-family: var(--serif); font-size: 30px; font-weight: 800; letter-spacing: -.01em; }
+  .admin__head p { color: var(--text-secondary); font-size: 13.5px; margin-top: 6px; }
+  .admin__actions { display: flex; gap: 8px; }
+  .slots { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--card-bg); border: 1px solid var(--card-border); font-size: 12px; color: var(--text-secondary); }
+  .slots b { color: var(--text-primary); }
+
+  .manager { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 18px; align-items: start; }
+  .panel { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-xl); overflow: hidden; }
+  .panel__head { padding: 13px 16px; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; }
+  .panel__head span { margin-left: auto; letter-spacing: 0; text-transform: none; color: var(--text-tertiary); font-weight: 500; }
+
+  .slot-list { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .slot {
+    display: grid; grid-template-columns: 22px 26px minmax(0, 1fr) auto auto; gap: 10px; align-items: center;
+    padding: 10px 10px 10px 6px; border-radius: var(--radius-lg); border: 1px solid transparent;
+    background: var(--bg-primary); cursor: pointer;
+  }
+  .slot:hover { border-color: var(--card-border); }
+  .slot.is-active { border-color: var(--accent-primary); background: color-mix(in srgb, var(--accent-primary) 5%, var(--card-bg)); }
+  .slot.is-off { opacity: .55; }
+  .slot__grip { color: var(--text-tertiary); cursor: grab; font-size: 12px; text-align: center; letter-spacing: -1px; }
+  .slot__icon { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent-primary) 10%, transparent); color: var(--accent-primary); font-size: 12px; }
+  .slot__body { min-width: 0; }
+  .slot__body b { display: block; font-size: 13px; font-weight: 600; }
+  .slot__body span { font-size: 11px; color: var(--text-tertiary); }
+  .slot__move { display: flex; gap: 3px; }
+  .mini-btn { width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-tertiary); cursor: pointer; display: grid; place-items: center; font-size: 10px; line-height: 1; }
+  .mini-btn:hover { color: var(--accent-primary); border-color: var(--accent-primary); }
+  .switch { position: relative; width: 34px; height: 20px; border-radius: 999px; background: var(--bg-tertiary); border: 1px solid var(--card-border); cursor: pointer; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .18s ease; }
+  .switch[aria-checked="true"] { background: var(--accent-success); border-color: transparent; }
+  .switch[aria-checked="true"]::after { transform: translateX(14px); }
+
+  .inspector { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .field label { display: block; font-size: 11.5px; color: var(--text-tertiary); letter-spacing: .06em; margin-bottom: 6px; }
+  .field .value { font-size: 13.5px; }
+  .segmented { display: inline-flex; border: 1px solid var(--card-border); border-radius: 999px; overflow: hidden; }
+  .segmented button { border: 0; background: transparent; padding: 5px 12px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
+  .segmented button[aria-pressed="true"] { background: var(--accent-primary); color: #fff; }
+  .textarea { border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 10px 12px; font-size: 12.5px; color: var(--text-secondary); background: var(--bg-primary); min-height: 86px; }
+  .hint { font-size: 11.5px; color: var(--text-tertiary); }
+  .picker { display: flex; flex-wrap: wrap; gap: 6px; }
+  .picker .chip { font-size: 11.5px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--card-border); color: var(--text-secondary); background: var(--bg-primary); cursor: pointer; }
+  .picker .chip[aria-pressed="true"] { border-color: var(--accent-primary); color: var(--accent-primary); background: color-mix(in srgb, var(--accent-primary) 8%, transparent); }
+
+  .library { padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .lib-item { padding: 10px; border-radius: var(--radius-lg); border: 1px dashed var(--card-border); display: flex; gap: 9px; align-items: center; background: var(--bg-primary); }
+  .lib-item.is-added { opacity: .45; border-style: solid; }
+  .lib-item__icon { width: 26px; height: 26px; border-radius: 8px; background: color-mix(in srgb, var(--accent-secondary) 14%, transparent); color: var(--accent-secondary); display: grid; place-items: center; font-size: 12px; flex: none; }
+  .lib-item__body { min-width: 0; flex: 1; }
+  .lib-item__body b { display: block; font-size: 12.5px; }
+  .lib-item__body span { font-size: 10.5px; color: var(--text-tertiary); }
+
+  /* ============ 设计稿工具条 ============ */
+  .devbar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 7px 9px; background: rgba(24, 16, 14, .92); color: #f7ece9; border-radius: 999px; font-size: 11.5px; z-index: 99; box-shadow: 0 10px 30px rgba(0,0,0,.25); font-family: ui-monospace, Consolas, monospace; }
+  .devbar__label { opacity: .5; padding: 0 5px; }
+  .devbar button { border: 0; background: transparent; color: inherit; opacity: .72; padding: 4px 8px; border-radius: 999px; cursor: pointer; font: inherit; }
+  .devbar button:hover { opacity: 1; background: rgba(255,255,255,.1); }
+  .devbar button[aria-pressed="true"] { background: #e11d48; opacity: 1; color: #fff; }
+  .devbar__sep { width: 1px; height: 15px; background: rgba(255,255,255,.18); margin: 0 2px; }
+
+  /* ============ 响应式 ============ */
+  @media (max-width: 992px) {
+    .nav { display: none; }
+    .profile { grid-template-columns: 1fr; gap: 18px; }
+    .recent { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .rarest { grid-template-columns: 1fr 1fr; }
+    .rarest .rare-card--hero { grid-column: span 2; }
+    .manager { grid-template-columns: 1fr; }
+    .showcase { grid-column: span 12; }
+    .wishlist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 768px) {
+    .wrap { padding: 30px 20px 72px; }
+    .topbar__inner { padding: 12px 20px; }
+    .pagehead { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .pagehead__meta { align-items: flex-start; }
+    .profile__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 12px; }
+    .stat:nth-child(3) { border-left: 0; padding-left: 0; }
+    .collector { flex-wrap: wrap; }
+    .library { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 576px) {
+    .recent { grid-template-columns: 1fr; }
+    .rarest { grid-template-columns: 1fr; }
+    .rarest .rare-card--hero { grid-column: span 1; }
+    .wishlist { grid-template-columns: 1fr; }
+    .pagehead h1 { font-size: 34px; }
+    .showcase { padding: 16px; }
+    .slot { grid-template-columns: 22px 26px minmax(0, 1fr) auto; }
+    .slot__move { display: none; }
+    .devbar { font-size: 10.5px; gap: 2px; padding: 6px; }
+    .devbar__label { display: none; }
+    .admin__head { flex-direction: column; align-items: flex-start; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body data-view="default" data-mode="public">
+
+<!-- ================= 设计稿工具条 ================= -->
+<div class="devbar" role="group" aria-label="设计稿预览控制">
+  <span class="devbar__label">视图</span>
+  <button data-mode="public" aria-pressed="true">公开页</button>
+  <button data-mode="edit">就地编辑</button>
+  <button data-mode="manage">展柜管理器</button>
+  <span class="devbar__sep"></span>
+  <button data-state="default" aria-pressed="true">默认</button>
+  <button data-state="loading">加载</button>
+  <button data-state="empty">空</button>
+  <button data-state="private">隐私</button>
+  <button data-state="error">失败</button>
+  <span class="devbar__sep"></span>
+  <button data-theme-toggle>暗色</button>
+</div>
+
+<!-- ================= 顶栏 ================= -->
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="#"><span class="brand__mark">W</span><span>WyrmKk</span></a>
+    <nav class="nav" aria-label="主导航">
+      <a href="#">首页</a><a href="#">文章</a><a href="#">画廊</a>
+      <a href="#" aria-current="page">游戏</a><a href="#">归档</a>
+    </nav>
+    <div class="topbar__right">
+      <button class="icon-btn menu-btn" aria-label="菜单">☰</button>
+      <button class="icon-btn" aria-label="搜索">⌕</button>
+      <button class="icon-btn" data-theme-toggle aria-label="切换主题">◐</button>
+    </div>
+  </div>
+</header>
+
+<!-- ================================================================
+     公开页
+================================================================= -->
+<main class="wrap public-view">
+  <section class="pagehead">
+    <div>
+      <span class="eyebrow">Play Log · Showcase</span>
+      <h1>游戏档案</h1>
+      <p class="lead">像 Steam 个人资料页那样，把游玩记录摆进一个个展柜：收藏家、最爱、回不去的时长，还有那 1.8% 的成就。</p>
+    </div>
+    <div class="pagehead__meta">
+      <div class="sync" id="sync-pill" aria-live="polite"><span class="sync__dot"></span><span id="sync-text">已同步 · 12 分钟前</span></div>
+      <a class="link-arrow" href="#">在 Steam 查看 ↗</a>
+    </div>
+  </section>
+
+  <div class="state-note state-note--empty" role="status">
+    <div class="state-note__icon">◌</div>
+    <div><h3>还没有可展示的游戏数据</h3><p>Steam 账号里暂时没有游玩记录，或资料尚未公开。等第一次同步完成后再回来看看。</p></div>
+  </div>
+  <div class="state-note state-note--private" role="status">
+    <div class="state-note__icon">⚿</div>
+    <div><h3>数据因隐私设置不可读</h3><p>Steam「游戏详情」当前为私密状态，接口无法返回库信息。把 <a href="#">隐私设置</a> 里的「游戏详情」改为公开后，下一轮同步会自动恢复。</p></div>
+  </div>
+  <div class="state-note state-note--error" role="status">
+    <div class="state-note__icon">!</div>
+    <div><h3>这次没取到最新快照</h3><p>Steam 接口暂时不可用，下面是上一次成功同步的数据。可以稍后重试。</p><button class="btn" type="button">重新加载</button></div>
+  </div>
+
+  <!-- ============ 展柜内容 ============ -->
+  <div class="view-real showcase-grid">
+
+    <!-- 1. 档案条 -->
+    <section class="showcase showcase--full profile" aria-label="Steam 档案概览">
+      <button class="showcase__edit" aria-label="编辑展柜">✎</button>
+      <div class="profile__id">
+        <div class="avatar" aria-hidden="true">W</div>
+        <div style="min-width:0">
+          <div class="profile__name"><h2>WyrmKk</h2><span class="lvl">LV 42</span></div>
+          <div class="profile__sub">Steam 账号 · 2015 年加入 · 成就完成度 20%</div>
+        </div>
+      </div>
+      <div class="profile__stats">
+        <div class="stat"><b>128</b><span>游戏</span></div>
+        <div class="stat"><b>1,284<em>h</em></b><span>总时长</span></div>
+        <div class="stat"><b>6.2<em>h</em></b><span>近两周</span></div>
+        <div class="stat"><b>1,024</b><span>成就</span></div>
+      </div>
+    </section>
+
+    <!-- 2. 最爱游戏 -->
+    <section class="showcase showcase--hero" aria-labelledby="sc-fav">
+      <button class="showcase__edit" aria-label="编辑展柜">✎</button>
+      <div class="showcase__head"><span class="showcase__icon">★</span><h2 class="showcase__title" id="sc-fav">最爱游戏</h2><span class="showcase__meta">由我指定</span></div>
+      <div class="favorite">
+        <div class="favorite__bg cover--gold"><span>E</span></div>
+        <div class="favorite__body">
+          <div style="min-width:0">
+            <h3>ELDEN RING</h3>
+            <p>107 小时 · 31 / 42 成就 · 2022 年 3 月首次游玩</p>
+          </div>
+          <div class="ring" role="img" aria-label="成就完成度 74%">
+            <svg width="58" height="58" viewBox="0 0 58 58">
+              <circle cx="29" cy="29" r="25" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="4"></circle>
+              <circle cx="29" cy="29" r="25" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="41"></circle>
+            </svg>
+            <span class="ring__label">74%</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 游戏收藏家 -->
+    <section class="showcase showcase--side" aria-labelledby="sc-collector">
+      <button class="showcase__edit" aria-label="编辑展柜">✎</button>
+      <div class="showcase__head"><span class="showcase__icon">▤</span><h2 class="showcase__title" id="sc-collector">游戏收藏家</h2><span class="showcase__meta">2015 — 2026</span></div>
+      <div class="collector">
+        <div class="collector__big"><b>128</b><span>款游戏</span></div>
+        <div class="collector__side">
+          <div class="collector__row"><span>总时长</span><b>1,284 小时</b></div>
+          <div class="collector__row"><span>平均单款</span><b>10.0 小时</b></div>
+          <div class="collector__row"><span>完美通关</span><b>5 款</b></div>
+          <div class="collector__row"><span>最近入库</span><b>3 天前</b></div>
+          <div class="collector__shelf">
+            <div class="chip-cover cover--violet"><span>S</span></div>
+            <div class="chip-cover cover--amber"><span>C</span></div>
+            <div class="chip-cover cover--red"><span>B</span></div>
+            <div class="chip-cover cover--teal"><span>H</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 最近在玩 -->
+    <section class="showcase showcase--full" aria-labelledby="sc-recent">
+      <button class="showcase__edit" aria-label="编辑展柜">✎</button>
+      <div class="showcase__head"><span class="showcase__icon">◷</span><h2 class="showcase__title" id="sc-recent">最近在玩</h2><span class="showcase__meta">近 14 天</span></div>
+      <div class="recent">
+        <a class="game-card" href="#">
+          <div class="cover cover--gold"><span class="cover__letter">E</span></div>
+          <div class="game-card__body">
+            <h3 class="game-card__title">ELDEN RING</h3>
+            <div class="game-card__meta"><b>3.2 小时</b> · 昨天</div>
+            <div class="mini-bar"><i style="width:74%"></i></div>
+            <div class="mini-bar__label"><span>成就 31 / 42</span><span>74%</span></div>
+          </div>
+        </a>
+        <a class="game-card" href="#">
+          <div class="cover cover--red"><span class="cover__letter">B</span></div>
+          <div class="game-card__body">
+            <h3 class="game-card__title">Balatro</h3>
+            <div class="game-card__meta"><b>1.8 小时</b> · 3 天前</div>
+            <div class="mini-bar"><i style="width:58%"></i></div>
+            <div class="mini-bar__label"><span>成就 18 / 31</span><span>58%</span></div>
+          </div>
+        </a>
+        <a class="game-card" href="#">
+          <div class="cover cover--teal"><span class="cover__letter">H</span></div>
+          <div class="game-card__body">
+            <h3 class="game-card__title">Hades II</h3>
+            <div class="game-card__meta"><b>0.9 小时</b> · 上周</div>
+            <div class="mini-bar"><i style="width:25%"></i></div>
+            <div class="mini-bar__label"><span>成就 12 / 48</span><span>25%</span></div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- 5. 时长排行 -->
+    <section class="showcase showcase--wide" aria-labelledby="sc-top">
+      <button class="showcase__edit" aria-label="编辑展柜">✎</button>
+      <div class="showcase__head"><span class="showcase__icon">▮</span><h2 class="showcase__title" id="sc-top">游玩时长</h2><span class="showcase__meta">Top 6 / 128</span></div>
+      <div class="ranking">
+        <div class="rank-row"><span class="rank-row__no">01</span><div class="rank-row__body"><div class="rank-row__name"><b>Counter-Strike 2</b><span>24%</span></div><div class="rank-row__track"><i style="width:100%"></i></div></div><div class="rank-row__hours"><b>303.8</b><span>小时</span></div></div>
+        <div class="rank-row"><span class="rank-row__no">02</span><div class="rank-row__body"><div class="rank-row__name"><b>ELDEN RING</b><span>8%</span></div><div class="rank-row__track"><i style="width:35%"></i></div></div><div class="rank-row__hours"><b>107.0</b><span>小时</span></div></div>
+        <div class="rank-row"><span class="rank-row__no">03</span><div class="rank-row__body"><div class="rank-row__name"><b>Monster Hunter: World</b><span>7%</span></div><div class="rank-row__track"><i style="width:28%"></i></div></div><div class="rank-row__hours"><b>85.3</b><span>小时</span></div></div>
+        <div class="rank-row"><span class="rank-row__no">04</span><div class="rank-row__body"><div class="rank-row__name"><b>Hades</b><span>4%</span></div><div class="rank-row__track"><i style="width:18%"></i></div></div><div class="rank-row__hours"><b>53.4</b><span>小时</span></div></div>
+        <div class="rank-row"><span class="rank-row__no">05</span><div class="rank-row__body"><div class="rank-row__name"><b>Balatro</b><span>4%</span></div><div class="rank-row__track"><i style="width:16%"></i></div></div><div class="rank-row__hours"><b>49.7</b><span>小时</span></div></div>
+        <div class="rank-row"><span class="rank-row__no">06</span><div class="rank-row__body"><div class="rank-row__name"><b>Stardew Valley</b><span>3%</span></div><div class="rank-row__track"><i style="width:14%"></i></div></div><div class="rank-row__hours"><b>43.5</b><span>小时</span></div></div>
+      </div>
+    </section>
+
+    <!-- 6. 完美通关 -->
+    <section class="showcase showcase--narrow" aria-labelledby="sc-perfect">
+      <button class="showcase__edit" aria-label="编辑展柜">✎</button>
+      <div class="showcase__head"><span class="showcase__icon">✦</span><h2 class="showcase__title" id="sc-perfect">完美通关</h2><span class="showcase__meta">5 款</span></div>
+      <div class="perfect">
+        <div class="perfect__row"><div class="perfect__thumb cover--violet"><span>H</span></div><div class="perfect__name"><b>Hades</b><span>49 / 49 · 53.4 小时</span></div><div class="perfect__pct">100%</div></div>
+        <div class="perfect__row"><div class="perfect__thumb cover--blue"><span>H</span></div><div class="perfect__name"><b>Hollow Knight</b><span>63 / 63 · 35.1 小时</span></div><div class="perfect__pct">100%</div></div>
+        <div class="perfect__row"><div class="perfect__thumb cover--rose"><span>S</span></div><div class="perfect__name"><b>Sekiro</b><span>34 / 34 · 30.7 小时</span></div><div class="perfect__pct">100%</div></div>
+        <div class="perfect__row"><div class="perfect__thumb cover--teal"><span>S</span></div><div class="perfect__name"><b>Stardew Valley</b><span>40 / 40 · 43.5 小时</span></div><div class="perfect__pct">100%</div></div>
+        <div class="perfect__row"><div class="perfect__thumb cover--amber"><span>C</span></div><div class="perfect__name"><b>Celeste</b><span>32 / 32 · 21.8 小时</span></div><div class="perfect__pct">100%</div></div>
+      </div>
+      <div class="perfect__foot">共 5 款 · 占库 3.9% · 平均 37 小时</div>
+    </section>
+
+    <!-- 7. 最稀有成就 -->
+    <section class="showcase showcase--full" aria-labelledby="sc-rare">
+      <button class="showcase__edit" aria-label="编辑展柜">✎</button>
+      <div class="showcase__head"><span class="showcase__icon">◆</span><h2 class="showcase__title" id="sc-rare">最稀有成就</h2><span class="showcase__meta">按全球解锁率</span></div>
+      <div class="rarest">
+        <article class="rare-card rare-card--hero">
+          <span class="rare-card__game">Balatro</span>
+          <h3 class="rare-card__name">一千万</h3>
+          <p class="rare-card__desc">单局拿到 10,000,000 筹码。全站只有 1.8% 的玩家做到了。</p>
+          <div class="rarity rarity--epic"><div class="rarity__track"><i style="width:4%"></i></div><span class="rarity__val">1.8% 解锁</span></div>
+        </article>
+        <article class="rare-card">
+          <span class="rare-card__game">Sekiro</span>
+          <h3 class="rare-card__name">修罗</h3>
+          <p class="rare-card__desc">击败所有 Boss，走到另一个结局。</p>
+          <div class="rarity rarity--rare"><div class="rarity__track"><i style="width:22%"></i></div><span class="rarity__val">22.1%</span></div>
+        </article>
+        <article class="rare-card">
+          <span class="rare-card__game">ELDEN RING</span>
+          <h3 class="rare-card__name">ELDEN LORD</h3>
+          <p class="rare-card__desc">成为艾尔登之王。</p>
+          <div class="rarity rarity--common"><div class="rarity__track"><i style="width:39%"></i></div><span class="rarity__val">39.4%</span></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 8. 愿望单 -->
+    <section class="showcase showcase--full" aria-labelledby="sc-wish">
+      <button class="showcase__edit" aria-label="编辑展柜">✎</button>
+      <div class="showcase__head"><span class="showcase__icon">◇</span><h2 class="showcase__title" id="sc-wish">愿望单</h2><span class="showcase__meta">4 款 · 最久 103 天</span></div>
+      <div class="wishlist">
+        <div class="wish"><div class="wish__thumb cover--violet"><span>S</span></div><div class="wish__meta"><b>Hollow Knight: Silksong</b><span>61 天前加入</span></div></div>
+        <div class="wish"><div class="wish__thumb cover--amber"><span>C</span></div><div class="wish__meta"><b>Clair Obscur: Expedition 33</b><span>26 天前加入</span></div></div>
+        <div class="wish"><div class="wish__thumb cover--gold"><span>B</span></div><div class="wish__meta"><b>Black Myth: Wukong</b><span>80 天前加入</span></div></div>
+        <div class="wish"><div class="wish__thumb cover--blue"><span>M</span></div><div class="wish__meta"><b>Metaphor: ReFantazio</b><span>103 天前加入</span></div></div>
+      </div>
+    </section>
+    <p class="provenance" style="grid-column:1/-1">
+      <span><b>数据来源</b> · Steam Web API</span><span>·</span>
+      <span>展柜顺序可在后台调整</span><span>·</span>
+      <span>最后成功同步 2026-10-31 16:46</span>
+    </p>
+  </div>
+
+  <!-- ============ 骨架 ============ -->
+  <div class="view-skeleton showcase-grid">
+    <div class="showcase showcase--full" style="display:flex;gap:26px">
+      <div class="sk" style="width:62px;height:62px;border-radius:18px"></div>
+      <div style="flex:1"><div class="sk" style="height:18px;width:140px"></div><div class="sk" style="height:12px;width:220px;margin-top:10px"></div></div>
+      <div style="flex:1"><div class="sk" style="height:44px"></div></div>
+    </div>
+    <div class="showcase showcase--hero"><div class="sk" style="height:16px;width:90px"></div><div class="sk" style="height:236px;margin-top:16px"></div></div>
+    <div class="showcase showcase--side"><div class="sk" style="height:16px;width:110px"></div><div class="sk" style="height:236px;margin-top:16px"></div></div>
+    <div class="showcase showcase--full"><div class="sk" style="height:16px;width:100px"></div><div class="recent" style="margin-top:16px"><div class="sk" style="aspect-ratio:16/9"></div><div class="sk" style="aspect-ratio:16/9"></div><div class="sk" style="aspect-ratio:16/9"></div></div></div>
+    <div class="showcase showcase--wide"><div class="sk" style="height:16px;width:80px"></div><div class="sk" style="height:230px;margin-top:16px"></div></div>
+    <div class="showcase showcase--narrow"><div class="sk" style="height:16px;width:80px"></div><div class="sk" style="height:230px;margin-top:16px"></div></div>
+    <div class="showcase showcase--full"><div class="sk" style="height:16px;width:90px"></div><div class="sk" style="height:170px;margin-top:16px"></div></div>
+    <div class="showcase showcase--full"><div class="sk" style="height:16px;width:60px"></div><div class="wishlist" style="margin-top:16px"><div class="sk" style="height:44px"></div><div class="sk" style="height:44px"></div><div class="sk" style="height:44px"></div><div class="sk" style="height:44px"></div></div></div>
+  </div>
+</main>
+
+<!-- ================================================================
+     展柜管理器
+================================================================= -->
+<main class="wrap admin">
+  <div class="admin__head">
+    <div>
+      <span class="eyebrow">Showcase Manager</span>
+      <h2>展柜管理器</h2>
+      <p>决定公开页显示哪些展柜、以什么顺序显示。用上下箭头调整顺序，右侧配置内容。</p>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+      <span class="slots">展柜位 <b>8</b> / 12 <span style="color:var(--text-tertiary)">· 等级 42 解锁</span></span>
+      <div class="admin__actions">
+        <button class="btn btn--ghost">重置</button>
+        <button class="btn">保存顺序</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="manager">
+    <!-- 左：已启用 -->
+    <div class="panel">
+      <div class="panel__head">已启用展柜 <span>8 个 · 上下移排序</span></div>
+      <div class="slot-list" id="slot-list">
+        <div class="slot is-active" data-slot="profile">
+          <span class="slot__grip">⠿</span><span class="slot__icon">▦</span>
+          <div class="slot__body"><b>档案条</b><span>固定 · 始终显示在顶部</span></div>
+          <div class="slot__move"><button class="mini-btn" aria-label="上移">↑</button><button class="mini-btn" aria-label="下移">↓</button></div>
+          <span class="switch" role="switch" aria-checked="true" aria-label="显示档案条"></span>
+        </div>
+        <div class="slot" data-slot="favorite">
+          <span class="slot__grip">⠿</span><span class="slot__icon">★</span>
+          <div class="slot__body"><b>最爱游戏</b><span>宽 7 · 指定 1 款 · ELDEN RING</span></div>
+          <div class="slot__move"><button class="mini-btn" aria-label="上移">↑</button><button class="mini-btn" aria-label="下移">↓</button></div>
+          <span class="switch" role="switch" aria-checked="true" aria-label="显示最爱游戏"></span>
+        </div>
+        <div class="slot" data-slot="collector">
+          <span class="slot__grip">⠿</span><span class="slot__icon">▤</span>
+          <div class="slot__body"><b>游戏收藏家</b><span>宽 5 · 数量 / 时长 / 最近入库</span></div>
+          <div class="slot__move"><button class="mini-btn" aria-label="上移">↑</button><button class="mini-btn" aria-label="下移">↓</button></div>
+          <span class="switch" role="switch" aria-checked="true" aria-label="显示游戏收藏家"></span>
+        </div>
+        <div class="slot" data-slot="recent">
+          <span class="slot__grip">⠿</span><span class="slot__icon">◷</span>
+          <div class="slot__body"><b>最近在玩</b><span>整行 · 近 14 天，最多 3 款</span></div>
+          <div class="slot__move"><button class="mini-btn" aria-label="上移">↑</button><button class="mini-btn" aria-label="下移">↓</button></div>
+          <span class="switch" role="switch" aria-checked="true" aria-label="显示最近在玩"></span>
+        </div>
+        <div class="slot" data-slot="top">
+          <span class="slot__grip">⠿</span><span class="slot__icon">▮</span>
+          <div class="slot__body"><b>游玩时长</b><span>宽 8 · Top 6</span></div>
+          <div class="slot__move"><button class="mini-btn" aria-label="上移">↑</button><button class="mini-btn" aria-label="下移">↓</button></div>
+          <span class="switch" role="switch" aria-checked="true" aria-label="显示游玩时长"></span>
+        </div>
+        <div class="slot" data-slot="perfect">
+          <span class="slot__grip">⠿</span><span class="slot__icon">✦</span>
+          <div class="slot__body"><b>完美通关</b><span>宽 4 · 100% 成就的游戏</span></div>
+          <div class="slot__move"><button class="mini-btn" aria-label="上移">↑</button><button class="mini-btn" aria-label="下移">↓</button></div>
+          <span class="switch" role="switch" aria-checked="true" aria-label="显示完美通关"></span>
+        </div>
+        <div class="slot" data-slot="rare">
+          <span class="slot__grip">⠿</span><span class="slot__icon">◆</span>
+          <div class="slot__body"><b>最稀有成就</b><span>整行 · 1 大 2 小</span></div>
+          <div class="slot__move"><button class="mini-btn" aria-label="上移">↑</button><button class="mini-btn" aria-label="下移">↓</button></div>
+          <span class="switch" role="switch" aria-checked="true" aria-label="显示最稀有成就"></span>
+        </div>
+        <div class="slot" data-slot="wish">
+          <span class="slot__grip">⠿</span><span class="slot__icon">◇</span>
+          <div class="slot__body"><b>愿望单</b><span>整行 · 最多 8 款</span></div>
+          <div class="slot__move"><button class="mini-btn" aria-label="上移">↑</button><button class="mini-btn" aria-label="下移">↓</button></div>
+          <span class="switch" role="switch" aria-checked="true" aria-label="显示愿望单"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：配置 + 可选展柜 -->
+    <div style="display:flex; flex-direction:column; gap:18px; min-width:0">
+      <div class="panel">
+        <div class="panel__head">配置 · <span id="inspector-title" style="margin:0 0 0 4px; letter-spacing:0; text-transform:none; color:var(--text-primary); font-weight:600">游玩时长</span></div>
+        <div class="inspector">
+          <div class="field">
+            <label>显示数量</label>
+            <div class="segmented" role="group" aria-label="显示数量">
+              <button aria-pressed="false">5</button>
+              <button aria-pressed="true">6</button>
+              <button aria-pressed="false">8</button>
+              <button aria-pressed="false">10</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>排序方式</label>
+            <div class="segmented" role="group" aria-label="排序方式">
+              <button aria-pressed="true">总时长</button>
+              <button aria-pressed="false">近两周</button>
+              <button aria-pressed="false">最近游玩</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>包含</label>
+            <div class="picker">
+              <button class="chip" aria-pressed="true">免费游戏</button>
+              <button class="chip" aria-pressed="false">已隐藏</button>
+              <button class="chip" aria-pressed="true">DLC 合并到本体</button>
+            </div>
+          </div>
+          <p class="hint">展柜内容全部来自最近一次成功的 Steam 快照，配置只影响展示，不会额外请求 Steam。</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel__head">可选展柜 <span>6 个可用</span></div>
+        <div class="library">
+          <div class="lib-item"><span class="lib-item__icon">◈</span><div class="lib-item__body"><b>徽章</b><span>Steam 等级与徽章</span></div><button class="mini-btn" aria-label="添加徽章">+</button></div>
+          <div class="lib-item"><span class="lib-item__icon">▥</span><div class="lib-item__body"><b>成就墙</b><span>全部成就 · 分页</span></div><button class="mini-btn" aria-label="添加成就墙">+</button></div>
+          <div class="lib-item"><span class="lib-item__icon">◱</span><div class="lib-item__body"><b>年度回顾</b><span>需要历史快照</span></div><button class="mini-btn" aria-label="添加年度回顾">+</button></div>
+          <div class="lib-item"><span class="lib-item__icon">✍</span><div class="lib-item__body"><b>评测摘录</b><span>关联站内文章</span></div><button class="mini-btn" aria-label="添加评测摘录">+</button></div>
+          <div class="lib-item"><span class="lib-item__icon">📈</span><div class="lib-item__body"><b>时长趋势</b><span>需要历史快照</span></div><button class="mini-btn" aria-label="添加时长趋势">+</button></div>
+          <div class="lib-item"><span class="lib-item__icon">▦</span><div class="lib-item__body"><b>系列收藏</b><span>按系列聚合</span></div><button class="mini-btn" aria-label="添加系列收藏">+</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="provenance">
+    <span><b>说明</b> · 展柜只读取快照，不额外请求 Steam</span><span>·</span>
+    <span>「年度回顾」需要先把每日快照累积起来，属于后续变更</span>
+  </p>
+</main>
+
+<script>
+  // 视图切换
+  document.querySelectorAll('[data-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.body.dataset.mode = btn.dataset.mode;
+      document.querySelectorAll('.devbar [data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+    });
+  });
+
+  // 状态切换
+  document.querySelectorAll('[data-state]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.body.dataset.view = btn.dataset.state;
+      document.querySelectorAll('.devbar [data-state]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+      const pill = document.getElementById('sync-pill');
+      const text = document.getElementById('sync-text');
+      if (btn.dataset.state === 'error') {
+        pill.classList.add('sync--stale');
+        text.textContent = '同步失败 · 显示 3 小时前的快照';
+      } else {
+        pill.classList.remove('sync--stale');
+        text.textContent = '已同步 · 12 分钟前';
+      }
+    });
+  });
+
+  // 主题
+  document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const root = document.documentElement;
+      const dark = root.dataset.theme === 'dark';
+      root.dataset.theme = dark ? 'light' : 'dark';
+      document.querySelectorAll('.devbar [data-theme-toggle]').forEach(b => { b.textContent = dark ? '暗色' : '亮色'; });
+    });
+  });
+
+  // 管理器：选中 + 上下移动 + 开关
+  const list = document.getElementById('slot-list');
+  const title = document.getElementById('inspector-title');
+  list.addEventListener('click', (e) => {
+    const move = e.target.closest('.mini-btn');
+    const sw = e.target.closest('.switch');
+    const slot = e.target.closest('.slot');
+    if (!slot) return;
+
+    if (move) {
+      e.stopPropagation();
+      const dir = move.getAttribute('aria-label');
+      if (dir === '上移' && slot.previousElementSibling) list.insertBefore(slot, slot.previousElementSibling);
+      if (dir === '下移' && slot.nextElementSibling) list.insertBefore(slot.nextElementSibling, slot);
+      return;
+    }
+    if (sw) {
+      e.stopPropagation();
+      const on = sw.getAttribute('aria-checked') === 'true';
+      sw.setAttribute('aria-checked', String(!on));
+      slot.classList.toggle('is-off', on);
+      const label = slot.querySelector('.slot__body b').textContent;
+      slot.querySelector('.slot__body span').textContent = on ? label + ' · 已隐藏' : slot.querySelector('.slot__body span').textContent.replace(' · 已隐藏', '');
+      return;
+    }
+    list.querySelectorAll('.slot').forEach(s => s.classList.remove('is-active'));
+    slot.classList.add('is-active');
+    title.textContent = slot.querySelector('.slot__body b').textContent;
+  });
+
+  // 分段控件
+  document.querySelectorAll('.segmented').forEach(group => {
+    group.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      group.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    });
+  });
+  document.querySelectorAll('.picker').forEach(group => {
+    group.addEventListener('click', (e) => {
+      const b = e.target.closest('.chip');
+      if (!b) return;
+      b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+    });
+  });
+</script>
+</body>
+</html>

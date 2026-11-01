@@ -31,7 +31,9 @@ export default defineNuxtConfig({
     errorHandler: '~~/server/error-handler'
   },
   routeRules: {
-    // API 响应为动态数据：禁止边缘/浏览器缓存，避免 SSG 构建读到陈旧数据。
+    // Steam 快照允许边缘缓存：页面只读快照，过期由 stale-while-revalidate 兜底。
+    '/api/steam/overview': { headers: { 'cache-control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=3600' } },
+    // 其余 API 响应为动态数据：禁止边缘/浏览器缓存，避免 SSG 构建读到陈旧数据。
     '/api/**': { headers: { 'cache-control': 'no-store' } },
     '/admin/api/**': { headers: { 'cache-control': 'no-store' } }
   },

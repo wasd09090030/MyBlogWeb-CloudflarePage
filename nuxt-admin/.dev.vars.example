@@ -13,6 +13,18 @@ DEEPSEEK_API_URL=https://api.deepseek.com/v1/chat/completions
 DEEPSEEK_MODEL=deepseek-chat
 PAGES_DEPLOY_HOOK_URL=
 
+# Steam 游戏档案（本地开发用）。生产对应：
+#   后台 /admin/gaming 填写  -> 推荐，凭证加密存 D1
+#   STEAM_ID / STEAM_API_KEY -> 兜底（D1 无可用凭证时生效）
+#   STEAM_SYNC_TOKEN         -> blog-api 与 blog-router 各 put 一次，值必须一致
+#   STEAM_CREDENTIAL_KEY     -> 可选，凭证加密密钥；留空回退 SESSION_PEPPER 派生
+#   STEAM_CREDENTIAL_KEY_PREVIOUS -> 轮换期间填旧值，让旧密文仍可解
+STEAM_ID=
+STEAM_API_KEY=
+STEAM_SYNC_TOKEN=replace-with-a-long-random-token
+STEAM_CREDENTIAL_KEY=
+STEAM_CREDENTIAL_KEY_PREVIOUS=
+
 # Keep this file local. Replace IMAGE_API_BASE_URL with the independent
 # image-host API before testing image operations. IMAGE_API_TOKEN is only for
 # local development; production uses a Worker Secret. Bindings are configured

@@ -31,5 +31,9 @@ export const API_ENDPOINTS = {
     // 每日日记（碎碎念形态）：公开列表支持 ?year=&month= 时间筛选。
     publicList: '/diary',
     detail: (date: string) => `/diary/${date}`
+  },
+  steam: {
+    // 游戏档案公开快照：只读、可边缘缓存，由 blog-api 定时同步。
+    overview: '/steam/overview'
   }
 } as const

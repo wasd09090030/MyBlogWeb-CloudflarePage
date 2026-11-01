@@ -179,7 +179,9 @@ export default defineNuxtConfig({
 
   icon: {
     serverBundle: {
-      collections: ['heroicons', 'mdi']
+      // 白名单：不在列表里的集合在 SSG 产物中会退化成运行时向 api.iconify.design 拉取。
+      // ph / game-icons / simple-icons 供游戏档案页使用（需先安装对应 @iconify-json 包）。
+      collections: ['heroicons', 'mdi', 'ph', 'game-icons', 'simple-icons']
     },
     provider: 'iconify',
     clientBundle: {
@@ -390,7 +392,7 @@ export default defineNuxtConfig({
     prerender: {
       autoSubfolderIndex: false,
       crawlLinks: true,
-      routes: ['/'],
+      routes: ['/', '/games'],
       failOnError: false,
       // 并行预渲染优化
       concurrency: 10,  // 同时预渲染 10 个页面

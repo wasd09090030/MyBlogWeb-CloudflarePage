@@ -10,5 +10,14 @@ ADMIN_PAGES_ORIGIN = "https://myblog-admin-8n8.pages.dev"
 binding = "BLOG_API"
 service = "blog-api"
 
+# Steam 快照同步：每小时一次，转发到 blog-api 的 /api/steam/sync。
+# 单轮上游请求预算 40（Free 计划 50 次子请求上限），成就按陈旧度轮转，
+# 一轮跑不完的会在下一轮继续。
+[triggers]
+crons = ["17 * * * *"]
+
+# 需要配置 Secret：npx wrangler secret put STEAM_SYNC_TOKEN --config wrangler.toml
+# 该值必须与 blog-api 的 STEAM_SYNC_TOKEN 完全一致。
+
 # Workers Routes should bind this Worker to the public hostname.
 # Deploy blog-api and both Pages projects before deploying this Worker.

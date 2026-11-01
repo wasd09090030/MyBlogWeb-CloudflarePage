@@ -23,6 +23,11 @@ declare global {
     ADMIN_RESET_TOKEN?: string
     ADMIN_RATE_LIMIT?: KVNamespace
     IMAGES?: ImagesBinding
+    STEAM_ID?: string
+    STEAM_API_KEY?: string
+    STEAM_SYNC_TOKEN?: string
+    STEAM_CREDENTIAL_KEY?: string
+    STEAM_CREDENTIAL_KEY_PREVIOUS?: string
   }
 
   interface CloudflareEnv extends BlogCloudflareEnv {}

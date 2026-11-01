@@ -62,5 +62,6 @@ D1 迁移必须先执行：`cd nuxt-admin && npm run db:migrate:remote`。生产
 
 - [CLAUDE.md](CLAUDE.md) — 部署方式与后台 trigger 按钮重建说明
 - [Cloudflare Pages 部署](docs/CloudflarePages-Deploy-Guide.md)
+- [密钥与加密存储](docs/Secrets-Encryption.md) — Steam 凭证的加密、轮换与故障排查
 - [管理后台运行与部署](nuxt-admin/README.md)
 - [生产性能记录](doc/2026-09-11_production-performance-report.md)

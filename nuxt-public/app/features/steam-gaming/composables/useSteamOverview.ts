@@ -21,7 +21,7 @@ export function useSteamOverview() {
         stale: false,
         profile: null,
         showcases: [],
-        freshnessWindowMinutes: 60
+        freshnessWindowMinutes: 26 * 60
       })
     }
   )

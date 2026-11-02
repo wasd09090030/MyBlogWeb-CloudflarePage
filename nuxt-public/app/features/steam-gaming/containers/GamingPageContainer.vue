@@ -159,7 +159,7 @@ const achievementRate = computed(() => {
         <Icon name="ph:database" size="13" />
         <span><b>数据来源</b> · Steam Web API</span>
         <span>·</span>
-        <span>每小时自动同步一次，页面只读快照</span>
+        <span>每天 05:00 自动同步一次，页面只读快照</span>
         <template v-if="overview?.syncedAt">
           <span>·</span>
           <span>最后成功同步 {{ relativeTime(overview.syncedAt) }}</span>

@@ -52,6 +52,7 @@ export default defineEventHandler(async (event) => {
     stale: meta.stale,
     profile,
     showcases,
-    freshnessWindowMinutes: 60
+    // 定时任务每天 05:00（上海）跑一次，前端按 26 小时判断「快照过期」。
+    freshnessWindowMinutes: 26 * 60
   }
 })

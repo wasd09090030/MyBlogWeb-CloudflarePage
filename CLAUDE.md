@@ -71,7 +71,7 @@ npm run deploy:api
 
 cd ../cloudflare-worker
 npx wrangler secret put STEAM_SYNC_TOKEN --config wrangler.toml
-npx wrangler deploy --config wrangler.toml                    # 带 crons = ["17 * * * *"]
+npx wrangler deploy --config wrangler.toml                    # 带 crons = ["0 21 * * *"]（= 次日 05:00 上海）
 ```
 
 部署后登录后台「游戏」页填 SteamID + API Key，点保存（会自动校验），再点「立即同步」。
@@ -94,7 +94,7 @@ npx wrangler deploy --config wrangler.toml                    # 带 crons = ["17
 
 **为什么 cron 在 `blog-router`**：Nitro 的 `cloudflare_module` 产物只导出 `fetch`，无法接收 Cloudflare 的 `scheduled` 事件。因此定时任务挂在 `blog-router`，经 `BLOG_API` service binding 调用 `POST /api/steam/sync`。
 
-单轮最多 40 次上游请求（Free 计划 50 次子请求上限），成就按陈旧度轮转，一轮跑不完下一轮继续；同步失败保留上一次成功快照，页面标注「快照过期」而不是清空。未配置凭证时 `/api/steam/overview` 返回 `status: "unconfigured"`，页面显示说明而不报错。
+单轮最多 40 次上游请求（Free 计划 50 次子请求上限）；库内只写**发生变化的行**，避免每天把 708 款游戏与上千条成就整表重写（D1 写额度按行计费，带索引的列还会再算一次）。成就一半名额给「近两周在玩」，一半按陈旧度轮转整个库。同步失败保留上一次成功快照，页面标注「快照过期」而不是清空。未配置凭证时 `/api/steam/overview` 返回 `status: "unconfigured"`，页面显示说明而不报错。
 
 ## 公开站重建（后台 trigger 按钮）
 

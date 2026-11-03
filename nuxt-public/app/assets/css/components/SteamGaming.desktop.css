@@ -7,41 +7,50 @@
   padding: 40px clamp(12px, 2vw, 28px) 80px;
 }
 
-/* ---------- 页头 ---------- */
-.sg-head {
+/* ---------- 详情页页头（/games/ratings 等） ---------- */
+.sg-detail-head {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 32px;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 22px;
 }
 
-.sg-eyebrow {
-  display: inline-block;
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--accent-primary);
-  font-weight: 700;
-  margin-bottom: 10px;
+.sg-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  padding: 4px 0;
 }
 
-.sg-title {
+.sg-back:hover { color: var(--accent-primary); }
+
+.sg-detail-title {
   font-family: var(--serif, 'Playfair Display', 'Noto Serif SC', Georgia, serif);
-  font-size: clamp(34px, 5vw, 52px);
-  line-height: 1.08;
-  margin: 0 0 12px;
+  font-size: clamp(26px, 3.4vw, 38px);
+  line-height: 1.15;
+  margin: 0;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--text-primary);
 }
 
-.sg-lead {
+.sg-detail-meta {
   margin: 0;
-  color: var(--text-secondary);
-  max-width: 48ch;
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sg-detail-card {
+  padding: 20px clamp(16px, 2.6vw, 26px) 22px;
+}
+
+.sg-detail-loading {
+  height: 320px;
+  border-radius: 22px;
 }
 
 /* ---------- 档案条 ---------- */
@@ -229,13 +238,81 @@
   margin: 0;
 }
 
-.sg-sec__meta {
+.sg-sec__end {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sg-sec__meta {
   font-size: 11.5px;
   color: var(--text-tertiary);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+/* 「更多…」入口：只在有独立详情页且还有未展示内容时出现 */
+.sg-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-primary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.sg-more:hover {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  background: rgba(225, 29, 72, 0.06);
+}
+
+/* 分页「再加载」 */
+.sg-load {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sg-load__hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sg-load__btn {
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.sg-load__btn:hover:not(:disabled) {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.sg-load__btn:disabled { opacity: 0.55; cursor: default; }
 
 /* ---------- 通用封面 ---------- */
 .sg-cover {
@@ -462,6 +539,11 @@
   grid-template-columns: 208px minmax(0, 1fr);
   gap: 34px;
 }
+
+.sg-score__main { min-width: 0; }
+
+/* 详情页：去掉展柜首屏留白，让列表和分页按钮贴合卡片底部 */
+.sg-score--detail { padding-bottom: 22px; }
 
 .sg-score__aside { padding-bottom: 12px; }
 
@@ -1228,6 +1310,11 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+/* 详情页：整页宽度下自适应列数，避免大屏只排三列 */
+.sg-wishlist--detail {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
 }
 
 .sg-wish {

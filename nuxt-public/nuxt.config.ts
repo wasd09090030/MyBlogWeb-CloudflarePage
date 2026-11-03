@@ -392,7 +392,7 @@ export default defineNuxtConfig({
     prerender: {
       autoSubfolderIndex: false,
       crawlLinks: true,
-      routes: ['/', '/games'],
+      routes: ['/', '/games', '/games/ratings', '/games/playtime', '/games/wishlist'],
       failOnError: false,
       // 并行预渲染优化
       concurrency: 10,  // 同时预渲染 10 个页面

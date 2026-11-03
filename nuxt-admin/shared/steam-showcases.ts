@@ -22,6 +22,8 @@ export type SteamShowcaseConfig = {
   limit?: number
   sort?: 'total' | 'recent'
   appid?: number
+  /** 首页是否显示「更多…」入口；只对有独立详情页的展柜生效。 */
+  more?: boolean
 }
 
 export type SteamShowcaseDefinition = {
@@ -34,6 +36,8 @@ export type SteamShowcaseDefinition = {
   /** Allowed numeric range for `config.limit`, omitted when the type has no list. */
   limitRange?: [number, number]
   sortOptions?: Array<'total' | 'recent'>
+  /** 完整列表页路径；有值时首页只放预览，并允许开关「更多…」入口。 */
+  detailPath?: string
 }
 
 export const STEAM_SHOWCASES: Record<SteamShowcaseType, SteamShowcaseDefinition> = {
@@ -48,9 +52,10 @@ export const STEAM_SHOWCASES: Record<SteamShowcaseType, SteamShowcaseDefinition>
     type: 'rating',
     label: '我的评分',
     span: 12,
-    description: '我为游戏打的分（1~10，0.5 档）与一句短评，附带平均分与分布。',
-    defaults: { limit: 6 },
-    limitRange: [3, 12]
+    description: '我为游戏打的分（1~10，0.5 档）与一句短评；首页只放预览，完整列表在详情页。',
+    defaults: { limit: 6, more: true },
+    limitRange: [3, 12],
+    detailPath: '/games/ratings'
   },
   collector: {
     type: 'collector',
@@ -71,10 +76,11 @@ export const STEAM_SHOWCASES: Record<SteamShowcaseType, SteamShowcaseDefinition>
     type: 'top-playtime',
     label: '游玩时长',
     span: 7,
-    description: '按时长排序的榜单，带竖版小海报。',
-    defaults: { limit: 6, sort: 'total' },
+    description: '按时长排序的榜单，带竖版小海报；首页只放预览，完整榜单在详情页。',
+    defaults: { limit: 6, sort: 'total', more: true },
     limitRange: [3, 10],
-    sortOptions: ['total', 'recent']
+    sortOptions: ['total', 'recent'],
+    detailPath: '/games/playtime'
   },
   completionist: {
     type: 'completionist',
@@ -96,9 +102,10 @@ export const STEAM_SHOWCASES: Record<SteamShowcaseType, SteamShowcaseDefinition>
     type: 'wishlist',
     label: '愿望单',
     span: 12,
-    description: '愿望单中最早加入的项目。',
-    defaults: { limit: 8 },
-    limitRange: [1, 12]
+    description: '愿望单中最早加入的项目；首页只放预览，完整列表在详情页。',
+    defaults: { limit: 8, more: true },
+    limitRange: [1, 12],
+    detailPath: '/games/wishlist'
   }
 }
 
@@ -110,13 +117,13 @@ export const STEAM_SHOWCASE_TYPES = Object.keys(STEAM_SHOWCASES) as SteamShowcas
  */
 export const DEFAULT_STEAM_SHOWCASES: Array<{ type: SteamShowcaseType, config: SteamShowcaseConfig }> = [
   { type: 'favorite', config: {} },
-  { type: 'rating', config: { limit: 6 } },
+  { type: 'rating', config: { limit: 6, more: true } },
   { type: 'recent', config: { limit: 4 } },
   { type: 'collector', config: {} },
-  { type: 'top-playtime', config: { limit: 6, sort: 'total' } },
+  { type: 'top-playtime', config: { limit: 6, sort: 'total', more: true } },
   { type: 'completionist', config: { limit: 5 } },
   { type: 'rarest-achievement', config: { limit: 3 } },
-  { type: 'wishlist', config: { limit: 8 } }
+  { type: 'wishlist', config: { limit: 8, more: true } }
 ]
 
 export type SteamShowcaseRow = {
@@ -156,6 +163,7 @@ export function parseShowcaseConfig(value: unknown): SteamShowcaseConfig {
     if (Number.isFinite(limit)) config.limit = Math.trunc(limit)
   }
   if (raw.sort === 'total' || raw.sort === 'recent') config.sort = raw.sort
+  if (typeof raw.more === 'boolean') config.more = raw.more
   if (raw.appid !== undefined && raw.appid !== null && raw.appid !== '') {
     const appid = Number(raw.appid)
     if (Number.isSafeInteger(appid) && appid > 0) config.appid = appid
@@ -185,6 +193,9 @@ export function normalizeShowcaseConfig(type: SteamShowcaseType, value: unknown)
   }
   if (config.appid !== undefined && type !== 'favorite') {
     throw new SteamShowcaseError('config.appid', '只有「最爱游戏」可以指定 appid')
+  }
+  if (config.more !== undefined && !definition.detailPath) {
+    throw new SteamShowcaseError('config.more', `${definition.label}没有独立详情页，不支持「更多」入口`)
   }
 
   return { ...definition.defaults, ...config }

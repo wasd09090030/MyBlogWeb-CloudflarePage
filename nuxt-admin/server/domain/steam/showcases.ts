@@ -53,6 +53,8 @@ export type ComposedShowcase = {
   span: number
   config: Record<string, unknown>
   empty: boolean
+  /** 该类数据的总条目数（用于前端判断是否还有更多）；无列表的类型为 0。 */
+  total: number
   data: unknown
 }
 
@@ -86,12 +88,16 @@ export async function listShowcases(event: H3Event): Promise<SteamShowcaseEntry[
   )
   return rows
     .filter(row => row.type in STEAM_SHOWCASES)
-    .map(row => ({
-      type: row.type as SteamShowcaseType,
-      position: row.position,
-      visible: row.visible === 1,
-      config: parseShowcaseConfig(safeJson(row.config))
-    }))
+    .map(row => {
+      const type = row.type as SteamShowcaseType
+      return {
+        type,
+        position: row.position,
+        visible: row.visible === 1,
+        // 旧行可能没有新增字段（如 more），合并默认值保证编辑器与公开页一致。
+        config: { ...STEAM_SHOWCASES[type].defaults, ...parseShowcaseConfig(safeJson(row.config)) }
+      }
+    })
 }
 
 function safeJson(value: string | null): unknown {
@@ -205,11 +211,18 @@ function bucketOf(score: number): RatingBucketKey {
   return 'meh'
 }
 
-/**
- * 评分展柜：列表受 limit 限制，但平均分与分布按全部已评游戏统计，
- * 这样调小列表也不会让「平均 8.9」跟着变。
- */
-async function ratingData(event: H3Event, limit: number) {
+export type PublicRatedGame = PublicGame & { score: number, comment: string | null }
+
+export type RatingPayload = {
+  items: PublicRatedGame[]
+  total: number
+  average: number
+  best: { name: string, score: number } | null
+  distribution: Array<{ key: string, label: string, count: number }>
+  peakCount: number
+}
+
+async function ratedGames(event: H3Event): Promise<PublicRatedGame[]> {
   const db = getDb(event)
   const rows = await queryAll<Record<string, unknown>>(
     db,
@@ -220,49 +233,93 @@ async function ratingData(event: H3Event, limit: number) {
       WHERE g.is_visible = 1
       ORDER BY r.position ASC`
   )
-  if (!rows.length) return null
-
-  const rated = rows.map(row => ({
+  return rows.map(row => ({
     ...toPublicGame(row),
     score: Number(row.score),
     comment: (row.comment as string | null) ?? null
   }))
+}
 
-  const total = rated.length
-  const average = Math.round((rated.reduce((sum, item) => sum + item.score, 0) / total) * 10) / 10
-  const best = rated.reduce((top, item) => (item.score > top.score ? item : top), rated[0]!)
+/**
+ * 完整评分投影：详情页展示全部已评游戏；平均分与分布按全部已评统计。
+ */
+export async function ratingDetail(event: H3Event): Promise<RatingPayload> {
+  const rated = await ratedGames(event)
   const distribution = RATING_BUCKETS.map(bucket => ({
     key: bucket.key,
     label: bucket.label,
     count: rated.filter(item => bucketOf(item.score) === bucket.key).length
   }))
-  const peakCount = distribution.reduce((max, bucket) => Math.max(max, bucket.count), 0)
-
+  if (!rated.length) {
+    return { items: [], total: 0, average: 0, best: null, distribution, peakCount: 0 }
+  }
+  const total = rated.length
+  const average = Math.round((rated.reduce((sum, item) => sum + item.score, 0) / total) * 10) / 10
+  const best = rated.reduce((top, item) => (item.score > top.score ? item : top), rated[0]!)
   return {
-    items: rated.slice(0, Math.max(1, limit)),
+    items: rated,
     total,
     average,
     best: { name: best.name, score: best.score },
     distribution,
-    peakCount
+    peakCount: distribution.reduce((max, bucket) => Math.max(max, bucket.count), 0)
   }
 }
 
-async function topPlaytimeData(event: H3Event, limit: number, sort: 'total' | 'recent') {  const db = getDb(event)
-  const order = sort === 'recent' ? 'minutes_2weeks DESC, minutes_total DESC' : 'minutes_total DESC'
+/**
+ * 评分展柜：列表受 limit 限制，但平均分与分布按全部已评游戏统计，
+ * 这样调小列表也不会让「平均 8.9」跟着变。
+ */
+async function ratingData(event: H3Event, limit: number) {
+  const payload = await ratingDetail(event)
+  if (!payload.total) return null
+  return { ...payload, items: payload.items.slice(0, Math.max(1, limit)) }
+}
+
+export type PlaytimePage = {
+  games: PublicGame[]
+  totalMinutes: number
+  total: number
+  offset: number
+  limit: number
+}
+
+/** 完整游玩时长榜单：首页只取前 limit 条，详情页按 offset 分页。 */
+export async function playtimePage(
+  event: H3Event,
+  options: { offset?: number, limit?: number, sort?: 'total' | 'recent' } = {}
+): Promise<PlaytimePage> {
+  const db = getDb(event)
+  const offset = Math.max(0, Math.trunc(options.offset ?? 0))
+  const limit = Math.min(60, Math.max(1, Math.trunc(options.limit ?? 24)))
+  const order = options.sort === 'recent' ? 'minutes_2weeks DESC, minutes_total DESC' : 'minutes_total DESC'
   const rows = await queryAll<Record<string, unknown>>(
     db,
-    `SELECT ${GAME_COLUMNS} FROM steam_games WHERE is_visible = 1 AND minutes_total > 0 ORDER BY ${order} LIMIT ?`,
-    limit
+    `SELECT ${GAME_COLUMNS} FROM steam_games WHERE is_visible = 1 AND minutes_total > 0 ORDER BY ${order} LIMIT ? OFFSET ?`,
+    limit,
+    offset
   )
-  const total = Number(
-    (await queryFirst<{ minutes: number }>(db, 'SELECT COALESCE(SUM(minutes_total), 0) AS minutes FROM steam_games WHERE is_visible = 1'))?.minutes ?? 0
+  const totals = await queryFirst<{ minutes: number, total: number }>(
+    db,
+    `SELECT COALESCE(SUM(minutes_total), 0) AS minutes, COUNT(*) AS total
+       FROM steam_games WHERE is_visible = 1 AND minutes_total > 0`
   )
-  const games = rows.map(toPublicGame)
   return {
-    games,
-    totalMinutes: total,
-    share: (game: PublicGame) => (total > 0 ? game.minutesTotal / total : 0)
+    games: rows.map(toPublicGame),
+    totalMinutes: Number(totals?.minutes ?? 0),
+    total: Number(totals?.total ?? 0),
+    offset,
+    limit
+  }
+}
+
+async function topPlaytimeData(event: H3Event, limit: number, sort: 'total' | 'recent') {
+  const page = await playtimePage(event, { limit, sort })
+  return {
+    games: page.games,
+    totalMinutes: page.totalMinutes,
+    total: page.total,
+    share: (game: PublicGame) => (page.totalMinutes > 0 ? game.minutesTotal / page.totalMinutes : 0)
   }
 }
 
@@ -301,25 +358,49 @@ async function rarestAchievementData(event: H3Event, limit: number) {
   }))
 }
 
-async function wishlistData(event: H3Event, limit: number) {
+export type WishlistPage = {
+  items: PublicWishlistItem[]
+  total: number
+  offset: number
+  limit: number
+}
+
+function toWishlistItem(row: Record<string, unknown>): PublicWishlistItem {
+  const addedAt = row.date_added ? new Date(Number(row.date_added) * 1000).toISOString() : nowIso()
+  return {
+    appid: Number(row.appid),
+    name: String(row.name),
+    headerUrl: (row.header_url as string | null) ?? null,
+    addedAt,
+    daysWaiting: daysSince(addedAt)
+  }
+}
+
+/** 完整愿望单：详情页按 offset 分页，首页只取前 limit 条。 */
+export async function wishlistPage(
+  event: H3Event,
+  options: { offset?: number, limit?: number } = {}
+): Promise<WishlistPage> {
   const db = getDb(event)
+  const offset = Math.max(0, Math.trunc(options.offset ?? 0))
+  const limit = Math.min(60, Math.max(1, Math.trunc(options.limit ?? 24)))
+  const totalRow = await queryFirst<{ total: number }>(
+    db,
+    'SELECT COUNT(*) AS total FROM steam_wishlist WHERE name IS NOT NULL'
+  )
   const rows = await queryAll<Record<string, unknown>>(
     db,
-    `SELECT appid, name, header_url, date_added FROM steam_wishlist ORDER BY position ASC LIMIT ?`,
-    limit
+    `SELECT appid, name, header_url, date_added FROM steam_wishlist
+      WHERE name IS NOT NULL ORDER BY position ASC LIMIT ? OFFSET ?`,
+    limit,
+    offset
   )
-  return rows
-    .filter(row => row.name)
-    .map<PublicWishlistItem>(row => {
-      const addedAt = row.date_added ? new Date(Number(row.date_added) * 1000).toISOString() : nowIso()
-      return {
-        appid: Number(row.appid),
-        name: String(row.name),
-        headerUrl: (row.header_url as string | null) ?? null,
-        addedAt,
-        daysWaiting: daysSince(addedAt)
-      }
-    })
+  return {
+    items: rows.map(toWishlistItem),
+    total: Number(totalRow?.total ?? 0),
+    offset,
+    limit
+  }
 }
 
 const DEFAULT_LIMITS: Record<string, number> = { rating: 6, recent: 4, 'top-playtime': 6, completionist: 5, 'rarest-achievement': 3, wishlist: 8 }
@@ -336,12 +417,15 @@ export async function composeShowcases(event: H3Event, onlyVisible = true): Prom
     const definition = STEAM_SHOWCASES[entry.type]
     const limit = Math.max(1, Number(entry.config.limit ?? DEFAULT_LIMITS[entry.type] ?? 6))
     let data: unknown = null
+    // 该类数据的完整条目数；前端据此决定是否显示「更多…」入口。
+    let total = 0
     switch (entry.type) {
       case 'favorite':
         data = await favoriteData(event, entry.config.appid)
         break
       case 'rating':
         data = await ratingData(event, limit)
+        total = (data as RatingPayload | null)?.total ?? 0
         break
       case 'collector':
         data = await collectorData(event)
@@ -352,6 +436,7 @@ export async function composeShowcases(event: H3Event, onlyVisible = true): Prom
       case 'top-playtime': {
         const payload = await topPlaytimeData(event, limit, entry.config.sort === 'recent' ? 'recent' : 'total')
         data = { totalMinutes: payload.totalMinutes, games: payload.games.map(game => ({ ...game, share: payload.share(game) })) }
+        total = payload.total
         break
       }
       case 'completionist':
@@ -360,9 +445,12 @@ export async function composeShowcases(event: H3Event, onlyVisible = true): Prom
       case 'rarest-achievement':
         data = await rarestAchievementData(event, limit)
         break
-      case 'wishlist':
-        data = await wishlistData(event, limit)
+      case 'wishlist': {
+        const payload = await wishlistPage(event, { limit })
+        data = payload.items
+        total = payload.total
         break
+      }
       default:
         data = null
     }
@@ -373,6 +461,7 @@ export async function composeShowcases(event: H3Event, onlyVisible = true): Prom
       span: definition.span,
       config: entry.config as Record<string, unknown>,
       empty,
+      total,
       data
     })
   }

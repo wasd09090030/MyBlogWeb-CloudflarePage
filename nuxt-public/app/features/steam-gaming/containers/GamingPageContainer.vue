@@ -17,6 +17,7 @@ import type {
   SteamGame,
   SteamRankedGame,
   SteamRatingData,
+  SteamShowcase,
   SteamWishlistItem
 } from '../types'
 import { useSteamOverview } from '../composables/useSteamOverview'
@@ -25,6 +26,32 @@ const { overview, status, refresh } = useSteamOverview()
 
 const showcases = computed(() => (overview.value?.showcases ?? []).filter(item => !item.empty))
 const profile = computed(() => overview.value?.profile ?? null)
+
+/** 有独立详情页的展柜：首页只放预览，入口由后台开关与数据量共同决定。 */
+const DETAIL_PATHS: Partial<Record<string, string>> = {
+  rating: '/games/ratings',
+  'top-playtime': '/games/playtime',
+  wishlist: '/games/wishlist'
+}
+
+function shownCount(item: SteamShowcase): number {
+  switch (item.type) {
+    case 'rating': return (item.data as SteamRatingData | null)?.items?.length ?? 0
+    case 'top-playtime': return (item.data as { games?: SteamGame[] } | null)?.games?.length ?? 0
+    case 'wishlist': return Array.isArray(item.data) ? item.data.length : 0
+    default: return 0
+  }
+}
+
+function moreTo(item: SteamShowcase): string | undefined {
+  const path = DETAIL_PATHS[item.type]
+  if (!path || item.config.more === false) return undefined
+  if (item.total <= shownCount(item)) return undefined
+  // 详情页沿用首页配置的排序，避免两处榜单顺序不一致。
+  return item.type === 'top-playtime' && item.config.sort === 'recent' ? `${path}?sort=recent` : path
+}
+
+const cards = computed(() => showcases.value.map(item => ({ item, moreTo: moreTo(item) })))
 const pending = computed(() => {
   // `idle` 是 server:false 在 SSR 阶段的状态：首屏先出骨架，避免闪现「暂无数据」。
   const state = status.value
@@ -51,16 +78,6 @@ const achievementRate = computed(() => {
 
 <template>
   <main class="sg-page">
-    <header class="sg-head">
-      <div>
-        <span class="sg-eyebrow">Play Log · Showcase</span>
-        <h1 class="sg-title">游戏档案</h1>
-        <p class="sg-lead">
-          像 Steam 个人资料页那样，把游玩记录摆进一个个展柜：收藏家、最爱、回不去的时长，还有那些没人拿到的成就。
-        </p>
-      </div>
-    </header>
-
     <ShowcaseSkeleton v-if="pending" />
     <StateNotice v-else-if="noticeKind" :kind="noticeKind" @retry="refresh" />
 
@@ -110,47 +127,50 @@ const achievementRate = computed(() => {
       </section>
 
       <div class="sg-flow">
-        <template v-for="item in showcases" :key="item.type">
+        <template v-for="card in cards" :key="card.item.type">
           <FavoriteShowcase
-            v-if="item.type === 'favorite'"
-            :game="item.data as SteamFavoriteGame"
+            v-if="card.item.type === 'favorite'"
+            :game="card.item.data as SteamFavoriteGame"
             :total-minutes="profile.totalMinutes"
             :game-count="profile.gameCount"
           />
           <RatingShowcase
-            v-else-if="item.type === 'rating'"
-            :data="item.data as SteamRatingData"
+            v-else-if="card.item.type === 'rating'"
+            :data="card.item.data as SteamRatingData"
+            :more-to="card.moreTo"
           />
           <RecentShowcase
-            v-else-if="item.type === 'recent'"
-            :games="item.data as SteamGame[]"
+            v-else-if="card.item.type === 'recent'"
+            :games="card.item.data as SteamGame[]"
           />
           <CollectorShowcase
-            v-else-if="item.type === 'collector'"
-            :data="item.data as SteamCollectorData"
-            :span="item.span"
+            v-else-if="card.item.type === 'collector'"
+            :data="card.item.data as SteamCollectorData"
+            :span="card.item.span"
           />
           <PlaytimeRankingShowcase
-            v-else-if="item.type === 'top-playtime'"
-            :games="(item.data as { games: SteamRankedGame[] }).games"
-            :total-minutes="(item.data as { totalMinutes: number }).totalMinutes"
-            :span="item.span"
+            v-else-if="card.item.type === 'top-playtime'"
+            :games="(card.item.data as { games: SteamRankedGame[] }).games"
+            :total-minutes="(card.item.data as { totalMinutes: number }).totalMinutes"
+            :span="card.item.span"
+            :more-to="card.moreTo"
           />
           <CompletionistShowcase
-            v-else-if="item.type === 'completionist'"
-            :games="item.data as SteamGame[]"
+            v-else-if="card.item.type === 'completionist'"
+            :games="card.item.data as SteamGame[]"
             :total-games="profile.gameCount"
-            :span="item.span"
+            :span="card.item.span"
           />
           <RarestAchievementShowcase
-            v-else-if="item.type === 'rarest-achievement'"
-            :achievements="item.data as SteamAchievement[]"
-            :span="item.span"
+            v-else-if="card.item.type === 'rarest-achievement'"
+            :achievements="card.item.data as SteamAchievement[]"
+            :span="card.item.span"
           />
           <WishlistShowcase
-            v-else-if="item.type === 'wishlist'"
-            :items="item.data as SteamWishlistItem[]"
-            :span="item.span"
+            v-else-if="card.item.type === 'wishlist'"
+            :items="card.item.data as SteamWishlistItem[]"
+            :span="card.item.span"
+            :more-to="card.moreTo"
           />
         </template>
       </div>

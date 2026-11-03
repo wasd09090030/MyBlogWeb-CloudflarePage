@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin-auth' })
 
-type ShowcaseConfig = { limit?: number, sort?: 'total' | 'recent', appid?: number }
+type ShowcaseConfig = { limit?: number, sort?: 'total' | 'recent', appid?: number, more?: boolean }
 type ShowcaseEntry = { type: string, visible: boolean, config: ShowcaseConfig }
 type LibraryItem = {
   type: string
@@ -11,6 +11,7 @@ type LibraryItem = {
   defaults: ShowcaseConfig
   limitRange?: [number, number]
   sortOptions?: Array<'total' | 'recent'>
+  detailPath?: string
 }
 type ShowcaseResponse = { showcases: ShowcaseEntry[], updatedAt: string | null, limit: number, library: LibraryItem[] }
 type StatusResponse = {
@@ -236,6 +237,66 @@ const ratingCommentMax = ref(60)
 const ratingQuery = ref('')
 const savingRatings = ref(false)
 
+/* 编辑列表分页：和公开页一样，不把几十条评分堆在一屏里。 */
+const RATING_PAGE_SIZE = 8
+const ratingFilter = ref('')
+const ratingPage = ref(1)
+
+const filteredRatings = computed(() => {
+  const query = ratingFilter.value.trim().toLowerCase()
+  if (!query) return ratingDraft.value
+  return ratingDraft.value.filter(item =>
+    item.name.toLowerCase().includes(query) || String(item.appid) === query
+  )
+})
+
+const ratingPageCount = computed(() => Math.max(1, Math.ceil(filteredRatings.value.length / RATING_PAGE_SIZE)))
+
+const pagedRatings = computed(() => {
+  const page = Math.min(Math.max(1, ratingPage.value), ratingPageCount.value)
+  const start = (page - 1) * RATING_PAGE_SIZE
+  return filteredRatings.value.slice(start, start + RATING_PAGE_SIZE)
+})
+
+const ratingIndexOf = (appid: number) => ratingDraft.value.findIndex(item => item.appid === appid)
+
+/** 分页/筛选后按钮上的 index 不再是全局位置，按 appid 找回真实下标。 */
+function canMoveRating(appid: number, direction: -1 | 1): boolean {
+  const query = ratingFilter.value.trim().toLowerCase()
+  if (query) {
+    const position = filteredRatings.value.findIndex(item => item.appid === appid)
+    const target = position + direction
+    return position >= 0 && target >= 0 && target < filteredRatings.value.length
+  }
+  const index = ratingIndexOf(appid)
+  const target = index + direction
+  return index >= 0 && target >= 0 && target < ratingDraft.value.length
+}
+
+function moveRatingBy(appid: number, direction: -1 | 1) {
+  const index = ratingIndexOf(appid)
+  if (index < 0) return
+  const query = ratingFilter.value.trim().toLowerCase()
+  if (!query) {
+    moveRating(index, direction)
+    return
+  }
+  // 筛选状态下与「可见的相邻项」互换，避免和夹在中间的未匹配项交换后看起来没动。
+  const position = filteredRatings.value.findIndex(item => item.appid === appid)
+  const neighbour = filteredRatings.value[position + direction]
+  if (!neighbour) return
+  const neighbourIndex = ratingIndexOf(neighbour.appid)
+  if (neighbourIndex < 0) return
+  const next = [...ratingDraft.value]
+  ;[next[index], next[neighbourIndex]] = [next[neighbourIndex]!, next[index]!]
+  ratingDraft.value = next
+}
+
+watch(ratingFilter, () => { ratingPage.value = 1 })
+watch(ratingPageCount, (count) => {
+  if (ratingPage.value > count) ratingPage.value = count
+})
+
 watch(ratingData, (value) => {
   if (!value) return
   ratingDraft.value = value.ratings.map(item => ({ ...item }))
@@ -267,6 +328,9 @@ function addRating(item: RatingLibraryItem) {
     { appid: item.appid, name: item.name, headerUrl: item.headerUrl, minutesTotal: item.minutesTotal, score: 8, comment: null }
   ]
   ratingQuery.value = ''
+  // 新加的评分往往在末尾：清掉筛选并跳到它的那一页，避免「点了没反应」。
+  ratingFilter.value = ''
+  ratingPage.value = Math.max(1, Math.ceil(ratingDraft.value.length / RATING_PAGE_SIZE))
 }
 
 function removeRating(appid: number) {
@@ -307,7 +371,7 @@ async function saveRatingDraft() {
       <div>
         <p class="text-sm text-muted">Steam 接入与展示</p>
         <h2 class="mt-1 text-2xl font-semibold">游戏</h2>
-        <p class="mt-1 text-sm text-muted">在这里填写 Steam 凭证、查看同步状态，并决定公开页 /games 显示哪些展柜。</p>
+        <p class="mt-1 text-sm text-muted">在这里填写 Steam 凭证、查看同步状态，并决定公开页 /games 显示哪些展柜。评分、游玩时长、愿望单首页只放预览，其余内容走各自的「更多…」详情页。</p>
       </div>
       <div class="flex items-center gap-2">
         <UBadge variant="subtle" color="neutral">展柜位 {{ draft.length }} / {{ limit }}</UBadge>
@@ -388,7 +452,7 @@ async function saveRatingDraft() {
           <div>
             <p class="font-medium">我的评分</p>
             <p class="mt-1 text-xs text-muted">
-              公开页「我的评分」板块与最爱游戏上的分数都来自这里，只写在自己的库里，不会同步回 Steam。
+              公开页「我的评分」板块、评分详情页（/games/ratings）与最爱游戏上的分数都来自这里，只写在自己的库里，不会同步回 Steam。列表已分页，可先筛选再改分。
             </p>
           </div>
           <div class="flex items-center gap-2">
@@ -405,7 +469,14 @@ async function saveRatingDraft() {
             v-model="ratingQuery"
             icon="i-lucide-search"
             placeholder="搜索库里的游戏（名字或 appid）"
-            class="w-full sm:w-80"
+            class="w-full sm:w-72"
+          />
+          <UInput
+            v-model="ratingFilter"
+            icon="i-lucide-list-filter"
+            placeholder="筛选已评游戏"
+            class="w-full sm:w-56"
+            :disabled="!ratingDraft.length"
           />
           <span class="text-xs text-muted">分数 1 - 10，0.5 档；短评最多 {{ ratingCommentMax }} 字</span>
         </div>
@@ -434,13 +505,13 @@ async function saveRatingDraft() {
 
         <div v-if="ratingDraft.length" class="space-y-2">
           <div
-            v-for="(item, index) in ratingDraft"
+            v-for="item in pagedRatings"
             :key="item.appid"
             class="flex flex-wrap items-center gap-3 rounded-lg border border-default p-2"
           >
             <div class="flex flex-col gap-1">
-              <UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-chevron-up" :disabled="index === 0" @click="moveRating(index, -1)" />
-              <UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-chevron-down" :disabled="index === ratingDraft.length - 1" @click="moveRating(index, 1)" />
+              <UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-chevron-up" :disabled="!canMoveRating(item.appid, -1)" @click="moveRatingBy(item.appid, -1)" />
+              <UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-chevron-down" :disabled="!canMoveRating(item.appid, 1)" @click="moveRatingBy(item.appid, 1)" />
             </div>
             <img
               v-if="item.headerUrl"
@@ -469,6 +540,18 @@ async function saveRatingDraft() {
               class="min-w-0 flex-1 sm:max-w-md"
             />
             <UButton size="xs" color="error" variant="ghost" icon="i-lucide-x" @click="removeRating(item.appid)" />
+          </div>
+
+          <p v-if="filteredRatings.length === 0" class="p-2 text-sm text-muted">
+            没有匹配「{{ ratingFilter }}」的评分。
+          </p>
+
+          <div v-if="filteredRatings.length > RATING_PAGE_SIZE" class="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <span class="text-xs text-muted">第 {{ ratingPage }} / {{ ratingPageCount }} 页 · 共 {{ filteredRatings.length }} 条</span>
+            <div class="flex items-center gap-1">
+              <UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-chevron-left" :disabled="ratingPage <= 1" @click="ratingPage = Math.max(1, ratingPage - 1)" />
+              <UButton size="xs" color="neutral" variant="ghost" icon="i-lucide-chevron-right" :disabled="ratingPage >= ratingPageCount" @click="ratingPage = Math.min(ratingPageCount, ratingPage + 1)" />
+            </div>
           </div>
         </div>
         <p v-else class="p-2 text-sm text-muted">还没有评分。上面搜一款游戏，加进来打分。</p>
@@ -504,6 +587,7 @@ async function saveRatingDraft() {
                 {{ definitionOf(entry.type)?.description || '' }}
                 <span v-if="entry.config.limit"> · 数量 {{ entry.config.limit }}</span>
                 <span v-if="entry.config.sort"> · {{ entry.config.sort === 'recent' ? '近两周' : '总时长' }}</span>
+                <span v-if="definitionOf(entry.type)?.detailPath"> · 更多入口{{ entry.config.more === false ? '关' : '开' }}</span>
                 <span v-if="entry.config.appid"> · appid {{ entry.config.appid }}</span>
               </p>
             </div>
@@ -520,7 +604,7 @@ async function saveRatingDraft() {
             <p class="font-medium">配置 · {{ selectedDefinition?.label || '未选择' }}</p>
           </template>
           <div v-if="selectedEntry && selectedDefinition" class="space-y-4">
-            <UFormField v-if="selectedDefinition.limitRange" :label="`显示数量（${selectedDefinition.limitRange[0]} - ${selectedDefinition.limitRange[1]}）`">
+            <UFormField v-if="selectedDefinition.limitRange" :label="`首页预览条数（${selectedDefinition.limitRange[0]} - ${selectedDefinition.limitRange[1]}）`">
               <UInput
                 v-model.number="selectedEntry.config.limit"
                 type="number"
@@ -535,6 +619,16 @@ async function saveRatingDraft() {
                 :items="[{ label: '总时长', value: 'total' }, { label: '近两周', value: 'recent' }]"
                 class="w-40"
               />
+            </UFormField>
+            <UFormField v-if="selectedDefinition.detailPath" label="首页「更多…」入口">
+              <div class="flex flex-wrap items-center gap-3">
+                <USwitch v-model="selectedEntry.config.more" />
+                <span class="text-xs text-muted">
+                  关闭后首页只显示预览；完整列表始终可通过
+                  <a :href="selectedDefinition.detailPath" target="_blank" rel="noopener" class="text-primary underline">{{ selectedDefinition.detailPath }}</a>
+                  直接访问。
+                </span>
+              </div>
             </UFormField>
             <UFormField v-if="selectedDefinition.type === 'favorite'" label="指定游戏 AppID（留空则取时长最高）">
               <UInput v-model.number="selectedEntry.config.appid" type="number" placeholder="例如 1245620" class="w-56" />

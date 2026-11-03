@@ -164,7 +164,8 @@ const isArticleDetailRoute = computed(() => route.path.startsWith('/article/'))
 const isAboutRoute = computed(() => route.path === '/about')
 const isArchiveRoute = computed(() => route.path === '/archive' || route.path.startsWith('/archive/'))
 // 游戏档案是 12 列展柜网格，侧边栏会把内容压到 ~770px，配对展柜会变得拥挤。
-const isGamesRoute = computed(() => route.path === '/games')
+// 详情页（/games/ratings 等）沿用同一套宽版布局。
+const isGamesRoute = computed(() => route.path === '/games' || route.path.startsWith('/games/'))
 const showSidebar = computed(() => !isGalleryRoute.value && !isGamesRoute.value && !isArticleDetailRoute.value && !isAboutRoute.value && !isArchiveRoute.value)
 
 onMounted(() => {

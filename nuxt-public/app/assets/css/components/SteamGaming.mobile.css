@@ -45,14 +45,17 @@
 
   .sg-wishlist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+  /* 详情页保持自适应列数，别在 800px 宽时只剩两列 */
+  .sg-wishlist--detail { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+
   .sg-skel-rail-row { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 768px) {
   .sg-page { padding: 24px 16px 64px; }
 
-  .sg-head { flex-direction: column; align-items: flex-start; gap: 14px; }
-  .sg-title { font-size: 38px; }
+  .sg-detail-head { gap: 6px; margin-bottom: 18px; }
+  .sg-detail-title { font-size: 28px; }
 
   .sg-rail__end { margin-left: 0; width: 100%; justify-content: space-between; }
 
@@ -79,8 +82,9 @@
 }
 
 @media (max-width: 576px) {
-  .sg-title { font-size: 34px; }
-  .sg-lead { font-size: 14px; }
+  .sg-detail-title { font-size: 24px; }
+
+  .sg-load { align-items: flex-start; flex-direction: column; gap: 8px; }
 
   .sg-rail { padding: 10px 13px; }
   .sg-rail__stats b { font-size: 17px; }

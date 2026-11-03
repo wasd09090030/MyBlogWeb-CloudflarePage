@@ -34,6 +34,23 @@ export const API_ENDPOINTS = {
   },
   steam: {
     // 游戏档案公开快照：只读、可边缘缓存，由 blog-api 定时同步。
-    overview: '/steam/overview'
+    overview: '/steam/overview',
+    // 展柜详情页：完整列表，按分页参数取。
+    ratings: '/steam/ratings',
+    playtime: (params: { offset?: number, limit?: number, sort?: 'total' | 'recent' } = {}) => {
+      const search = new URLSearchParams()
+      if (params.offset !== undefined) search.set('offset', String(params.offset))
+      if (params.limit !== undefined) search.set('limit', String(params.limit))
+      if (params.sort) search.set('sort', params.sort)
+      const query = search.toString()
+      return query ? `/steam/playtime?${query}` : '/steam/playtime'
+    },
+    wishlist: (params: { offset?: number, limit?: number } = {}) => {
+      const search = new URLSearchParams()
+      if (params.offset !== undefined) search.set('offset', String(params.offset))
+      if (params.limit !== undefined) search.set('limit', String(params.limit))
+      const query = search.toString()
+      return query ? `/steam/wishlist?${query}` : '/steam/wishlist'
+    }
   }
 } as const

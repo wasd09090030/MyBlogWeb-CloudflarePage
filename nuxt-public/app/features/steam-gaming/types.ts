@@ -88,12 +88,22 @@ export type SteamShowcaseType =
   | 'rarest-achievement'
   | 'wishlist'
 
+/** 展柜配置：limit 是首页预览条数，more 控制「更多…」入口。 */
+export type SteamShowcaseConfig = {
+  limit?: number
+  sort?: 'total' | 'recent'
+  appid?: number
+  more?: boolean
+}
+
 export type SteamShowcase = {
   type: SteamShowcaseType
   label: string
   span: number
-  config: Record<string, unknown>
+  config: SteamShowcaseConfig
   empty: boolean
+  /** 该类数据的完整条目数，用来判断是否还有更多内容。 */
+  total: number
   data: unknown
 }
 
@@ -106,4 +116,21 @@ export type SteamOverview = {
   profile: SteamProfile | null
   showcases: SteamShowcase[]
   freshnessWindowMinutes: number
+}
+
+/** 详情页 /games/playtime：完整榜单按 offset/limit 分页。 */
+export type SteamPlaytimePage = {
+  games: SteamRankedGame[]
+  totalMinutes: number
+  total: number
+  offset: number
+  limit: number
+}
+
+/** 详情页 /games/wishlist：完整愿望单按 offset/limit 分页。 */
+export type SteamWishlistPage = {
+  items: SteamWishlistItem[]
+  total: number
+  offset: number
+  limit: number
 }

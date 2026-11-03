@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import SectionHeader from './SectionHeader.vue'
-import GameCover from '../components/GameCover.vue'
 
 const props = defineProps<{
   title: string
   icon: string
   meta?: string
   span?: number
+  moreTo?: string
 }>()
 
 const spanClass = computed(() => {
@@ -23,7 +23,7 @@ const spanClass = computed(() => {
 
 <template>
   <section class="sg-card" :class="spanClass">
-    <SectionHeader :icon="icon" :title="title" :meta="meta" />
+    <SectionHeader :icon="icon" :title="title" :meta="meta" :more-to="moreTo" />
     <slot />
   </section>
 </template>

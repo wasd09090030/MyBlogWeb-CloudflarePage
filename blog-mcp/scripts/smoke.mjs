@@ -149,3 +149,379 @@ assert.ok(network.includes('无法连接'), network)
 assert.ok(network.includes('BLOG_MCP_URL'), network)
 assert.ok(network.includes('https://offline.test'), network)
 console.log('smoke: api client passed')
+
+// --- 工具表、上传校验、MCP 服务与 CLI ---------------------------------------
+// 这一段的断言来自 Task 7 的 Review Focus：13 个工具、无删除能力、
+// `id` 只走路径、`image_upload` 先校验再发请求、`serve` 的 stdout 只有 JSON-RPC。
+import { tools } from '../src/tools.js'
+import { validateUploadPath, MAX_UPLOAD_BYTES, ALLOWED_EXTENSIONS } from '../src/upload.js'
+import { createMcpServer } from '../src/server.js'
+import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync, truncateSync, mkdirSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { spawn } from 'node:child_process'
+import http from 'node:http'
+
+assert.equal(tools.length, 13)
+assert.deepEqual(tools.map(t => t.name).sort(), [
+  'article_create', 'article_get', 'article_list', 'article_summarize', 'article_update',
+  'diary_list', 'diary_upsert',
+  'gallery_create', 'gallery_list', 'gallery_update',
+  'image_list', 'image_upload',
+  'rebuild_public_site'
+])
+// 没有删除能力
+assert.equal(tools.some(t => /delete|remove|destroy/i.test(t.name)), false, 'no tool may delete anything')
+for (const tool of tools) {
+  assert.ok(tool.description && tool.description.length > 10, `${tool.name} needs a real description`)
+  assert.equal(typeof tool.run, 'function', `${tool.name} needs a run function`)
+  assert.equal(typeof tool.inputSchema, 'object', `${tool.name} needs an input schema`)
+}
+
+// 上传路径校验：扩展名、绝对路径、存在性、大小。用临时目录造真实文件。
+const scratch = mkdtempSync(join(tmpdir(), 'blog-mcp-'))
+const png = join(scratch, 'a.PNG')
+writeFileSync(png, Buffer.from([0x89, 0x50, 0x4e, 0x47]))
+const notImage = join(scratch, 'notes.txt')
+writeFileSync(notImage, 'x')
+
+// BLOG_MCP_UPLOAD_ROOTS 若恰好存在于开发者的环境里，这里的断言就失去意义，
+// 所以整段临时摘掉它并保证恢复。
+const savedRoots = process.env.BLOG_MCP_UPLOAD_ROOTS
+delete process.env.BLOG_MCP_UPLOAD_ROOTS
+try {
+  assert.equal(validateUploadPath(png), png)
+  assert.throws(() => validateUploadPath(notImage), /扩展名/)
+  assert.throws(() => validateUploadPath('relative/pic.png'), /绝对路径/)
+  assert.throws(() => validateUploadPath(join(scratch, 'missing.png')), /不存在/)
+  assert.equal(MAX_UPLOAD_BYTES, 50 * 1024 * 1024)
+  assert.deepEqual(ALLOWED_EXTENSIONS, ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif'])
+
+  // 超过 50 MB：用稀疏文件，避免真写 50 MB
+  const huge = join(scratch, 'huge.png')
+  writeFileSync(huge, '')
+  truncateSync(huge, MAX_UPLOAD_BYTES + 1)
+  assert.throws(() => validateUploadPath(huge), /50 MB/)
+  rmSync(huge, { force: true })
+
+  // 上传根目录白名单
+  const otherRoot = mkdtempSync(join(tmpdir(), 'blog-mcp-roots-'))
+  try {
+    const restricted = { ...process.env, BLOG_MCP_UPLOAD_ROOTS: otherRoot }
+    assert.throws(() => validateUploadPath(png, restricted), /BLOG_MCP_UPLOAD_ROOTS/)
+    // 白名单命中时放行（分隔符用 path.delimiter，两个根都有效）
+    const allowed = { ...process.env, BLOG_MCP_UPLOAD_ROOTS: `${otherRoot}${process.platform === 'win32' ? ';' : ':'}${scratch}` }
+    assert.equal(validateUploadPath(png, allowed), png)
+  } finally {
+    rmSync(otherRoot, { recursive: true, force: true })
+  }
+} finally {
+  if (savedRoots !== undefined) process.env.BLOG_MCP_UPLOAD_ROOTS = savedRoots
+}
+
+// 工具 → 请求映射
+const calls = []
+const fakeApi = {
+  request: async (method, path, opts) => { calls.push({ method, path, opts }); return { ok: true } },
+  upload: async (filePath) => { calls.push({ upload: filePath }); return { ok: true } }
+}
+const byName = Object.fromEntries(tools.map(t => [t.name, t]))
+
+await byName.article_list.run({ page: 2, pageSize: 10 }, fakeApi)
+assert.deepEqual(calls.at(-1), { method: 'GET', path: '/api/mcp/articles', opts: { query: { page: 2, pageSize: 10 } } })
+
+await byName.article_get.run({ id: 42 }, fakeApi)
+assert.equal(calls.at(-1).path, '/api/mcp/articles/42')
+assert.equal(calls.at(-1).method, 'GET')
+
+await byName.article_create.run({ title: 'T', contentMarkdown: 'M', tags: ['a'], category: 'study' }, fakeApi)
+assert.equal(calls.at(-1).method, 'POST')
+assert.equal(calls.at(-1).path, '/api/mcp/articles')
+assert.deepEqual(calls.at(-1).opts.body, { title: 'T', contentMarkdown: 'M', tags: ['a'], category: 'study' })
+
+await byName.article_update.run({ id: 7, title: 'T' }, fakeApi)
+assert.equal(calls.at(-1).method, 'PUT')
+assert.equal(calls.at(-1).path, '/api/mcp/articles/7')
+assert.deepEqual(calls.at(-1).opts.body, { title: 'T' }, 'undefined fields must not be sent')
+// id 只走路径：只传 id 时连 body 都不该出现
+await byName.article_update.run({ id: 7 }, fakeApi)
+assert.deepEqual(calls.at(-1).opts, {}, 'id never goes into the body')
+
+await byName.article_summarize.run({ title: 'T', content: 'C' }, fakeApi)
+assert.equal(calls.at(-1).method, 'POST')
+assert.equal(calls.at(-1).path, '/api/mcp/ai/summary')
+assert.deepEqual(calls.at(-1).opts.body, { title: 'T', content: 'C' })
+
+await byName.image_list.run({ dir: 'blog', recursive: true }, fakeApi)
+assert.deepEqual(calls.at(-1), {
+  method: 'GET',
+  path: '/api/mcp/images',
+  opts: { query: { dir: 'blog', recursive: true } }
+})
+
+await byName.image_upload.run({ filePath: png }, fakeApi)
+assert.deepEqual(calls.at(-1), { upload: png })
+// 校验在发请求之前：坏路径根本到不了 upload
+const callsBeforeUpload = calls.length
+await assert.rejects(() => byName.image_upload.run({ filePath: notImage }, fakeApi), /扩展名/)
+assert.equal(calls.length, callsBeforeUpload, 'a rejected path must never reach api.upload')
+
+await byName.gallery_list.run({ page: 1, pageSize: 5 }, fakeApi)
+assert.deepEqual(calls.at(-1), { method: 'GET', path: '/api/mcp/gallery', opts: { query: { page: 1, pageSize: 5 } } })
+
+await byName.gallery_create.run({ imageUrl: 'https://img/x.png' }, fakeApi)
+assert.equal(calls.at(-1).method, 'POST')
+assert.equal(calls.at(-1).path, '/api/mcp/gallery')
+assert.deepEqual(calls.at(-1).opts.body, { imageUrl: 'https://img/x.png' })
+
+await byName.gallery_update.run({ id: 3, isActive: false }, fakeApi)
+assert.equal(calls.at(-1).method, 'PATCH')
+assert.equal(calls.at(-1).path, '/api/mcp/gallery/3')
+assert.deepEqual(calls.at(-1).opts.body, { isActive: false }, 'id never goes into the body')
+
+await byName.diary_list.run({}, fakeApi)
+assert.deepEqual(calls.at(-1), { method: 'GET', path: '/api/mcp/diary', opts: {} })
+
+await byName.diary_upsert.run({ date: '2026-11-16', contentMarkdown: 'x' }, fakeApi)
+assert.equal(calls.at(-1).method, 'PUT')
+assert.equal(calls.at(-1).path, '/api/mcp/diary/2026-11-16')
+assert.deepEqual(calls.at(-1).opts.body, { contentMarkdown: 'x' }, 'isPublic must not be invented client-side')
+
+await byName.rebuild_public_site.run({}, fakeApi)
+assert.deepEqual(calls.at(-1), { method: 'POST', path: '/api/mcp/ops/pages/deploy', opts: {} })
+
+// 未传 query 时不能出现空 query 对象
+await byName.article_list.run({}, fakeApi)
+assert.deepEqual(calls.at(-1).opts, {})
+
+// gallery_create 没有 createdAt（domain 层会忽略）
+assert.equal('createdAt' in byName.gallery_create.inputSchema, false)
+assert.equal('createdAt' in byName.gallery_update.inputSchema, true)
+// diary_upsert 的日期格式由 schema 收紧
+assert.equal(byName.diary_upsert.inputSchema.date.safeParse('16-11-2026').success, false)
+assert.equal(byName.diary_upsert.inputSchema.date.safeParse('2026-11-16').success, true)
+console.log('smoke: tools mapping passed')
+
+// --- MCP 服务：工具注册、结果序列化、错误映射 ---------------------------------
+{
+  const { Client } = await import('@modelcontextprotocol/sdk/client/index.js')
+  const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js')
+
+  async function withClient(api, fn) {
+    const server = createMcpServer(api)
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
+    const client = new Client({ name: 'blog-mcp-smoke', version: '0.0.0' })
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)])
+    try {
+      return await fn(client)
+    } finally {
+      await client.close()
+      await server.close()
+    }
+  }
+
+  await withClient(fakeApi, async (client) => {
+    const { tools: listed } = await client.listTools()
+    assert.equal(listed.length, 13)
+    assert.deepEqual(listed.map(t => t.name).sort(), tools.map(t => t.name).sort())
+
+    const result = await client.callTool({ name: 'article_list', arguments: { page: 3, pageSize: 4 } })
+    assert.equal(result.isError, undefined)
+    assert.deepEqual(JSON.parse(result.content[0].text), { ok: true })
+    assert.deepEqual(calls.at(-1), {
+      method: 'GET',
+      path: '/api/mcp/articles',
+      opts: { query: { page: 3, pageSize: 4 } }
+    })
+
+    // schema 校验失败要变成工具错误，而不是让协议层抛异常
+    const invalid = await client.callTool({ name: 'article_create', arguments: { title: 'T' } })
+    assert.equal(invalid.isError, true)
+    assert.ok(invalid.content[0].text.length > 0)
+  })
+
+  // 服务端 2xx 但正文不是 JSON：parseResponse 给的是 { error }，必须当失败上报
+  const nonJsonApi = { request: async () => ({ error: '<html>502 Bad Gateway</html>' }), upload: async () => ({}) }
+  await withClient(nonJsonApi, async (client) => {
+    const result = await client.callTool({ name: 'article_get', arguments: { id: 1 } })
+    assert.equal(result.isError, true, 'an error-only body must not be reported as data')
+    assert.ok(result.content[0].text.includes('502'))
+  })
+
+  // 抛出的异常走 formatApiError：401 提示重新登录
+  const unauthorizedApi = {
+    request: async () => { throw new ApiError(401, 'Authentication required', null) },
+    upload: async () => { throw new ApiError(401, 'Authentication required', null) }
+  }
+  await withClient(unauthorizedApi, async (client) => {
+    const result = await client.callTool({ name: 'article_list', arguments: {} })
+    assert.equal(result.isError, true)
+    assert.ok(result.content[0].text.includes('blog-mcp login'), result.content[0].text)
+  })
+}
+console.log('smoke: mcp server passed')
+
+// --- CLI：login / status / logout 与 serve 的 stdout 纯净度 -------------------
+// 用本地 stub 服务，把凭证目录指到临时目录，绝不碰开发者真实的 %APPDATA%。
+{
+  const requested = []
+  const stub = http.createServer((req, res) => {
+    let body = ''
+    req.on('data', chunk => { body += chunk })
+    req.on('end', () => {
+      requested.push({ method: req.method, url: req.url, authorization: req.headers.authorization, body })
+      const send = (status, payload) => {
+        res.writeHead(status, { 'content-type': 'application/json' })
+        res.end(JSON.stringify(payload))
+      }
+      if (req.method === 'POST' && req.url === '/api/mcp/token') {
+        return send(201, {
+          token: 'bmcp_smoketoken_0123456789abcdef',
+          id: 'tok-smoke',
+          tokenPrefix: 'bmcp_smoket',
+          username: 'admin',
+          label: JSON.parse(body || '{}').label,
+          scopes: JSON.parse(body || '{}').scopes || ['mcp:read', 'mcp:write'],
+          createdAt: '2026-11-16T00:00:00.000Z',
+          lastUsedAt: null,
+          expiresAt: '2026-12-16T00:00:00.000Z',
+          revokedAt: null
+        })
+      }
+      if (req.method === 'GET' && req.url === '/api/mcp/whoami') {
+        return send(200, {
+          username: 'admin',
+          label: 'smoke',
+          scopes: ['mcp:read'],
+          expiresAt: '2026-12-16T00:00:00.000Z'
+        })
+      }
+      if (req.method === 'POST' && req.url === '/api/mcp/token/revoke') return send(200, { success: true })
+      send(404, { statusMessage: 'not found' })
+    })
+  })
+  await new Promise(resolveReady => stub.listen(0, '127.0.0.1', resolveReady))
+  const baseUrl = `http://127.0.0.1:${stub.address().port}`
+
+  const configHome = mkdtempSync(join(tmpdir(), 'blog-mcp-config-'))
+  const credentialsDir = join(configHome, 'blog-mcp')
+  const credentialsFile = join(credentialsDir, 'credentials.json')
+  const cli = fileURLToPath(new URL('../src/index.js', import.meta.url))
+  const env = {
+    ...process.env,
+    BLOG_MCP_URL: baseUrl,
+    // 两个平台的环境变量都指向临时目录，credentialsPath() 用哪个都落在这里
+    APPDATA: configHome,
+    XDG_CONFIG_HOME: configHome
+  }
+
+  /** 跑一条 CLI 命令，返回 { code, stdout, stderr }。 */
+  function runCli(args, stdin) {
+    return new Promise(resolveRun => {
+      const child = spawn(process.execPath, [cli, ...args], { env, stdio: ['pipe', 'pipe', 'pipe'] })
+      let stdout = ''
+      let stderr = ''
+      child.stdout.on('data', chunk => { stdout += chunk })
+      child.stderr.on('data', chunk => { stderr += chunk })
+      child.on('close', code => resolveRun({ code, stdout, stderr }))
+      if (stdin !== undefined) child.stdin.write(stdin)
+      child.stdin.end()
+    })
+  }
+
+  try {
+    mkdirSync(credentialsDir, { recursive: true })
+
+    // 没有凭证时 status/serve 必须给出可执行的下一步，且不碰 stdout（serve）
+    const noCredentialsStatus = await runCli(['status'])
+    assert.equal(noCredentialsStatus.code, 1)
+    assert.ok(`${noCredentialsStatus.stdout}${noCredentialsStatus.stderr}`.includes('blog-mcp login'))
+
+    const noCredentialsServe = await runCli(['serve'])
+    assert.equal(noCredentialsServe.code, 1)
+    assert.equal(noCredentialsServe.stdout, '', 'serve must not write diagnostics to stdout')
+    assert.ok(noCredentialsServe.stderr.includes('blog-mcp login'))
+
+    // 参数错误要在提示输入之前就失败
+    const badDays = await runCli(['login', '--days', '0'])
+    assert.equal(badDays.code, 1)
+    assert.ok(badDays.stderr.includes('--days'))
+
+    const login = await runCli(['login', '--label', 'smoke', '--read-only'], 'admin\nlocal-dev-password-123\n')
+    assert.equal(login.code, 0, `login failed: ${login.stdout}${login.stderr}`)
+    assert.ok(login.stdout.includes('已登录'), login.stdout)
+    const loginOutput = `${login.stdout}${login.stderr}`
+    assert.equal(loginOutput.includes('bmcp_smoketoken_0123456789abcdef'), false, 'the token must never be printed')
+
+    assert.ok(existsSync(credentialsFile), 'login must write credentials')
+    const stored = JSON.parse(readFileSync(credentialsFile, 'utf8'))
+    assert.equal(stored.token, 'bmcp_smoketoken_0123456789abcdef')
+    assert.equal(stored.baseUrl, baseUrl)
+    assert.equal(stored.label, 'smoke')
+    assert.deepEqual(stored.scopes, ['mcp:read'])
+
+    // --read-only 必须发 scopes: ['mcp:read']（不能是空数组，服务端会 400）
+    const tokenRequest = requested.find(r => r.url === '/api/mcp/token')
+    const tokenBody = JSON.parse(tokenRequest.body)
+    assert.deepEqual(tokenBody.scopes, ['mcp:read'])
+    assert.equal(tokenBody.username, 'admin')
+
+    const status = await runCli(['status'])
+    assert.equal(status.code, 0, `status failed: ${status.stdout}${status.stderr}`)
+    assert.ok(status.stdout.includes('admin'), status.stdout)
+    assert.ok(status.stdout.includes('smoke'), status.stdout)
+    assert.ok(status.stdout.includes('mcp:read'), status.stdout)
+    assert.ok(status.stdout.includes(baseUrl), status.stdout)
+    assert.equal(`${status.stdout}${status.stderr}`.includes('bmcp_smoketoken_0123456789abcdef'), false, 'status must never print the token')
+    const whoami = requested.find(r => r.url === '/api/mcp/whoami')
+    assert.equal(whoami.authorization, 'Bearer bmcp_smoketoken_0123456789abcdef')
+
+    // serve：stdout 只允许出现 JSON-RPC
+    const serve = spawn(process.execPath, [cli, 'serve'], { env, stdio: ['pipe', 'pipe', 'pipe'] })
+    let serveOut = ''
+    let serveErr = ''
+    serve.stdout.on('data', chunk => { serveOut += chunk })
+    serve.stderr.on('data', chunk => { serveErr += chunk })
+    const serveExit = new Promise(resolveExit => serve.on('close', code => resolveExit(code)))
+    const send = (message) => serve.stdin.write(`${JSON.stringify(message)}\n`)
+    send({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'smoke', version: '0.0.0' } }
+    })
+    send({ jsonrpc: '2.0', method: 'notifications/initialized' })
+    send({ jsonrpc: '2.0', id: 2, method: 'tools/list' })
+
+    const deadline = Date.now() + 15000
+    while (Date.now() < deadline && !serveOut.split('\n').some(line => line.includes('"id":2'))) {
+      await new Promise(resolveTick => setTimeout(resolveTick, 50))
+    }
+    serve.kill()
+    await serveExit
+
+    const serveLines = serveOut.split('\n').filter(line => line.trim() !== '')
+    assert.ok(serveLines.length >= 2, `serve produced no JSON-RPC: ${serveOut}`)
+    for (const line of serveLines) {
+      let parsedLine
+      assert.doesNotThrow(() => { parsedLine = JSON.parse(line) }, `non JSON-RPC text on stdout: ${JSON.stringify(line)}`)
+      assert.equal(parsedLine.jsonrpc, '2.0', `stdout line is not JSON-RPC: ${line}`)
+    }
+    const listResponse = serveLines.map(line => JSON.parse(line)).find(message => message.id === 2)
+    assert.ok(listResponse, 'serve must answer tools/list')
+    assert.equal(listResponse.result.tools.length, 13)
+    assert.equal(serveOut.includes('smoke:'), false)
+
+    const logout = await runCli(['logout'])
+    assert.equal(logout.code, 0, `logout failed: ${logout.stdout}${logout.stderr}`)
+    assert.equal(existsSync(credentialsFile), false, 'logout must delete the credentials file')
+    assert.ok(requested.some(r => r.method === 'POST' && r.url === '/api/mcp/token/revoke'), 'logout must revoke the token')
+    assert.equal(serveErr.includes('smoke:'), false, 'serve keeps its diagnostics off stdout')
+  } finally {
+    stub.close()
+    rmSync(configHome, { recursive: true, force: true })
+    rmSync(scratch, { recursive: true, force: true })
+  }
+}
+console.log('smoke: cli passed')

@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 /**
- * check-mdc.mjs — 校验博客 MDC 文章语法
+ * check-mdc.mjs — 校验博客 MDC 文章语法与类别用组件规范
  *
  * 用法：
  *   node .skills/mdc-article-writing/scripts/check-mdc.mjs article.md
  *   node .skills/mdc-article-writing/scripts/check-mdc.mjs a.md b.md
+ *   node .skills/mdc-article-writing/scripts/check-mdc.mjs article.md --category game
+ *   node .skills/mdc-article-writing/scripts/check-mdc.mjs article.md --category=resource
  *
- * 只查语法与契约，不评价内容质量。退出码：0 = 无错误，1 = 有错误（warning 不影响退出码）。
+ * 不带 --category 时只查语法（通用检查）。带上类别后，额外按 references/patterns.md
+ * 的矩阵检查组件取舍：不该出现的组件报 error，有条件使用的组件在不满足条件时报 warning。
  *
- * 检查项：
+ * 退出码：0 = 无错误，1 = 有错误（warning 不影响退出码），2 = 用法错误。
+ *
+ * 通用检查项：
  *   - 未知组件名 / 已废弃组件
  *   - 块标记缩进（必须顶格）
  *   - 冒号数量不配对、块未闭合、多余闭合
@@ -22,6 +27,13 @@
  *   - code-playground 的 runnable 与非 JS 语言冲突
  *   - 标题层级超过 h4
  *   - code-playground 内使用 mermaid 围栏
+ *   - star-rating 嵌在 tabs 内
+ *
+ * 类别检查项（--category 指定后）：
+ *   - 该类别禁用组件是否出现
+ *   - 有条件组件是否越界（github-card / alert / type-writer / tabs 数量上限）
+ *   - 结构性缺失（resource 类无 link-card、work 类无成品图或外部入口、game 类只有一个评分）
+ *   - 全文一个组件都没用
  */
 
 import { readFileSync } from 'node:fs'
@@ -65,6 +77,85 @@ const ALLOWED_EMBED_HOSTS = [
 ]
 
 const JS_LANGS = new Set(['javascript', 'js', 'node'])
+
+/**
+ * 类别 → 组件规范。数据来源：references/patterns.md 的矩阵。
+ * 'forbid'  = 该类文章不该出现，报 error
+ * 'allowed' = 正常使用
+ * 有条件使用的组件用 limits 表达（数量上限）。
+ */
+const CATEGORY_RULES = {
+  study: {
+    label: '学习笔记 / 技术教程 / 踩坑复盘',
+    forbid: ['spoiler', 'star-rating', 'type-writer'],
+    limits: { 'github-card': 2 },
+  },
+  game: {
+    label: '游戏评测',
+    forbid: ['code-playground', 'steps', 'github-card', 'link-card', 'tabs'],
+    limits: {},
+  },
+  work: {
+    label: '个人作品 / 项目展示',
+    forbid: ['spoiler'],
+    limits: { 'github-card': 2, 'type-writer': 1, tabs: 1 },
+  },
+  resource: {
+    label: '资源分享',
+    forbid: ['star-rating', 'spoiler', 'code-playground', 'steps', 'image-comparison', 'type-writer', 'web-embed'],
+    limits: {},
+  },
+  other: {
+    label: '随笔 / 日记 / 更新日志',
+    forbid: ['tabs', 'steps', 'code-playground', 'star-rating', 'spoiler', 'image-comparison', 'web-embed', 'github-card', 'link-card'],
+    limits: { alert: 1, 'type-writer': 1 },
+  },
+}
+
+/**
+ * 禁用理由。按类别分组，因为同一个组件在不同类别里被禁的原因不同
+ * （例如 star-rating 在 study 里像软文，在 resource 里是让读者多花一次注意力）。
+ * 查不到时回退到 GENERIC_REASON。
+ */
+const CATEGORY_FORBID_REASON = {
+  study: {
+    'spoiler': '技术内容没有「剧透」概念，遮起来只会让人多点击一次；要收起长内容用 collapse。',
+    'star-rating': '技术笔记用星级评分会让文章显得像产品软文。',
+    'type-writer': '读者要的是信息，不是动效。',
+  },
+  game: {
+    'code-playground': '评测里出现代码沙箱会立刻破坏阅读氛围。',
+    'steps': '评测读者不是来跟着做的。',
+    'github-card': '评测里放仓库卡片会打断阅读。',
+    'link-card': '评测读者不需要逐个点开外链，入口放文末一段链接就够。',
+    'tabs': '标签页是重交互；分项评分要平铺，别让读者点四次才看全。',
+  },
+  work: {
+    'spoiler': '作品展示没有需要遮的内容，遮起来只会让人多点击一次。',
+  },
+  resource: {
+    'star-rating': '资源页读者是来拿东西的，评分会让他们多花一次判断。',
+    'spoiler': '资源页没有需要遮的内容，遮起来是在阻止读者拿到链接。',
+    'code-playground': '资源页读者要的是链接，不是可运行示例。',
+    'steps': '资源页读者不是来跟着做的。',
+    'image-comparison': '拖动对比滑块是在阻止读者拿链接。',
+    'type-writer': '资源页需要一眼扫完，动效只会延迟信息出现。',
+    'web-embed': '资源页以链接为主，嵌入播放器会稀释重点。',
+  },
+  other: {
+    'tabs': '随笔用标签页显得很刻意。',
+    'steps': '随笔读者不是来跟着做的。',
+    'code-playground': '随笔里出现代码沙箱会破坏文字节奏。',
+    'star-rating': '随笔打分像在给生活做 KPI。',
+    'spoiler': '随笔没有剧透概念，遮起来只会让人多点击一次。',
+    'image-comparison': '随笔不需要拖动对比。',
+    'web-embed': '随笔里嵌播放器会打断阅读。',
+    'github-card': '随笔里放仓库卡片会打断阅读。',
+    'link-card': '随笔里堆链接按钮显得像广告位。',
+  },
+}
+
+const GENERIC_REASON = '该组件对这一类文章是噪音。'
 
 function parseAttrs(raw) {
   const inner = raw.trim().replace(/^\{/, '').replace(/\}$/, '')
@@ -117,7 +208,7 @@ function hostAllowed(value) {
   }
 }
 
-function checkFile(path) {
+function checkFile(path, category) {
   let source
   try {
     source = readFileSync(path, 'utf8')
@@ -132,6 +223,12 @@ function checkFile(path) {
   const warn = (line, msg) => warnings.push({ line, msg })
 
   const stack = []
+  // 记录每个组件的首次出现行号与出现次数，供类别规则使用
+  const componentUses = /** @type {Record<string, { line: number, count: number }>} */ ({})
+  const noteUse = (name, line) => {
+    if (!componentUses[name]) componentUses[name] = { line, count: 0 }
+    componentUses[name].count++
+  }
   let fence = null
   let inYaml = false
   let yamlLines = []
@@ -238,6 +335,14 @@ function checkFile(path) {
       } else if (!REGISTRY[name]) {
         err(lineNo, '未知组件 `::' + name + '`。已注册：' + Object.keys(REGISTRY).join('、') + '。')
       } else {
+        noteUse(name, lineNo)
+        // star-rating 嵌进 tabs：评测类明确要平铺，其它类别也给提醒
+        if (name === 'star-rating') {
+          const parent = stack[stack.length - 1]
+          if (parent && parent.name === 'tabs') {
+            warn(lineNo, '`::star-rating` 嵌在 `::tabs` 内，读者要逐个点开才能看全分数；评分建议平铺。')
+          }
+        }
         // 枚举
         const enums = ENUMS[name] || {}
         for (const [key, allowed] of Object.entries(enums)) {
@@ -298,8 +403,11 @@ function checkFile(path) {
       if (stack.length) {
         const parent = stack[stack.length - 1]
         const expected = parent.colon + 1
-        if (colons.length !== expected) {
-          warn(lineNo, '嵌套层级冒号数可疑：外层 `::' + parent.name + '` 用了 ' + parent.colon + ' 个冒号，内层建议用 ' + expected + ' 个（当前 ' + colons.length + ' 个）。')
+        if (colons.length < expected) {
+          // 冒号数不足时，闭合标记会提前结束外层组件，内层内容被挤到外面 —— 结构直接错位
+          err(lineNo, '嵌套冒号数不足：外层 `::' + parent.name + '` 用了 ' + parent.colon + ' 个冒号，内层至少要用 ' + expected + ' 个（当前 ' + colons.length + ' 个）。同数量的闭合标记会提前关闭外层组件，导致结构错位。')
+        } else if (colons.length > expected) {
+          warn(lineNo, '嵌套冒号数偏多：外层用了 ' + parent.colon + ' 个，内层建议 ' + expected + ' 个（当前 ' + colons.length + ' 个）。能闭合，但和闭合标记要逐个数对。')
         }
       } else if (colons.length !== 2) {
         warn(lineNo, '顶层组件通常用 2 个冒号，当前用了 ' + colons.length + ' 个。')
@@ -340,6 +448,40 @@ function checkFile(path) {
     errors.push({ line: frame.line, msg: '`::' + frame.name + '` 未闭合，文件结束时仍缺少 ' + '`'.concat(':'.repeat(frame.colon)) + ' 收尾。' })
   }
 
+  // ——— 类别规则 ———
+  if (category && CATEGORY_RULES[category]) {
+    const rule = CATEGORY_RULES[category]
+    const usedNames = Object.keys(componentUses)
+    if (!usedNames.length) {
+      warn(1, '这篇文章没有使用任何 MDC 组件（' + rule.label + ' 类别通常至少会用一处 alert 或 collapse）。')
+    }
+    for (const forbidden of rule.forbid) {
+      const use = componentUses[forbidden]
+      if (use) {
+        const reason = (CATEGORY_FORBID_REASON[category] || {})[forbidden] || GENERIC_REASON
+        err(use.line, '`::' + forbidden + '` 不适合 ' + category + '（' + rule.label + '）类文章。' + reason)
+      }
+    }
+    for (const [name, limit] of Object.entries(rule.limits || {})) {
+      const use = componentUses[name]
+      if (use && use.count > limit) {
+        warn(use.line, '`::' + name + '` 在 ' + category + ' 类文章里出现了 ' + use.count + ' 次，建议不超过 ' + limit + ' 次。')
+      }
+    }
+    if (category === 'game' && componentUses['star-rating']) {
+      const n = componentUses['star-rating'].count
+      if (n === 1) {
+        warn(componentUses['star-rating'].line, 'game 类只有总评一个 star-rating；评测通常还要给出分项评分。')
+      }
+    }
+    if (category === 'resource' && !componentUses['link-card']) {
+      warn(1, 'resource 类没有使用 `::link-card` —— 资源分享的核心是让读者一眼拿到链接。')
+    }
+    if (category === 'work' && !componentUses['link-card'] && !componentUses['github-card'] && !componentUses['web-embed'] && !componentUses['image-enhanced']) {
+      warn(1, '作品类文章既没有成品图也没有外部入口（link-card / github-card / web-embed）；读者没法判断这东西长什么样、去哪看。')
+    }
+  }
+
   return { path, errors, warnings }
 }
 
@@ -347,10 +489,10 @@ function report(result) {
   const label = basename(result.path)
   const total = result.errors.length + result.warnings.length
   if (!total) {
-    console.log('✔ ' + label + ' — 语法检查通过')
+    console.log('✔ ' + label + ' — 检查通过' + (result.category ? '（' + result.category + ' 类）' : ''))
     return true
   }
-  console.log('\n' + label + '  (' + result.errors.length + ' 错误, ' + result.warnings.length + ' 警告)')
+  console.log('\n' + label + '  (' + result.errors.length + ' 错误, ' + result.warnings.length + ' 警告' + (result.category ? '，' + result.category + ' 类' : '') + ')')
   for (const e of result.errors.sort((a, b) => a.line - b.line)) {
     console.log('  ✖ 第 ' + e.line + ' 行  ' + e.msg)
   }
@@ -360,21 +502,40 @@ function report(result) {
   return result.errors.length === 0
 }
 
-const targets = process.argv.slice(2).filter(a => !a.startsWith('-'))
+const argv = process.argv.slice(2)
+let category = null
+const targets = []
+for (let i = 0; i < argv.length; i++) {
+  const a = argv[i]
+  if (a === '--category' || a === '-c') {
+    category = (argv[i + 1] || '').toLowerCase()
+    i++
+  } else if (a.startsWith('--category=')) {
+    category = a.slice('--category='.length).toLowerCase()
+  } else if (!a.startsWith('-')) {
+    targets.push(a)
+  }
+}
+
+if (category && !CATEGORY_RULES[category]) {
+  console.error('未知类别: ' + category + '。可选: ' + Object.keys(CATEGORY_RULES).join(' / '))
+  process.exit(2)
+}
 if (!targets.length) {
-  console.error('用法: node check-mdc.mjs <article.md> [more.md ...]')
+  console.error('用法: node check-mdc.mjs <article.md> [more.md ...] [--category study|game|work|resource|other]')
   process.exit(2)
 }
 
 let ok = true
 let totalErrors = 0
 for (const t of targets) {
-  const r = checkFile(t)
+  const r = checkFile(t, category)
+  r.category = category
   totalErrors += r.errors.length
   if (!report(r)) ok = false
 }
 
 if (!ok) {
-  console.log('\n共 ' + totalErrors + ' 处语法错误。修完再发布 —— 这些错误不会在运行时抛异常，只会静默变成纯文本。')
+  console.log('\n共 ' + totalErrors + ' 处错误。修完再发布 —— 语法错误不会在运行时抛异常，只会静默变成纯文本。')
 }
 process.exit(ok ? 0 : 1)

@@ -1,21 +1,47 @@
 ---
 name: mdc-article-writing
-description: 为本项目博客写 Markdown 正文时使用，尤其是要用 ::alert / ::tabs / ::steps / ::code-playground / ::image-enhanced / ::spoiler / ::star-rating 等 MDC 块组件排版的文章。覆盖 13 个已注册组件的准确语法、props 取值、可嵌套规则、以及教程/评测/更新日志的成稿套路。当用户说「写篇文章」「写个教程」「写游戏评测」「整理成博客正文」「加个提示框/折叠/标签页」「这段 markdown 发不出去」「MDC 没渲染」时都应主动加载本 skill，即使用户没有说出 MDC 这个词。
+description: 为本项目博客写 Markdown 正文时使用，尤其是要用 ::alert / ::tabs / ::steps / ::code-playground / ::image-enhanced / ::spoiler / ::star-rating 等 MDC 块组件排版的文章。覆盖 13 个已注册组件的准确语法、props 取值、可嵌套规则，以及按文章类别（study 学习笔记 / game 游戏评测 / work 个人作品 / resource 资源分享 / other 随笔）区分组件用法的取舍矩阵。当用户说「写篇文章」「写个教程」「写游戏评测」「整理成博客正文」「加个提示框/折叠/标签页」「这段 markdown 发不出去」「MDC 没渲染」时都应主动加载本 skill，即使用户没有说出 MDC 这个词。
 ---
 
 # 写本项目能渲染的 MDC 文章
 
-这个博客的文章正文不是普通 Markdown：`nuxt-public` 装了 `@nuxtjs/mdc`，正文会被解析成 AST 再由 `MDCRenderer` 渲染，`app/components/content/` 下的 13 个组件因此可以直接用 `::name` 语法调用。写错一个冒号或拼错标签名不会报错 —— 解析器会把它当成普通文本，页面上什么都不显示。所以本 skill 的重点是**准确的语法**加**写完自检**。
+这个博客的文章正文不是普通 Markdown：`nuxt-public` 装了 `@nuxtjs/mdc`，正文会被解析成 AST 再由 `MDCRenderer` 渲染，`app/components/content/` 下的 13 个组件因此可以直接用 `::name` 语法调用。写错一个冒号或拼错标签名不会报错 —— 解析器会把它当成普通文本，页面上什么都不显示。所以本 skill 的重点是**准确的语法**、**按类别选对组件**，加**写完自检**。
 
 ## 先读什么
 
 | 场景 | 读 |
 | --- | --- |
+| 要先确定这篇该用哪些组件、不该用哪些 | 下面「按类别选组件」+ `references/patterns.md` |
 | 要写某个组件，需要完整 props 表和 YAML 示例 | `references/components.md` |
-| 要成稿，需要某种文章类型的完整骨架 | `references/patterns.md` |
 | 写完要校验 | 跑 `scripts/check-mdc.mjs`（见文末） |
 
 不确定某个组件现在长什么样，直接读 `nuxt-public/app/components/content/<Name>.vue` 的 `defineProps` —— 组件源码是唯一权威，本 skill 的表格是它的快照。
+
+## 第一步：确定文章类别
+
+后台 `category` 字段只接受五个值（`nuxt-admin/server/domain/articles.ts:41`）：**`study` 学习笔记、`game` 游戏评测、`work` 个人作品、`resource` 资源分享、`other` 随笔**。类别不是装饰性标签，它决定了读者要什么，也就决定了哪些组件是帮助、哪些是噪音。
+
+写之前先归类，然后按那张矩阵选组件。矩阵完整版（含每类的骨架和取舍理由）在 `references/patterns.md`，这里只给速查：
+
+| 组件 | study | game | work | resource | other |
+| --- | --- | --- | --- | --- | --- |
+| `alert` | ✓ | ✓ 仅结论/警告 | ✓ | ✓ | ○ 至多一个 |
+| `tabs` | ✓ | — | ○ 方案对比 | ○ 分类清单 | — |
+| `collapse` | ✓ | ○ 仅埋藏支线 | ✓ | ✓ | ○ |
+| `spoiler` | — | ✓ | — | — | — |
+| `steps` | ✓ | — | ✓ | — | — |
+| `code-playground` | ✓ | — | ✓ | — | — |
+| `image-enhanced` | ✓ | ✓ | ✓ | ○ | ○ |
+| `image-comparison` | ○ 版本对比 | ✓ 画质/改动 | ✓ 前后效果 | — | — |
+| `star-rating` | — | ✓ | ○ 仅用户评分类作品 | — | — |
+| `github-card` | ○ 至多两张 | — | ✓ | ✓ | — |
+| `link-card` | ○ 引用资料 | — | ✓ | ✓ 主力 | ○ |
+| `type-writer` | — | — | ○ 至多一处 | — | ○ 至多一处 |
+| `web-embed` | ○ 视频教程 | ✓ 实机视频 | ✓ 演示录屏 | ○ | — |
+
+`✓` 主力；`○` 有条件（条件写在 `references/patterns.md`）；`—` 不要用。
+
+**为什么这么限制**：矩阵不是洁癖。`game` 类里出现 `code-playground` 会立刻破坏评测的阅读氛围；`resource` 类里放 `spoiler` 或 `image-comparison` 是在阻止读者拿到链接；`study` 类里用 `star-rating` 会让技术内容显得像产品软文。反过来，`work` 类不用 `link-card`/`github-card` 就等于让读者自己去找入口。破例可以，但要能说出"这个组件让读者更快拿到他想要的东西"，而不只是"版面更热闹"。
 
 ## 硬性规则
 
@@ -90,6 +116,8 @@ steps:
 
 不写 `#default` 时，标签后、首个 `#slot` 之前的内容就是默认槽。各组件支持哪些槽见 `references/components.md`；`steps` / `code-playground` / `star-rating` / `github-card` / `link-card` 没有具名槽。
 
+**槽位标记后面紧跟列表时，习惯上留一个空行。** 我没能在本环境实测出「不留空行就解析失败」（`node_modules` 未安装，跑不了 `nuxt generate`），所以不当硬规则要求；但留空行没有代价，写列表时顺手加上更稳。
+
 ## 嵌套
 
 MDC 用冒号数量表示层级：
@@ -109,7 +137,7 @@ labels: ["问题", "解决"]
 ::
 ```
 
-但嵌套有几个实际限制：`code-playground` 读的是 slot 的 `textContent`，里面再塞组件会把组件文本一起读进去；`tabs` 的每个 panel 里嵌套别的块组件也容易数错冒号。**优先拆平**：把要嵌套的提示框移到标签页外面，或用连续段落代替。
+嵌套在技术上可行（`Tabs.vue` 用 `<slot :name="tab.slot" />` 渲染，子组件能正常挂载），但有两个真实限制：`code-playground` 读的是 slot 的 `textContent`，里面再塞组件会把组件文本一起读进去；`tabs` 的 panel 里嵌套时内层必须多用一个冒号，是最容易数错的地方。**所以：需要嵌套时（例如 resource 类按类别分组 `link-card`）可以嵌，但写完必须跑校验脚本；能用连续段落表达清楚的，优先拆平。**
 
 ## 内容层的三个坑
 
@@ -141,11 +169,22 @@ def wrapper(*args, **kwargs):
 ## 成稿后自检
 
 ```bash
+# 只查语法
 node .skills/mdc-article-writing/scripts/check-mdc.mjs path/to/article.md
-```
-脚本检查：未知标签、冒号不配对、缩进的 `::`、必填 props 缺失、`labels` 与 `#tab-N` 数量不一致、枚举值越界、`web-embed` 域名白名单、`star-rating` 半星/上限、`runnable` 语言不匹配。有错误时退出码为 1，可以直接串进工作流。
 
-脚本只能查语法，查不出内容质量。发布前的最后一步仍然是登录后台，在「分屏」模式里看一眼预览 —— 但注意**后台预览用的是简化替身**（`nuxt-admin/app/components/mdc/`）：`steps` 渲染成有序列表而不是 `UStepper`，`star-rating` 不做半星，`web-embed` 只显示外壳。预览正常不等于线上一致，涉及交互组件的文章要发布后回公开站再看一眼。
+# 语法 + 类别规范（推荐）
+node .skills/mdc-article-writing/scripts/check-mdc.mjs path/to/article.md --category study
+```
+
+`--category` 接受 `study` / `game` / `work` / `resource` / `other`，和后台分类字段完全一致。带上类别后，脚本会额外按前面那张矩阵判断：
+
+- 该类不该出现的组件报 **error**（退出码 1），并说明原因
+- 有条件组件超量报 **warning**（`github-card` 超过 2 张、`type-writer`/`tabs`/`alert` 超过上限）
+- 结构性缺失报 warning（`resource` 类没有 `link-card`、`work` 类既无成品图又无入口、`game` 类只有一个评分）
+
+通用语法检查项：未知标签、冒号不配对、缩进、必填 props 缺失、`labels` 与 `#tab-N` 数量不一致、枚举越界、`web-embed` 域名白名单、`star-rating` 半星与上限、`runnable` 语言不匹配、`star-rating` 嵌在 `tabs` 内。
+
+脚本只能查语法和组件取舍，查不出内容质量。发布前的最后一步仍然是登录后台，在「分屏」模式里看一眼预览 —— 但注意**后台预览用的是简化替身**（`nuxt-admin/app/components/mdc/`）：`steps` 渲染成有序列表而不是 `UStepper`，`star-rating` 不做半星，`web-embed` 只显示外壳。预览正常不等于线上一致，涉及交互组件的文章要发布后回公开站再看一眼。
 
 ## 别忘了重建
 

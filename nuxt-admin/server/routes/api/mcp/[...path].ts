@@ -71,14 +71,15 @@ function isKnownScope(value: unknown): value is McpScope {
 }
 
 /**
- * `normalizeMcpScopes` in the domain widens an all-invalid scope list to the full
- * set, so a typo such as `["admin:all"]` would silently mint an over-privileged
- * token. Issuance therefore rejects unknown names here instead of relying on the
- * domain default.
+ * `normalizeMcpScopes` in the domain widens an empty or all-invalid scope list to
+ * the full set, so both a typo such as `["admin:all"]` and an explicit `[]` would
+ * silently mint an over-privileged token — an empty list must not fail open. Only
+ * an omitted `scopes` means "use the default".
  */
 function validateRequestedScopes(value: unknown) {
   if (value === undefined || value === null) return
   if (!Array.isArray(value)) throw createError({ statusCode: 400, statusMessage: 'scopes must be an array of MCP scope names' })
+  if (value.length === 0) throw createError({ statusCode: 400, statusMessage: 'scopes must not be empty; omit it to request the default scopes' })
   for (const scope of value) {
     if (!isKnownScope(scope)) throw createError({ statusCode: 400, statusMessage: `Unknown MCP scope: ${String(scope)}` })
   }

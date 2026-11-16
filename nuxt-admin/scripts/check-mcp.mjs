@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { createRequire } from 'node:module'
 import { build } from 'esbuild'
-import { createError, getRequestURL } from 'h3'
+import { createError, getHeader, getRequestHost, getRequestURL } from 'h3'
 import { paginate, projectArticleList, withDiaryPublicDefault } from '../server/domain/mcp-view.ts'
 
 const root = new URL('../', import.meta.url)
@@ -37,6 +37,13 @@ const adapter = {
 // Nitro auto-imports these in production; keep tests explicit.
 globalThis.createError = createError
 globalThis.getRequestURL = getRequestURL
+// The route file relies on Nitro's auto-imported defineEventHandler; identity is enough here.
+globalThis.defineEventHandler = handler => handler
+// `server/utils/request-security.ts` uses these without importing them (Nitro auto-imports).
+// Without the globals the CSRF guard throws ReferenceError, which the assertions below would
+// misread as a failing status instead of exercising the real check.
+globalThis.getHeader = getHeader
+globalThis.getRequestHost = getRequestHost
 
 async function bundleModule(relativePath) {
   const output = await build({
@@ -208,6 +215,221 @@ assert.equal(withDiaryPublicDefault({ isPublic: true }).isPublic, true)
 assert.equal(withDiaryPublicDefault({ isPublic: '0' }).isPublic, false)
 assert.equal(withDiaryPublicDefault({ isPublic: 1 }).isPublic, true)
 
+// 14. 路由层鉴权组：默认导出必须真的挂上每个 guard
+// 路由文件的鉴权不能只靠手工 curl 验证，否则删掉 assertSafeMutation、把 Bearer 分支
+// 换成 Cookie、或放宽 scope 校验，check:mcp 依然会全绿。
+const routeModule = await bundleModule('server/routes/api/mcp/[...path].ts')
+
+// h3 event 的最小真实形状：getRouterParam 读 context.params，getMethod 读 node.req.method，
+// getHeader 读 node.req.headers，readBody 读 node.req.body，requireAdminSession 需要
+// node.res 来清 cookie，Origin 校验需要 context.cloudflare.request。
+function routeEvent({ path, method = 'GET', headers = {}, body, cookie, origin, requestUrl = 'https://wasd09090030.top/api/mcp' }) {
+  const requestHeaders = { host: 'wasd09090030.top', ...headers }
+  if (body !== undefined) requestHeaders['content-type'] = 'application/json'
+  if (cookie) requestHeaders.cookie = cookie
+  // The Origin header is the *caller's* origin and must stay independent of the
+  // request URL (the resource being fetched). Deriving one from the other would
+  // make every request look same-origin and silently neuter assertSafeMutation.
+  if (origin) requestHeaders.origin = origin
+  const runtime = { env: { ...event.context.cloudflare.env, BLOG_DB: adapter }, request: new Request(requestUrl + path) }
+  const res = {
+    headers: {}, statusCode: 200, statusMessage: '',
+    getHeader(name) { return this.headers[name] },
+    setHeader(name, value) { this.headers[name] = value },
+    removeHeader(name) { delete this.headers[name] },
+    appendHeader(name, value) { this.headers[name] = value },
+    headersSent: false
+  }
+  const ev = {
+    __is_event__: true,
+    path: '/api/mcp' + path,
+    method,
+    node: { req: { url: '/api/mcp' + path, method, headers: requestHeaders, body }, res },
+    context: { params: { path: path.replace(/^\//, '') }, cloudflare: runtime }
+  }
+  return { event: ev, res }
+}
+
+async function callRoute(opts) {
+  const { event: ev, res } = routeEvent(opts)
+  try {
+    const value = await routeModule.default(ev)
+    return { ok: true, value, status: res.statusCode, headers: res.headers }
+  } catch (error) {
+    return { ok: false, status: error.statusCode, message: error.statusMessage || error.message, headers: res.headers }
+  }
+}
+
+// 先把「当前权限」状态准备好：admin 存在、must_reset=0，且密码可校验（前面小节只用了假 hash）。
+db.prepare("UPDATE admin_users SET must_reset = 0 WHERE username = 'admin'").run()
+const adminPassword = await cryptoModule.hashPassword('route-test-password')
+db.prepare("UPDATE admin_users SET password_hash = ?, password_salt = ?, password_iterations = ?, password_algorithm = ? WHERE username = 'admin'")
+  .run(adminPassword.hash, adminPassword.salt, adminPassword.iterations, adminPassword.algorithm)
+const routeToken = await mcpToken.issueMcpToken(event, { username: 'admin', label: 'route-test', scopes: ['mcp:read', 'mcp:write'] })
+const readOnlyToken = await mcpToken.issueMcpToken(event, { username: 'admin', label: 'route-ro', scopes: ['mcp:read'] })
+const bearer = `Bearer ${routeToken.token}`
+const sessionToken = 'route-session-token'
+db.prepare("INSERT INTO admin_sessions (token_hash, username, expires_at, revoked_at, created_at, last_seen_at, ip_address, user_agent) VALUES (?, 'admin', '2099-01-01T00:00:00.000Z', NULL, '2026-01-01', '2026-01-01', NULL, NULL)")
+  .run(await cryptoModule.hashToken(sessionToken, 'test-pepper'))
+const cookieHeader = `admin_session=${sessionToken}`
+
+// 14.1 无 Bearer → 401 Authentication required（且确实是 401，不是 404/500）
+const noAuth = await callRoute({ path: '/whoami', method: 'GET' })
+assert.equal(noAuth.ok, false)
+assert.equal(noAuth.status, 401, 'GET /api/mcp/whoami without Authorization must be 401')
+assert.equal(noAuth.message, 'Authentication required')
+
+// 14.2 合法 Bearer → 回显四个字段，且绝不回显 token 明文
+const who = await callRoute({ path: '/whoami', method: 'GET', headers: { authorization: bearer } })
+assert.equal(who.ok, true)
+assert.deepEqual(Object.keys(who.value).sort(), ['expiresAt', 'label', 'scopes', 'username'])
+assert.equal(who.value.username, 'admin')
+assert.equal(who.value.label, 'route-test')
+assert.equal('token' in who.value, false, 'whoami must not return the plaintext token')
+assert.equal(JSON.stringify(who.value).includes(routeToken.token), false)
+
+// 14.3 Cookie 分支只认 Cookie：带合法 Bearer + 无 cookie → 401（不能拿 Bearer 当会话）
+const bearerOnCookieRoute = await callRoute({ path: '/tokens', method: 'GET', headers: { authorization: bearer } })
+assert.equal(bearerOnCookieRoute.ok, false)
+assert.equal(bearerOnCookieRoute.status, 400, 'an Authorization header on a cookie route must be rejected outright')
+assert.equal(bearerOnCookieRoute.message, 'Authorization headers are not accepted on cookie-authenticated routes')
+const noCookieNoBearer = await callRoute({ path: '/tokens', method: 'GET' })
+assert.equal(noCookieNoBearer.status, 401, 'GET /api/mcp/tokens without a session must be 401')
+
+// 14.4 Bearer 分支完全不看 Cookie：带合法 cookie + 无 Authorization → 401
+const cookieOnBearerRoute = await callRoute({ path: '/whoami', method: 'GET', cookie: cookieHeader })
+assert.equal(cookieOnBearerRoute.ok, false)
+assert.equal(cookieOnBearerRoute.status, 401, 'a valid session cookie must not authenticate a Bearer route')
+assert.equal(cookieOnBearerRoute.message, 'Authentication required')
+
+// 14.5 Cookie 分支的合法路径：有会话 → 列表，且列表不含任何明文 token
+const tokenList = await callRoute({ path: '/tokens', method: 'GET', cookie: cookieHeader })
+assert.equal(tokenList.ok, true)
+assert.ok(Array.isArray(tokenList.value.tokens))
+assert.equal(JSON.stringify(tokenList.value).includes(routeToken.token), false)
+assert.equal(JSON.stringify(tokenList.value).includes(readOnlyToken.token), false)
+
+// 14.6 Cookie 变更路由：CSRF 检查必须先于会话查询
+// 无会话 + 非法 Origin → 403（若顺序反了，缺会话会先抛 401）
+const crossOriginRevoke = await callRoute({
+  path: '/tokens/1/revoke', method: 'POST', origin: 'https://evil.example'
+})
+assert.equal(crossOriginRevoke.ok, false)
+assert.equal(crossOriginRevoke.status, 403, 'assertSafeMutation must run before requireAdminSession')
+assert.equal(crossOriginRevoke.message, 'Cross-origin request rejected')
+
+// 14.6a 同一请求加上合法会话仍是 403：证明挡住它的是 Origin，不是会话缺失
+const crossOriginWithSession = await callRoute({
+  path: '/tokens/1/revoke', method: 'POST', origin: 'https://evil.example', cookie: cookieHeader
+})
+assert.equal(crossOriginWithSession.status, 403)
+
+// 14.6b 同源但无会话 → 401（证明 403 不是唯一出口，会话确实被要求）
+const sameOriginNoSession = await callRoute({ path: '/tokens/1/revoke', method: 'POST', origin: 'https://wasd09090030.top' })
+assert.equal(sameOriginNoSession.ok, false)
+assert.equal(sameOriginNoSession.status, 401, 'same-origin revoke without a session must be 401')
+
+// 14.6c 同源 + 有效会话 + 不存在的 id → 404（证明会话通过后才查行）
+const revokeMissing = await callRoute({ path: '/tokens/99999/revoke', method: 'POST', origin: 'https://wasd09090030.top', cookie: cookieHeader })
+assert.equal(revokeMissing.ok, false)
+assert.equal(revokeMissing.status, 404, 'revoking an unknown id must be 404')
+
+// 14.7 签发路由的 Origin 规则：没有 Origin（CLI）必须放行。
+// 这条放在所有其它签发断言之前，否则「Origin 被改成无条件校验」会先在别处以 400 vs 403 暴露。
+const noOriginIssue = await callRoute({
+  path: '/token', method: 'POST',
+  body: { username: 'admin', password: 'route-test-password', label: 'no-origin' }
+})
+assert.equal(noOriginIssue.ok, true, 'a CLI client sends no Origin and must still be able to issue a token')
+
+// 14.7a 未知 scope → 400 且不落库
+const beforeCount = db.prepare('SELECT COUNT(*) AS n FROM mcp_tokens').get().n
+const unknownScope = await callRoute({
+  path: '/token', method: 'POST',
+  body: { username: 'admin', password: 'route-test-password', label: 'bad', scopes: ['admin:all'] }
+})
+assert.equal(unknownScope.ok, false)
+assert.equal(unknownScope.status, 400)
+assert.ok(String(unknownScope.message).includes('admin:all'), 'the 400 must name the offending scope')
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM mcp_tokens').get().n, beforeCount, 'a rejected scope must not issue a token')
+assert.equal(db.prepare("SELECT COUNT(*) AS n FROM mcp_tokens WHERE label = 'bad'").get().n, 0)
+
+// 14.7b 空数组 → 400（不能 fail open 成默认全权限）
+const emptyScopes = await callRoute({
+  path: '/token', method: 'POST',
+  body: { username: 'admin', password: 'route-test-password', label: 'empty', scopes: [] }
+})
+assert.equal(emptyScopes.ok, false)
+assert.equal(emptyScopes.status, 400, 'scopes: [] must not fall back to the default full scope set')
+assert.ok(/omit/i.test(String(emptyScopes.message)), 'the 400 must say omitting scopes means the default')
+assert.equal(db.prepare("SELECT COUNT(*) AS n FROM mcp_tokens WHERE label = 'empty'").get().n, 0)
+
+// 14.7c scopes 不是数组 → 400
+const badScopesType = await callRoute({
+  path: '/token', method: 'POST',
+  body: { username: 'admin', password: 'route-test-password', label: 'notarray', scopes: 'mcp:read' }
+})
+assert.equal(badScopesType.status, 400)
+
+// 14.7d 签发成功 → 201 + 明文 token；用该 token 能过 whoami
+const issuedViaRoute = await callRoute({
+  path: '/token', method: 'POST',
+  body: { username: 'admin', password: 'route-test-password', label: 'via-route', scopes: ['mcp:read'] }
+})
+assert.equal(issuedViaRoute.ok, true)
+assert.equal(issuedViaRoute.status, 201, 'issuance must set 201')
+assert.ok(String(issuedViaRoute.value.token).startsWith('bmcp_'))
+assert.equal(issuedViaRoute.value.tokenPrefix, issuedViaRoute.value.token.slice(0, 12))
+assert.deepEqual(issuedViaRoute.value.scopes, ['mcp:read'], 'requested scopes must be honored exactly')
+
+// 14.7e 密码错误 → 401；must_reset → 403
+const wrongPassword = await callRoute({
+  path: '/token', method: 'POST', body: { username: 'admin', password: 'wrong-password', label: 'x' }
+})
+assert.equal(wrongPassword.status, 401)
+assert.equal(wrongPassword.message, 'Invalid username or password')
+db.prepare("UPDATE admin_users SET must_reset = 1 WHERE username = 'admin'").run()
+const mustResetIssue = await callRoute({
+  path: '/token', method: 'POST', body: { username: 'admin', password: 'route-test-password', label: 'x' }
+})
+assert.equal(mustResetIssue.status, 403)
+assert.equal(mustResetIssue.message, 'Password reset is required')
+db.prepare("UPDATE admin_users SET must_reset = 0 WHERE username = 'admin'").run()
+
+// 14.7f 错误 Origin → 403 且不落库；同源 Origin → 放行
+const evilOrigin = await callRoute({
+  path: '/token', method: 'POST', origin: 'https://evil.example',
+  body: { username: 'admin', password: 'route-test-password', label: 'evil' }
+})
+assert.equal(evilOrigin.status, 403)
+assert.equal(evilOrigin.message, 'Cross-origin request rejected')
+assert.equal(db.prepare("SELECT COUNT(*) AS n FROM mcp_tokens WHERE label = 'evil'").get().n, 0, 'a rejected Origin must not issue a token')
+const sameOriginIssue = await callRoute({
+  path: '/token', method: 'POST', origin: 'https://wasd09090030.top',
+  body: { username: 'admin', password: 'route-test-password', label: 'same-origin' }
+})
+assert.equal(sameOriginIssue.ok, true, 'a same-origin browser call must still be able to issue a token')
+
+// 14.8 Bearer scope 分档：只读 token 能过 read 分支
+const readOnlyWho = await callRoute({ path: '/whoami', method: 'GET', headers: { authorization: `Bearer ${readOnlyToken.token}` } })
+assert.equal(readOnlyWho.ok, true)
+
+// 14.8a 自吊销要求 mcp:read：仅 write 的 token 必须 403，随后 read token 才成功
+const writeOnly = await mcpToken.issueMcpToken(event, { username: 'admin', label: 'route-wo', scopes: ['mcp:write'] })
+const writeOnlyRevoke = await callRoute({ path: '/token/revoke', method: 'POST', headers: { authorization: `Bearer ${writeOnly.token}` } })
+assert.equal(writeOnlyRevoke.status, 403, 'self-revoke must require mcp:read')
+assert.ok(String(writeOnlyRevoke.message).includes('Insufficient scope'))
+const readOnlyRevoke = await callRoute({ path: '/token/revoke', method: 'POST', headers: { authorization: `Bearer ${readOnlyToken.token}` } })
+assert.equal(readOnlyRevoke.ok, true)
+assert.deepEqual(readOnlyRevoke.value, { success: true })
+const revokedWho = await callRoute({ path: '/whoami', method: 'GET', headers: { authorization: `Bearer ${readOnlyToken.token}` } })
+assert.equal(revokedWho.status, 401, 'a self-revoked token must stop working')
+
+// 14.9 未知路径 → 404，而不是静默成功
+const unknownRoute = await callRoute({ path: '/nope', method: 'GET' })
+assert.equal(unknownRoute.status, 404)
+assert.equal(unknownRoute.message, 'Unsupported MCP API route')
+
 db.close()
 
-console.log('MCP checks passed: tokens (format, scopes, TTL, issuance, enforcement, expiry, revocation, must_reset, redaction, credentials, password change/reset), list projection, pagination, diary defaults.')
+console.log('MCP checks passed: tokens (format, scopes, TTL, issuance, enforcement, expiry, revocation, must_reset, redaction, credentials, password change/reset), list projection, pagination, diary defaults, route auth gates (bearer/cookie separation, CSRF ordering, scope validation).')

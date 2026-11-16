@@ -1,0 +1,16 @@
+{
+  "name": "blog-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": { "blog-mcp": "src/index.js" },
+  "engines": { "node": ">=20.19.0" },
+  "scripts": { "smoke": "node scripts/smoke.mjs" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.0"
+  }
+}

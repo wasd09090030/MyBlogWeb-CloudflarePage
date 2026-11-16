@@ -17,6 +17,9 @@ const MCP_TOKEN_PATTERN = /^bmcp_[A-Za-z0-9_-]{43}$/
 const MCP_LABEL_MAX = 64
 const MCP_LAST_USED_THROTTLE_MS = 60_000
 
+/** Every read of `mcp_tokens` selects the same shape; keep the list in one place. */
+const TOKEN_COLUMNS = 'id, token_prefix, username, label, scopes, created_at, last_used_at, expires_at, revoked_at'
+
 export type McpTokenPublic = {
   id: number
   tokenPrefix: string
@@ -82,6 +85,17 @@ export function isMcpTokenFormat(value: string): boolean {
   return MCP_TOKEN_PATTERN.test(value)
 }
 
+/**
+ * The single "revoke every live token for this account" statement.
+ * `changeAdminPassword` and `resetOrBootstrapAdmin` inline it into their batch,
+ * and `revokeAllMcpTokens` runs the identical SQL — one literal, so the two can
+ * never drift. It lives here (not in `auth.ts`) so the token module does not
+ * have to import the auth module and create a cycle.
+ */
+export function revokeMcpTokensStatement(username: string, now: string): { sql: string; values: string[] } {
+  return { sql: 'UPDATE mcp_tokens SET revoked_at = ? WHERE username = ? AND revoked_at IS NULL', values: [now, username] }
+}
+
 export function parseMcpScopesColumn(value: unknown): McpScope[] {
   if (typeof value !== 'string' || !value.trim()) return []
   try {
@@ -123,6 +137,11 @@ export async function issueMcpToken(
     throw createError({ statusCode: 400, statusMessage: 'A token label is required (1-64 characters)' })
   }
   const username = String(input.username || '').trim()
+  // A token bound to '' would be orphaned from the start: every Bearer check
+  // looks the username up in admin_users and rejects when the row is missing.
+  if (!username) {
+    throw createError({ statusCode: 400, statusMessage: 'A username is required to issue a token' })
+  }
   const scopes = normalizeMcpScopes(input.scopes)
   const days = normalizeMcpExpiresInDays(input.expiresInDays)
   const token = `${MCP_TOKEN_PREFIX}${randomToken(32)}`
@@ -135,7 +154,7 @@ export async function issueMcpToken(
     VALUES (?, ?, ?, ?, ?, ?, NULL, ?, NULL)
   `, tokenHash, token.slice(0, 12), username, label, JSON.stringify(scopes), createdAt, expiresAt)
   const row = await queryFirst<McpTokenRow>(db, `
-    SELECT id, token_prefix, username, label, scopes, created_at, last_used_at, expires_at, revoked_at
+    SELECT ${TOKEN_COLUMNS}
     FROM mcp_tokens WHERE token_hash = ? LIMIT 1
   `, tokenHash)
   if (!row) throw createError({ statusCode: 500, statusMessage: 'Token could not be persisted' })
@@ -154,7 +173,7 @@ export async function authenticateMcpRequest(
   const tokenHash = await hashToken(token, getRequiredSecret(event, 'SESSION_PEPPER'))
   const db = getDb(event)
   const row = await queryFirst<McpTokenRow>(db, `
-    SELECT id, token_prefix, username, label, scopes, created_at, last_used_at, expires_at, revoked_at
+    SELECT ${TOKEN_COLUMNS}
     FROM mcp_tokens
     WHERE token_hash = ? AND revoked_at IS NULL AND expires_at > ?
     LIMIT 1
@@ -184,7 +203,7 @@ export async function authenticateMcpRequest(
 
 export async function listMcpTokens(event: H3Event, username: string): Promise<McpTokenPublic[]> {
   const rows = await queryAll<McpTokenRow>(getDb(event), `
-    SELECT id, token_prefix, username, label, scopes, created_at, last_used_at, expires_at, revoked_at
+    SELECT ${TOKEN_COLUMNS}
     FROM mcp_tokens
     WHERE username = ?
     ORDER BY created_at DESC, id DESC
@@ -204,5 +223,6 @@ export async function revokeMcpTokenByHash(event: H3Event, tokenHash: string): P
 }
 
 export async function revokeAllMcpTokens(event: H3Event, username: string): Promise<void> {
-  await execute(getDb(event), 'UPDATE mcp_tokens SET revoked_at = ? WHERE username = ? AND revoked_at IS NULL', nowIso(), username)
+  const statement = revokeMcpTokensStatement(username, nowIso())
+  await execute(getDb(event), statement.sql, ...statement.values)
 }

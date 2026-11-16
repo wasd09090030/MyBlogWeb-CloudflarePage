@@ -3,6 +3,9 @@ import { deleteCookie, getCookie, getHeader, setCookie } from 'h3'
 import { batch, execute, getDb, nowIso, queryFirst } from '~~/server/utils/d1'
 import { getClientAddress, getCloudflareEnv, getRequiredSecret } from '~~/server/utils/cloudflare'
 import { hashPassword, hashToken, randomToken, verifyPassword } from '~~/server/utils/edge-crypto'
+// The revocation statement lives with the token module so its SQL has one owner;
+// `auth.ts` only decides *when* it runs (password change / reset batches).
+import { revokeMcpTokensStatement } from '~~/server/domain/mcp-token'
 
 type AdminUserRow = {
   username: string
@@ -173,11 +176,6 @@ export async function revokeCurrentSession(event: H3Event) {
   const session = await getCurrentSession(event, false)
   if (session) await execute(getDb(event), 'UPDATE admin_sessions SET revoked_at = ? WHERE token_hash = ? AND revoked_at IS NULL', nowIso(), session.tokenHash)
   clearSessionCookie(event)
-}
-
-/** Shared by password change and reset: revoke every live MCP token for the account. */
-export function revokeMcpTokensStatement(username: string, now: string): { sql: string; values: string[] } {
-  return { sql: 'UPDATE mcp_tokens SET revoked_at = ? WHERE username = ? AND revoked_at IS NULL', values: [now, username] }
 }
 
 export async function changeAdminPassword(event: H3Event, currentPasswordValue: unknown, newPasswordValue: unknown) {

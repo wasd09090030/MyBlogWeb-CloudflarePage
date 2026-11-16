@@ -62,6 +62,12 @@ export async function parseResponse(response) {
 }
 
 /**
+ * 请求超时。服务端 `reportPagesDeploy` 自身在 15 秒收尾，客户端留足余量，
+ * 避免把一次慢部署误报成超时。
+ */
+const REQUEST_TIMEOUT_MS = 30_000
+
+/**
  * 把任意异常转成给人看的一句话。
  * @param {unknown} error
  * @returns {string}
@@ -71,8 +77,14 @@ export function formatApiError(error) {
     if (error.status === 401) return '凭证已失效或已被吊销，请重新运行 blog-mcp login'
     return `${error.status} ${error.message}`
   }
+  // createApiClient 在 fetch 失败/超时时会挂上它真正请求的 baseUrl；
+  // 只有裸异常（例如手写的 TypeError）才回退到运行时环境变量。
+  const requestBaseUrl = /** @type {any} */ (error)?.requestBaseUrl
+  if (error instanceof Error && error.name === 'TimeoutError') {
+    return `请求超时（${REQUEST_TIMEOUT_MS / 1000} 秒）${requestBaseUrl ? `：${requestBaseUrl}` : ''}，服务端可能仍在处理，稍后用 status 或列表接口确认结果`
+  }
   if (error instanceof TypeError) {
-    return `无法连接 ${resolveBaseUrl()}，检查网络或 BLOG_MCP_URL`
+    return `无法连接 ${requestBaseUrl || resolveBaseUrl()}，检查网络或 BLOG_MCP_URL`
   }
   if (error instanceof Error && error.message) return error.message
   return String(error)
@@ -113,8 +125,19 @@ export function createApiClient(credentials) {
       headers['content-type'] = 'application/json'
       init.body = JSON.stringify(opts.body)
     }
+    init.signal = AbortSignal.timeout(REQUEST_TIMEOUT_MS)
 
-    const response = await fetch(url, init)
+    let response
+    try {
+      response = await fetch(url, init)
+    } catch (error) {
+      // fetch 的失败只有两种形态：网络错误（TypeError）与超时（TimeoutError）。
+      // 两者都补上这个客户端真正请求的地址，别让错误文案指向环境变量里的另一个地址。
+      if (error instanceof TypeError || (error instanceof Error && error.name === 'TimeoutError')) {
+        /** @type {any} */ (error).requestBaseUrl = baseUrl
+      }
+      throw error
+    }
     // parseResponse 已经把 body 消费掉，错误分支只能复用它的返回值
     const body = await parseResponse(response)
     if (!response.ok) {

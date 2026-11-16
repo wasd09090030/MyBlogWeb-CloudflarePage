@@ -106,6 +106,49 @@ console.log('smoke: api parsing passed')
     )
     assert.equal(reads, 1, 'response body must be read exactly once')
 
+    // 网络失败：用假 fetch 抛 TypeError，错误文案必须落到这个客户端真正请求的
+    // baseUrl（credentials.baseUrl），而不是运行时环境变量里的地址——两边不一致时
+    // 旧文案会指向一个根本没被请求过的服务器。同时请求必须带超时信号。
+    const savedEnvBaseUrl = process.env.BLOG_MCP_URL
+    process.env.BLOG_MCP_URL = 'https://runtime-env.test'
+    try {
+      let seenInit = null
+      globalThis.fetch = async (url, init) => {
+        seenInit = init
+        throw new TypeError('fetch failed')
+      }
+      await assert.rejects(
+        () => api.request('GET', '/api/mcp/whoami'),
+        error => {
+          const message = formatApiError(error)
+          assert.ok(message.includes('无法连接'), message)
+          assert.ok(message.includes('BLOG_MCP_URL'), message)
+          assert.ok(message.includes('https://example.test'), `the message must name the requested baseUrl: ${message}`)
+          assert.equal(message.includes('https://runtime-env.test'), false, 'the message must not name the runtime env baseUrl')
+          return true
+        }
+      )
+      assert.ok(seenInit.signal instanceof AbortSignal, 'requests must carry an AbortSignal timeout')
+      assert.equal(seenInit.signal.aborted, false, 'the timeout signal must not be pre-aborted')
+
+      // 超时：DOMException 名为 TimeoutError，文案必须与通用网络失败区分开。
+      // 用非 TypeError 的异常形态，确保区分靠的是 name 而不是「碰巧 instanceof TypeError」。
+      globalThis.fetch = async () => { throw new DOMException('The operation was aborted due to timeout', 'TimeoutError') }
+      await assert.rejects(
+        () => api.request('GET', '/api/mcp/whoami'),
+        error => {
+          const message = formatApiError(error)
+          assert.ok(message.includes('超时'), message)
+          assert.equal(message.includes('无法连接'), false, 'a timeout must not be reported as a connection failure')
+          assert.ok(message.includes('https://example.test'), `the timeout message must name the requested baseUrl: ${message}`)
+          return true
+        }
+      )
+    } finally {
+      if (savedEnvBaseUrl === undefined) delete process.env.BLOG_MCP_URL
+      else process.env.BLOG_MCP_URL = savedEnvBaseUrl
+    }
+
     // upload：表单上传，content-type 交给 fetch 生成 boundary
     const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs')
     const { tmpdir } = await import('node:os')

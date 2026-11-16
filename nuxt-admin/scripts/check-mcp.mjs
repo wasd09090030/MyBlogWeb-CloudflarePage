@@ -85,7 +85,8 @@ assert.equal(issued.record.username, 'admin')
 const ctx = await mcpToken.authenticateMcpRequest(event, `Bearer ${issued.token}`, 'mcp:read')
 assert.equal(ctx.username, 'admin')
 assert.equal(ctx.label, 'laptop')
-assert.ok(ctx.tokenHash.length > 20, 'hash must not be the token')
+assert.notEqual(ctx.tokenHash, issued.token, 'the auth context must carry the hash, never the plaintext token')
+assert.ok(ctx.tokenHash.length > 20, 'the hash must be a full digest, not a prefix')
 
 // write scope 未授予 → 403
 await assert.rejects(mcpToken.authenticateMcpRequest(event, `Bearer ${issued.token}`, 'mcp:write'), /Insufficient scope/)
@@ -127,9 +128,11 @@ await mcpToken.issueMcpToken(event, { username: 'admin', label: 'b' })
 await mcpToken.revokeAllMcpTokens(event, 'admin')
 assert.equal((await mcpToken.listMcpTokens(event, 'admin')).every(t => t.revokedAt), true)
 
-// 10. label 校验
+// 10. label 校验 + username 校验
 await assert.rejects(mcpToken.issueMcpToken(event, { username: 'admin', label: '' }), /label/)
 await assert.rejects(mcpToken.issueMcpToken(event, { username: 'admin', label: 'x'.repeat(65) }), /label/)
+// 空 username 会签发出一条永远过不了 authenticateMcpRequest 的孤儿 token，必须当场 400
+await assert.rejects(mcpToken.issueMcpToken(event, { username: '   ', label: 'orphan' }), /username/)
 
 // 11. 凭证校验顺序 + 改密/重置时吊销 MCP token
 const authModule = await bundleModule('server/domain/auth.ts')
@@ -154,9 +157,28 @@ assert.deepEqual(await authModule.loginAdmin(event, 'ops', 'correct-horse-batter
 assert.deepEqual(await authModule.verifyAdminCredentials(event, 'ops', 'wrong'), { ok: false, reason: 'invalid' }, 'wrong password must not reveal must_reset')
 db.prepare("UPDATE admin_users SET must_reset = 0 WHERE username = 'ops'").run()
 
+// 成功分支同样要钉住：只测三条失败文案的话，把 loginAdmin 的成功返回值改坏（漏 session、
+// 漏 expiresAt、不写 cookie）依然全绿。此时 ops 的密码是 correct-horse-battery、must_reset=0。
+const loginEvent = httpEvent()
+const loginResult = await authModule.loginAdmin(loginEvent, 'ops', 'correct-horse-battery')
+assert.equal(loginResult.success, true)
+assert.equal(loginResult.username, 'ops')
+assert.ok(typeof loginResult.expiresAt === 'string' && loginResult.expiresAt.length > 0, 'a successful login must return an expiry')
+assert.ok(Date.parse(loginResult.expiresAt) > Date.now(), 'the session expiry must be in the future')
+assert.ok(loginEvent.node.res.headers['set-cookie'], 'a successful login must set the session cookie')
+
+// 11a. 按 id 吊销必须带上 username 过滤：拿到别人的 token id 也不能吊销它
+// 表里同时存在 admin 与 ops 两行，所以这里失败只能是因为过滤条件，而不是「该用户不存在」。
+const foreignTarget = await mcpToken.issueMcpToken(event, { username: 'admin', label: 'foreign-revoke-target' })
+await assert.rejects(mcpToken.revokeMcpTokenById(event, foreignTarget.record.id, 'ops'), /Token not found/, 'revoking another account\'s token id must fail')
+const survivor = await mcpToken.authenticateMcpRequest(event, `Bearer ${foreignTarget.token}`, 'mcp:read')
+assert.equal(survivor.username, 'admin', 'a rejected revoke must leave the token usable')
+
 // 改密/重置共用的吊销语句：把 ops 的 token 准备好的，执行语句后必须失效
+// 这条语句的唯一所有者是 mcp-token.ts（auth.ts 直接 import），所以测试也从那里取；
+// 它被接进两个 batch 这件事由 section 12 走真实领域函数证明。
 const opsToken = await mcpToken.issueMcpToken(event, { username: 'ops', label: 'laptop' })
-const statement = authModule.revokeMcpTokensStatement('ops', new Date().toISOString())
+const statement = mcpToken.revokeMcpTokensStatement('ops', new Date().toISOString())
 await adapter.prepare(statement.sql).bind(...statement.values).run()
 await assert.rejects(mcpToken.authenticateMcpRequest(event, `Bearer ${opsToken.token}`, 'mcp:read'), /Authentication required/)
 

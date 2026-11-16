@@ -99,15 +99,15 @@ claude mcp add blog --scope user -e BLOG_MCP_UPLOAD_ROOTS=D:\Pictures -- node D:
 
 两个变量的**生效时机不同**，这一点很容易搞错：
 
-- `BLOG_MCP_URL` 在 **`login` 时**读取，并被写进 `credentials.json` 的 `baseUrl`。之后 `serve` 只从凭证文件里取这个值，**不再用环境变量决定请求目标**（网络失败提示的文案是例外，见下表）。所以要改服务器地址，必须带着新值重新 `login`。
+- `BLOG_MCP_URL` 在 **`login` 时**读取，并被写进 `credentials.json` 的 `baseUrl`。之后 `serve` 只从凭证文件里取这个值，**不再用环境变量决定请求目标**。所以要改服务器地址，必须带着新值重新 `login`。
 - `BLOG_MCP_UPLOAD_ROOTS` 在**每次 `image_upload` 调用时**读取，所以它属于 `serve` 进程，要通过注册命令的 `-e`（Claude Code）或 `env`（Claude Desktop）传进去。
 
 | 变量 | 何时读取 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `BLOG_MCP_URL` | **请求目标**在 `login` 时决定并持久化；网络失败提示按运行时环境变量拼 | `https://wasd09090030.top` | API 基址，末尾斜杠会被去掉。`status` 输出里的「服务器」就是它 |
+| `BLOG_MCP_URL` | 仅在 `login` 时（决定并持久化请求目标） | `https://wasd09090030.top` | API 基址，末尾斜杠会被去掉。`status` 输出里的「服务器」就是它 |
 | `BLOG_MCP_UPLOAD_ROOTS` | 每次调用 `image_upload` 时 | 未设置（不限制目录） | 允许读取的本地根目录白名单。Windows 用 `;` 分隔，macOS/Linux 用 `:` 分隔。**这是唯一需要在注册时用 `-e` / `env` 传递的变量** |
 
-`BLOG_MCP_URL` 用在哪台服务器，从登录那一刻就固定了。注册 `serve` 时再加 `-e BLOG_MCP_URL=...` **不会**改变请求目标；更糟的是，网络失败提示里的地址是按运行时环境变量拼的，两边不一致时错误信息会指向一个根本没被请求过的地址。**不要给 `serve` 传 `BLOG_MCP_URL`。**
+`BLOG_MCP_URL` 用在哪台服务器，从登录那一刻就固定了。注册 `serve` 时再加 `-e BLOG_MCP_URL=...` **不会**改变请求目标，网络失败或超时的提示也仍然报凭证文件里的地址。**不要给 `serve` 传 `BLOG_MCP_URL`。**
 
 设置 `BLOG_MCP_UPLOAD_ROOTS` 的意义：模型被提示注入后可以把任意本地文件上传成一个公开 URL，这是本客户端最现实的一条外泄路径。把它限制在图片目录里，能挡住绝大部分误操作。校验会按 `realpath` 再比一次，白名单目录里的符号链接/junction 逃不出去。
 
@@ -170,7 +170,7 @@ Remove-Item Env:BLOG_MCP_URL     # 在本窗口清掉，再 login
 
 ## 维护者：部署顺序
 
-`/api/mcp/*` 只由 `blog-api` 处理，所以首次启用或后续改动都要按仓库固定顺序发布。**迁移必须先于 Worker 部署**：`mcp_tokens` 表若不存在，签发 token 与所有 Bearer 校验都会失败。
+`/api/mcp/*` 只由 `blog-api` 处理，所以首次启用或后续改动都要按仓库固定顺序发布。**迁移必须先于 Worker 部署**，否则不只是 MCP 坏掉：`mcp_tokens` 表不存在时，签发 token 和所有 Bearer 校验都会失败；更要紧的是，吊销 token 的那条 `UPDATE mcp_tokens ...` 是改密（`changeAdminPassword`）与重置（`resetOrBootstrapAdmin`）batch 里的第三条语句，表不存在会让整个 batch 回滚并返回 500——也就是说，**在 Worker 已部署、迁移还没跑的那段时间里，管理员虽然还能登录，却既改不了密码也重置不了密码**（`must_reset` 也清不掉）。
 
 ```powershell
 cd nuxt-admin
@@ -196,7 +196,8 @@ npm run smoke
 | `凭证已失效或已被吊销，请重新运行 blog-mcp login` | token 过期、被单独吊销，或改密/重置密码吊销了全部 token | 重新执行 `node src/index.js login --label my-laptop` |
 | `403 Insufficient scope: mcp:write` | 这枚 token 是 `--read-only` 签发的，只有 `mcp:read` | 重登一次（不带 `--read-only`），或用另一台机器的读写 token |
 | `403 Password reset is required`（工具调用）/ `管理员密码需要重置，请先在后台完成重置`（`login`） | 账号被标记为必须重置密码 | 先在后台完成密码重置，再重新 `login` |
-| `无法连接 …，检查网络或 BLOG_MCP_URL` | 登录时记下的地址不可达、代理/网络不通，或线上 Worker 未部署 | 直接读凭证文件里的 `baseUrl`（服务器连不上时 `status` 也只会再报一次同样的错，看不到地址）：Windows 打开 `%APPDATA%\blog-mcp\credentials.json`，其他平台看 `$XDG_CONFIG_HOME/blog-mcp/credentials.json`（回退 `~/.config/blog-mcp/`），找 `"baseUrl"` 那一行。地址不对 → 带着正确的 `BLOG_MCP_URL` 重新 `login`（给 `serve` 加 `-e` 没用）；地址对 → 排查网络，本地联调确认 `nuxt dev` 已启动 |
+| `无法连接 …，检查网络或 BLOG_MCP_URL` | 登录时记下的地址不可达、代理/网络不通，或线上 Worker 未部署 | 报错里的地址就是本次真正请求的地址（来自凭证文件）。地址不对 → 带着正确的 `BLOG_MCP_URL` 重新 `login`（给 `serve` 加 `-e` 没用）；地址对 → 排查网络，本地联调确认 `nuxt dev` 已启动 |
+| `请求超时（30 秒）…` | 30 秒内没收到响应：网络很慢，或服务端仍在处理（例如公开站重建） | 不要立刻重试写操作；先用 `status` 或对应的列表工具确认上一次是否已经生效 |
 | `尚未登录，请先运行 blog-mcp login` | 本机没有凭证文件（`serve` / `status` 会遇到） | 先 `login`；若已登录过，检查是不是在另一个用户账户下运行的 |
 | 工具提示凭证已失效，但手动 `status` 正常 | 客户端启动的进程读不到凭证（例如用了不同的 `APPDATA`） | 用 `claude mcp list` 确认注册的命令，与手动 `node src/index.js status` 用同一环境 |
 | 机器丢失 / 需要远程吊销 | 凭证文件在那台机器上，本地无法操作 | 见下方「吊销某台机器的 token」 |

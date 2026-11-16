@@ -131,7 +131,7 @@ npx wrangler secret put CLOUDFLARE_ACCOUNT_ID --config wrangler.toml
 
 **部署与变更**
 
-- 发布顺序不变，且**迁移必须先于 Worker 部署**：`npm run db:migrate:remote` → `npm run deploy:api`。少跑迁移会让 `/api/mcp/token` 因 `mcp_tokens` 表不存在而失败。这两个命令需用户授权后执行，不要自行运行。
+- 发布顺序不变，且**迁移必须先于 Worker 部署**：`npm run db:migrate:remote` → `npm run deploy:api`。少跑迁移不只是 `/api/mcp/token` 会因 `mcp_tokens` 表不存在而失败：`revokeMcpTokensStatement` 是 `changeAdminPassword` 与 `resetOrBootstrapAdmin` 两个 batch 里的第三条语句，表不存在会让**整个 batch 回滚并返回 500**，于是在部署了 Worker 却还没迁移的窗口里，管理员虽然还能登录，却**既改不了也重置不了密码**（改密/重置失败，`must_reset` 也清不掉）。这两个命令需用户授权后执行，不要自行运行。
 - `blog-router` 不需要改动：`/api` 已在 `API_PATHS` 里，`/api/mcp/*` 原样转发给 `blog-api`。
 - 不新增 Worker Secret：token 哈希复用既有的 `SESSION_PEPPER`。
 - 本地验证：`cd nuxt-admin && npm run check:free-config && npm run check:mcp`、`cd blog-mcp && npm run smoke`。`npm run typecheck` 在本仓库有 12 个**既有**错误（`app/pages/admin/diary|gaming/*`、`server/domain/articles|assets|diary.ts`），不是本模块的绿色门禁——判断标准是"没有新增错误"，不要声称它通过。

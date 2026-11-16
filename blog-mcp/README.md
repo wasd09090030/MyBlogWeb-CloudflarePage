@@ -1,6 +1,6 @@
 # blog-mcp
 
-把博客后台的能力包装成 MCP 工具，让 Claude Code / Claude Desktop 直接读写文章、画廊、日记、图床并触发公开站重建。它在本机以 **stdio** 子进程运行，自身不碰数据库，所有请求都打到线上 `blog-api` 的 `/api/mcp/*`（Bearer 鉴权）。
+把博客后台的能力包装成 MCP 工具，让 Claude Code / Claude Desktop 直接读写文章、画廊、日记、图床并触发公开站重建。它在本机以 **stdio** 子进程运行，自身不碰数据库，业务请求都打到线上 `blog-api` 的 `/api/mcp/*`（Bearer 鉴权）。登录与 token 管理是这条规则的例外：`POST /api/mcp/token` 用账号密码换 token，`/api/mcp/tokens` 两条管理路由只认后台 Cookie 会话。
 
 ## 前置条件
 
@@ -40,7 +40,7 @@ node src/index.js login --label my-laptop
 | 参数 | 作用 |
 | --- | --- |
 | `--label <name>` | 凭证标签，用于认出是哪台机器。省略时取主机名，最长 64 字符 |
-| `--read-only` | 只申请 `mcp:read`。之后调用任何写工具都会得到 `403 Insufficient scope: mcp:write` |
+| `--read-only` | 只申请 `mcp:read`。之后所有写操作——包括不落库的 `article_summarize`——都会得到 `403 Insufficient scope: mcp:write` |
 | `--days <1-90>` | 有效期天数，默认 30。CLI 直接拒绝越界值（服务端另有一层 90 天夹取） |
 | `--help` | 打印用法 |
 
@@ -63,8 +63,8 @@ claude mcp add blog --scope user -- node D:\Work_space\MyBlogWeb-CloudflarePage\
 ```
 
 - `--scope user`：对本机所有项目生效。只想在某个项目里用就换成 `--scope project`。
-- 上面的路径指向主检出目录。若你在某个 `git worktree` 里工作，换成那个 worktree 的绝对路径，例如 `D:\Work_space\MyBlogWeb-CloudflarePage\.claude\worktrees\feat-blog-mcp\blog-mcp\src\index.js`。
-- 需要自定义环境变量时用 `-e`：
+- 上面的路径指向主检出目录。若你在某个 `git worktree` 里工作，换成那个 worktree 的绝对路径，例如 `D:\Work_space\MyBlogWeb-CloudflarePage\.claude\worktrees\feat+blog-mcp\blog-mcp\src\index.js`。
+- 需要给 `serve` 传环境变量时用 `-e`。目前只有 `BLOG_MCP_UPLOAD_ROOTS` 属于这一类（`BLOG_MCP_URL` 是在 `login` 时读的，见「环境变量」）：
 
 ```powershell
 claude mcp add blog --scope user -e BLOG_MCP_UPLOAD_ROOTS=D:\Pictures -- node D:\Work_space\MyBlogWeb-CloudflarePage\blog-mcp\src\index.js serve
@@ -97,14 +97,31 @@ claude mcp add blog --scope user -e BLOG_MCP_UPLOAD_ROOTS=D:\Pictures -- node D:
 
 ## 环境变量
 
-这些变量由**启动 `serve` 的那个进程**读取，所以要在注册命令里通过 `-e`（Claude Code）或 `env`（Claude Desktop）传进去，而不是只在当前 PowerShell 窗口里 `$env:`。
+两个变量的**生效时机不同**，这一点很容易搞错：
 
-| 变量 | 默认值 | 说明 |
-| --- | --- | --- |
-| `BLOG_MCP_URL` | `https://wasd09090030.top` | API 基址，末尾斜杠会被去掉。本地联调指向 `http://localhost:3000` |
-| `BLOG_MCP_UPLOAD_ROOTS` | 未设置（不限制目录） | 允许 `image_upload` 读取的本地根目录白名单。Windows 用 `;` 分隔，macOS/Linux 用 `:` 分隔 |
+- `BLOG_MCP_URL` 在 **`login` 时**读取，并被写进 `credentials.json` 的 `baseUrl`。之后 `serve` 只从凭证文件里取这个值，**不再看环境变量**。所以要改服务器地址，必须带着新值重新 `login`。
+- `BLOG_MCP_UPLOAD_ROOTS` 在**每次 `image_upload` 调用时**读取，所以它属于 `serve` 进程，要通过注册命令的 `-e`（Claude Code）或 `env`（Claude Desktop）传进去。
+
+| 变量 | 何时读取 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `BLOG_MCP_URL` | `login` 时（随后持久化到凭证文件） | `https://wasd09090030.top` | API 基址，末尾斜杠会被去掉。`status` 输出里的「服务器」就是它 |
+| `BLOG_MCP_UPLOAD_ROOTS` | 每次调用 `image_upload` 时 | 未设置（不限制目录） | 允许读取的本地根目录白名单。Windows 用 `;` 分隔，macOS/Linux 用 `:` 分隔。**这是唯一需要在注册时用 `-e` / `env` 传递的变量** |
+
+`BLOG_MCP_URL` 用在哪台服务器，从登录那一刻就固定了。注册 `serve` 时再加 `-e BLOG_MCP_URL=...` **不会**改变请求目标；更糟的是，网络失败提示里的地址是按运行时环境变量拼的，两边不一致时错误信息会指向一个根本没被请求过的地址。**不要给 `serve` 传 `BLOG_MCP_URL`。**
 
 设置 `BLOG_MCP_UPLOAD_ROOTS` 的意义：模型被提示注入后可以把任意本地文件上传成一个公开 URL，这是本客户端最现实的一条外泄路径。把它限制在图片目录里，能挡住绝大部分误操作。校验会按 `realpath` 再比一次，白名单目录里的符号链接/junction 逃不出去。
+
+### 本地联调
+
+先带着本地地址登录，再注册一个不带 `-e BLOG_MCP_URL` 的 `serve`：
+
+```powershell
+cd D:\Work_space\MyBlogWeb-CloudflarePage\blog-mcp
+$env:BLOG_MCP_URL = 'http://localhost:3000'
+node src/index.js login --label local-dev
+```
+
+确认 `node src/index.js status` 的「服务器」显示 `http://localhost:3000` 后，按上面的命令注册 `serve` 即可（不需要 `-e`）。联调结束想回到线上，重新跑一次 `login` 且不要设置该变量——**同一份凭证文件里只存一个地址**，所以本地联调会顶掉线上的凭证。
 
 ## 工具清单（13 个，没有删除类工具）
 
@@ -114,8 +131,8 @@ claude mcp add blog --scope user -e BLOG_MCP_UPLOAD_ROOTS=D:\Pictures -- node D:
 | `article_get` | 按 id 读单篇全文 | `id` |
 | `article_create` | 新建文章 | `title`\*、`contentMarkdown`\*、`slug?`、`category?`、`tags?`、`coverImage?`、`aiSummary?` |
 | `article_update` | 按 id 增量更新文章 | `id`\* + 上述任意字段 |
-| `article_summarize` | 调服务端 AI 生成摘要与建议 slug，不写库 | `title`\*、`content`\*（≤80000 字符） |
-| `image_list` | 列出图床文件 | `dir?`、`search?`、`start?`、`count?`（≤100）、`recursive?` |
+| `article_summarize` | 调服务端 AI 生成摘要与建议 slug。**不写库，但需要 `mcp:write`**（服务端 `/ai/summary` 挂在写 scope 下） | `title`\*、`content`\*（≤80000 字符） |
+| `image_list` | 列出图床文件。**不是纯只读**：服务端会把列出的文件登记进图片资源表 | `dir?`、`search?`、`start?`、`count?`（≤100）、`recursive?` |
 | `image_upload` | 上传本机图片到图床（上传后公开可访问） | `filePath`\*（绝对路径） |
 | `gallery_list` | 分页列出画廊条目 | `page?`、`pageSize?`（默认 100，≤200） |
 | `gallery_create` | 新增画廊条目 | `imageUrl`\*、`tag?`、`sortOrder?`、`isActive?` |
@@ -171,7 +188,7 @@ npm run smoke
 | `凭证已失效或已被吊销，请重新运行 blog-mcp login` | token 过期、被单独吊销，或改密/重置密码吊销了全部 token | 重新执行 `node src/index.js login --label my-laptop` |
 | `403 Insufficient scope: mcp:write` | 这枚 token 是 `--read-only` 签发的，只有 `mcp:read` | 重登一次（不带 `--read-only`），或用另一台机器的读写 token |
 | `403 Password reset is required`（工具调用）/ `管理员密码需要重置，请先在后台完成重置`（`login`） | 账号被标记为必须重置密码 | 先在后台完成密码重置，再重新 `login` |
-| `无法连接 …，检查网络或 BLOG_MCP_URL` | `BLOG_MCP_URL` 写错、代理/网络不通，或线上 Worker 未部署 | 确认 `BLOG_MCP_URL`；浏览器打开 `https://wasd09090030.top` 看是否可达；本地联调时确认 `nuxt dev` 已启动 |
+| `无法连接 …，检查网络或 BLOG_MCP_URL` | 登录时记下的地址不可达、代理/网络不通，或线上 Worker 未部署 | 用 `node src/index.js status` 看「服务器」——那才是请求真正打向的地址；地址不对就带着正确的 `BLOG_MCP_URL` 重新 `login`（给 `serve` 加 `-e` 没用）；地址对就排查网络，本地联调确认 `nuxt dev` 已启动 |
 | `尚未登录，请先运行 blog-mcp login` | 本机没有凭证文件（`serve` / `status` 会遇到） | 先 `login`；若已登录过，检查是不是在另一个用户账户下运行的 |
 | 工具提示凭证已失效，但手动 `status` 正常 | 客户端启动的进程读不到凭证（例如用了不同的 `APPDATA`） | 用 `claude mcp list` 确认注册的命令，与手动 `node src/index.js status` 用同一环境 |
 | 机器丢失 / 需要远程吊销 | 凭证文件在那台机器上，本地无法操作 | 见下方「吊销某台机器的 token」 |

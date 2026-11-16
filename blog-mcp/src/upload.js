@@ -5,7 +5,7 @@
  * URL，这是整个客户端最现实的一条外泄路径。所有拒绝都要发生在读取文件内容
  * 之前 —— 只有本函数返回之后，调用方才允许调用 `openAsBlob`。
  */
-import { statSync } from 'node:fs'
+import { realpathSync, statSync } from 'node:fs'
 import { delimiter, extname, isAbsolute, resolve, sep } from 'node:path'
 
 // 与服务端 `MAX_UPLOAD_BYTES` 保持一致
@@ -25,6 +25,19 @@ function withinRoots(filePath, roots) {
     const prefix = root.endsWith(sep) ? root : `${root}${sep}`
     return filePath.startsWith(prefix)
   })
+}
+
+/**
+ * 取真实路径；失败时退回原路径（根目录可能已不存在，那不是上传路径的错）。
+ * @param {string} value
+ * @returns {string}
+ */
+function realOrSelf(value) {
+  try {
+    return realpathSync(value)
+  } catch {
+    return value
+  }
 }
 
 /**
@@ -64,6 +77,15 @@ export function validateUploadPath(filePath, env = process.env) {
   }
   if (!stats.isFile()) throw new Error(`不是普通文件: ${absolutePath}`)
   if (stats.size > MAX_UPLOAD_BYTES) throw new Error(`文件超过 50 MB 上限: ${absolutePath}`)
+
+  // 上面的前缀比较是字面的：允许目录里的一个符号链接可以指向任何地方。
+  // 真实路径再比一次，才能保证「在允许目录内」不是一句空话。
+  if (roots.length > 0) {
+    const realRoots = roots.map(realOrSelf)
+    if (!withinRoots(realOrSelf(absolutePath), realRoots)) {
+      throw new Error(`上传路径不在 BLOG_MCP_UPLOAD_ROOTS 允许范围内: ${absolutePath}`)
+    }
+  }
 
   return absolutePath
 }

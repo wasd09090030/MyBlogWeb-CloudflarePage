@@ -156,7 +156,7 @@ console.log('smoke: api client passed')
 import { tools } from '../src/tools.js'
 import { validateUploadPath, MAX_UPLOAD_BYTES, ALLOWED_EXTENSIONS } from '../src/upload.js'
 import { createMcpServer } from '../src/server.js'
-import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync, truncateSync, mkdirSync } from 'node:fs'
+import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync, truncateSync, mkdirSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -213,6 +213,33 @@ try {
     // 白名单命中时放行（分隔符用 path.delimiter，两个根都有效）
     const allowed = { ...process.env, BLOG_MCP_UPLOAD_ROOTS: `${otherRoot}${process.platform === 'win32' ? ';' : ':'}${scratch}` }
     assert.equal(validateUploadPath(png, allowed), png)
+
+    // 白名单里的链接不能成为逃逸通道：字面上在允许目录内，真实路径在外。
+    // Windows 上建文件符号链接需要开发者模式/管理员权限，但目录 junction
+    // 不需要；非 Windows 直接用文件符号链接。建不出来就跳过（不影响其余断言）。
+    const linkedDir = mkdtempSync(join(tmpdir(), 'blog-mcp-outside-'))
+    let escapePath = null
+    try {
+      if (process.platform === 'win32') {
+        symlinkSync(scratch, join(linkedDir, 'escape'), 'junction')
+        escapePath = join(linkedDir, 'escape', 'a.PNG')
+      } else {
+        symlinkSync(png, join(linkedDir, 'linked.png'), 'file')
+        escapePath = join(linkedDir, 'linked.png')
+      }
+    } catch {
+      escapePath = null
+    }
+    if (escapePath !== null) {
+      const onlyOther = { ...process.env, BLOG_MCP_UPLOAD_ROOTS: linkedDir }
+      assert.throws(() => validateUploadPath(escapePath, onlyOther), /BLOG_MCP_UPLOAD_ROOTS/, 'a link must not escape the allowed roots')
+      // 链接目标所在目录也在白名单里时应当放行
+      const bothRoots = `${linkedDir}${process.platform === 'win32' ? ';' : ':'}${scratch}`
+      assert.equal(validateUploadPath(escapePath, { ...process.env, BLOG_MCP_UPLOAD_ROOTS: bothRoots }), escapePath)
+    } else {
+      console.log('smoke: link escape case skipped (cannot create links here)')
+    }
+    rmSync(linkedDir, { recursive: true, force: true })
   } finally {
     rmSync(otherRoot, { recursive: true, force: true })
   }
@@ -301,6 +328,20 @@ assert.equal('createdAt' in byName.gallery_update.inputSchema, true)
 // diary_upsert 的日期格式由 schema 收紧
 assert.equal(byName.diary_upsert.inputSchema.date.safeParse('16-11-2026').success, false)
 assert.equal(byName.diary_upsert.inputSchema.date.safeParse('2026-11-16').success, true)
+
+// 描述文字是给模型看的提示，必须与真实行为一致：
+// 排序是升序（domain 的两个列表查询都 ORDER BY sort_order ASC），
+// 而且 image_list 会让服务端把文件登记进 image_assets，不是纯只读。
+assert.ok(byName.gallery_create.description.includes('会直接修改线上数据'))
+assert.ok(byName.gallery_create.inputSchema.sortOrder.description.includes('越小越靠前'))
+assert.ok(byName.gallery_update.inputSchema.sortOrder.description.includes('越小越靠前'))
+assert.equal(byName.image_list.description.includes('只读'), false, 'image_list registers asset rows, so it is not purely read-only')
+assert.ok(byName.image_upload.description.includes('公开可访问'))
+assert.ok(byName.rebuild_public_site.description.includes('几分钟'))
+assert.ok(byName.diary_upsert.description.includes('默认不公开'))
+// search 描述写了「最长 200 字」，schema 必须真的挡住
+assert.equal(byName.image_list.inputSchema.search.safeParse('x'.repeat(200)).success, true)
+assert.equal(byName.image_list.inputSchema.search.safeParse('x'.repeat(201)).success, false)
 console.log('smoke: tools mapping passed')
 
 // --- MCP 服务：工具注册、结果序列化、错误映射 ---------------------------------
@@ -448,6 +489,28 @@ console.log('smoke: mcp server passed')
     assert.equal(badDays.code, 1)
     assert.ok(badDays.stderr.includes('--days'))
 
+    // --help 必须真的可解析（曾经被 parseArgs 的未知参数挡在 2 号退出码）
+    const help = await runCli(['--help'])
+    assert.equal(help.code, 0, `--help failed: ${help.stdout}${help.stderr}`)
+    assert.ok(help.stdout.includes('blog-mcp login'))
+    const noArgs = await runCli([])
+    assert.equal(noArgs.code, 2)
+
+    // CRLF 输入：Windows 的 cmd / PowerShell 管道就是 CRLF。
+    // `\r` 派发成 return、`\n` 再派发成 enter，第二行绝不能因此被当成空密码。
+    const crlfLogin = await runCli(['login', '--label', 'crlf'], 'admin\r\nlocal-dev-password-123\r\n')
+    assert.equal(crlfLogin.code, 0, `CRLF login failed: ${crlfLogin.stdout}${crlfLogin.stderr}`)
+    assert.ok(crlfLogin.stdout.includes('已登录'), crlfLogin.stdout)
+    assert.equal(`${crlfLogin.stdout}${crlfLogin.stderr}`.includes('bmcp_smoketoken_0123456789abcdef'), false)
+    {
+      const body = JSON.parse(requested.filter(r => r.url === '/api/mcp/token').at(-1).body)
+      assert.equal(body.username, 'admin')
+      assert.equal(body.password, 'local-dev-password-123', 'the password must survive CRLF input')
+      // 没有 --read-only 时 scopes 必须整个省略（服务端拒绝 []）
+      assert.equal('scopes' in body, false, 'scopes must be omitted unless --read-only is passed')
+      assert.equal('expiresInDays' in body, false, 'omitting --days must not send expiresInDays')
+    }
+
     const login = await runCli(['login', '--label', 'smoke', '--read-only'], 'admin\nlocal-dev-password-123\n')
     assert.equal(login.code, 0, `login failed: ${login.stdout}${login.stderr}`)
     assert.ok(login.stdout.includes('已登录'), login.stdout)
@@ -462,10 +525,17 @@ console.log('smoke: mcp server passed')
     assert.deepEqual(stored.scopes, ['mcp:read'])
 
     // --read-only 必须发 scopes: ['mcp:read']（不能是空数组，服务端会 400）
-    const tokenRequest = requested.find(r => r.url === '/api/mcp/token')
+    const tokenRequest = requested.filter(r => r.url === '/api/mcp/token').at(-1)
     const tokenBody = JSON.parse(tokenRequest.body)
     assert.deepEqual(tokenBody.scopes, ['mcp:read'])
     assert.equal(tokenBody.username, 'admin')
+
+    // --days N → expiresInDays: N
+    const daysLogin = await runCli(['login', '--label', 'days', '--days', '7'], 'admin\nlocal-dev-password-123\n')
+    assert.equal(daysLogin.code, 0, `--days login failed: ${daysLogin.stdout}${daysLogin.stderr}`)
+    const daysBody = JSON.parse(requested.filter(r => r.url === '/api/mcp/token').at(-1).body)
+    assert.equal(daysBody.expiresInDays, 7)
+    assert.equal('scopes' in daysBody, false)
 
     const status = await runCli(['status'])
     assert.equal(status.code, 0, `status failed: ${status.stdout}${status.stderr}`)

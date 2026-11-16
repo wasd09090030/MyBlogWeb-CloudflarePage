@@ -112,10 +112,10 @@ export const tools = [
   },
   {
     name: 'image_list',
-    description: '列出图床里的图片文件（名称、大小、类型、公开 URL），支持按目录、关键词过滤。只读。',
+    description: '列出图床里的图片文件（名称、大小、类型、公开 URL），支持按目录、关键词过滤。不会修改文章或画廊内容，但服务端会把列出的文件登记进图片资源表。',
     inputSchema: {
       dir: optionalText().describe('目录前缀'),
-      search: optionalText().describe('关键词，最长 200 字'),
+      search: z.string().min(1).max(200).optional().describe('关键词，最长 200 字'),
       start: z.number().int().nonnegative().optional().describe('起始偏移，默认 0'),
       count: z.number().int().positive().max(100).optional().describe('返回条数，默认 50，最大 100'),
       recursive: z.boolean().optional().describe('是否递归子目录')
@@ -147,7 +147,7 @@ export const tools = [
     inputSchema: {
       imageUrl: z.string().min(1).describe('图片 URL 或图床文件名'),
       tag: optionalText().describe('分组标签'),
-      sortOrder: z.number().int().nonnegative().optional().describe('排序值，越大越靠前'),
+      sortOrder: z.number().int().nonnegative().optional().describe('排序值，越小越靠前（升序排列），默认追加到末尾'),
       isActive: z.boolean().optional().describe('是否启用，默认启用')
     },
     run: endpoint('POST', () => '/api/mcp/gallery', { bodyKeys: GALLERY_CREATE_BODY_KEYS })
@@ -159,7 +159,7 @@ export const tools = [
       id: z.number().int().positive().describe('画廊条目 id，只用于定位，不写入条目'),
       imageUrl: optionalText().describe('新图片 URL 或图床文件名'),
       tag: optionalText().describe('新分组标签'),
-      sortOrder: z.number().int().nonnegative().optional().describe('新排序值'),
+      sortOrder: z.number().int().nonnegative().optional().describe('新排序值，越小越靠前（升序排列）'),
       isActive: z.boolean().optional().describe('新的启用状态'),
       createdAt: optionalText().describe('创建时间（ISO 8601），仅更新时生效')
     },

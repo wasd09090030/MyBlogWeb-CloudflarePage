@@ -36,6 +36,11 @@ const USAGE = `用法:
  * 关键细节：一次 ask 结束到下一次 ask 注册之间，stdin 上仍可能同步派发事件
  * （管道里两行常常在同一个 chunk 里）。所以事件先进队列，ask 开始时先把队列
  * 排空，否则第二行会被丢掉。
+ *
+ * 第二个坑是 CRLF：`emitKeypressEvents` 把 `\r\n` 拆成两个事件 —— `return`
+ * 带 `\r`，紧跟一个 `enter` 带 `\n`。若只按键名判断，`return` 已结束第一行，
+ * 那个孤立的 `enter` 会留在队列里，把第二行一问就当成空输入结束。Windows 的
+ * cmd / PowerShell 管道全是 CRLF，所以必须吞掉成对的第二个事件。
  */
 function createLineReader() {
   const stdin = process.stdin
@@ -47,9 +52,19 @@ function createLineReader() {
   const queue = []
   /** @type {{ handle: (event: { type: 'key', str?: string, key?: import('node:readline').Key } | { type: 'end' }) => void } | null} */
   let active = null
+  /**
+   * 上一次 `return` 之后是否还在等 CRLF 的配对的 `\n`。
+   * @type {boolean}
+   */
+  let awaitingCrlfTail = false
 
   /** @type {(str: string | undefined, key: import('node:readline').Key | undefined) => void} */
   const onKeypress = (str, key) => {
+    // CRLF 的第二个事件：`\n` 被 readline 命名为 `enter`，但单个 LF 也是
+    // `enter`。区别在于它紧跟在 `return` 之后，且只隔这一个事件。
+    const isCrlfTail = awaitingCrlfTail && key?.name === 'enter' && str === '\n'
+    awaitingCrlfTail = key?.name === 'return'
+    if (isCrlfTail) return
     const event = { type: 'key', str, key }
     if (active) active.handle(event)
     else queue.push(event)
@@ -304,7 +319,9 @@ async function main() {
       options: {
         label: { type: 'string' },
         'read-only': { type: 'boolean', default: false },
-        days: { type: 'string' }
+        days: { type: 'string' },
+        // 显式声明，否则 parseArgs 遇到未知的 --help 会先抛错、退出码 2
+        help: { type: 'boolean', default: false }
       }
     })
   } catch (error) {
@@ -315,9 +332,10 @@ async function main() {
   }
 
   const [command, ...rest] = parsed.positionals
-  if (!command || command === 'help' || command === '--help') {
+  if (parsed.values.help || !command || command === 'help') {
     console.log(USAGE)
-    if (!command) process.exitCode = 2
+    // `--help` / `help` 是主动求助，退出码 0；完全不给参数才是用法错误
+    if (!parsed.values.help && !command) process.exitCode = 2
     return
   }
 

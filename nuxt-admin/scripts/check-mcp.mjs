@@ -449,8 +449,12 @@ db.prepare("INSERT INTO articles (id, title, slug, content, content_markdown, ca
 
 // 15.1 文章列表必须投影：无 content / contentMarkdown，有 contentLength
 // Section 14 self-revoked `readOnlyToken`, so the read-only leg needs a fresh one.
+// A write-only token is needed throughout too: it is the only way to tell a
+// `requireScope('mcp:read')` gate from one that accepts any authenticated token.
 const businessReadOnly = await mcpToken.issueMcpToken(event, { username: 'admin', label: 'business-ro', scopes: ['mcp:read'] })
 const readOnlyBearer = `Bearer ${businessReadOnly.token}`
+const businessWriteOnly = await mcpToken.issueMcpToken(event, { username: 'admin', label: 'business-wo', scopes: ['mcp:write'] })
+const writeOnlyBearer = `Bearer ${businessWriteOnly.token}`
 const articleList = await callRoute({ path: '/articles', method: 'GET', headers: { authorization: bearer } })
 assert.equal(articleList.ok, true)
 assert.equal(articleList.value.total, 2)
@@ -472,12 +476,27 @@ assert.ok(String(articleDetail.value.content).startsWith('body-a-'))
 const missingArticle = await callRoute({ path: '/articles/999999', method: 'GET', headers: { authorization: bearer } })
 assert.equal(missingArticle.status, 404)
 
+// 15.3a 详情分支的读层级同样是 mcp:read：只读 token 能读，只写 token 必须被挡。
+// 用 read+write 的 bearer 测详情只能证明「分支可达」，证明不了它要的是 read。
+assert.equal((await callRoute({ path: '/articles/1', method: 'GET', headers: { authorization: readOnlyBearer } })).ok, true, 'GET articles/:id must accept mcp:read')
+const detailAsWriteOnly = await callRoute({ path: '/articles/1', method: 'GET', headers: { authorization: writeOnlyBearer } })
+assert.equal(detailAsWriteOnly.status, 403, 'GET articles/:id must require mcp:read specifically')
+assert.ok(String(detailAsWriteOnly.message).includes('Insufficient scope: mcp:read'))
+
 // 15.4 只读 token 写文章 → 403；读 token 能读
 const roCreate = await callRoute({ path: '/articles', method: 'POST', headers: { authorization: readOnlyBearer }, body: { title: 'x', contentMarkdown: 'y' } })
 assert.equal(roCreate.ok, false)
 assert.equal(roCreate.status, 403, 'a read-only token must not create an article')
 assert.ok(String(roCreate.message).includes('Insufficient scope'))
 assert.equal(db.prepare("SELECT COUNT(*) AS n FROM articles WHERE title = 'x'").get().n, 0, 'a rejected write must not insert a row')
+
+// 15.4a PUT articles/:id 也要 write：只读 token 403 且不改行，写 token 真的能改。
+// 只测 POST 的话，把 PUT 的 scope 降成 mcp:read 依然全绿。
+const roUpdate = await callRoute({ path: '/articles/1', method: 'PUT', headers: { authorization: readOnlyBearer }, body: { title: 'Should Not Apply' } })
+assert.equal(roUpdate.ok, false)
+assert.equal(roUpdate.status, 403, 'a read-only token must not update an article')
+assert.ok(String(roUpdate.message).includes('Insufficient scope: mcp:write'))
+assert.equal(db.prepare('SELECT title FROM articles WHERE id = 1').get().title, 'Alpha', 'a rejected update must not change the row')
 
 // 15.5 写 token 建文章 → 201，且 id 只来自路径
 const created = await callRoute({ path: '/articles', method: 'POST', headers: { authorization: bearer }, body: { title: 'Gamma', contentMarkdown: 'gamma body' } })
@@ -500,6 +519,25 @@ assert.equal(galleryList.value.pageSize, 100, 'gallery default pageSize is 100')
 assert.equal((await callRoute({ path: '/gallery', method: 'GET', headers: { authorization: bearer }, query: { pageSize: '9999' } })).value.pageSize, 200, 'gallery pageSize must be capped at 200')
 const roGalleryCreate = await callRoute({ path: '/gallery', method: 'POST', headers: { authorization: readOnlyBearer }, body: { imageUrl: 'https://cfimg.example/b.webp' } })
 assert.equal(roGalleryCreate.status, 403, 'a read-only token must not create a gallery item')
+
+// 15.6a POST /gallery 成功路径：201 + 落库（只测 403 的话分支可达性没被覆盖）
+const galleryCreated = await callRoute({ path: '/gallery', method: 'POST', headers: { authorization: bearer }, body: { imageUrl: 'https://cfimg.example/b.webp', tag: 'screenshot' } })
+assert.equal(galleryCreated.ok, true)
+assert.equal(galleryCreated.status, 201, 'gallery creation must set 201')
+assert.equal(galleryCreated.value.tag, 'screenshot')
+assert.equal(db.prepare("SELECT COUNT(*) AS n FROM galleries WHERE tag = 'screenshot'").get().n, 1)
+
+// 15.6b PATCH gallery/:id 也要 write：只读 token 403 且不改行，写 token 真的能改
+const roGalleryPatch = await callRoute({ path: '/gallery/1', method: 'PATCH', headers: { authorization: readOnlyBearer }, body: { tag: 'hijacked' } })
+assert.equal(roGalleryPatch.ok, false)
+assert.equal(roGalleryPatch.status, 403, 'a read-only token must not update a gallery item')
+assert.ok(String(roGalleryPatch.message).includes('Insufficient scope: mcp:write'))
+assert.equal(db.prepare('SELECT tag FROM galleries WHERE id = 1').get().tag, 'artwork', 'a rejected patch must not change the row')
+const galleryPatched = await callRoute({ path: '/gallery/1', method: 'PATCH', headers: { authorization: bearer }, body: { tag: 'landscape' } })
+assert.equal(galleryPatched.ok, true)
+assert.equal(galleryPatched.value.id, 1)
+assert.equal(galleryPatched.value.tag, 'landscape')
+assert.equal(db.prepare('SELECT tag FROM galleries WHERE id = 1').get().tag, 'landscape')
 
 // 15.7 日记：默认不公开，且必须分页
 const diaryWrite = await callRoute({ path: '/diary/2026-11-16', method: 'PUT', headers: { authorization: bearer }, body: { contentMarkdown: 'mcp default check' } })
@@ -528,8 +566,6 @@ for (const path of ['/images', '/gallery', '/diary', '/articles']) {
 // 15.8a 读列表用的是 mcp:read，而不是 mcp:write：
 // 只读 token 必须能读（不是 403），只写 token 必须被挡（403）。
 // 只断言 401 无法区分「requireScope('mcp:read')」和「requireScope('mcp:write')」。
-const writeOnlyBusiness = await mcpToken.issueMcpToken(event, { username: 'admin', label: 'business-wo', scopes: ['mcp:write'] })
-const writeOnlyBearer = `Bearer ${writeOnlyBusiness.token}`
 for (const path of ['/articles', '/gallery', '/diary']) {
   const asReadOnly = await callRoute({ path, method: 'GET', headers: { authorization: readOnlyBearer } })
   assert.equal(asReadOnly.ok, true, `${path} must be readable with mcp:read only`)
@@ -551,8 +587,8 @@ const imagesRead = await callRoute({ path: '/images', method: 'GET', headers: { 
 assert.equal(imagesRead.ok, false)
 assert.equal(imagesRead.status, 503, 'without image-provider config the read reaches the provider and fails there')
 assert.match(String(imagesRead.message), /not configured/, 'the 503 must come from the image provider config, not from a guard')
-const imagesReadNoScope = await callRoute({ path: '/images', method: 'POST', headers: { authorization: readOnlyBearer }, body: {} })
-assert.equal(imagesReadNoScope.status, 403, 'POST /images must require mcp:write')
+const imagesUploadAsReadOnly = await callRoute({ path: '/images', method: 'POST', headers: { authorization: readOnlyBearer }, body: {} })
+assert.equal(imagesUploadAsReadOnly.status, 403, 'POST /images must require mcp:write')
 
 // 15.10 POST /images 不能先被 readBody 吃掉请求体：非 multipart → 领域层 400
 const imagesNotMultipart = await callRoute({ path: '/images', method: 'POST', headers: { authorization: bearer }, body: {} })
@@ -585,11 +621,12 @@ assert.equal(imagesMultipart.status, 503, 'the multipart file must reach the pro
 const roDeploy = await callRoute({ path: '/ops/pages/deploy', method: 'POST', headers: { authorization: readOnlyBearer } })
 assert.equal(roDeploy.status, 403, 'ops/pages/deploy must require mcp:write')
 const deploy = await callRoute({ path: '/ops/pages/deploy', method: 'POST', headers: { authorization: bearer } })
-// The domain wraps a missing deploy secret in its own 504 timeout envelope
-// (`triggerPagesDeploy` catches everything around the secret lookup). Either way
-// the point here is that the branch is routed — 404 would mean it is missing.
+// No PAGES_DEPLOY_HOOK_URL here, so the domain falls back to CLOUDFLARE_API_TOKEN
+// and `getRequiredSecret` throws inside its try/catch — the timeout envelope turns
+// that into a deterministic 504. Exact status, plus the 404 proof that the branch
+// itself exists rather than falling through.
 assert.notEqual(deploy.status, 404, 'the deploy branch must be routed, not fall through to the 404')
-assert.ok([502, 503, 504].includes(deploy.status), `deploy must fail on configuration, got ${deploy.status}`)
+assert.equal(deploy.status, 504, 'with no deploy hook/secret the domain reports its timeout envelope')
 const roSummary = await callRoute({ path: '/ai/summary', method: 'POST', headers: { authorization: readOnlyBearer }, body: { title: 't', content: 'c' } })
 assert.equal(roSummary.status, 403, 'ai/summary must require mcp:write')
 const summary = await callRoute({ path: '/ai/summary', method: 'POST', headers: { authorization: bearer }, body: { title: 't', content: 'c' } })

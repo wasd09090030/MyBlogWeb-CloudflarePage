@@ -167,9 +167,8 @@ export default defineEventHandler(async (event) => {
     }
     if (parts.length === 1 && currentMethod === 'POST') {
       await requireScope(event, 'mcp:write')
-      const body = await readJsonBody()
       setResponseStatus(event, 201)
-      return await createArticle(event, body)
+      return await createArticle(event, await readJsonBody())
     }
     if (parts.length === 2 && currentMethod === 'PUT') {
       await requireScope(event, 'mcp:write')
@@ -186,9 +185,8 @@ export default defineEventHandler(async (event) => {
     }
     if (parts.length === 1 && currentMethod === 'POST') {
       await requireScope(event, 'mcp:write')
-      const body = await readJsonBody()
       setResponseStatus(event, 201)
-      return await createGallery(event, body)
+      return await createGallery(event, await readJsonBody())
     }
     if (parts.length === 2 && currentMethod === 'PATCH') {
       await requireScope(event, 'mcp:write')

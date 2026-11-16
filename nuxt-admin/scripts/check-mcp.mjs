@@ -223,15 +223,20 @@ const routeModule = await bundleModule('server/routes/api/mcp/[...path].ts')
 // h3 event 的最小真实形状：getRouterParam 读 context.params，getMethod 读 node.req.method，
 // getHeader 读 node.req.headers，readBody 读 node.req.body，requireAdminSession 需要
 // node.res 来清 cookie，Origin 校验需要 context.cloudflare.request。
-function routeEvent({ path, method = 'GET', headers = {}, body, cookie, origin, requestUrl = 'https://wasd09090030.top/api/mcp' }) {
+function routeEvent({ path, method = 'GET', headers = {}, body, cookie, origin, query, requestUrl = 'https://wasd09090030.top/api/mcp' }) {
   const requestHeaders = { host: 'wasd09090030.top', ...headers }
-  if (body !== undefined) requestHeaders['content-type'] = 'application/json'
+  // Only default the content type when the caller did not set one: the images
+  // upload case needs a real multipart boundary header to reach `uploadMedia`.
+  if (body !== undefined && !requestHeaders['content-type']) requestHeaders['content-type'] = 'application/json'
   if (cookie) requestHeaders.cookie = cookie
   // The Origin header is the *caller's* origin and must stay independent of the
   // request URL (the resource being fetched). Deriving one from the other would
   // make every request look same-origin and silently neuter assertSafeMutation.
   if (origin) requestHeaders.origin = origin
-  const runtime = { env: { ...event.context.cloudflare.env, BLOG_DB: adapter }, request: new Request(requestUrl + path) }
+  // `query` lands in the request URL only. The router param must stay the bare
+  // pathname, otherwise `routeParts` would see `articles?pageSize=2` as one segment.
+  const search = query ? `?${new URLSearchParams(query)}` : ''
+  const runtime = { env: { ...event.context.cloudflare.env, BLOG_DB: adapter }, request: new Request(requestUrl + path + search) }
   const res = {
     headers: {}, statusCode: 200, statusMessage: '',
     getHeader(name) { return this.headers[name] },
@@ -242,9 +247,9 @@ function routeEvent({ path, method = 'GET', headers = {}, body, cookie, origin, 
   }
   const ev = {
     __is_event__: true,
-    path: '/api/mcp' + path,
+    path: '/api/mcp' + path + search,
     method,
-    node: { req: { url: '/api/mcp' + path, method, headers: requestHeaders, body }, res },
+    node: { req: { url: '/api/mcp' + path + search, method, headers: requestHeaders, body }, res },
     context: { params: { path: path.replace(/^\//, '') }, cloudflare: runtime }
   }
   return { event: ev, res }
@@ -432,6 +437,170 @@ const unknownRoute = await callRoute({ path: '/nope', method: 'GET' })
 assert.equal(unknownRoute.status, 404)
 assert.equal(unknownRoute.message, 'Unsupported MCP API route')
 
+// ---------------------------------------------------------------------------
+// 15. 业务组：投影、分页、scope 分档、日记可见性默认值
+// 手工 curl 只能证明「某次跑通」，证明不了「列表没把正文带出来」这类回归。
+// 这里用真实领域函数 + 内存 D1 驱动路由，覆盖设计文档 §5.4 的业务端点。
+// ---------------------------------------------------------------------------
+db.prepare("INSERT INTO articles (id, title, slug, content, content_markdown, category, tags, ai_summary, created_at, updated_at) VALUES (1, 'Alpha', 'alpha', ?, ?, 'study', '[\"x\"]', 'summary-a', '2026-01-01', '2026-01-01')")
+  .run('body-a-'.repeat(50), 'markdown-a-'.repeat(30))
+db.prepare("INSERT INTO articles (id, title, slug, content, content_markdown, category, tags, ai_summary, created_at, updated_at) VALUES (2, 'Beta', 'beta', ?, ?, 'game', '[]', NULL, '2026-01-02', '2026-01-02')")
+  .run('body-b', 'markdown-b')
+
+// 15.1 文章列表必须投影：无 content / contentMarkdown，有 contentLength
+// Section 14 self-revoked `readOnlyToken`, so the read-only leg needs a fresh one.
+const businessReadOnly = await mcpToken.issueMcpToken(event, { username: 'admin', label: 'business-ro', scopes: ['mcp:read'] })
+const readOnlyBearer = `Bearer ${businessReadOnly.token}`
+const articleList = await callRoute({ path: '/articles', method: 'GET', headers: { authorization: bearer } })
+assert.equal(articleList.ok, true)
+assert.equal(articleList.value.total, 2)
+assert.deepEqual(Object.keys(articleList.value.data[0]).sort(), ['aiSummary', 'category', 'contentLength', 'createdAt', 'id', 'slug', 'tags', 'title', 'updatedAt'])
+assert.equal(JSON.stringify(articleList.value).includes('body-a-'), false, 'article list must not return the content column')
+assert.equal(JSON.stringify(articleList.value).includes('markdown-a-'), false, 'article list must not return contentMarkdown')
+assert.equal(articleList.value.data.find(row => row.id === 1).contentLength, 'body-a-'.repeat(50).length)
+
+// 15.2 列表分页：默认 20、上限 50，page 生效
+assert.equal((await callRoute({ path: '/articles', method: 'GET', headers: { authorization: bearer } })).value.pageSize, 20)
+assert.equal((await callRoute({ path: '/articles', method: 'GET', headers: { authorization: bearer }, query: { pageSize: '9999' } })).value.pageSize, 50, 'articles pageSize must be capped at 50')
+assert.equal((await callRoute({ path: '/articles', method: 'GET', headers: { authorization: bearer }, query: { pageSize: '1', page: '2' } })).value.data[0].id, 1, 'page 2 of size 1 must be the older article')
+
+// 15.3 全文只从 articles/:id 取
+const articleDetail = await callRoute({ path: '/articles/1', method: 'GET', headers: { authorization: bearer } })
+assert.equal(articleDetail.ok, true)
+assert.equal(articleDetail.value.id, 1)
+assert.ok(String(articleDetail.value.content).startsWith('body-a-'))
+const missingArticle = await callRoute({ path: '/articles/999999', method: 'GET', headers: { authorization: bearer } })
+assert.equal(missingArticle.status, 404)
+
+// 15.4 只读 token 写文章 → 403；读 token 能读
+const roCreate = await callRoute({ path: '/articles', method: 'POST', headers: { authorization: readOnlyBearer }, body: { title: 'x', contentMarkdown: 'y' } })
+assert.equal(roCreate.ok, false)
+assert.equal(roCreate.status, 403, 'a read-only token must not create an article')
+assert.ok(String(roCreate.message).includes('Insufficient scope'))
+assert.equal(db.prepare("SELECT COUNT(*) AS n FROM articles WHERE title = 'x'").get().n, 0, 'a rejected write must not insert a row')
+
+// 15.5 写 token 建文章 → 201，且 id 只来自路径
+const created = await callRoute({ path: '/articles', method: 'POST', headers: { authorization: bearer }, body: { title: 'Gamma', contentMarkdown: 'gamma body' } })
+assert.equal(created.ok, true)
+assert.equal(created.status, 201, 'article creation must set 201')
+assert.equal(created.value.title, 'Gamma')
+// body 里的 id 不是 updateArticle 的入参：路径 id=1 时不得改到 id=2
+const sneakyUpdate = await callRoute({ path: '/articles/1', method: 'PUT', headers: { authorization: bearer }, body: { id: 2, title: 'Alpha updated' } })
+assert.equal(sneakyUpdate.ok, true)
+assert.equal(sneakyUpdate.value.id, 1)
+assert.equal(db.prepare('SELECT title FROM articles WHERE id = 1').get().title, 'Alpha updated')
+assert.equal(db.prepare('SELECT title FROM articles WHERE id = 2').get().title, 'Beta', 'an id in the body must not retarget the write')
+
+// 15.6 画廊：投影不做，但必须分页；scope 分档
+db.prepare("INSERT INTO galleries (id, image_url, sort_order, is_active, tag, created_at, updated_at) VALUES (1, 'https://cfimg.example/a.webp', 0, 1, 'artwork', '2026-01-01', '2026-01-01')").run()
+const galleryList = await callRoute({ path: '/gallery', method: 'GET', headers: { authorization: bearer } })
+assert.equal(galleryList.ok, true)
+assert.equal(galleryList.value.total, 1)
+assert.equal(galleryList.value.pageSize, 100, 'gallery default pageSize is 100')
+assert.equal((await callRoute({ path: '/gallery', method: 'GET', headers: { authorization: bearer }, query: { pageSize: '9999' } })).value.pageSize, 200, 'gallery pageSize must be capped at 200')
+const roGalleryCreate = await callRoute({ path: '/gallery', method: 'POST', headers: { authorization: readOnlyBearer }, body: { imageUrl: 'https://cfimg.example/b.webp' } })
+assert.equal(roGalleryCreate.status, 403, 'a read-only token must not create a gallery item')
+
+// 15.7 日记：默认不公开，且必须分页
+const diaryWrite = await callRoute({ path: '/diary/2026-11-16', method: 'PUT', headers: { authorization: bearer }, body: { contentMarkdown: 'mcp default check' } })
+assert.equal(diaryWrite.ok, true)
+assert.equal(diaryWrite.value.isPublic, false, 'diary_upsert must default to private when isPublic is omitted')
+assert.equal(diaryWrite.value.entryDate, '2026-11-16')
+const diaryPublic = await callRoute({ path: '/diary/2026-11-17', method: 'PUT', headers: { authorization: bearer }, body: { contentMarkdown: 'public one', isPublic: true } })
+assert.equal(diaryPublic.value.isPublic, true, 'an explicit isPublic: true must still be honored')
+const diaryList = await callRoute({ path: '/diary', method: 'GET', headers: { authorization: bearer } })
+assert.equal(diaryList.ok, true)
+assert.equal(diaryList.value.total, 2)
+assert.equal(diaryList.value.pageSize, 50, 'diary default pageSize is 50')
+assert.equal((await callRoute({ path: '/diary', method: 'GET', headers: { authorization: bearer }, query: { pageSize: '9999' } })).value.pageSize, 100, 'diary pageSize must be capped at 100')
+const roDiaryWrite = await callRoute({ path: '/diary/2026-11-18', method: 'PUT', headers: { authorization: readOnlyBearer }, body: { contentMarkdown: 'nope' } })
+assert.equal(roDiaryWrite.status, 403, 'a read-only token must not write a diary entry')
+assert.equal(db.prepare("SELECT COUNT(*) AS n FROM diary_entries WHERE entry_date = '2026-11-18'").get().n, 0)
+
+// 15.8 三个读列表都必须先过 mcp:read：无 token → 401，而不是 200/404/500
+for (const path of ['/images', '/gallery', '/diary', '/articles']) {
+  const unauthenticated = await callRoute({ path, method: 'GET' })
+  assert.equal(unauthenticated.ok, false, `${path} without a token must not succeed`)
+  assert.equal(unauthenticated.status, 401, `${path} without a token must be 401`)
+  assert.equal(unauthenticated.message, 'Authentication required')
+}
+
+// 15.8a 读列表用的是 mcp:read，而不是 mcp:write：
+// 只读 token 必须能读（不是 403），只写 token 必须被挡（403）。
+// 只断言 401 无法区分「requireScope('mcp:read')」和「requireScope('mcp:write')」。
+const writeOnlyBusiness = await mcpToken.issueMcpToken(event, { username: 'admin', label: 'business-wo', scopes: ['mcp:write'] })
+const writeOnlyBearer = `Bearer ${writeOnlyBusiness.token}`
+for (const path of ['/articles', '/gallery', '/diary']) {
+  const asReadOnly = await callRoute({ path, method: 'GET', headers: { authorization: readOnlyBearer } })
+  assert.equal(asReadOnly.ok, true, `${path} must be readable with mcp:read only`)
+  const asWriteOnly = await callRoute({ path, method: 'GET', headers: { authorization: writeOnlyBearer } })
+  assert.equal(asWriteOnly.status, 403, `${path} must require mcp:read specifically, not any token`)
+  assert.ok(String(asWriteOnly.message).includes('Insufficient scope'))
+}
+// images 在本地缺少图床凭证，因此用「不是 403」来证明它过的是 read 门而不是 write 门。
+const imagesAsReadOnly = await callRoute({ path: '/images', method: 'GET', headers: { authorization: readOnlyBearer }, query: { count: '2' } })
+assert.notEqual(imagesAsReadOnly.status, 403, 'GET /images must accept mcp:read')
+assert.equal(imagesAsReadOnly.status, 503)
+const imagesAsWriteOnly = await callRoute({ path: '/images', method: 'GET', headers: { authorization: writeOnlyBearer } })
+assert.equal(imagesAsWriteOnly.status, 403, 'GET /images must not accept a write-only token')
+
+// 15.9 images：读分支要 mcp:read，写分支要 mcp:write。
+// 本地没有图床凭证，因此只断言「鉴权通过后交给领域层」，不断言上游成功。
+// 503 而不是 401/404 正好证明 Bearer 与 scope 都已通过，卡住它的是图床配置。
+const imagesRead = await callRoute({ path: '/images', method: 'GET', headers: { authorization: bearer }, query: { count: '2' } })
+assert.equal(imagesRead.ok, false)
+assert.equal(imagesRead.status, 503, 'without image-provider config the read reaches the provider and fails there')
+assert.match(String(imagesRead.message), /not configured/, 'the 503 must come from the image provider config, not from a guard')
+const imagesReadNoScope = await callRoute({ path: '/images', method: 'POST', headers: { authorization: readOnlyBearer }, body: {} })
+assert.equal(imagesReadNoScope.status, 403, 'POST /images must require mcp:write')
+
+// 15.10 POST /images 不能先被 readBody 吃掉请求体：非 multipart → 领域层 400
+const imagesNotMultipart = await callRoute({ path: '/images', method: 'POST', headers: { authorization: bearer }, body: {} })
+assert.equal(imagesNotMultipart.ok, false)
+assert.equal(imagesNotMultipart.status, 400, 'uploadMedia must own the body and reject a non-multipart request itself')
+assert.equal(imagesNotMultipart.message, 'Upload must use multipart/form-data')
+
+// 15.11 multipart 请求体必须原样到达 uploadMedia（同样的无图床凭证 → 503）
+// The body is a one-shot stream on purpose: a `readBody` before the upload branch
+// would consume it, leaving `readMultipartFormData` with nothing (or a locked
+// stream) instead of the file. A Buffer could be read twice here and would hide
+// exactly the bug this assertion exists for.
+const boundary = '----mcp-check-boundary'
+const multipartPayload = Buffer.from(
+  `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="ping.png"\r\nContent-Type: image/png\r\n\r\nPNGDATA\r\n--${boundary}--\r\n`,
+  'utf8'
+)
+const multipartStream = () => new ReadableStream({
+  start(controller) { controller.enqueue(new Uint8Array(multipartPayload)); controller.close() }
+})
+const imagesMultipart = await callRoute({
+  path: '/images', method: 'POST',
+  headers: { authorization: bearer, 'content-type': `multipart/form-data; boundary=${boundary}` },
+  body: multipartStream()
+})
+assert.equal(imagesMultipart.ok, false)
+assert.equal(imagesMultipart.status, 503, 'the multipart file must reach the provider call; a consumed/locked body would not')
+
+// 15.12 ops / ai 分支存在且要 mcp:write（本地无 hook、无 DeepSeek key，所以走到上游失败）
+const roDeploy = await callRoute({ path: '/ops/pages/deploy', method: 'POST', headers: { authorization: readOnlyBearer } })
+assert.equal(roDeploy.status, 403, 'ops/pages/deploy must require mcp:write')
+const deploy = await callRoute({ path: '/ops/pages/deploy', method: 'POST', headers: { authorization: bearer } })
+// The domain wraps a missing deploy secret in its own 504 timeout envelope
+// (`triggerPagesDeploy` catches everything around the secret lookup). Either way
+// the point here is that the branch is routed — 404 would mean it is missing.
+assert.notEqual(deploy.status, 404, 'the deploy branch must be routed, not fall through to the 404')
+assert.ok([502, 503, 504].includes(deploy.status), `deploy must fail on configuration, got ${deploy.status}`)
+const roSummary = await callRoute({ path: '/ai/summary', method: 'POST', headers: { authorization: readOnlyBearer }, body: { title: 't', content: 'c' } })
+assert.equal(roSummary.status, 403, 'ai/summary must require mcp:write')
+const summary = await callRoute({ path: '/ai/summary', method: 'POST', headers: { authorization: bearer }, body: { title: 't', content: 'c' } })
+assert.equal(summary.status, 503, 'the summary branch must be routed (missing DEEPSEEK_API_KEY → 503, not 404)')
+
+// 15.13 不存在的业务路径仍是 404
+assert.equal((await callRoute({ path: '/articles/1/nope', method: 'GET', headers: { authorization: bearer } })).status, 404)
+assert.equal((await callRoute({ path: '/gallery/1', method: 'DELETE', headers: { authorization: bearer } })).status, 404, 'there must be no delete capability')
+assert.equal((await callRoute({ path: '/articles/1', method: 'DELETE', headers: { authorization: bearer } })).status, 404, 'there must be no delete capability')
+assert.equal((await callRoute({ path: '/images', method: 'DELETE', headers: { authorization: bearer } })).status, 404, 'there must be no delete capability')
+
 db.close()
 
-console.log('MCP checks passed: tokens (format, scopes, TTL, issuance, enforcement, expiry, revocation, must_reset, redaction, credentials, password change/reset), list projection, pagination, diary defaults, route auth gates (bearer/cookie separation, CSRF ordering, scope validation).')
+console.log('MCP checks passed: tokens (format, scopes, TTL, issuance, enforcement, expiry, revocation, must_reset, redaction, credentials, password change/reset), list projection, pagination, diary defaults, route auth gates (bearer/cookie separation, CSRF ordering, scope validation), business routes (article list projection + pagination, detail fetch, write scope, id from path, gallery/diary pagination, diary private default, image read/write split, multipart body ownership, ops/ai routing, no delete capability).')

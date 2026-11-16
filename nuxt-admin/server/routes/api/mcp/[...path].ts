@@ -1,6 +1,12 @@
 import type { H3Event } from 'h3'
-import { createError, getHeader, getMethod, getRouterParam, readBody, setResponseStatus } from 'h3'
+import { createError, getHeader, getMethod, getQuery, getRouterParam, readBody, setResponseStatus } from 'h3'
+import { createArticle, getAdminArticle, listAdminArticles, updateArticle } from '~~/server/domain/articles'
 import { requireAdminSession, verifyAdminCredentials, type AdminSession } from '~~/server/domain/auth'
+import { listAdminDiaryEntries, upsertDiaryEntry } from '~~/server/domain/diary'
+import { createGallery, listAdminGallery, updateGallery } from '~~/server/domain/gallery'
+import { listMedia, uploadMedia } from '~~/server/domain/media'
+import { paginate, projectArticleList, withDiaryPublicDefault } from '~~/server/domain/mcp-view'
+import { generateArticleSummary, triggerPagesDeploy } from '~~/server/domain/operations'
 import {
   authenticateMcpRequest,
   issueMcpToken,
@@ -135,7 +141,95 @@ export default defineEventHandler(async (event) => {
   }
 
   // --- Business group (articles, gallery, diary, images, ops, ai) ------------
-  // Additional Bearer + scope branches belong here.
+  // Every branch below starts with `requireScope`, so a branch can never reach
+  // the domain layer before its scope is checked.
+  //
+  // The JSON body is read lazily inside the branches that need one, never once
+  // up-front: `POST images` hands the same H3Event to `uploadMedia`, which calls
+  // `readMultipartFormData` and consumes the raw stream. A prior `readBody` would
+  // leave that stream empty and break uploads.
+  const readJsonBody = async () => (await readBody<Record<string, unknown> | undefined>(event)) || {}
+
+  // List projection is mandatory here, not cosmetic: `listAdminArticles` returns
+  // up to 500 full articles, `listAdminGallery` up to 2000 rows and
+  // `listAdminDiaryEntries` is unbounded. Returning them raw would blow up the
+  // caller's context window, so the lists are paginated and the article list is
+  // projected down to metadata + `contentLength`. Full text stays on `articles/:id`.
+  if (parts[0] === 'articles') {
+    if (parts.length === 1 && currentMethod === 'GET') {
+      await requireScope(event, 'mcp:read')
+      const page = paginate(await listAdminArticles(event), getQuery(event), { pageSize: 20, maxPageSize: 50 })
+      return { ...page, data: projectArticleList(page.data) }
+    }
+    if (parts.length === 2 && currentMethod === 'GET') {
+      await requireScope(event, 'mcp:read')
+      return await getAdminArticle(event, parts[1])
+    }
+    if (parts.length === 1 && currentMethod === 'POST') {
+      await requireScope(event, 'mcp:write')
+      const body = await readJsonBody()
+      setResponseStatus(event, 201)
+      return await createArticle(event, body)
+    }
+    if (parts.length === 2 && currentMethod === 'PUT') {
+      await requireScope(event, 'mcp:write')
+      // The id comes from the path only; a body field named `id` is not an input
+      // of `updateArticle`, so it can never retarget the write.
+      return await updateArticle(event, parts[1], await readJsonBody())
+    }
+  }
+
+  if (parts[0] === 'gallery') {
+    if (parts.length === 1 && currentMethod === 'GET') {
+      await requireScope(event, 'mcp:read')
+      return paginate(await listAdminGallery(event), getQuery(event), { pageSize: 100, maxPageSize: 200 })
+    }
+    if (parts.length === 1 && currentMethod === 'POST') {
+      await requireScope(event, 'mcp:write')
+      const body = await readJsonBody()
+      setResponseStatus(event, 201)
+      return await createGallery(event, body)
+    }
+    if (parts.length === 2 && currentMethod === 'PATCH') {
+      await requireScope(event, 'mcp:write')
+      return await updateGallery(event, parts[1], await readJsonBody())
+    }
+  }
+
+  if (parts[0] === 'diary') {
+    if (parts.length === 1 && currentMethod === 'GET') {
+      await requireScope(event, 'mcp:read')
+      return paginate(await listAdminDiaryEntries(event), getQuery(event), { pageSize: 50, maxPageSize: 100 })
+    }
+    if (parts.length === 2 && currentMethod === 'PUT') {
+      await requireScope(event, 'mcp:write')
+      // Missing `isPublic` must mean private, never the domain's public default.
+      return await upsertDiaryEntry(event, parts[1], withDiaryPublicDefault(await readJsonBody()))
+    }
+  }
+
+  if (parts[0] === 'images') {
+    if (parts.length === 1 && currentMethod === 'GET') {
+      await requireScope(event, 'mcp:read')
+      return await listMedia(event, getQuery(event))
+    }
+    if (parts.length === 1 && currentMethod === 'POST') {
+      await requireScope(event, 'mcp:write')
+      // No `readJsonBody()` here — see the note above: `uploadMedia` owns the stream.
+      setResponseStatus(event, 201)
+      return await uploadMedia(event)
+    }
+  }
+
+  if (parts[0] === 'ops' && parts[1] === 'pages' && parts[2] === 'deploy' && parts.length === 3 && currentMethod === 'POST') {
+    await requireScope(event, 'mcp:write')
+    return await triggerPagesDeploy(event)
+  }
+
+  if (parts[0] === 'ai' && parts[1] === 'summary' && parts.length === 2 && currentMethod === 'POST') {
+    await requireScope(event, 'mcp:write')
+    return await generateArticleSummary(event, await readJsonBody())
+  }
 
   throw createError({ statusCode: 404, statusMessage: 'Unsupported MCP API route' })
 })

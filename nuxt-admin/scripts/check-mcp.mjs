@@ -278,6 +278,8 @@ const noAuth = await callRoute({ path: '/whoami', method: 'GET' })
 assert.equal(noAuth.ok, false)
 assert.equal(noAuth.status, 401, 'GET /api/mcp/whoami without Authorization must be 401')
 assert.equal(noAuth.message, 'Authentication required')
+// WWW-Authenticate 只在真实 HTTP event 上设置；本 stub 有 node.res，所以这里必须能看到。
+assert.equal(noAuth.headers['WWW-Authenticate'], 'Bearer', 'a 401 must advertise the Bearer challenge')
 
 // 14.2 合法 Bearer → 回显四个字段，且绝不回显 token 明文
 const who = await callRoute({ path: '/whoami', method: 'GET', headers: { authorization: bearer } })

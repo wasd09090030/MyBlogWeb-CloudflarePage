@@ -4,6 +4,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { createRequire } from 'node:module'
 import { build } from 'esbuild'
 import { createError, getRequestURL } from 'h3'
+import { paginate, projectArticleList, withDiaryPublicDefault } from '../server/domain/mcp-view.ts'
 
 const root = new URL('../', import.meta.url)
 const posix = value => value.pathname.replace(/^\/([A-Za-z]:)/, '$1').replace(/\/$/, '')
@@ -178,6 +179,35 @@ await authModule.changeAdminPassword(httpEvent('admin_session=browser-session'),
 await assert.rejects(mcpToken.authenticateMcpRequest(event, `Bearer ${laptopToken.token}`, 'mcp:read'), /Authentication required/, 'password change must revoke MCP tokens')
 assert.deepEqual(await authModule.verifyAdminCredentials(event, 'ops', 'another-password'), { ok: true, username: 'ops' })
 
+// 13. 列表投影、分页与日记可见性默认值（纯函数）
+// 文章列表投影：正文必须被剥掉，长度保留
+const articles = [
+  { id: 2, title: 'B', slug: 'b', category: 'study', tags: ['x'], content: 'a'.repeat(500), contentMarkdown: 'm'.repeat(400), aiSummary: 's', createdAt: 'c2', updatedAt: 'u2', coverImage: 'https://x/y.jpg' },
+  { id: 1, title: 'A', slug: null, category: 'other', tags: [], content: 'abc', contentMarkdown: null, aiSummary: null, createdAt: 'c1', updatedAt: 'u1' }
+]
+const projected = projectArticleList(articles)
+assert.equal(projected.length, 2)
+assert.deepEqual(Object.keys(projected[0]).sort(), ['aiSummary', 'category', 'contentLength', 'createdAt', 'id', 'slug', 'tags', 'title', 'updatedAt'])
+assert.equal(projected[0].contentLength, 500)
+assert.equal(projected[1].contentLength, 3)
+assert.equal(JSON.stringify(projected).includes('a'.repeat(50)), false, 'body text must not leak into the list projection')
+
+// 分页：默认值、上限、越界
+assert.deepEqual(paginate([1, 2, 3, 4, 5], {}, { pageSize: 2, maxPageSize: 2 }), { data: [1, 2], total: 5, page: 1, pageSize: 2, totalPages: 3 })
+assert.deepEqual(paginate([1, 2, 3, 4, 5], { page: '2', pageSize: '2' }, { pageSize: 2, maxPageSize: 2 }).data, [3, 4])
+assert.equal(paginate([1, 2, 3], { pageSize: '999' }, { pageSize: 2, maxPageSize: 50 }).pageSize, 50)
+assert.equal(paginate([1, 2, 3], { page: '0' }, { pageSize: 2, maxPageSize: 2 }).page, 1)
+assert.equal(paginate([1, 2, 3], { page: '99' }, { pageSize: 2, maxPageSize: 2 }).data.length, 0)
+assert.equal(paginate([], {}, { pageSize: 20, maxPageSize: 50 }).totalPages, 1)
+assert.equal(paginate([1, 2, 3], { limit: '3' }, { pageSize: 20, maxPageSize: 50 }).pageSize, 3, 'limit is an accepted alias for pageSize')
+
+// 日记默认值：漏传一律不公开
+assert.equal(withDiaryPublicDefault({ contentMarkdown: 'x' }).isPublic, false)
+assert.equal(withDiaryPublicDefault({}).isPublic, false)
+assert.equal(withDiaryPublicDefault({ isPublic: true }).isPublic, true)
+assert.equal(withDiaryPublicDefault({ isPublic: '0' }).isPublic, false)
+assert.equal(withDiaryPublicDefault({ isPublic: 1 }).isPublic, true)
+
 db.close()
 
-console.log('MCP token checks passed: format, scopes, TTL clamp, issuance, scopes enforcement, expiry, revocation, must_reset, list redaction, credential order, loginAdmin parity, password change and reset revoke tokens.')
+console.log('MCP checks passed: tokens (format, scopes, TTL, issuance, enforcement, expiry, revocation, must_reset, redaction, credentials, password change/reset), list projection, pagination, diary defaults.')

@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { createRequire } from 'node:module'
 import { build } from 'esbuild'
-import { createError } from 'h3'
+import { createError, getRequestURL } from 'h3'
 
 const root = new URL('../', import.meta.url)
 const posix = value => value.pathname.replace(/^\/([A-Za-z]:)/, '$1').replace(/\/$/, '')
@@ -35,6 +35,7 @@ const adapter = {
 
 // Nitro auto-imports these in production; keep tests explicit.
 globalThis.createError = createError
+globalThis.getRequestURL = getRequestURL
 
 async function bundleModule(relativePath) {
   const output = await build({
@@ -122,4 +123,61 @@ assert.equal((await mcpToken.listMcpTokens(event, 'admin')).every(t => t.revoked
 await assert.rejects(mcpToken.issueMcpToken(event, { username: 'admin', label: '' }), /label/)
 await assert.rejects(mcpToken.issueMcpToken(event, { username: 'admin', label: 'x'.repeat(65) }), /label/)
 
-console.log('MCP token checks passed: format, scopes, TTL clamp, issuance, scopes enforcement, expiry, revocation, must_reset, list redaction.')
+// 11. 凭证校验顺序 + 改密/重置时吊销 MCP token
+const authModule = await bundleModule('server/domain/auth.ts')
+const cryptoModule = await bundleModule('server/utils/edge-crypto.ts')
+const password = await cryptoModule.hashPassword('correct-horse-battery')
+db.prepare("INSERT INTO admin_users (username, password_hash, password_salt, password_iterations, password_algorithm, must_reset, created_at, updated_at) VALUES ('ops',?,?,100000,'pbkdf2-sha256',0,'2026-01-01','2026-01-01')")
+  .run(password.hash, password.salt)
+
+assert.deepEqual(await authModule.verifyAdminCredentials(event, 'ops', 'correct-horse-battery'), { ok: true, username: 'ops' })
+assert.deepEqual(await authModule.verifyAdminCredentials(event, 'ops', 'wrong'), { ok: false, reason: 'invalid' })
+assert.deepEqual(await authModule.verifyAdminCredentials(event, 'nobody', 'correct-horse-battery'), { ok: false, reason: 'invalid' })
+assert.deepEqual(await authModule.verifyAdminCredentials(event, '', ''), { ok: false, reason: 'missing' })
+
+// loginAdmin 的三条失败分支必须与抽取前逐字一致
+assert.deepEqual(await authModule.loginAdmin(event, '', ''), { success: false, message: 'Username and password are required' })
+assert.deepEqual(await authModule.loginAdmin(event, 'ops', 'wrong'), { success: false, message: 'Invalid username or password' })
+
+// must_reset 必须在密码正确之后才暴露
+db.prepare("UPDATE admin_users SET must_reset = 1 WHERE username = 'ops'").run()
+assert.deepEqual(await authModule.verifyAdminCredentials(event, 'ops', 'correct-horse-battery'), { ok: false, reason: 'must_reset' })
+assert.deepEqual(await authModule.loginAdmin(event, 'ops', 'correct-horse-battery'), { success: false, mustReset: true, message: 'Password reset is required' })
+assert.deepEqual(await authModule.verifyAdminCredentials(event, 'ops', 'wrong'), { ok: false, reason: 'invalid' }, 'wrong password must not reveal must_reset')
+db.prepare("UPDATE admin_users SET must_reset = 0 WHERE username = 'ops'").run()
+
+// 改密/重置共用的吊销语句：把 ops 的 token 准备好的，执行语句后必须失效
+const opsToken = await mcpToken.issueMcpToken(event, { username: 'ops', label: 'laptop' })
+const statement = authModule.revokeMcpTokensStatement('ops', new Date().toISOString())
+await adapter.prepare(statement.sql).bind(...statement.values).run()
+await assert.rejects(mcpToken.authenticateMcpRequest(event, `Bearer ${opsToken.token}`, 'mcp:read'), /Authentication required/)
+
+// 12. 语句确实接进了改密/重置的 batch：走真实领域函数后 token 必须失效
+// auth.ts 会读写 cookie，需要一个最小可用的 HTTP event（plain-object event 没有 res）。
+function httpEvent(cookie) {
+  const res = { headers: {}, getHeader(name) { return this.headers[name] }, setHeader(name, value) { this.headers[name] = value }, removeHeader(name) { delete this.headers[name] }, appendHeader(name, value) { this.headers[name] = value }, headersSent: false }
+  return {
+    __is_event__: true,
+    path: '/admin/api/auth/password',
+    node: { req: { url: '/', method: 'POST', headers: cookie ? { host: 'wasd09090030.top', cookie } : { host: 'wasd09090030.top' } }, res },
+    context: { cloudflare: { env: { ...event.context.cloudflare.env, ADMIN_RESET_TOKEN: 'test-reset-token' } } }
+  }
+}
+
+const phoneToken = await mcpToken.issueMcpToken(event, { username: 'ops', label: 'phone' })
+assert.equal((await mcpToken.authenticateMcpRequest(event, `Bearer ${phoneToken.token}`, 'mcp:read')).username, 'ops')
+await authModule.resetOrBootstrapAdmin(httpEvent(), 'ops', 'brand-new-password', 'test-reset-token')
+await assert.rejects(mcpToken.authenticateMcpRequest(event, `Bearer ${phoneToken.token}`, 'mcp:read'), /Authentication required/, 'reset must revoke MCP tokens')
+assert.deepEqual(await authModule.verifyAdminCredentials(event, 'ops', 'brand-new-password'), { ok: true, username: 'ops' })
+
+const sessionTokenHash = await cryptoModule.hashToken('browser-session', 'test-pepper')
+db.prepare("INSERT INTO admin_sessions (token_hash, username, expires_at, revoked_at, created_at, last_seen_at, ip_address, user_agent) VALUES (?, 'ops', '2099-01-01T00:00:00.000Z', NULL, '2026-01-01', '2026-01-01', NULL, NULL)").run(sessionTokenHash)
+const laptopToken = await mcpToken.issueMcpToken(event, { username: 'ops', label: 'laptop-again' })
+assert.equal((await mcpToken.authenticateMcpRequest(event, `Bearer ${laptopToken.token}`, 'mcp:read')).username, 'ops')
+await authModule.changeAdminPassword(httpEvent('admin_session=browser-session'), 'brand-new-password', 'another-password')
+await assert.rejects(mcpToken.authenticateMcpRequest(event, `Bearer ${laptopToken.token}`, 'mcp:read'), /Authentication required/, 'password change must revoke MCP tokens')
+assert.deepEqual(await authModule.verifyAdminCredentials(event, 'ops', 'another-password'), { ok: true, username: 'ops' })
+
+db.close()
+
+console.log('MCP token checks passed: format, scopes, TTL clamp, issuance, scopes enforcement, expiry, revocation, must_reset, list redaction, credential order, loginAdmin parity, password change and reset revoke tokens.')

@@ -115,6 +115,29 @@ npx wrangler secret put CLOUDFLARE_ACCOUNT_ID --config wrangler.toml
 
 `myblog-admin`（Direct Upload）和 `blog-api`、`blog-router` 两个 Worker 没有自动构建，修改代码后必须手动按上述顺序发布。
 
+## MCP 服务（blog-mcp）
+
+`blog-mcp/` 是一个**本机 Node stdio 进程**，把博客后台能力包装成 13 个 MCP 工具（文章、画廊、日记、图床、AI 摘要、公开站重建），供 Claude Code / Claude Desktop 调用。它不直连 D1，业务请求都走线上 `blog-api` 的 `/api/mcp/*`。安装、注册与排错见 `blog-mcp/README.md`。
+
+**鉴权模型**
+
+- `/api/mcp/*` 是实现于 `nuxt-admin/server/routes/api/mcp/[...path].ts` 与 `server/domain/mcp-token.ts` 的独立命名空间，不经过 `admin/api/[...path].ts` 的三条前置检查。**业务路由**只认 `Authorization: Bearer bmcp_...`；三个例外是 `POST /api/mcp/token`（账号密码换 token）与 `GET /api/mcp/tokens`、`POST /api/mcp/tokens/:id/revoke`（只认后台 Cookie 会话）。
+- token 存 D1 `mcp_tokens` 表（`nuxt-admin/migrations/0011_mcp_tokens.sql`），只存 `SHA-256(SESSION_PEPPER:token)`，明文仅签发时返回一次；scope 为 `mcp:read` / `mcp:write`，默认 TTL 30 天、上限 90 天，`last_used_at` 有 60 秒节流。
+- **Bearer 与 Cookie 永不混用**：Bearer 路由完全不读 Cookie；`GET /api/mcp/tokens` 与 `POST /api/mcp/tokens/:id/revoke` 两条管理路由反过来只认后台 Cookie 会话，并**显式拒绝**任何 `Authorization` 头（返回 400），防止泄露的 MCP token 反向操作 token 管理本身。改这两组路由时不要放宽这条边界。
+- **改密码 / 重置密码会吊销该账号的全部 MCP token**（`server/domain/mcp-token.ts` 的 `revokeMcpTokensStatement` 由 `server/domain/auth.ts` 导入，接在 `changeAdminPassword` 与 `resetOrBootstrapAdmin` 的 batch 里）。`must_reset` 为 1 时签发和每次 Bearer 校验都会被拒。
+- **没有删除类工具，也不要加**。`tools.js` 中 13 个工具全部为只读或写入/覆盖；服务端 `/api/mcp/*` 也没有 DELETE 分支（恒 404）。删除类端点（尤其会联动真删图床原文件的那种）属于明确非目标。
+- **`diary_upsert` 的可见性默认值在路由层被翻转**：domain 的 `upsertDiaryEntry` 默认 `is_public = 1`，MCP 路由调用前用 `withDiaryPublicDefault` 补 `isPublic ?? false`。改这条会直接把模型漏填的日记发到公开站，不要"对齐"回 domain 默认值。
+- **`image_list` 不是纯只读**：它在 `mcp:read` 下也会把列出的文件 upsert 进图片资源表。加工具时不要因为"看着像读接口"就把它挂到只读语义上。
+
+**部署与变更**
+
+- 发布顺序不变，且**迁移必须先于 Worker 部署**：`npm run db:migrate:remote` → `npm run deploy:api`。少跑迁移不只是 `/api/mcp/token` 会因 `mcp_tokens` 表不存在而失败：`revokeMcpTokensStatement` 是 `changeAdminPassword` 与 `resetOrBootstrapAdmin` 两个 batch 里的第三条语句，表不存在会让**整个 batch 回滚并返回 500**，于是在部署了 Worker 却还没迁移的窗口里，管理员虽然还能登录，却**既改不了也重置不了密码**（改密/重置失败，`must_reset` 也清不掉）。这两个命令需用户授权后执行，不要自行运行。
+- `blog-router` 不需要改动：`/api` 已在 `API_PATHS` 里，`/api/mcp/*` 原样转发给 `blog-api`。
+- 不新增 Worker Secret：token 哈希复用既有的 `SESSION_PEPPER`。
+- 本地验证：`cd nuxt-admin && npm run check:free-config && npm run check:mcp`、`cd blog-mcp && npm run smoke`。`npm run typecheck` 在本仓库有 12 个**既有**错误（`app/pages/admin/diary|gaming/*`、`server/domain/articles|assets|diary.ts`），不是本模块的绿色门禁——判断标准是"没有新增错误"，不要声称它通过。
+
+**修改工具时**：新增/修改任一工具必须同时改 `blog-mcp/src/tools.js`（名称、描述、schema）与 `blog-mcp/README.md` 的工具表，并更新 `blog-mcp/scripts/smoke.mjs` 里的工具清单断言。工具描述是给模型看的提示，必须与真实行为一致（写操作要写"会直接修改线上数据"、`diary_upsert` 要写"默认不公开"、`image_upload` 要写"公开可访问"）。
+
 ## 关键文件
 
 - `nuxt-admin/wrangler.toml` — `blog-api` Worker 与 D1 配置

@@ -3,6 +3,9 @@ import { deleteCookie, getCookie, getHeader, setCookie } from 'h3'
 import { batch, execute, getDb, nowIso, queryFirst } from '~~/server/utils/d1'
 import { getClientAddress, getCloudflareEnv, getRequiredSecret } from '~~/server/utils/cloudflare'
 import { hashPassword, hashToken, randomToken, verifyPassword } from '~~/server/utils/edge-crypto'
+// The revocation statement lives with the token module so its SQL has one owner;
+// `auth.ts` only decides *when* it runs (password change / reset batches).
+import { revokeMcpTokensStatement } from '~~/server/domain/mcp-token'
 
 type AdminUserRow = {
   username: string
@@ -40,6 +43,10 @@ export type LoginResult = {
   mustReset?: boolean
   message?: string
 }
+
+export type AdminCredentialCheck =
+  | { ok: true; username: string }
+  | { ok: false; reason: 'missing' | 'invalid' | 'must_reset' }
 
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60
 
@@ -105,17 +112,32 @@ async function createSession(event: H3Event, username: string): Promise<AdminSes
   return { username, tokenHash, expiresAt, mustReset: false }
 }
 
-export async function loginAdmin(event: H3Event, usernameValue: unknown, passwordValue: unknown): Promise<LoginResult> {
+/**
+ * Credential outcome only: never throws for a wrong/missing credential.
+ * Order matters — blank input, then user lookup + password, then must_reset —
+ * so a wrong password cannot reveal that the account is flagged for reset.
+ */
+export async function verifyAdminCredentials(event: H3Event, usernameValue: unknown, passwordValue: unknown): Promise<AdminCredentialCheck> {
   const username = String(usernameValue || '').trim()
   const password = String(passwordValue || '')
-  if (!username || !password) return { success: false, message: 'Username and password are required' }
+  if (!username || !password) return { ok: false, reason: 'missing' }
   const user = await getUser(event, username)
   if (!user || !(await verifyPassword(password, user.password_hash, user.password_salt, user.password_iterations, user.password_algorithm))) {
-    return { success: false, message: 'Invalid username or password' }
+    return { ok: false, reason: 'invalid' }
   }
-  if (user.must_reset === 1) return { success: false, mustReset: true, message: 'Password reset is required' }
-  const session = await createSession(event, username)
-  return { success: true, username, expiresAt: session.expiresAt }
+  if (user.must_reset === 1) return { ok: false, reason: 'must_reset' }
+  return { ok: true, username }
+}
+
+export async function loginAdmin(event: H3Event, usernameValue: unknown, passwordValue: unknown): Promise<LoginResult> {
+  const credentials = await verifyAdminCredentials(event, usernameValue, passwordValue)
+  if (!credentials.ok) {
+    if (credentials.reason === 'missing') return { success: false, message: 'Username and password are required' }
+    if (credentials.reason === 'invalid') return { success: false, message: 'Invalid username or password' }
+    return { success: false, mustReset: true, message: 'Password reset is required' }
+  }
+  const session = await createSession(event, credentials.username)
+  return { success: true, username: credentials.username, expiresAt: session.expiresAt }
 }
 
 export async function getCurrentSession(event: H3Event, clearInvalid = true): Promise<AdminSession | null> {
@@ -175,7 +197,8 @@ export async function changeAdminPassword(event: H3Event, currentPasswordValue: 
     {
       sql: 'UPDATE admin_sessions SET revoked_at = ? WHERE username = ? AND token_hash <> ? AND revoked_at IS NULL',
       values: [now, session.username, session.tokenHash]
-    }
+    },
+    revokeMcpTokensStatement(session.username, now)
   ])
   return { success: true, message: 'Password changed successfully' }
 }
@@ -199,7 +222,8 @@ export async function resetOrBootstrapAdmin(event: H3Event, usernameValue: unkno
               must_reset = 0, updated_at = excluded.updated_at`,
       values: [username, password.hash, password.salt, password.iterations, password.algorithm, now, now]
     },
-    { sql: 'UPDATE admin_sessions SET revoked_at = ? WHERE username = ? AND revoked_at IS NULL', values: [now, username] }
+    { sql: 'UPDATE admin_sessions SET revoked_at = ? WHERE username = ? AND revoked_at IS NULL', values: [now, username] },
+    revokeMcpTokensStatement(username, now)
   ])
   clearSessionCookie(event)
   return { success: true, message: 'Administrator password reset successfully' }

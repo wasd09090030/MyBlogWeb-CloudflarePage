@@ -1,9 +1,9 @@
 import type { H3Event } from 'h3'
 import { createError, getHeader, getMethod, getQuery, getRouterParam, readBody, setResponseStatus } from 'h3'
-import { createArticle, getAdminArticle, listAdminArticles, updateArticle } from '~~/server/domain/articles'
+import { createArticle, deleteArticle, getAdminArticle, listAdminArticles, updateArticle } from '~~/server/domain/articles'
 import { requireAdminSession, verifyAdminCredentials, type AdminSession } from '~~/server/domain/auth'
-import { listAdminDiaryEntries, upsertDiaryEntry } from '~~/server/domain/diary'
-import { createGallery, listAdminGallery, updateGallery } from '~~/server/domain/gallery'
+import { deleteDiaryEntry, listAdminDiaryEntries, upsertDiaryEntry } from '~~/server/domain/diary'
+import { createGallery, deleteGallery, listAdminGallery, updateGallery } from '~~/server/domain/gallery'
 import { listMedia, uploadMedia } from '~~/server/domain/media'
 import { paginate, projectArticleList, withDiaryPublicDefault } from '~~/server/domain/mcp-view'
 import { generateArticleSummary, triggerPagesDeploy } from '~~/server/domain/operations'
@@ -18,6 +18,7 @@ import {
   type McpScope
 } from '~~/server/domain/mcp-token'
 import { getActualRequestOrigin, getRequestOrigin } from '~~/server/utils/cloudflare'
+import { requireId } from '~~/server/utils/d1'
 import { assertSafeMutation } from '~~/server/utils/request-security'
 
 /**
@@ -176,6 +177,15 @@ export default defineEventHandler(async (event) => {
       // of `updateArticle`, so it can never retarget the write.
       return await updateArticle(event, parts[1], await readJsonBody())
     }
+    if (parts.length === 2 && currentMethod === 'DELETE') {
+      await requireScope(event, 'mcp:write')
+      // Parse with the same helper the domain uses: `Number(parts[1])` disagrees with
+      // `requireId` on segments like `2x` or `1e3`, and the response would then name a
+      // record that was not the one deleted.
+      const id = requireId(parts[1], 'article id')
+      await deleteArticle(event, id)
+      return { success: true, deleted: id }
+    }
   }
 
   if (parts[0] === 'gallery') {
@@ -192,6 +202,15 @@ export default defineEventHandler(async (event) => {
       await requireScope(event, 'mcp:write')
       return await updateGallery(event, parts[1], await readJsonBody())
     }
+    if (parts.length === 2 && currentMethod === 'DELETE') {
+      await requireScope(event, 'mcp:write')
+      // Admin semantics: the imagebed original is deleted too; a still-referenced
+      // file makes the domain throw 409 and keeps the record. Parse the id once so
+      // the response echoes the row that was actually removed.
+      const id = requireId(parts[1], 'gallery id')
+      await deleteGallery(event, id)
+      return { success: true, deleted: id }
+    }
   }
 
   if (parts[0] === 'diary') {
@@ -203,6 +222,11 @@ export default defineEventHandler(async (event) => {
       await requireScope(event, 'mcp:write')
       // Missing `isPublic` must mean private, never the domain's public default.
       return await upsertDiaryEntry(event, parts[1], withDiaryPublicDefault(await readJsonBody()))
+    }
+    if (parts.length === 2 && currentMethod === 'DELETE') {
+      await requireScope(event, 'mcp:write')
+      await deleteDiaryEntry(event, parts[1])
+      return { success: true, deleted: parts[1] }
     }
   }
 

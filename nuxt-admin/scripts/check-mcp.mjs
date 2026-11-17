@@ -532,6 +532,36 @@ assert.equal(sneakyUpdate.value.id, 1)
 assert.equal(db.prepare('SELECT title FROM articles WHERE id = 1').get().title, 'Alpha updated')
 assert.equal(db.prepare('SELECT title FROM articles WHERE id = 2').get().title, 'Beta', 'an id in the body must not retarget the write')
 
+// 15.5b DELETE /articles/:id：只读 token 403 且行仍在；写 token 真删；重复删除 404
+const roArticleDelete = await callRoute({ path: '/articles/2', method: 'DELETE', headers: { authorization: readOnlyBearer } })
+assert.equal(roArticleDelete.ok, false)
+assert.equal(roArticleDelete.status, 403, 'a read-only token must not delete an article')
+assert.ok(String(roArticleDelete.message).includes('Insufficient scope: mcp:write'))
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM articles WHERE id = 2').get().n, 1, 'a rejected delete must not remove the row')
+const articleDeleted = await callRoute({ path: '/articles/2', method: 'DELETE', headers: { authorization: bearer } })
+assert.equal(articleDeleted.ok, true)
+assert.deepEqual(articleDeleted.value, { success: true, deleted: 2 })
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM articles WHERE id = 2').get().n, 0)
+const articleDeleteAgain = await callRoute({ path: '/articles/2', method: 'DELETE', headers: { authorization: bearer } })
+assert.equal(articleDeleteAgain.status, 404, 'deleting a missing article must be 404')
+
+// 15.5c PUT /articles/:id 传 coverImage: null 必须同时清空 cover_image 与 cover_image_asset_id。
+// 资产 id 必须先真的挂上：fixture 直接设成 NULL 的话，这条断言不靠任何实现也能通过。
+db.prepare("INSERT INTO image_assets (id, public_id, storage_key, source_url, content_type, version, kind, is_active, created_at, updated_at) VALUES (9001, 'i_assetcover1234', 'uploads/cover.webp', 'https://cfimg.example/file/uploads/cover.webp', 'image/webp', 1, 'article_cover', 1, '2026-01-01', '2026-01-01')").run()
+db.prepare("UPDATE articles SET cover_image = 'https://cfimg.example/file/uploads/cover.webp', cover_image_asset_id = 9001 WHERE id = 1").run()
+const cleared = await callRoute({ path: '/articles/1', method: 'PUT', headers: { authorization: bearer }, body: { coverImage: null } })
+assert.equal(cleared.ok, true)
+assert.equal(cleared.value.coverImage, null)
+const clearedRow = db.prepare('SELECT cover_image, cover_image_asset_id FROM articles WHERE id = 1').get()
+assert.equal(clearedRow.cover_image, null, 'coverImage: null must clear the cover column')
+assert.equal(clearedRow.cover_image_asset_id, null, 'coverImage: null must also clear the linked asset id')
+
+// 15.5d 非规范 id 片段：响应里的 deleted 必须等于 requireId 真正解析出的 id
+const oddArticleDelete = await callRoute({ path: '/articles/1x', method: 'DELETE', headers: { authorization: bearer } })
+assert.equal(oddArticleDelete.ok, true)
+assert.deepEqual(oddArticleDelete.value, { success: true, deleted: 1 }, 'deleted must name the row that was actually removed')
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM articles WHERE id = 1').get().n, 0)
+
 // 15.6 画廊：投影不做，但必须分页；scope 分档
 db.prepare("INSERT INTO galleries (id, image_url, sort_order, is_active, tag, created_at, updated_at) VALUES (1, 'https://cfimg.example/a.webp', 0, 1, 'artwork', '2026-01-01', '2026-01-01')").run()
 const galleryList = await callRoute({ path: '/gallery', method: 'GET', headers: { authorization: bearer } })
@@ -561,6 +591,14 @@ assert.equal(galleryPatched.value.id, 1)
 assert.equal(galleryPatched.value.tag, 'landscape')
 assert.equal(db.prepare('SELECT tag FROM galleries WHERE id = 1').get().tag, 'landscape')
 
+// 15.6c DELETE /gallery/:id：只读 403；写 token 到达领域层（本地无图床配置 → 503，不是 404），记录保留
+const roGalleryDelete = await callRoute({ path: '/gallery/1', method: 'DELETE', headers: { authorization: readOnlyBearer } })
+assert.equal(roGalleryDelete.status, 403, 'a read-only token must not delete a gallery item')
+const galleryDelete = await callRoute({ path: '/gallery/1', method: 'DELETE', headers: { authorization: bearer } })
+assert.equal(galleryDelete.status, 503, 'deleteGallery needs the image provider; a missing config must not look like a missing route')
+assert.match(String(galleryDelete.message), /IMAGE_API_BASE_URL/)
+assert.equal(db.prepare('SELECT COUNT(*) AS n FROM galleries WHERE id = 1').get().n, 1, 'a failed media cleanup must keep the gallery row')
+
 // 15.7 日记：默认不公开，且必须分页
 const diaryWrite = await callRoute({ path: '/diary/2026-11-16', method: 'PUT', headers: { authorization: bearer }, body: { contentMarkdown: 'mcp default check' } })
 assert.equal(diaryWrite.ok, true)
@@ -576,6 +614,16 @@ assert.equal((await callRoute({ path: '/diary', method: 'GET', headers: { author
 const roDiaryWrite = await callRoute({ path: '/diary/2026-11-18', method: 'PUT', headers: { authorization: readOnlyBearer }, body: { contentMarkdown: 'nope' } })
 assert.equal(roDiaryWrite.status, 403, 'a read-only token must not write a diary entry')
 assert.equal(db.prepare("SELECT COUNT(*) AS n FROM diary_entries WHERE entry_date = '2026-11-18'").get().n, 0)
+
+// 15.7a DELETE /diary/:date：只读 403；写 token 删掉；重复删除 404
+const roDiaryDelete = await callRoute({ path: '/diary/2026-11-16', method: 'DELETE', headers: { authorization: readOnlyBearer } })
+assert.equal(roDiaryDelete.status, 403, 'a read-only token must not delete a diary entry')
+assert.equal(db.prepare("SELECT COUNT(*) AS n FROM diary_entries WHERE entry_date = '2026-11-16'").get().n, 1)
+const diaryDeleted = await callRoute({ path: '/diary/2026-11-16', method: 'DELETE', headers: { authorization: bearer } })
+assert.equal(diaryDeleted.ok, true)
+assert.deepEqual(diaryDeleted.value, { success: true, deleted: '2026-11-16' })
+assert.equal(db.prepare("SELECT COUNT(*) AS n FROM diary_entries WHERE entry_date = '2026-11-16'").get().n, 0)
+assert.equal((await callRoute({ path: '/diary/2026-11-16', method: 'DELETE', headers: { authorization: bearer } })).status, 404)
 
 // 15.8 三个读列表都必须先过 mcp:read：无 token → 401，而不是 200/404/500
 for (const path of ['/images', '/gallery', '/diary', '/articles']) {
@@ -656,10 +704,9 @@ assert.equal(summary.status, 503, 'the summary branch must be routed (missing DE
 
 // 15.13 不存在的业务路径仍是 404
 assert.equal((await callRoute({ path: '/articles/1/nope', method: 'GET', headers: { authorization: bearer } })).status, 404)
-assert.equal((await callRoute({ path: '/gallery/1', method: 'DELETE', headers: { authorization: bearer } })).status, 404, 'there must be no delete capability')
-assert.equal((await callRoute({ path: '/articles/1', method: 'DELETE', headers: { authorization: bearer } })).status, 404, 'there must be no delete capability')
-assert.equal((await callRoute({ path: '/images', method: 'DELETE', headers: { authorization: bearer } })).status, 404, 'there must be no delete capability')
+// 图床文件删除仍是明确非目标：deleteMedia 没有引用检查，删掉被引用的图会直接坏图
+assert.equal((await callRoute({ path: '/images', method: 'DELETE', headers: { authorization: bearer } })).status, 404, 'there must be no media delete capability')
 
 db.close()
 
-console.log('MCP checks passed: tokens (format, scopes, TTL, issuance, enforcement, expiry, revocation, must_reset, redaction, credentials, password change/reset), list projection, pagination, diary defaults, route auth gates (bearer/cookie separation, CSRF ordering, scope validation), business routes (article list projection + pagination, detail fetch, write scope, id from path, gallery/diary pagination, diary private default, image read/write split, multipart body ownership, ops/ai routing, no delete capability).')
+console.log('MCP checks passed: tokens (format, scopes, TTL, issuance, enforcement, expiry, revocation, must_reset, redaction, credentials, password change/reset), list projection, pagination, diary defaults, route auth gates (bearer/cookie separation, CSRF ordering, scope validation), business routes (article list projection + pagination, detail fetch, write scope, id from path, gallery/diary pagination, diary private default, image read/write split, multipart body ownership, ops/ai routing, article/gallery/diary delete capability (scope-gated, row removal, 404 on repeat, no media delete).')

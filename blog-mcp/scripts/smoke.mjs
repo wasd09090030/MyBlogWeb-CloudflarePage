@@ -194,7 +194,7 @@ assert.ok(network.includes('https://offline.test'), network)
 console.log('smoke: api client passed')
 
 // --- 工具表、上传校验、MCP 服务与 CLI ---------------------------------------
-// 这一段的断言来自 Task 7 的 Review Focus：13 个工具、无删除能力、
+// 这一段的断言来自 Task 7 的 Review Focus：16 个工具、删除工具必须带 confirm、
 // `id` 只走路径、`image_upload` 先校验再发请求、`serve` 的 stdout 只有 JSON-RPC。
 import { tools } from '../src/tools.js'
 import { validateUploadPath, MAX_UPLOAD_BYTES, ALLOWED_EXTENSIONS } from '../src/upload.js'
@@ -206,16 +206,22 @@ import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import http from 'node:http'
 
-assert.equal(tools.length, 13)
+assert.equal(tools.length, 16)
 assert.deepEqual(tools.map(t => t.name).sort(), [
-  'article_create', 'article_get', 'article_list', 'article_summarize', 'article_update',
-  'diary_list', 'diary_upsert',
-  'gallery_create', 'gallery_list', 'gallery_update',
+  'article_create', 'article_delete', 'article_get', 'article_list', 'article_summarize', 'article_update',
+  'diary_delete', 'diary_list', 'diary_upsert',
+  'gallery_create', 'gallery_delete', 'gallery_list', 'gallery_update',
   'image_list', 'image_upload',
   'rebuild_public_site'
 ])
-// 没有删除能力
-assert.equal(tools.some(t => /delete|remove|destroy/i.test(t.name)), false, 'no tool may delete anything')
+// 删除工具必须存在，但每条都必须自带危险标注与 confirm 回填
+const deleteTools = tools.filter(t => /delete/i.test(t.name))
+assert.deepEqual(deleteTools.map(t => t.name).sort(), ['article_delete', 'diary_delete', 'gallery_delete'])
+for (const tool of deleteTools) {
+  assert.match(tool.description, /危险/, `${tool.name} must mark itself dangerous`)
+  assert.match(tool.description, /不可恢复/, `${tool.name} must say it cannot be undone`)
+  assert.ok(tool.inputSchema.confirm, `${tool.name} must require a confirm value`)
+}
 for (const tool of tools) {
   assert.ok(tool.description && tool.description.length > 10, `${tool.name} needs a real description`)
   assert.equal(typeof tool.run, 'function', `${tool.name} needs a run function`)
@@ -318,6 +324,29 @@ assert.deepEqual(calls.at(-1).opts.body, { title: 'T' }, 'undefined fields must 
 await byName.article_update.run({ id: 7 }, fakeApi)
 assert.deepEqual(calls.at(-1).opts, {}, 'id never goes into the body')
 
+// 可清空字段：null 必须原样进入 body，不能被当成「未填写」丢掉
+await byName.article_update.run({ id: 7, coverImage: null, aiSummary: null }, fakeApi)
+assert.deepEqual(calls.at(-1).opts.body, { coverImage: null, aiSummary: null })
+
+// 删除工具的 confirm 必须在发请求之前生效
+let deleteCalls = 0
+const countingApi = { request: async () => { deleteCalls += 1; return { ok: true } }, upload: async () => ({}) }
+await assert.rejects(() => byName.article_delete.run({ id: 7, confirm: 8 }, countingApi), /confirm/)
+await assert.rejects(() => byName.diary_delete.run({ date: '2026-11-17', confirm: '2026-11-16' }, countingApi), /confirm/)
+await assert.rejects(() => byName.gallery_delete.run({ id: 7, confirm: 70 }, countingApi), /confirm/)
+assert.equal(deleteCalls, 0, 'a mismatched confirm must never reach the API')
+
+await byName.article_delete.run({ id: 7, confirm: 7 }, fakeApi)
+assert.equal(calls.at(-1).method, 'DELETE')
+assert.equal(calls.at(-1).path, '/api/mcp/articles/7')
+assert.equal(calls.at(-1).opts, undefined)
+await byName.gallery_delete.run({ id: 3, confirm: 3 }, fakeApi)
+assert.equal(calls.at(-1).method, 'DELETE')
+assert.equal(calls.at(-1).path, '/api/mcp/gallery/3')
+await byName.diary_delete.run({ date: '2026-11-17', confirm: '2026-11-17' }, fakeApi)
+assert.equal(calls.at(-1).method, 'DELETE')
+assert.equal(calls.at(-1).path, '/api/mcp/diary/2026-11-17')
+
 await byName.article_summarize.run({ title: 'T', content: 'C' }, fakeApi)
 assert.equal(calls.at(-1).method, 'POST')
 assert.equal(calls.at(-1).path, '/api/mcp/ai/summary')
@@ -407,7 +436,7 @@ console.log('smoke: tools mapping passed')
 
   await withClient(fakeApi, async (client) => {
     const { tools: listed } = await client.listTools()
-    assert.equal(listed.length, 13)
+    assert.equal(listed.length, 16)
     assert.deepEqual(listed.map(t => t.name).sort(), tools.map(t => t.name).sort())
 
     const result = await client.callTool({ name: 'article_list', arguments: { page: 3, pageSize: 4 } })
@@ -623,7 +652,7 @@ console.log('smoke: mcp server passed')
     }
     const listResponse = serveLines.map(line => JSON.parse(line)).find(message => message.id === 2)
     assert.ok(listResponse, 'serve must answer tools/list')
-    assert.equal(listResponse.result.tools.length, 13)
+    assert.equal(listResponse.result.tools.length, 16)
     assert.equal(serveOut.includes('smoke:'), false)
 
     const logout = await runCli(['logout'])

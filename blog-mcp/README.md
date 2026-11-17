@@ -70,7 +70,7 @@ claude mcp add blog --scope user -- node D:\Work_space\MyBlogWeb-CloudflarePage\
 claude mcp add blog --scope user -e BLOG_MCP_UPLOAD_ROOTS=D:\Pictures -- node D:\Work_space\MyBlogWeb-CloudflarePage\blog-mcp\src\index.js serve
 ```
 
-注册后用 `claude mcp list` 确认状态，重启会话即可看到 13 个工具。
+注册后用 `claude mcp list` 确认状态，重启会话即可看到 16 个工具。
 
 ## 注册到 Claude Desktop
 
@@ -131,27 +131,31 @@ Remove-Item Env:BLOG_MCP_URL     # 在本窗口清掉，再 login
 
 或者干脆**新开一个 PowerShell 窗口**（新窗口没有这个变量），在那里执行 `cd D:\Work_space\MyBlogWeb-CloudflarePage\blog-mcp` 和 `node src/index.js login --label my-laptop`。
 
-## 工具清单（13 个，没有删除类工具）
+## 工具清单（16 个，含 3 个删除工具）
 
 | 工具 | 作用 | 关键入参 |
 | --- | --- | --- |
 | `article_list` | 分页列出文章元信息（不含正文） | `page?`、`pageSize?`（默认 20，≤50） |
 | `article_get` | 按 id 读单篇全文 | `id` |
 | `article_create` | 新建文章 | `title`\*、`contentMarkdown`\*、`slug?`、`category?`、`tags?`、`coverImage?`、`aiSummary?` |
-| `article_update` | 按 id 增量更新文章 | `id`\* + 上述任意字段 |
+| `article_update` | 按 id 增量更新文章。`coverImage` / `aiSummary` 传 `null` 可清空 | `id`\* + 上述任意字段 |
+| `article_delete` | ⚠️ **危险、不可恢复**：删除文章。只删 D1 行，不动图床文件 | `id`\*、`confirm`\*（必须等于 `id`） |
 | `article_summarize` | 调服务端 AI 生成摘要与建议 slug。**不写库，但需要 `mcp:write`**（服务端 `/ai/summary` 挂在写 scope 下） | `title`\*、`content`\*（≤80000 字符） |
 | `image_list` | 列出图床文件。**不是纯只读**：服务端会把列出的文件登记进图片资源表 | `dir?`、`search?`、`start?`、`count?`（≤100）、`recursive?` |
 | `image_upload` | 上传本机图片到图床（上传后公开可访问） | `filePath`\*（绝对路径） |
 | `gallery_list` | 分页列出画廊条目 | `page?`、`pageSize?`（默认 100，≤200） |
 | `gallery_create` | 新增画廊条目 | `imageUrl`\*、`tag?`、`sortOrder?`、`isActive?` |
 | `gallery_update` | 按 id 更新画廊条目 | `id`\* + 上述任意字段，外加 `createdAt?` |
+| `gallery_delete` | ⚠️ **危险、不可恢复**：删除画廊条目并**真删图床原文件**；文件仍被引用时服务端 409 拒绝 | `id`\*、`confirm`\*（必须等于 `id`） |
 | `diary_list` | 分页列出日记元信息（含未公开） | `page?`、`pageSize?`（默认 50，≤100） |
 | `diary_upsert` | 按日期写入/覆盖日记，一天一条 | `date`\*、`contentMarkdown`\*、`mood?`、`weather?`、`location?`、`tags?`、`isPublic?`（**默认 false**） |
+| `diary_delete` | ⚠️ **危险、不可恢复**：删除某天的日记 | `date`\*、`confirm`\*（必须等于 `date`） |
 | `rebuild_public_site` | 触发公开站重建 | — |
 
 \* 必填。
 
-**没有删除类工具。** `blog-mcp` 这一侧没有任何工具能删文章、画廊、图床文件或日记；服务端 `/api/mcp/*` 上也没有 DELETE 分支（恒为 404）。删除仍然只能去后台手动操作。
+**删除只覆盖三类：** 文章、画廊条目、日记。三个删除工具都要求 `confirm` 回填目标值，不匹配时客户端直接拒绝。图床文件没有被暴露成删除工具，删除仍然只能去后台手动操作。
+
 
 几条行为约定：
 
@@ -161,6 +165,10 @@ Remove-Item Env:BLOG_MCP_URL     # 在本窗口清掉，再 login
 - 工具失败时返回的是给人看的中文/英文原因，不是异常堆栈。
 
 ## 安全说明
+
+**删除工具**：`article_delete` / `gallery_delete` / `diary_delete` 都要求 `confirm` 回填目标值（文章 id、画廊 id、日记日期），
+不匹配时客户端直接拒绝、一个请求都不会发出。这是防模型误触的护栏，不是安全边界——真正的边界是 `mcp:write` scope。
+`gallery_delete` 会真删图床原文件；图床文件删除（`deleteMedia`）**没有**暴露给 MCP，因为它没有引用检查，删掉被文章引用的图会直接坏图。
 
 - token 是 `bmcp_` 开头的随机串，服务端只存 `SHA-256(pepper:token)`，明文只在签发时返回一次。
 - 默认有效期 30 天，最长 90 天；scope 分 `mcp:read` / `mcp:write`。
@@ -224,7 +232,7 @@ await fetch(`/api/mcp/tokens/${ID}/revoke`, { method: 'POST' })
 | 路径 | 作用 |
 | --- | --- |
 | `blog-mcp/src/index.js` | CLI：`login` / `logout` / `status` / `serve` |
-| `blog-mcp/src/tools.js` | 13 个工具的定义（新增/修改工具改这里，并同步本 README） |
+| `blog-mcp/src/tools.js` | 16 个工具的定义（新增/修改工具改这里，并同步本 README） |
 | `blog-mcp/src/upload.js` | `image_upload` 的本地路径校验（扩展名、根目录白名单、50 MB） |
 | `blog-mcp/src/api.js` | HTTP 客户端与错误文案 |
 | `nuxt-admin/server/routes/api/mcp/[...path].ts` | 服务端 `/api/mcp/*` 端点与鉴权 |

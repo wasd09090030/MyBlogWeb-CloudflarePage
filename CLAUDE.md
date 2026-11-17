@@ -117,7 +117,7 @@ npx wrangler secret put CLOUDFLARE_ACCOUNT_ID --config wrangler.toml
 
 ## MCP 服务（blog-mcp）
 
-`blog-mcp/` 是一个**本机 Node stdio 进程**，把博客后台能力包装成 13 个 MCP 工具（文章、画廊、日记、图床、AI 摘要、公开站重建），供 Claude Code / Claude Desktop 调用。它不直连 D1，业务请求都走线上 `blog-api` 的 `/api/mcp/*`。安装、注册与排错见 `blog-mcp/README.md`。
+`blog-mcp/` 是一个**本机 Node stdio 进程**，把博客后台能力包装成 16 个 MCP 工具（文章、画廊、日记、图床、AI 摘要、公开站重建），供 Claude Code / Claude Desktop 调用。它不直连 D1，业务请求都走线上 `blog-api` 的 `/api/mcp/*`。安装、注册与排错见 `blog-mcp/README.md`。
 
 **鉴权模型**
 
@@ -125,7 +125,7 @@ npx wrangler secret put CLOUDFLARE_ACCOUNT_ID --config wrangler.toml
 - token 存 D1 `mcp_tokens` 表（`nuxt-admin/migrations/0011_mcp_tokens.sql`），只存 `SHA-256(SESSION_PEPPER:token)`，明文仅签发时返回一次；scope 为 `mcp:read` / `mcp:write`，默认 TTL 30 天、上限 90 天，`last_used_at` 有 60 秒节流。
 - **Bearer 与 Cookie 永不混用**：Bearer 路由完全不读 Cookie；`GET /api/mcp/tokens` 与 `POST /api/mcp/tokens/:id/revoke` 两条管理路由反过来只认后台 Cookie 会话，并**显式拒绝**任何 `Authorization` 头（返回 400），防止泄露的 MCP token 反向操作 token 管理本身。改这两组路由时不要放宽这条边界。
 - **改密码 / 重置密码会吊销该账号的全部 MCP token**（`server/domain/mcp-token.ts` 的 `revokeMcpTokensStatement` 由 `server/domain/auth.ts` 导入，接在 `changeAdminPassword` 与 `resetOrBootstrapAdmin` 的 batch 里）。`must_reset` 为 1 时签发和每次 Bearer 校验都会被拒。
-- **没有删除类工具，也不要加**。`tools.js` 中 13 个工具全部为只读或写入/覆盖；服务端 `/api/mcp/*` 也没有 DELETE 分支（恒 404）。删除类端点（尤其会联动真删图床原文件的那种）属于明确非目标。
+- **删除类工具只有三个，且必须带 `confirm`**。`tools.js` 的 16 个工具包含 `article_delete` / `gallery_delete` / `diary_delete`；三者都要求 `confirm` 回填目标值（文章 id / 画廊 id / 日记日期），不匹配时客户端直接拒绝、不发请求。`gallery_delete` 复用 `deleteGallery`，**会真删图床原文件**（仍被引用时 409 拒绝）；`article_delete` / `diary_delete` 只删 D1 行。**图床文件删除仍是明确非目标**：`deleteMedia` 没有引用检查，删掉被文章正文引用的图会直接坏图。`confirm` 是防模型误触的护栏，不是安全边界，真正的边界是 `mcp:write` scope。服务端 `/api/mcp/*` 只有文章、画廊、日记三条 DELETE 分支，图床文件没有删除端点。
 - **`diary_upsert` 的可见性默认值在路由层被翻转**：domain 的 `upsertDiaryEntry` 默认 `is_public = 1`，MCP 路由调用前用 `withDiaryPublicDefault` 补 `isPublic ?? false`。改这条会直接把模型漏填的日记发到公开站，不要"对齐"回 domain 默认值。
 - **`image_list` 不是纯只读**：它在 `mcp:read` 下也会把列出的文件 upsert 进图片资源表。加工具时不要因为"看着像读接口"就把它挂到只读语义上。
 

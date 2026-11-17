@@ -3,7 +3,7 @@
  *
  * 约定（Review Focus 已定）：
  * - `id` / `date` 只出现在路径里，绝不进 body；
- * - 没有删除类工具，13 个都只读或写入/覆盖；
+ * - 16 个工具；其中 3 个是删除工具，必须带 `confirm` 回填目标值，其余只读或写入/覆盖；
  * - body / query 只带调用方真正传了的字段，`undefined` 一律不发送；
  * - `image_upload` 先本地校验再发请求，校验失败时一个字节都不会上传。
  */
@@ -50,6 +50,15 @@ function endpoint(method, pathFor, { queryKeys = [], bodyKeys = [] } = {}) {
 
 /** 可选的字符串字段；空串按未填写处理，避免把 `""` 写进线上数据。 */
 const optionalText = () => z.string().min(1).optional()
+/** 可清空的文本字段：传 null 表示清空；省略表示不修改。 */
+const clearableText = () => z.string().min(1).nullable().optional()
+
+/** 危险操作护栏：confirm 必须原样回填目标值，否则在发请求之前就拒绝。 */
+function requireDeleteConfirm(actual, expected, label) {
+  if (actual !== expected) {
+    throw new Error(`危险操作已拒绝：confirm 必须等于${label} ${JSON.stringify(expected)}，收到 ${JSON.stringify(actual)}。请先向用户确认再调用。`)
+  }
+}
 /** 可分页列表的通用入参。 */
 const PAGE_QUERY_KEYS = ['page', 'pageSize']
 
@@ -81,8 +90,8 @@ export const tools = [
       slug: optionalText().describe('URL 短名，省略时由标题生成'),
       category: z.enum(ARTICLE_CATEGORIES).optional().describe('分类'),
       tags: z.array(z.string()).optional().describe('标签列表'),
-      coverImage: optionalText().describe('封面图 URL 或图床文件名'),
-      aiSummary: optionalText().describe('AI 摘要')
+      coverImage: clearableText().describe('封面图 URL 或图床文件名；传 null 表示不设置/清空'),
+      aiSummary: clearableText().describe('AI 摘要；传 null 表示清空')
     },
     run: endpoint('POST', () => '/api/mcp/articles', { bodyKeys: ARTICLE_BODY_KEYS })
   },
@@ -96,10 +105,22 @@ export const tools = [
       slug: optionalText().describe('新 slug'),
       category: z.enum(ARTICLE_CATEGORIES).optional().describe('新分类'),
       tags: z.array(z.string()).optional().describe('新标签列表（整体替换）'),
-      coverImage: optionalText().describe('新封面图 URL 或图床文件名'),
-      aiSummary: optionalText().describe('新摘要')
+      coverImage: clearableText().describe('新封面图 URL 或图床文件名；传 null 清空'),
+      aiSummary: clearableText().describe('新摘要；传 null 清空')
     },
     run: endpoint('PUT', args => `/api/mcp/articles/${args.id}`, { bodyKeys: ARTICLE_BODY_KEYS })
+  },
+  {
+    name: 'article_delete',
+    description: '⚠️ 危险且不可恢复：永久删除一篇文章及其数据库记录，会直接修改线上数据。图床里的图片文件不会被删除；公开站需重建后才会消失。必须传 confirm 且等于 id 才会执行。',
+    inputSchema: {
+      id: z.number().int().positive().describe('文章 id'),
+      confirm: z.number().int().positive().describe('二次确认：必须与 id 完全相同，否则本地直接拒绝')
+    },
+    run: async (args, api) => {
+      requireDeleteConfirm(args.confirm, args.id, '文章 id')
+      return await api.request('DELETE', `/api/mcp/articles/${args.id}`)
+    }
   },
   {
     name: 'article_summarize',
@@ -166,6 +187,18 @@ export const tools = [
     run: endpoint('PATCH', args => `/api/mcp/gallery/${args.id}`, { bodyKeys: GALLERY_UPDATE_BODY_KEYS })
   },
   {
+    name: 'gallery_delete',
+    description: '⚠️ 危险且不可恢复：永久删除一条画廊条目，并删除图床里的原文件，会直接修改线上数据。文件仍被其他画廊项、文章封面或 Hero 引用时服务端会拒绝（409），记录保留。公开站需重建后才会更新。必须传 confirm 且等于 id 才会执行。',
+    inputSchema: {
+      id: z.number().int().positive().describe('画廊条目 id'),
+      confirm: z.number().int().positive().describe('二次确认：必须与 id 完全相同，否则本地直接拒绝')
+    },
+    run: async (args, api) => {
+      requireDeleteConfirm(args.confirm, args.id, '画廊 id')
+      return await api.request('DELETE', `/api/mcp/gallery/${args.id}`)
+    }
+  },
+  {
     name: 'diary_list',
     description: '分页列出日记元信息（日期、心情、天气、地点、是否公开），包含未公开的条目。只读。',
     inputSchema: {
@@ -187,6 +220,18 @@ export const tools = [
       isPublic: z.boolean().optional().describe('是否公开，省略时为 false（不公开）')
     },
     run: endpoint('PUT', args => `/api/mcp/diary/${args.date}`, { bodyKeys: DIARY_BODY_KEYS })
+  },
+  {
+    name: 'diary_delete',
+    description: '⚠️ 危险且不可恢复：永久删除某一天的日记，会直接修改线上数据。公开站需重建后才会消失。必须传 confirm 且等于 date 才会执行。',
+    inputSchema: {
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('日期，格式 YYYY-MM-DD'),
+      confirm: z.string().min(1).describe('二次确认：必须与 date 完全相同，否则本地直接拒绝')
+    },
+    run: async (args, api) => {
+      requireDeleteConfirm(args.confirm, args.date, '日期')
+      return await api.request('DELETE', `/api/mcp/diary/${args.date}`)
+    }
   },
   {
     name: 'rebuild_public_site',

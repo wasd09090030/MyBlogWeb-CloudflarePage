@@ -124,7 +124,7 @@ npx wrangler secret put CLOUDFLARE_ACCOUNT_ID --config wrangler.toml
 - `/api/mcp/*` 是实现于 `nuxt-admin/server/routes/api/mcp/[...path].ts` 与 `server/domain/mcp-token.ts` 的独立命名空间，不经过 `admin/api/[...path].ts` 的三条前置检查。**业务路由**只认 `Authorization: Bearer bmcp_...`；三个例外是 `POST /api/mcp/token`（账号密码换 token）与 `GET /api/mcp/tokens`、`POST /api/mcp/tokens/:id/revoke`（只认后台 Cookie 会话）。
 - token 存 D1 `mcp_tokens` 表（`nuxt-admin/migrations/0011_mcp_tokens.sql`），只存 `SHA-256(SESSION_PEPPER:token)`，明文仅签发时返回一次；scope 为 `mcp:read` / `mcp:write`，默认 TTL 30 天、上限 90 天，`last_used_at` 有 60 秒节流。
 - **Bearer 与 Cookie 永不混用**：Bearer 路由完全不读 Cookie；`GET /api/mcp/tokens` 与 `POST /api/mcp/tokens/:id/revoke` 两条管理路由反过来只认后台 Cookie 会话，并**显式拒绝**任何 `Authorization` 头（返回 400），防止泄露的 MCP token 反向操作 token 管理本身。改这两组路由时不要放宽这条边界。
-- **改密码 / 重置密码会吊销该账号的全部 MCP token**（`server/domain/auth.ts` 的 `revokeMcpTokensStatement` 接在 `changeAdminPassword` 与 `resetOrBootstrapAdmin` 的 batch 里）。`must_reset` 为 1 时签发和每次 Bearer 校验都会被拒。
+- **改密码 / 重置密码会吊销该账号的全部 MCP token**（`server/domain/mcp-token.ts` 的 `revokeMcpTokensStatement` 由 `server/domain/auth.ts` 导入，接在 `changeAdminPassword` 与 `resetOrBootstrapAdmin` 的 batch 里）。`must_reset` 为 1 时签发和每次 Bearer 校验都会被拒。
 - **没有删除类工具，也不要加**。`tools.js` 中 13 个工具全部为只读或写入/覆盖；服务端 `/api/mcp/*` 也没有 DELETE 分支（恒 404）。删除类端点（尤其会联动真删图床原文件的那种）属于明确非目标。
 - **`diary_upsert` 的可见性默认值在路由层被翻转**：domain 的 `upsertDiaryEntry` 默认 `is_public = 1`，MCP 路由调用前用 `withDiaryPublicDefault` 补 `isPublic ?? false`。改这条会直接把模型漏填的日记发到公开站，不要"对齐"回 domain 默认值。
 - **`image_list` 不是纯只读**：它在 `mcp:read` 下也会把列出的文件 upsert 进图片资源表。加工具时不要因为"看着像读接口"就把它挂到只读语义上。

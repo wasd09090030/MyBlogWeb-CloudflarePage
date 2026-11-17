@@ -104,7 +104,7 @@ claude mcp add blog --scope user -e BLOG_MCP_UPLOAD_ROOTS=D:\Pictures -- node D:
 
 | 变量 | 何时读取 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `BLOG_MCP_URL` | 仅在 `login` 时（决定并持久化请求目标） | `https://wasd09090030.top` | API 基址，末尾斜杠会被去掉。`status` 输出里的「服务器」就是它 |
+| `BLOG_MCP_URL` | 仅在 `login` 时（决定并持久化请求目标；错误文案也用它） | `https://wasd09090030.top` | API 基址，末尾斜杠会被去掉。`status` 输出里的「服务器」就是它 |
 | `BLOG_MCP_UPLOAD_ROOTS` | 每次调用 `image_upload` 时 | 未设置（不限制目录） | 允许读取的本地根目录白名单。Windows 用 `;` 分隔，macOS/Linux 用 `:` 分隔。**这是唯一需要在注册时用 `-e` / `env` 传递的变量** |
 
 `BLOG_MCP_URL` 用在哪台服务器，从登录那一刻就固定了。注册 `serve` 时再加 `-e BLOG_MCP_URL=...` **不会**改变请求目标，网络失败或超时的提示也仍然报凭证文件里的地址。**不要给 `serve` 传 `BLOG_MCP_URL`。**
@@ -121,7 +121,7 @@ $env:BLOG_MCP_URL = 'http://localhost:3000'
 node src/index.js login --label local-dev
 ```
 
-确认 `node src/index.js status` 的「服务器」显示 `http://localhost:3000` 后，按上面的命令注册 `serve` 即可（不需要 `-e`）。注意 `status` 的「服务器」行只有在成功连上服务端后才会打印；如果它只报 `无法连接 …`，就改读凭证文件里的 `baseUrl`（见「排错」表）。
+确认 `node src/index.js status` 的「服务器」显示 `http://localhost:3000` 后，按上面的命令注册 `serve` 即可（不需要 `-e`）。注意 `status` 的「服务器」行只有在成功连上服务端后才会打印；如果它只报 `无法连接 …`，报错里已经写出了本次真正请求的地址（见「排错」表）。
 
 联调结束想回到线上，重新跑一次 `login` 并让它不再看到该变量——**同一份凭证文件里只存一个地址**，所以本地联调会顶掉线上的凭证。`$env:BLOG_MCP_URL` 在当前 PowerShell 窗口里是持续生效的，直接重跑 `login` 仍会读到旧值；用下面任一方式清掉它：
 
@@ -196,7 +196,7 @@ npm run smoke
 | `凭证已失效或已被吊销，请重新运行 blog-mcp login` | token 过期、被单独吊销，或改密/重置密码吊销了全部 token | 重新执行 `node src/index.js login --label my-laptop` |
 | `403 Insufficient scope: mcp:write` | 这枚 token 是 `--read-only` 签发的，只有 `mcp:read` | 重登一次（不带 `--read-only`），或用另一台机器的读写 token |
 | `403 Password reset is required`（工具调用）/ `管理员密码需要重置，请先在后台完成重置`（`login`） | 账号被标记为必须重置密码 | 先在后台完成密码重置，再重新 `login` |
-| `无法连接 …，检查网络或 BLOG_MCP_URL` | 登录时记下的地址不可达、代理/网络不通，或线上 Worker 未部署 | 报错里的地址就是本次真正请求的地址（来自凭证文件）。地址不对 → 带着正确的 `BLOG_MCP_URL` 重新 `login`（给 `serve` 加 `-e` 没用）；地址对 → 排查网络，本地联调确认 `nuxt dev` 已启动 |
+| `无法连接 …，检查网络或 BLOG_MCP_URL` | 登录时记下的地址不可达、代理/网络不通，或线上 Worker 未部署 | 报错里的地址就是本次真正请求的地址（登录阶段来自 `BLOG_MCP_URL` 或默认值，之后来自凭证文件）。地址不对 → 带着正确的 `BLOG_MCP_URL` 重新 `login`（给 `serve` 加 `-e` 没用）；地址对 → 排查网络，本地联调确认 `nuxt dev` 已启动 |
 | `请求超时（30 秒）…` | 30 秒内没收到响应：网络很慢，或服务端仍在处理（例如公开站重建） | 不要立刻重试写操作；先用 `status` 或对应的列表工具确认上一次是否已经生效 |
 | `尚未登录，请先运行 blog-mcp login` | 本机没有凭证文件（`serve` / `status` 会遇到） | 先 `login`；若已登录过，检查是不是在另一个用户账户下运行的 |
 | 工具提示凭证已失效，但手动 `status` 正常 | 客户端启动的进程读不到凭证（例如用了不同的 `APPDATA`） | 用 `claude mcp list` 确认注册的命令，与手动 `node src/index.js status` 用同一环境 |

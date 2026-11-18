@@ -174,6 +174,11 @@ console.log('smoke: api parsing passed')
         false,
         'content-type must be left to fetch so the multipart boundary is generated'
       )
+
+      // folder 走 query：上传目录是服务端设置，客户端只能通过 query 覆盖
+      await api.upload(png, 'Study')
+      assert.equal(calls.at(-1).url, 'https://example.test/api/mcp/images?folder=Study')
+      assert.ok(calls.at(-1).init.body instanceof FormData)
     } finally {
       rmSync(scratch, { recursive: true, force: true })
     }
@@ -300,7 +305,7 @@ try {
 const calls = []
 const fakeApi = {
   request: async (method, path, opts) => { calls.push({ method, path, opts }); return { ok: true } },
-  upload: async (filePath) => { calls.push({ upload: filePath }); return { ok: true } }
+  upload: async (filePath, folder) => { calls.push({ upload: filePath, folder }); return { ok: true } }
 }
 const byName = Object.fromEntries(tools.map(t => [t.name, t]))
 
@@ -360,7 +365,9 @@ assert.deepEqual(calls.at(-1), {
 })
 
 await byName.image_upload.run({ filePath: png }, fakeApi)
-assert.deepEqual(calls.at(-1), { upload: png })
+assert.deepEqual(calls.at(-1), { upload: png, folder: undefined })
+await byName.image_upload.run({ filePath: png, folder: 'Study' }, fakeApi)
+assert.deepEqual(calls.at(-1), { upload: png, folder: 'Study' })
 // 校验在发请求之前：坏路径根本到不了 upload
 const callsBeforeUpload = calls.length
 await assert.rejects(() => byName.image_upload.run({ filePath: notImage }, fakeApi), /扩展名/)

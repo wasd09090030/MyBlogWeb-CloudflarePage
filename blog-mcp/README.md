@@ -142,7 +142,7 @@ Remove-Item Env:BLOG_MCP_URL     # 在本窗口清掉，再 login
 | `article_delete` | ⚠️ **危险、不可恢复**：删除文章。只删 D1 行，不动图床文件 | `id`\*、`confirm`\*（必须等于 `id`） |
 | `article_summarize` | 调服务端 AI 生成摘要与建议 slug。**不写库，但需要 `mcp:write`**（服务端 `/ai/summary` 挂在写 scope 下） | `title`\*、`content`\*（≤80000 字符） |
 | `image_list` | 列出图床文件。**不是纯只读**：服务端会把列出的文件登记进图片资源表 | `dir?`、`search?`、`start?`、`count?`（≤100）、`recursive?` |
-| `image_upload` | 上传本机图片到图床（上传后公开可访问） | `filePath`\*（绝对路径） |
+| `image_upload` | 上传本机图片到图床（上传后公开可访问） | `filePath`\*（绝对路径）、`folder?`（图床目录，如 `Study`；省略时用后台配置的上传目录） |
 | `gallery_list` | 分页列出画廊条目 | `page?`、`pageSize?`（默认 100，≤200） |
 | `gallery_create` | 新增画廊条目 | `imageUrl`\*、`tag?`、`sortOrder?`、`isActive?` |
 | `gallery_update` | 按 id 更新画廊条目 | `id`\* + 上述任意字段，外加 `createdAt?` |
@@ -159,7 +159,7 @@ Remove-Item Env:BLOG_MCP_URL     # 在本窗口清掉，再 login
 
 几条行为约定：
 
-- `image_upload` 只接受**绝对路径**，扩展名限 `.jpg` / `.jpeg` / `.png` / `.webp` / `.gif` / `.avif`，单文件 ≤ 50 MB。校验在读取文件内容之前完成，被拒的路径一个字节都不会上传。
+- `image_upload` 只接受**绝对路径**，扩展名限 `.jpg` / `.jpeg` / `.png` / `.webp` / `.gif` / `.avif`，单文件 ≤ 50 MB。校验在读取文件内容之前完成，被拒的路径一个字节都不会上传。可选 `folder` 覆盖图床目录；服务端会拒绝含 `..` 或 http(s) 前缀的值（400）。
 - `diary_upsert` 不传 `isPublic` 时一律**不公开**，只有显式传 `true` 才会发到公开站。
 - 写操作改的是线上数据，但公开站是静态生成的：文章/画廊/日记改动后要调 `rebuild_public_site`（或后台按钮）才会出现在公开站，通常需要几分钟。
 - 工具失败时返回的是给人看的中文/英文原因，不是异常堆栈。

@@ -687,6 +687,24 @@ const imagesMultipart = await callRoute({
 assert.equal(imagesMultipart.ok, false)
 assert.equal(imagesMultipart.status, 503, 'the multipart file must reach the provider call; a consumed/locked body would not')
 
+// 15.11a folder 覆盖：非法目录在碰图床之前就被拒（400），合法目录照常进入图床调用（503）
+// query 解析、normalizePrefix 与 provider 调用的先后顺序由这两个状态码一起钉住。
+const badFolderUpload = await callRoute({
+  path: '/images', method: 'POST',
+  headers: { authorization: bearer, 'content-type': `multipart/form-data; boundary=${boundary}` },
+  query: { folder: '../etc' },
+  body: multipartStream()
+})
+assert.equal(badFolderUpload.status, 400, 'a traversal folder must be rejected before the provider call')
+assert.equal(badFolderUpload.message, 'Invalid media prefix')
+const okFolderUpload = await callRoute({
+  path: '/images', method: 'POST',
+  headers: { authorization: bearer, 'content-type': `multipart/form-data; boundary=${boundary}` },
+  query: { folder: 'Study' },
+  body: multipartStream()
+})
+assert.equal(okFolderUpload.status, 503, 'a valid folder must reach the image provider (not configured in this harness)')
+
 // 15.12 ops / ai 分支存在且要 mcp:write（本地无 hook、无 DeepSeek key，所以走到上游失败）
 const roDeploy = await callRoute({ path: '/ops/pages/deploy', method: 'POST', headers: { authorization: readOnlyBearer } })
 assert.equal(roDeploy.status, 403, 'ops/pages/deploy must require mcp:write')

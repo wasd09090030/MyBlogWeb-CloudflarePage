@@ -145,13 +145,14 @@ export const tools = [
   },
   {
     name: 'image_upload',
-    description: '把本机的一张图片上传到图床。上传后该文件会公开可访问，任何人拿到 URL 都能查看。只允许上传用户明确指定的图片文件（绝对路径，扩展名 .jpg/.jpeg/.png/.webp/.gif/.avif，单文件不超过 50 MB）。',
+    description: '把本机的一张图片上传到图床。上传后该文件会公开可访问，任何人拿到 URL 都能查看。只允许上传用户明确指定的图片文件（绝对路径，扩展名 .jpg/.jpeg/.png/.webp/.gif/.avif，单文件不超过 50 MB）。可选 folder 指定图床目录（如 Study），省略时用服务端配置的上传目录。',
     inputSchema: {
-      filePath: z.string().min(1).describe('本机图片的绝对路径')
+      filePath: z.string().min(1).describe('本机图片的绝对路径'),
+      folder: optionalText().describe('图床目录，如 Study；不能包含 .. 或协议前缀')
     },
     // 先校验、后上传：坏路径必须在这里被拒绝，绝不能让 openAsBlob 先失败
     // （那个 TypeError 会被 formatApiError 误判成网络问题）。
-    run: async (args, api) => await api.upload(validateUploadPath(args.filePath))
+    run: async (args, api) => await api.upload(validateUploadPath(args.filePath), args.folder)
   },
   {
     name: 'gallery_list',

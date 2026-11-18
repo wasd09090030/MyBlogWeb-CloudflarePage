@@ -90,10 +90,15 @@ function providerFileTimestamp(file: Record<string, unknown>): string {
   return String(metadata.TimeStamp || file.uploaded || '')
 }
 
-export async function uploadMedia(event: H3Event) {
+export async function uploadMedia(event: H3Event, folderOverride?: unknown) {
+  if (folderOverride !== undefined && typeof folderOverride !== 'string') {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid media prefix' })
+  }
   const input = await readUploadInput(event)
   const config = await getImagebedConfig(event)
-  const folder = normalizePrefix(config.uploadFolder || getCloudflareEnv(event).DEFAULT_UPLOAD_FOLDER || 'uploads')
+  // A caller-supplied folder (MCP `image_upload.folder`) wins over the global
+  // imagebed setting; empty/omitted keeps the previous behaviour.
+  const folder = normalizePrefix(String(folderOverride ?? '').trim() || config.uploadFolder || getCloudflareEnv(event).DEFAULT_UPLOAD_FOLDER || 'uploads')
   const uploaded = await uploadToImageApi(event, input.body, input.contentType, folder)
   const sourceUrl = normalizeImageSourceUrl(event, uploaded.src, config.domain)
   const storageKey = providerFileName(sourceUrl)

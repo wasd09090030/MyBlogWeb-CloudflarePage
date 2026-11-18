@@ -238,8 +238,9 @@ export default defineEventHandler(async (event) => {
     if (parts.length === 1 && currentMethod === 'POST') {
       await requireScope(event, 'mcp:write')
       // No `readJsonBody()` here — see the note above: `uploadMedia` owns the stream.
+      // `folder` comes from the query string because the body is the multipart file.
       setResponseStatus(event, 201)
-      return await uploadMedia(event)
+      return await uploadMedia(event, getQuery(event).folder)
     }
   }
 

@@ -152,14 +152,19 @@ export function createApiClient(credentials) {
 
   /**
    * 上传本地文件到图床。文件会公开可访问，路径校验由调用方负责。
+   * `folder` 是可选的图床目录，省略时由服务端使用后台配置的上传目录。
    * @param {string} filePath
+   * @param {string} [folder]
    * @returns {Promise<unknown>}
    */
-  async function upload(filePath) {
+  async function upload(filePath, folder) {
     const blob = await openAsBlob(filePath)
     const form = new FormData()
     form.append('file', blob, basename(filePath))
-    return await request('POST', '/api/mcp/images', { form })
+    // 目录走 query：请求体已经被 multipart 文件占用。
+    const opts = { form }
+    if (folder) opts.query = { folder }
+    return await request('POST', '/api/mcp/images', opts)
   }
 
   return { request, upload }

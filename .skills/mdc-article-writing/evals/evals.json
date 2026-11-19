@@ -21,6 +21,13 @@
       "prompt": "帮我写一篇资源分享的文章，整理我做前端常用的 8 个工具网站，分「在线工具」「文档站点」「素材站」三类。要有每个工具的链接和一句话说明，文末提醒一下哪些需要注册、哪些可以直接用。中文，600 字左右。",
       "expected_output": "resource 类清单：::link-card 为绝对主力（每项一条，text 写成「名称 — 用途」），::tabs 按三类分组（内层冒号必须多于外层），文末 alert 说明注册与授权。不得使用 star-rating / spoiler / code-playground / steps / image-comparison / type-writer / web-embed。check-mdc.mjs --category resource 退出码 0。",
       "files": []
+    },
+    {
+      "id": 3,
+      "category": "other",
+      "prompt": "帮我写一篇随笔，说说我把博客从 GitHub Actions 自动部署改成 Cloudflare 免费套餐手动发布这件事。能说的就是：以前 push 就发布，现在要在本地依次敲 db:migrate:remote、deploy:api、deploy:pages，再去 cloudflare-worker 目录 deploy router，最后点后台的重构按钮；关掉自动构建是因为 Pages 的 git 构建要等好几分钟。中文，500-700 字。",
+      "expected_output": "other 类随笔，全篇第一人称「我」，不使用任何 MDC 组件。语气具体、语气参差：不得出现「像一种仪式」「像寄出一封信」「便宜不等于无代价」这类比喻或金句升华，不得编造用户未提供的耗时、次数、心情（如「笑着按下」「泡了杯茶」），不得用「总而言之」「接下来让我们」收尾或开场。事实与限定词必须与用户给的素材一致。",
+      "files": []
     }
   ]
 }

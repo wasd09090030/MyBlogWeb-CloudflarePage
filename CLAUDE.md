@@ -11,7 +11,7 @@
 | `blog-api` | Worker（cloudflare_module，绑定 D1） | 本地 `npm run deploy:api` |
 | `myblog-admin` | Pages（Direct Upload，静态 SPA） | 本地 `npm run deploy:pages` |
 | `blog-router` | Worker（统一域名路由） | 本地 `npx wrangler deploy` |
-| `myblogweb-cloudflarepage` | Pages（连接 Git，SSG 静态站） | Git 推送自动构建，或后台「重构 nuxt-public」按钮，或本地 `wrangler pages deploy` |
+| `myblogweb-cloudflarepage` | Pages（已禁用 Git 自动构建，SSG 静态站） | 本地 `wrangler pages deploy`，或后台「重构 nuxt-public」按钮（Deploy Hook） |
 | `blog-db` | D1 SQL 数据库 | 迁移命令 `npm run db:migrate:remote` |
 
 依赖关系：`blog-router` 通过 Service Binding 调用 `blog-api`（`BLOG_API`），并把 `/admin/api/*`、`/api/*`、`/images/*` 转发给 `blog-api`，`/admin/*` 转发给 `myblog-admin`，其余路径转发给 `myblogweb-cloudflarepage`。
@@ -58,7 +58,7 @@ cd nuxt-public
 npx playwright install chromium
 ```
 
-未安装或启动失败不会导致构建失败：mermaid 代码块会保留，由现有客户端渲染兜底。Cloudflare Pages 的 Git 构建如需启用构建期渲染，要在其 Build command 里追加同一条安装命令（构建缓存不保证浏览器一直存在）。
+未安装或启动失败不会导致构建失败：mermaid 代码块会保留，由现有客户端渲染兜底。后台按钮触发的 Cloudflare 构建同样需要在其 Build command 里追加安装命令（当前构建命令为 `npm ci && npm run generate`，未包含 Playwright 浏览器；不追加时该次构建会回退客户端渲染）。
 
 ## Steam 游戏档案同步（公开站 `/games`）
 
@@ -107,10 +107,10 @@ npx wrangler deploy --config wrangler.toml                    # 带 crons = ["0 
 
 ## 公开站重建（后台 trigger 按钮）
 
-`myblogweb-cloudflarepage` 是 SSG 静态站，文章、画廊等**内容变更后不会自动更新**。有两种重建方式：
+`myblogweb-cloudflarepage` 是 SSG 静态站，文章、画廊等**内容变更后不会自动更新**。Git 自动构建已在 2026-11-19 关闭（Pages 项目的 `deployments_enabled` / `production_deployments_enabled` 均为 false），推送代码不会再触发构建。现在有两种重建方式：
 
 1. **后台「重构 nuxt-public」按钮**：登录 `https://wasd09090030.top/admin` 后，在内容工作台点击「重构 nuxt-public」或 Cloudflare Pages 卡片上的「触发重构」。该操作调用 `POST /admin/api/ops/pages/deploy-hook`，由 `blog-api` Worker 触发 Cloudflare Pages 重建（静态站会重新生成并发布，通常需要几分钟）。
-2. Git 推送 `nuxt-public` 代码到 `main`：由于 `myblogweb-cloudflarepage` 连接了 Git，推送会触发 Cloudflare Pages 自动构建。
+2. **本地构建 + `wrangler pages deploy`**：按下方命令本地生成 `.output/public` 后直接上传（含 mermaid 构建期渲染时必须走这条，除非 Cloudflare 构建命令已安装 Chromium）。
 
 **前置条件**：后台 trigger 按钮依赖 `blog-api` 的 Worker Secret。优先配置 `PAGES_DEPLOY_HOOK_URL`（Pages Deploy Hook URL）；未配置时，`blog-api` 会回退到读取 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、`PAGES_PROJECT_NAME` 三个 secret。未配置任一 secret 时该接口返回 503。Secret 设置命令：
 

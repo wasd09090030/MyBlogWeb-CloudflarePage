@@ -58,7 +58,7 @@ cd nuxt-public
 npx playwright install chromium
 ```
 
-未安装或启动失败不会导致构建失败：mermaid 代码块会保留，由现有客户端渲染兜底。后台按钮触发的 Cloudflare 构建同样需要在其 Build command 里追加安装命令（当前构建命令为 `npm ci && npm run generate`，未包含 Playwright 浏览器；不追加时该次构建会回退客户端渲染）。
+未安装或启动失败不会导致构建失败：mermaid 代码块会保留，由现有客户端渲染兜底。Cloudflare 侧构建（后台按钮 / API 触发）的 Build command 已设为 `npx playwright install chromium && npm ci && npm run generate`；2026-11-19 实测构建成功（约 6 分钟）并生成明/暗双份 SVG。
 
 ## Steam 游戏档案同步（公开站 `/games`）
 
@@ -110,7 +110,7 @@ npx wrangler deploy --config wrangler.toml                    # 带 crons = ["0 
 `myblogweb-cloudflarepage` 是 SSG 静态站，文章、画廊等**内容变更后不会自动更新**。Git 自动构建已在 2026-11-19 关闭（Pages 项目的 `deployments_enabled` / `production_deployments_enabled` 均为 false），推送代码不会再触发构建。现在有两种重建方式：
 
 1. **后台「重构 nuxt-public」按钮**：登录 `https://wasd09090030.top/admin` 后，在内容工作台点击「重构 nuxt-public」或 Cloudflare Pages 卡片上的「触发重构」。该操作调用 `POST /admin/api/ops/pages/deploy-hook`，由 `blog-api` Worker 触发 Cloudflare Pages 重建（静态站会重新生成并发布，通常需要几分钟）。
-2. **本地构建 + `wrangler pages deploy`**：按下方命令本地生成 `.output/public` 后直接上传（含 mermaid 构建期渲染时必须走这条，除非 Cloudflare 构建命令已安装 Chromium）。
+2. **本地构建 + `wrangler pages deploy`**：本地 `npm run generate` 后直接上传；本机需已执行过 `npx playwright install chromium`，否则 mermaid 回退客户端渲染。
 
 **前置条件**：后台 trigger 按钮依赖 `blog-api` 的 Worker Secret。优先配置 `PAGES_DEPLOY_HOOK_URL`（Pages Deploy Hook URL）；未配置时，`blog-api` 会回退到读取 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`、`PAGES_PROJECT_NAME` 三个 secret。未配置任一 secret 时该接口返回 503。Secret 设置命令：
 

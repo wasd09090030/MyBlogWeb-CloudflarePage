@@ -51,6 +51,15 @@ npm run generate
 npx wrangler pages deploy .output/public --project-name myblogweb-cloudflarepage
 ```
 
+含 mermaid 代码块的文章会在 `npm run generate` 期间用 Playwright 渲染成**明/暗两份内联 SVG**（`nuxt-public/app/features/article-detail/services/rehypeMermaidDualTheme.ts`），页面加载时不再动态加载 mermaid。首次构建前需安装浏览器：
+
+```powershell
+cd nuxt-public
+npx playwright install chromium
+```
+
+未安装或启动失败不会导致构建失败：mermaid 代码块会保留，由现有客户端渲染兜底。Cloudflare Pages 的 Git 构建如需启用构建期渲染，要在其 Build command 里追加同一条安装命令（构建缓存不保证浏览器一直存在）。
+
 ## Steam 游戏档案同步（公开站 `/games`）
 
 数据由 `blog-api` 定时抓取并落 D1，公开页只读快照。凭证有**两条路径**，二选一或同时保留（D1 优先）：

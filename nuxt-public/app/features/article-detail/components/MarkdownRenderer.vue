@@ -475,6 +475,26 @@ onUnmounted(() => {
   height: auto;
 }
 
+/* 构建期渲染的明暗两份 SVG：默认显示亮色版本，.dark 下切换成暗色版本。
+   两份 SVG 的颜色在构建时已固化，不能靠 CSS 变量实时改色。 */
+.mermaid-diagram__variant {
+  display: none;
+  width: 100%;
+  justify-content: center;
+}
+
+.mermaid-diagram__variant--light {
+  display: flex;
+}
+
+.dark .mermaid-diagram__variant--light {
+  display: none;
+}
+
+.dark .mermaid-diagram__variant--dark {
+  display: flex;
+}
+
 /* 暗色模式下的 Mermaid 样式增强 */
 .dark .mermaid-diagram text {
   fill: var(--text-secondary) !important;

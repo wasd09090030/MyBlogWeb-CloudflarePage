@@ -2,7 +2,7 @@
   <div v-if="articles && articles.length > 0" class="related-articles-mdc my-12">
     <div class="related-articles-header">
       <Icon name="heroicons:hand-thumb-up" size="30" class="text-[color:var(--article-prose-accent)]" />
-      <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">相关推荐</h3>
+      <h3 class="text-2xl font-bold text-ink">相关推荐</h3>
     </div>
 
     <div class="related-articles-grid">
@@ -30,7 +30,7 @@
             />
           </template>
           <div v-else class="card-fallback">
-            <Icon name="heroicons:photo" size="3xl" class="text-gray-400 dark:text-gray-500" />
+            <Icon name="heroicons:photo" size="3xl" class="text-ink-faint" />
           </div>
 
         </div>
@@ -266,17 +266,17 @@ function formatDate(dateString) {
 .related-article-card {
   text-decoration: none;
   display: block;
-  border-radius: 0.375rem;
+  border-radius: var(--blog-radius-lg);
   overflow: hidden;
-  border: 1px solid var(--article-prose-border, #d9dde3);
-  background: var(--article-prose-surface, #f3f4f6);
+  border: 1px solid var(--border-color, #f2e4da);
+  background: var(--card-bg, #ffffff);
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .related-article-card:hover {
   text-decoration: none;
-  border-color: var(--article-prose-accent, #2563eb);
-  background: var(--article-prose-accent-soft, #e9eef8);
+  border-color: var(--accent-primary, #e11d48);
+  background: color-mix(in srgb, var(--accent-primary) 5%, var(--card-bg));
 }
 
 .card-media {
@@ -284,7 +284,7 @@ function formatDate(dateString) {
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: var(--article-prose-surface, #f3f4f6);
+  background: var(--bg-secondary, #f7e8e1);
 }
 
 .card-image {
@@ -306,7 +306,7 @@ function formatDate(dateString) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--article-prose-surface, #f3f4f6);
+  background: var(--bg-secondary, #f7e8e1);
 }
 
 .card-content {
@@ -314,7 +314,7 @@ function formatDate(dateString) {
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.95rem;
-  background: var(--article-prose-surface, #f3f4f6);
+  background: var(--card-bg, #ffffff);
 }
 
 .card-title {
@@ -322,14 +322,14 @@ function formatDate(dateString) {
   font-size: 1rem;
   line-height: 1.35;
   font-weight: 700;
-  color: var(--article-prose-heading, #20252c);
+  color: var(--text-primary, #3d2f2b);
 }
 
 .card-meta {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--article-prose-muted, #737b87);
+  color: var(--text-secondary, #8a7368);
   font-size: 0.83rem;
 }
 
@@ -355,6 +355,6 @@ function formatDate(dateString) {
 }
 
 :global(.dark) .related-article-card {
-  border-color: var(--article-prose-border, #363d47);
+  border-color: var(--border-color, #4a332b);
 }
 </style>

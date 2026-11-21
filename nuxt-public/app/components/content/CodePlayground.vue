@@ -44,7 +44,7 @@
     <div class="playground-body">
       <div v-if="highlightedHtml" class="shiki-wrapper" v-html="highlightedHtml"></div>
       <div v-else class="p-4">
-        <pre class="text-sm overflow-x-auto"><code class="text-gray-100">{{ displayCode }}</code></pre>
+        <pre class="text-sm overflow-x-auto"><code class="cp-code-text">{{ displayCode }}</code></pre>
       </div>
 
       <!-- 输出区域 -->
@@ -55,10 +55,10 @@
         >
           <div class="output-header flex items-center justify-between px-4 py-2">
             <div class="flex items-center gap-2">
-              <Icon name="heroicons:chevron-right" size="sm" class="text-green-500" />
+              <Icon name="heroicons:chevron-right" size="sm" class="cp-output-icon" />
               <span class="text-xs font-semibold">输出结果</span>
             </div>
-            <UButton color="neutral" variant="ghost" size="xs" class="text-gray-400" @click="output = null">
+            <UButton color="neutral" variant="ghost" size="xs" class="cp-close" @click="output = null">
               <Icon name="heroicons:x-mark" size="sm" />
             </UButton>
           </div>
@@ -231,8 +231,28 @@ const runCode = async () => {
   background: transparent !important;
 }
 
+/* 代码岛内部固定使用深色代码色板，不参与页面纸面主题 */
+.cp-code-text {
+  color: var(--code-block-text);
+}
+
+/* design-allow: 深色代码岛内部的“输出”状态色 */
+.cp-output-icon {
+  color: #2dd4bf;
+}
+
+.cp-close {
+  color: var(--code-block-text);
+  opacity: 0.65;
+}
+
+.cp-close:hover {
+  opacity: 1;
+}
+
 /* 代码区域不限制高度，完整展示所有行 */
 .playground-body {
+  /* design-allow: 代码岛底色，深色代码块不属于页面纸面主题 */
   background: var(--code-playground-bg, #1e1e1e);
 }
 

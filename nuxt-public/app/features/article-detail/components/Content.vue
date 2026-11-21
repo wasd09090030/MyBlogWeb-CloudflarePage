@@ -17,13 +17,13 @@
 
     <template v-if="showSecondaryBlocks">
       <!-- 分割线 -->
-      <div class="h-px mt-20 bg-gray-500 dark:bg-gray-800 w-full mb-10"></div>
+      <div class="mt-20 mb-10 w-full border-t border-warm"></div>
 
       <!-- 相关推荐 -->
       <RelatedArticles :exclude-id="article.id" :count="3" />
 
       <!-- 评论区 -->
-      <section class="mt-12 pt-8 border-t border-gray-500 dark:border-gray-700">
+      <section class="mt-12 pt-8 border-t border-warm">
         <CommentSection :article-id="article.id" />
       </section>
     </template>

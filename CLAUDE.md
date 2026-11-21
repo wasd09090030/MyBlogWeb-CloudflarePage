@@ -47,9 +47,12 @@ cd ../nuxt-public
 $env:NUXT_PUBLIC_API_BASE_URL = '/api'
 $env:NUXT_API_BASE_URL = 'https://wasd09090030.top/api'
 $env:NUXT_PUBLIC_SITE_URL = 'https://wasd09090030.top'
+npm run check:design
 npm run generate
 npx wrangler pages deploy .output/public --project-name myblogweb-cloudflarepage
 ```
+
+`npm run check:design` 扫描 `nuxt-public/app` 中的 Tailwind 调色板类、冷色字面量和非 token 裸 hex，拦截样式回潮。规则与例外写法（`design-allow` / `design-allow-block`）见 `nuxt-public/scripts/check-design.mjs`；设计语言见 `DESIGN.md`。
 
 含 mermaid 代码块的文章会在 `npm run generate` 期间用 Playwright 渲染成**明/暗两份内联 SVG**（`nuxt-public/app/features/article-detail/services/rehypeMermaidDualTheme.ts`），页面加载时不再动态加载 mermaid。首次构建前需安装浏览器：
 

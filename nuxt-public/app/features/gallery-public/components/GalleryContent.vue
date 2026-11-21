@@ -259,7 +259,7 @@ defineExpose({
 @import '~/assets/css/components/Gallery.mobile.css';
 
 .gallery-fullscreen {
-  --gallery-bg: linear-gradient(135deg, #fff8f3 0%, #f8e7e2 48%, #f4dce7 100%);
+  --gallery-bg: linear-gradient(135deg, var(--gallery-surface-1) 0%, var(--gallery-surface-2) 48%, var(--gallery-surface-3) 100%);
   --gallery-card-bg: rgba(255, 255, 255, 0.72);
   --gallery-card-strong: rgba(255, 253, 251, 0.92);
   --gallery-border: rgba(157, 23, 77, 0.16);
@@ -274,7 +274,7 @@ defineExpose({
 }
 
 :global(.dark .gallery-fullscreen) {
-  --gallery-bg: linear-gradient(135deg, #241a17 0%, #33241f 54%, #2b1c2a 100%);
+  --gallery-bg: linear-gradient(135deg, #241a17 0%, #33241f 54%, var(--gallery-night-plum) 100%);
   --gallery-card-bg: rgba(51, 36, 31, 0.82);
   --gallery-card-strong: rgba(51, 36, 31, 0.95);
   --gallery-border: rgba(251, 113, 133, 0.24);

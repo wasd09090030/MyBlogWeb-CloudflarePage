@@ -1,6 +1,9 @@
 
 <template>
-  <div id="app" :class="['min-h-screen', colorMode.value === 'dark' ? 'dark' : 'light']">
+  <!-- 主题 class 由 @nuxtjs/color-mode 写在 <html> 上。
+       这里不要再镜像一份 light/dark：Nuxt UI 的语义变量按 .light/.dark 作用域解析，
+       #app 上的旧 class 会在水化后与 <html> 不一致，导致深色页面里组件仍是浅色。 -->
+  <div id="app" class="min-h-screen">
     <!-- 根据主题切换动画效果 -->
     <ClientOnly>
       <Teleport to="body">

@@ -258,9 +258,8 @@ onUnmounted(() => {
   top: 0.75rem;
   bottom: 0.75rem;
   width: 2px;
-  background: rgba(15, 23, 42, 0.25);
+  background: rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.25);
   border-radius: 1px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.65);
 }
 
 /* ====== Year band (archive 2026-06-27 杂志感目录) ====== */
@@ -291,7 +290,7 @@ onUnmounted(() => {
 }
 
 .gallery-timeline__year.is-active .gallery-timeline__year-header {
-  border-bottom-color: var(--color-editorial-rule, rgba(15, 23, 42, 0.22));
+  border-bottom-color: var(--color-editorial-rule, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.22));
 }
 
 .gallery-timeline__year-label {
@@ -299,7 +298,7 @@ onUnmounted(() => {
   font-size: clamp(1.1rem, 1.4vw, 1.35rem);
   font-weight: 700;
   font-style: italic;
-  color: rgba(15, 23, 42, 0.62);
+  color: rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.62);
   letter-spacing: 0.04em;
   line-height: 1.05;
   white-space: nowrap;
@@ -307,7 +306,7 @@ onUnmounted(() => {
 }
 
 .gallery-timeline__year.is-active .gallery-timeline__year-label {
-  color: rgba(15, 23, 42, 0.92);
+  color: rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.92);
 }
 
 /* gallery-timeline-editorial-minimal · 已移除 .gallery-timeline__year-count（原数字埋点） */
@@ -324,7 +323,7 @@ onUnmounted(() => {
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: rgba(15, 23, 42, 0.68);
+  color: rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.68);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -346,14 +345,14 @@ onUnmounted(() => {
 .gallery-timeline__item:hover,
 .gallery-timeline__item:focus-visible,
 .gallery-timeline__item[aria-current="true"] {
-  background: rgba(255, 255, 255, 0.68);
-  color: rgba(15, 23, 42, 0.95);
+  background: rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.10);
+  color: rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.95);
   outline: none;
 }
 
 /* 4.4 · Active 月视觉跃迁：box-shadow 模拟 2px 左边框 + 4px 右移 nudge */
 .gallery-timeline__item[aria-current="true"] {
-  box-shadow: inset 2px 0 0 var(--color-editorial-glow, rgba(15, 23, 42, 0.32));
+  box-shadow: inset 2px 0 0 var(--color-editorial-glow, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.32));
   transform: translateX(4px);
   transition: background 0.2s ease, color 0.2s ease, box-shadow 220ms ease-out, transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -368,7 +367,7 @@ onUnmounted(() => {
   transform: translateY(-50%);
   width: 0.4rem;
   height: 2px;
-  background: var(--color-editorial-glow, rgba(15, 23, 42, 0.32));
+  background: var(--color-editorial-glow, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.32));
   border-radius: 999px;
   z-index: 1;
 }
@@ -380,8 +379,8 @@ onUnmounted(() => {
 /* 4.5 · Active 月 fill-bar: accent 色 + glow + 加厚 */
 .gallery-timeline__item[aria-current="true"] .gallery-timeline__fill-bar {
   height: 3px;
-  background: var(--color-editorial-glow, rgba(15, 23, 42, 0.32));
-  box-shadow: 0 0 6px var(--color-editorial-glow, rgba(15, 23, 42, 0.32));
+  background: var(--color-editorial-glow, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.32));
+  box-shadow: 0 0 6px var(--color-editorial-glow, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.32));
 }
 
 /* Editorial dot: 6→10px scale + glow on active */
@@ -389,8 +388,8 @@ onUnmounted(() => {
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.28);
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.66);
+  background: rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.28);
+  box-shadow: 0 0 0 4px rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.12);
   z-index: 1;
   transition:
     width 220ms cubic-bezier(0.4, 0, 0.2, 1),
@@ -402,10 +401,10 @@ onUnmounted(() => {
 .gallery-timeline__item[aria-current="true"] .gallery-timeline__dot {
   width: 0.7rem;
   height: 0.7rem;
-  background: rgba(15, 23, 42, 0.92);
+  background: rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.92);
   box-shadow:
-    0 0 0 4px var(--color-editorial-ring, rgba(15, 23, 42, 0.08)),
-    0 0 14px var(--color-editorial-glow, rgba(15, 23, 42, 0.32));
+    0 0 0 4px var(--color-editorial-ring, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.08)),
+    0 0 14px var(--color-editorial-glow, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.32));
 }
 
 .gallery-timeline__label {
@@ -435,7 +434,7 @@ onUnmounted(() => {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(15, 23, 42, 0.45);
+  color: rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.45);
 }
 
 /* Fill-bar: 显示当月图数占年内峰值比例 */
@@ -446,7 +445,7 @@ onUnmounted(() => {
   width: calc(var(--fill, 0) * 22px);
   max-width: 22px;
   height: 2px;
-  background: var(--color-rail-fill-bar, rgba(15, 23, 42, 0.18));
+  background: var(--color-rail-fill-bar, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.18));
   border-radius: 999px;
   transition: width 220ms ease-out, background 220ms ease, height 220ms ease, box-shadow 220ms ease-out;
   pointer-events: none;
@@ -461,7 +460,7 @@ onUnmounted(() => {
   width: 4px;
   height: 4px;
   margin: 0.15rem 0 0.05rem 0.55rem;
-  color: var(--color-editorial-ornament, rgba(15, 23, 42, 0.55));
+  color: var(--color-editorial-ornament, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.55));
   fill: currentColor;
   opacity: 0.9;
   align-self: flex-start;
@@ -491,7 +490,7 @@ onUnmounted(() => {
 
 .gallery-month-section__eyebrow {
   margin: 0;
-  color: rgba(15, 23, 42, 0.5);
+  color: rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.5);
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -513,7 +512,7 @@ onUnmounted(() => {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--color-editorial-rule, rgba(15, 23, 42, 0.22)) 50%,
+    var(--color-editorial-rule, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.22)) 50%,
     transparent 100%
   );
   align-self: center;
@@ -523,14 +522,14 @@ onUnmounted(() => {
   width: 8px;
   height: 8px;
   flex: 0 0 auto;
-  color: var(--color-editorial-ornament, rgba(15, 23, 42, 0.55));
+  color: var(--color-editorial-ornament, rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.55));
   fill: currentColor;
   opacity: 0.95;
 }
 
 .gallery-month-section__title {
   margin: 0;
-  color: rgba(15, 23, 42, 0.92);
+  color: rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.92);
   font-family: 'Playfair Display', 'Source Serif Pro', Georgia, serif;
   font-size: clamp(1.5rem, 2.4vw, 2.1rem);
   font-weight: 700;
@@ -648,8 +647,8 @@ onUnmounted(() => {
     height: 1px;
     background: linear-gradient(
       90deg,
-      rgba(15, 23, 42, 0.25) 0%,
-      rgba(15, 23, 42, 0.05) 100%
+      rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.25) 0%,
+      rgba(var(--gallery-ink-rgb, 61, 47, 43), 0.05) 100%
     );
     box-shadow: none;
   }

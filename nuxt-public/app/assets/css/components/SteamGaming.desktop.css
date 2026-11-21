@@ -385,7 +385,7 @@
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #fdba74;
+  color: var(--accent-secondary-soft);
   margin-bottom: 14px;
 }
 
@@ -436,7 +436,7 @@
   place-content: center;
   gap: 0;
   text-align: center;
-  background: radial-gradient(circle at 32% 26%, #fb7185, #e11d48 62%, #9f1239 100%);
+  background: radial-gradient(circle at 32% 26%, #fb7185, #e11d48 62%, var(--accent-primary-deep) 100%);
   border: 3px solid rgba(255, 255, 255, 0.92);
   box-shadow:
     0 14px 34px -10px rgba(225, 29, 72, 0.75),
@@ -521,7 +521,7 @@
 
 .sg-chip--hot {
   border-color: rgba(251, 146, 60, 0.5);
-  color: #fdba74;
+  color: var(--accent-secondary-soft);
   background: rgba(251, 146, 60, 0.12);
 }
 
@@ -717,7 +717,7 @@
   position: relative;
   overflow: hidden;
   border-radius: 26px;
-  background: linear-gradient(158deg, #33241f 0%, #241a17 62%, #1e1512 100%);
+  background: linear-gradient(158deg, #33241f 0%, #241a17 62%, var(--night-panel-3) 100%);
   color: #fdf5f1;
   padding: clamp(26px, 3.4vw, 42px) clamp(18px, 3vw, 44px) clamp(26px, 3vw, 36px);
 }
@@ -747,7 +747,7 @@
   font-weight: 700;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: #fdba74;
+  color: var(--accent-secondary-soft);
   margin-bottom: 10px;
 }
 
@@ -797,7 +797,7 @@
   overflow: hidden;
   scroll-snap-align: start;
   isolation: isolate;
-  background: #191110;
+  background: var(--night-panel-4);
   transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s ease;
 }
 
@@ -1229,7 +1229,7 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: radial-gradient(circle at 30% 25%, #fde68a, #f59e0b 60%, #b45309 100%);
+  background: radial-gradient(circle at 30% 25%, var(--accent-warning-soft), #f59e0b 60%, #b45309 100%);
   color: #3d2f2b;
   box-shadow: 0 8px 18px -10px rgba(180, 83, 9, 0.9);
 }
@@ -1301,9 +1301,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* design-allow: 成就稀有度是数据编码，紫色为 Steam 稀有度惯例，不属于分类色。 */
 .sg-rarity--epic i { background: linear-gradient(90deg, #a855f7, #38bdf8); }
 .sg-rarity--rare i { background: linear-gradient(90deg, #f43f5e, #fb923c); }
-.sg-rarity--common i { background: linear-gradient(90deg, #0d9488, #34d399); }
+.sg-rarity--common i { background: linear-gradient(90deg, var(--accent-success), color-mix(in srgb, var(--accent-success) 60%, #ffffff)); }
 
 /* 愿望单 */
 .sg-wishlist {

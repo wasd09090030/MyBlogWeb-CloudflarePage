@@ -102,7 +102,7 @@ const MOODS: Record<string, { label: string; color: string }> = {
   busy: { label: '忙碌', color: '#be123c' },
   tired: { label: '疲惫', color: '#8a7368' },
   cozy: { label: '惬意', color: '#f97316' },
-  pensive: { label: '沉思', color: '#8b5cf6' }
+  pensive: { label: '沉思', color: '#38bdf8' }
 }
 const WEATHERS: Record<string, string> = {
   sunny: '晴', cloudy: '多云', overcast: '阴', rain: '雨', thunder: '雷阵雨', haze: '雾霾'

@@ -20,13 +20,13 @@
     </div>
 
     <!-- AI 摘要 -->
-    <div v-if="article.aiSummary" class="bg-sky-50 dark:bg-sky-900/20 border-l-4 border-sky-500 rounded-r-lg p-4 mb-6">
-      <div class="flex items-center gap-2 text-sky-700 dark:text-sky-300 font-semibold text-sm mb-2">
+    <div v-if="article.aiSummary" class="ai-summary rounded-lg p-4 mb-6">
+      <div class="ai-summary__title flex items-center gap-2 font-semibold text-sm mb-2">
         <Icon name="mdi:robot" size="sm" />
         <span>AI 摘要</span>
       </div>
-      <p class="text-gray-700 dark:text-gray-300 italic leading-relaxed">
-        {{ displayedSummary }}<span class="animate-pulse text-sky-500">|</span>
+      <p class="ai-summary__text italic leading-relaxed">
+        {{ displayedSummary }}<span class="animate-pulse">|</span>
       </p>
     </div>
 
@@ -95,3 +95,18 @@ onUnmounted(() => {
   }
 })
 </script>
+
+<style scoped>
+.ai-summary {
+  background: color-mix(in srgb, var(--accent-info) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-info) 30%, var(--border-color));
+}
+
+.ai-summary__title {
+  color: var(--accent-info-ink);
+}
+
+.ai-summary__text {
+  color: var(--text-primary);
+}
+</style>

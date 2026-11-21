@@ -24,6 +24,10 @@
   --blog-radius-2xl: 24px;
   --blog-radius-full: 9999px;
 
+  /* 字体分工：衬线只写“页面叫什么”，无衬线写“页面说了什么” */
+  --font-serif: 'Playfair Display', 'Noto Serif SC', 'Songti SC', 'SimSun', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+
   /* Z-index层级 */
   --z-base: 1;
   --z-dropdown: 1000;
@@ -51,14 +55,32 @@
   --text-tertiary: #bda89d;
   --text-inverse: #ffffff;
   --text-muted: #c4a89b;
+  /* chip 字色：比 Cocoa Soft 深一档，保证 12–13px 小字仍有 4.5:1 对比度 */
+  --text-chip: #6b5750;
 
   /* 主题色 */
   --accent-primary: #e11d48;
+  --accent-primary-rgb: 225, 29, 72;
   --accent-secondary: #fb923c;
   --accent-success: #0d9488;
   --accent-danger: #e11d48;
   --accent-warning: #f59e0b;
   --accent-info: #38bdf8;
+  /* 浅色底上的文字级状态色：直接拿 warning/info 当字色对比度不足 */
+  --accent-warning-ink: #b45309;
+  --accent-info-ink: #0284c7;
+  --accent-success-ink: #0f766e;
+  --accent-danger-ink: #be123c;
+  --text-on-accent: #ffffff;
+
+  /* 语义表面：组件只消费这三个名字，不再直接取底色 token */
+  --surface-page: var(--bg-primary);
+  --surface-card: var(--card-bg);
+  --surface-panel: var(--panel-bg);
+  --surface-panel-soft: var(--panel-bg-soft);
+
+  /* 暖色悬停阴影（DESIGN.md: hover-lift） */
+  --shadow-hover-warm: 0 4px 12px rgba(251, 113, 133, 0.30);
 
   /* 全局交互色 */
   --scrollbar-track: #f7e8e1;
@@ -101,7 +123,6 @@
   --gradient-secondary: linear-gradient(135deg, #fda4af 0%, #fb923c 100%);
   --gradient-soft: linear-gradient(135deg, #fdf6f1 0%, #f7e8e1 100%);
   --gradient-warm: linear-gradient(135deg, #fb923c 0%, #fda4af 100%);
-  --gradient-cool: linear-gradient(135deg, #a855f7 0%, #38bdf8 100%);
 
   /* 边框颜色 */
   --border-color: #f2e4da;
@@ -116,10 +137,10 @@
   --shadow-xl: 0 12px 36px rgba(0, 0, 0, 0.25);
   --shadow-2xl: 0 20px 50px rgba(0, 0, 0, 0.3);
 
-  /* 毛玻璃效果 */
+  /* 毛玻璃效果：只用于滚动后的导航与浮层，颜色取暖沙而非冷白 */
   --backdrop-blur: blur(10px);
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-bg: rgba(253, 246, 241, 0.82);
+  --glass-border: rgba(217, 184, 168, 0.35);
 
   /* 导航栏 */
   --navbar-bg: linear-gradient(rgba(253, 246, 241, 0.95), rgba(253, 246, 241, 0.95));
@@ -171,16 +192,29 @@
   --welcome-badge-bg: rgba(255, 255, 255, 0.85);
   --welcome-badge-text: #3d2f2b;
 
-  /* Editorial 时间线高亮环与发光 (light) */
-  --color-editorial-ring: rgba(15, 23, 42, 0.08);
-  --color-editorial-glow: rgba(15, 23, 42, 0.32);
-  --color-editorial-rule: rgba(15, 23, 42, 0.22);
-  --color-editorial-ornament: rgba(15, 23, 42, 0.55);
-  --color-rail-fill-bar: rgba(15, 23, 42, 0.18);
+  /* Editorial 时间线高亮环与发光 (light)
+     取可可墨色的透明度阶，而不是 slate —— 暖纸上不能出现冷海军蓝。 */
+  --color-editorial-ring: rgba(61, 47, 43, 0.08);
+  --color-editorial-glow: rgba(61, 47, 43, 0.32);
+  --color-editorial-rule: rgba(61, 47, 43, 0.22);
+  --color-editorial-ornament: rgba(61, 47, 43, 0.55);
+  --color-rail-fill-bar: rgba(61, 47, 43, 0.18);
+
+  /* 画廊专属纸面：沉浸式子世界，但仍从暖纸色系派生 */
+  --gallery-surface-1: #fff8f3;
+  --gallery-surface-2: #f8e7e2;
+  --gallery-surface-3: #f4dce7;
+  --gallery-night-plum: #2b1c2a;
+
+  /* Steam 展示柜：固定深色面板与数据编码色 */
+  --accent-secondary-soft: #fdba74;
+  --accent-primary-deep: #9f1239;
+  --accent-warning-soft: #fde68a;
+  --night-panel-3: #1e1512;
+  --night-panel-4: #191110;
 }
 
 /* ==================== 暗色主题 (Dark Theme) ==================== */
-:root.dark,
 :root.dark,
 :root[data-theme="dark"] {
   /* 背景色 */
@@ -197,14 +231,23 @@
   --text-tertiary: #cdb8ad;
   --text-inverse: #241a17;
   --text-muted: #b7a096;
+  /* chip 字色：暗色下用奶油可可，保证小字对比度 */
+  --text-chip: #d8c4ba;
 
   /* 主题色 */
   --accent-primary: #fb7185;
+  --accent-primary-rgb: 251, 113, 133;
   --accent-secondary: #fb923c;
   --accent-success: #2dd4bf;
   --accent-danger: #fb7185;
   --accent-warning: #fbbf24;
   --accent-info: #38bdf8;
+  /* 暗色底上的文字级状态色 */
+  --accent-warning-ink: #fbbf24;
+  --accent-info-ink: #7dd3fc;
+  --accent-success-ink: #2dd4bf;
+  --accent-danger-ink: #fb7185;
+  --text-on-accent: #ffffff;
 
   /* 全局交互色 */
   --scrollbar-track: #2e211d;
@@ -247,7 +290,6 @@
   --gradient-secondary: linear-gradient(135deg, #fda4af 0%, #fb923c 100%);
   --gradient-soft: linear-gradient(135deg, #2e211d 0%, #3a2a24 100%);
   --gradient-warm: linear-gradient(135deg, #fb923c 0%, #fb7185 100%);
-  --gradient-cool: linear-gradient(135deg, #a855f7 0%, #38bdf8 100%);
 
   /* 边框颜色 */
   --border-color: #4a332b;
@@ -262,10 +304,10 @@
   --shadow-xl: 0 12px 36px rgba(0, 0, 0, 0.6);
   --shadow-2xl: 0 20px 50px rgba(0, 0, 0, 0.7);
 
-  /* 毛玻璃效果 */
+  /* 毛玻璃效果：暗色同样取暖棕，不用冷灰蓝 */
   --backdrop-blur: blur(10px);
-  --glass-bg: rgba(30, 41, 59, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(36, 26, 23, 0.82);
+  --glass-border: rgba(107, 76, 64, 0.45);
 
   /* 导航栏 */
   --navbar-bg: linear-gradient(rgba(36, 26, 23, 0.98), rgba(36, 26, 23, 0.95));
@@ -317,12 +359,24 @@
   --welcome-badge-bg: rgba(51, 36, 31, 0.88);
   --welcome-badge-text: #f7ece9;
 
-  /* Editorial 时间线高亮环与发光 (dark) */
-  --color-editorial-ring: rgba(226, 232, 240, 0.10);
-  --color-editorial-glow: rgba(226, 232, 240, 0.45);
-  --color-editorial-rule: rgba(226, 232, 240, 0.22);
-  --color-editorial-ornament: rgba(226, 232, 240, 0.62);
-  --color-rail-fill-bar: rgba(226, 232, 240, 0.22);
+  /* Editorial 时间线高亮环与发光 (dark)
+     暗色下改用奶油色透明度阶，保持同一套暖棕关系。 */
+  --color-editorial-ring: rgba(253, 245, 241, 0.10);
+  --color-editorial-glow: rgba(253, 245, 241, 0.45);
+  --color-editorial-rule: rgba(253, 245, 241, 0.22);
+  --color-editorial-ornament: rgba(253, 245, 241, 0.62);
+  --color-rail-fill-bar: rgba(253, 245, 241, 0.22);
+
+  /* 画廊专属纸面与 Steam 展示柜色在暗色下保持同一组值 */
+  --gallery-surface-1: #fff8f3;
+  --gallery-surface-2: #f8e7e2;
+  --gallery-surface-3: #f4dce7;
+  --gallery-night-plum: #2b1c2a;
+  --accent-secondary-soft: #fdba74;
+  --accent-primary-deep: #9f1239;
+  --accent-warning-soft: #fde68a;
+  --night-panel-3: #1e1512;
+  --night-panel-4: #191110;
 }
 
 /* ==================== 全局过渡 (Global Transitions) ==================== */

@@ -95,7 +95,7 @@ defineEmits<{
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-secondary, #8a7368);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -105,7 +105,7 @@ defineEmits<{
 
 .floating-quick-actions__item:hover {
   background: var(--bg-hover, rgba(0, 0, 0, 0.05));
-  color: var(--accent-primary, #0ea5e9);
+  color: var(--accent-primary, #e11d48);
   transform: translateY(-2px);
 }
 
@@ -114,13 +114,13 @@ defineEmits<{
 }
 
 .floating-quick-actions__item:focus-visible {
-  outline: 2px solid var(--accent-primary, #0ea5e9);
+  outline: 2px solid var(--accent-primary, #e11d48);
   outline-offset: 2px;
 }
 
 /* Muted State (Background Animation Off) */
 .floating-quick-actions__item--muted {
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted, #c4a89b);
   opacity: 0.8;
 }
 
@@ -143,7 +143,7 @@ defineEmits<{
   padding: 6px 12px;
   border-radius: 8px;
   
-  background: rgba(15, 23, 42, 0.9);
+  background: color-mix(in srgb, var(--welcome-overlay-bg, #3d0f1e) 94%, transparent);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   color: #fff;

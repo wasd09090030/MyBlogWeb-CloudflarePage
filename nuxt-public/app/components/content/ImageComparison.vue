@@ -34,7 +34,7 @@
         @pointercancel="stopDrag"
         @keydown="handleSliderKeydown"
       >
-        <div class="slider-button absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full border border-gray-300 flex items-center justify-center">
+        <div class="slider-button absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full border border-warm-strong flex items-center justify-center">
           <div class="flex gap-1">
             <Icon name="heroicons:chevron-left" size="sm" />
             <Icon name="heroicons:chevron-right" size="sm" />

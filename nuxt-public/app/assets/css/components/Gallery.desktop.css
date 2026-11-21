@@ -12,7 +12,7 @@
   bottom: 0;
   width: 100vw;
   height: 100vh;
-  background: var(--gallery-bg, linear-gradient(135deg, #fff8f3 0%, #f8e7e2 48%, #f4dce7 100%));
+  background: var(--gallery-bg, linear-gradient(135deg, var(--gallery-surface-1) 0%, var(--gallery-surface-2) 48%, var(--gallery-surface-3) 100%));
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 1000;
@@ -247,11 +247,11 @@
 }
 
 .control-btn.close-btn {
-  background: rgba(239, 68, 68, 0.6);
+  background: color-mix(in srgb, var(--accent-danger) 60%, transparent);
 }
 
 .control-btn.close-btn:hover {
-  background: rgba(239, 68, 68, 0.8);
+  background: color-mix(in srgb, var(--accent-danger) 80%, transparent);
 }
 
 /* 图片内容区域 */

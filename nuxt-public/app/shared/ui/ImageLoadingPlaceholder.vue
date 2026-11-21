@@ -58,6 +58,6 @@ defineProps({
 
 /* 仅覆盖底色，不要用 background 简写，否则会连带清掉上面的 background-image */
 :global(.dark) .image-loading-overlay {
-  background-color: rgba(15, 23, 42, 0.62);
+  background-color: rgba(36, 26, 23, 0.62);
 }
 </style>

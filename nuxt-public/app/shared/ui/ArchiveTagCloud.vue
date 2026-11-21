@@ -60,7 +60,7 @@ function getTagSize(count: number): string {
 .tag-link {
   display: inline;
   font-family: var(--serif, 'Playfair Display', 'Noto Serif SC', 'Songti SC', Georgia, serif);
-  color: var(--ink-soft, #4a423a);
+  color: var(--text-secondary);
   text-decoration: none;
   line-height: 2.1;
   cursor: pointer;
@@ -83,7 +83,7 @@ function getTagSize(count: number): string {
 
 /* Hover 浮起态 (MD3 Elevation & State Layer) */
 .tag-link:hover {
-  color: var(--accent, #b3372a);
+  color: var(--accent-primary);
   text-decoration: underline;
   text-underline-offset: 5px;
 }
@@ -93,7 +93,7 @@ function getTagSize(count: number): string {
 /* Active 激活态 (MD3 Primary Container/Primary) */
 .tag-link--active {
 
-  color: var(--accent, #b3372a);
+  color: var(--accent-primary);
   text-decoration: underline;
   text-underline-offset: 5px;
   font-weight: 700;

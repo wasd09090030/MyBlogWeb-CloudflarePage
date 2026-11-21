@@ -10,6 +10,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "lint:icons": "node scripts/check-icon-names.mjs",
+    "check:design": "node scripts/check-design.mjs",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {

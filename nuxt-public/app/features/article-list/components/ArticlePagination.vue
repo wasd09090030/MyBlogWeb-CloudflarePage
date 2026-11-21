@@ -66,11 +66,7 @@ const currentPageLocal = computed({
 }
 
 .pagination-summary {
-  color: rgba(55, 65, 81, 0.68);
+  color: var(--text-secondary);
   font-size: 0.875rem;
-}
-
-:global(.dark) .pagination-summary {
-  color: rgba(226, 232, 240, 0.7);
 }
 </style>

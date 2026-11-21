@@ -1,0 +1,180 @@
+/*
+ * surfaces.css — 共享表面、眉标、chip 与动作按钮
+ *
+ * 目的：把「暖纸 + 唯一胭脂行动色」的规则收敛成可复用类，
+ * 页面只组合语义类，不再各写一套颜色。新页面应优先复用这里的类。
+ *
+ * 全部颜色走 token，因此亮/暗主题自动成立；
+ * 禁止在此文件里写灰色调色板类或裸 hex。
+ */
+
+@layer components {
+  /* ---------- 表面 ---------- */
+
+  .surface-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--blog-radius-lg);
+  }
+
+  .surface-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--blog-radius-xl);
+  }
+
+  .surface-hover {
+    transition:
+      border-color 0.25s ease,
+      box-shadow 0.25s ease,
+      transform 0.25s ease;
+  }
+
+  .surface-hover:hover {
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-hover-warm);
+    transform: translateY(-2px);
+  }
+
+  /* ---------- 眉标 ---------- */
+
+  /*
+   * 编辑感来自字距，不来自加粗。
+   * 11–13px + ≥0.12em + 大写是 DESIGN.md 的 Eyebrow Rule。
+   */
+  .eyebrow {
+    display: inline-block;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  /* ---------- Chip ---------- */
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid transparent;
+    border-radius: var(--blog-radius-sm);
+    background: var(--article-muted-chip-bg);
+    color: var(--text-chip);
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .chip--pill {
+    border-radius: var(--blog-radius-full);
+    padding: 0.3rem 0.8rem;
+  }
+
+  .chip--active {
+    border-color: transparent;
+    background: var(--gradient-primary);
+    color: var(--text-on-accent);
+  }
+
+  /* 状态 chip：文字取“可读版”状态色，底色只做 12–14% 的薄着色 */
+  .chip--success {
+    background: color-mix(in srgb, var(--accent-success) 12%, transparent);
+    color: var(--accent-success-ink);
+  }
+
+  .chip--warning {
+    background: color-mix(in srgb, var(--accent-warning) 14%, transparent);
+    color: var(--accent-warning-ink);
+  }
+
+  .chip--danger {
+    background: color-mix(in srgb, var(--accent-danger) 12%, transparent);
+    color: var(--accent-danger-ink);
+  }
+
+  .chip--muted {
+    background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
+    color: var(--text-chip);
+  }
+
+  /* ---------- 动作 ---------- */
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.72rem 1.5rem;
+    border: none;
+    border-radius: var(--blog-radius-full);
+    background: var(--gradient-primary);
+    color: var(--text-on-accent);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease,
+      filter 0.25s ease;
+  }
+
+  .btn-primary:hover {
+    color: var(--text-on-accent);
+    filter: brightness(0.95);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover-warm);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.72rem 1.5rem;
+    border: 1px solid var(--border-color-dark);
+    border-radius: var(--blog-radius-full);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      color 0.25s ease,
+      border-color 0.25s ease,
+      background-color 0.25s ease;
+  }
+
+  .btn-outline:hover {
+    border-color: var(--accent-primary);
+    background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+    color: var(--accent-primary);
+  }
+
+  /* ---------- 状态块 ---------- */
+
+  /* 错误态：整块着色 + 完整描边，不使用单侧色条 */
+  .alert-danger {
+    background: color-mix(in srgb, var(--accent-danger) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-danger) 32%, var(--border-color));
+    color: var(--accent-danger-ink);
+  }
+
+  /* ---------- 键盘焦点 ---------- */
+
+  .btn-primary:focus-visible,
+  .btn-outline:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
+}

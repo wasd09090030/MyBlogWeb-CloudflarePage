@@ -645,11 +645,13 @@
   transition: width 1s ease;
 }
 
+/* design-allow-block: 技术栈品牌色，属于图标身份而非页面配色 */
 .js-color { background: linear-gradient(90deg, #f7df1e, #f0d800); }
 .vue-color { background: linear-gradient(90deg, #4fc08d, #42b883); }
 .node-color { background: linear-gradient(90deg, #8cc84b, #6bb349); }
 .python-color { background: linear-gradient(90deg, #3776ab, #2e5d8a); }
 .css-color { background: linear-gradient(90deg, #1572b6, #0e5aa3); }
+/* end-design-allow-block */
 
 .contact-info {
   margin-top: 1rem;
@@ -728,14 +730,16 @@
 }
 
 /* GitHub图标样式 */
+/* design-allow-block: GitHub 品牌色 */
 .github-icon {
   background: linear-gradient(135deg, #24292e 0%, #586069 100%);
   color: white;
 }
+/* end-design-allow-block */
 
 .github-icon:hover {
   transform: translateY(-5px) scale(1.1);
-  box-shadow: 0 10px 25px rgba(36, 41, 46, 0.4);
+  box-shadow: 0 10px 25px color-mix(in srgb, var(--welcome-overlay-bg, #3d0f1e) 40%, transparent);
   color: white;
   animation: githubPulse 1.5s infinite;
 }
@@ -803,13 +807,13 @@
 
 @keyframes githubPulse {
   0% {
-    box-shadow: 0 10px 25px rgba(36, 41, 46, 0.4), 0 0 0 0 rgba(36, 41, 46, 0.7);
+    box-shadow: 0 10px 25px color-mix(in srgb, var(--welcome-overlay-bg, #3d0f1e) 40%, transparent), 0 0 0 0 color-mix(in srgb, var(--welcome-overlay-bg, #3d0f1e) 70%, transparent);
   }
   70% {
-    box-shadow: 0 10px 25px rgba(36, 41, 46, 0.4), 0 0 0 10px rgba(36, 41, 46, 0);
+    box-shadow: 0 10px 25px color-mix(in srgb, var(--welcome-overlay-bg, #3d0f1e) 40%, transparent), 0 0 0 10px transparent;
   }
   100% {
-    box-shadow: 0 10px 25px rgba(36, 41, 46, 0.4), 0 0 0 0 transparent;
+    box-shadow: 0 10px 25px color-mix(in srgb, var(--welcome-overlay-bg, #3d0f1e) 40%, transparent), 0 0 0 0 transparent;
   }
 }
 

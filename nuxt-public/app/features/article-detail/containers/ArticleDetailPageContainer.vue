@@ -3,7 +3,7 @@
     class="article-detail-page-layout min-h-screen"
     :ui="{
       root: 'lg:gap-0',
-      center: 'article-detail-page-center min-w-0 flex-1 bg-white dark:bg-gray-900 rounded-xl overflow-hidden lg:rounded-l-xl lg:rounded-r-none',
+      center: 'article-detail-page-center min-w-0 flex-1 bg-card rounded-xl overflow-hidden lg:rounded-l-xl lg:rounded-r-none',
       right: 'article-detail-page-right order-last'
     }"
   >
@@ -11,7 +11,7 @@
     <StateLoading v-if="pending">
       <div class="flex flex-col items-center justify-center min-h-[60vh]">
         <UProgress animation="carousel" size="lg" color="primary" />
-        <p class="mt-4 text-gray-500 dark:text-gray-400">加载中...</p>
+        <p class="mt-4 text-ink-soft">加载中...</p>
       </div>
     </StateLoading>
 

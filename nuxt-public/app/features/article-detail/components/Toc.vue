@@ -1,18 +1,18 @@
 <template>
   <div v-if="tocItems.length > 0" class="h-full flex flex-col">
     <!-- 头部 -->
-    <div 
-      class="flex items-center justify-between px-3 py-3 border-b border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+    <div
+      class="flex items-center justify-between px-3 py-3 border-b border-warm cursor-pointer hover:bg-hover transition-colors"
       @click="toggleCollapse"
     >
-      <h6 class="flex items-center gap-2 text-sm font-semibold m-0 text-gray-800 dark:text-gray-100">
-        <Icon name="heroicons:list-bullet" size="sm" class="text-pink-500 dark:text-pink-400" />
+      <h6 class="flex items-center gap-2 text-sm font-semibold m-0 text-ink">
+        <Icon name="heroicons:list-bullet" size="sm" class="text-rouge" />
         文章目录
       </h6>
-      <Icon 
-        :name="isCollapsed ? 'heroicons:chevron-down' : 'heroicons:chevron-up'" 
+      <Icon
+        :name="isCollapsed ? 'heroicons:chevron-down' : 'heroicons:chevron-up'"
         size="sm"
-        class="text-gray-500 dark:text-gray-400 transition-transform duration-200"
+        class="text-ink-faint transition-transform duration-200"
       />
     </div>
 
@@ -43,14 +43,14 @@
                 :class="[
                   getTocTextClass(heading),
                   activeHeading === heading.id
-                    ? 'bg-pink-100 dark:bg-pink-500/20 text-pink-600 dark:text-pink-300 font-medium shadow-xs dark:shadow-pink-500/10'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-pink-600 dark:hover:text-pink-400'
+                    ? 'toc-link toc-link--active'
+                    : 'toc-link'
                 ]"
                 @click.prevent="scrollToHeading(heading.id)"
               >
                 <span
                   class="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-200"
-                  :class="activeHeading === heading.id ? 'bg-pink-500 dark:bg-pink-400 scale-125' : 'bg-gray-400 dark:bg-gray-500'"
+                  :class="activeHeading === heading.id ? 'toc-dot toc-dot--active' : 'toc-dot'"
                 />
                 <span class="truncate">{{ heading.text }}</span>
               </a>
@@ -60,17 +60,17 @@
       </nav>
 
       <!-- 阅读进度 -->
-      <div class="px-3 py-3 border-t border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-900/30">
-        <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 mb-2">
+      <div class="px-3 py-3 border-t border-warm bg-paper">
+        <div class="flex items-center justify-between text-xs text-ink-soft mb-2">
           <span class="flex items-center gap-1">
-            <Icon name="heroicons:book-open" size="sm" class="text-gray-500 dark:text-gray-400" />
+            <Icon name="heroicons:book-open" size="sm" class="text-ink-faint" />
             阅读进度
           </span>
-          <span class="font-semibold text-pink-600 dark:text-pink-400">{{ Math.round(progress) }}%</span>
+          <span class="font-semibold text-[color:var(--accent-primary-hover)]">{{ Math.round(progress) }}%</span>
         </div>
-        <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner">
-          <div 
-            class="h-full bg-linear-to-r from-pink-500 to-rose-500 dark:from-pink-400 dark:to-rose-400 rounded-full transition-all duration-300"
+        <div class="h-2 bg-sunken rounded-full overflow-hidden">
+          <div
+            class="toc-progress__fill h-full rounded-full transition-all duration-300"
             :style="{ width: `${progress}%` }"
           />
         </div>
@@ -173,7 +173,7 @@ function toggleCollapse() {
 function getTocItemClass(heading) {
   const depth = heading?.depth || 0
   return depth > 0
-    ? 'toc-item-child border-l border-gray-200 dark:border-gray-700'
+    ? 'toc-item-child border-l border-warm'
     : 'toc-item-root'
 }
 
@@ -385,6 +385,35 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.toc-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.toc-link:hover {
+  background: var(--bg-hover);
+  color: var(--accent-primary-hover);
+}
+
+.toc-link--active {
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  color: var(--accent-primary-hover);
+  font-weight: 600;
+}
+
+.toc-dot {
+  background: var(--text-tertiary);
+}
+
+.toc-dot--active {
+  background: var(--accent-primary);
+  transform: scale(1.25);
+}
+
+.toc-progress__fill {
+  background: var(--accent-primary);
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }

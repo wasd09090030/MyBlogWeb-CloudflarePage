@@ -398,7 +398,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.8);
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.52), rgba(30, 41, 59, 0.28));
+  background: var(--gallery-fallback, linear-gradient(135deg, rgba(61, 47, 43, 0.62), rgba(36, 26, 23, 0.42)));
 }
 
 .fade-in {

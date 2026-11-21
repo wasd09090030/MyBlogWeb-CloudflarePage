@@ -391,7 +391,7 @@ watch(
   transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.5s ease, z-index 0s;
   cursor: pointer;
   border-radius: 15px;
-  background: var(--gallery-card-strong, #f0f0f0);
+  background: var(--gallery-card-strong, var(--bg-secondary));
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
   /* 默认居中 */
   left: 0;

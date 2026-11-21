@@ -48,6 +48,8 @@ export default defineNuxtConfig({
     '~/assets/css/tailwind.css',
     // 项目设计 token 与共享文章排版入口。
     '~/assets/css/main.css',
+    // 共享表面 / 眉标 / chip / 按钮原子（页面只组合语义类）。
+    '~/assets/css/components/surfaces.css',
     '~/assets/css/components/responsive-utilities.desktop.css',
     '~/assets/css/components/responsive-utilities.mobile.css',
     // Editorial 字体（仅作用于画廊时间线月份标题）

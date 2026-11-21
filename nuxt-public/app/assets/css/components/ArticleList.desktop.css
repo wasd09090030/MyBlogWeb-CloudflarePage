@@ -561,7 +561,7 @@
 }
 
 .dark .article-title {
-  color: #fffaf7;
+  color: var(--text-primary);
 }
 
 .dark .article-title-link:hover .article-title {
@@ -569,20 +569,20 @@
 }
 
 .dark .article-content-preview {
-  color: #f2e6e0;
+  color: var(--text-secondary);
 }
 
 .dark .article-date {
-  background: rgba(255, 245, 241, 0.2);
-  color: #f5e6df;
+  background: var(--article-muted-chip-bg);
+  color: var(--text-secondary);
 }
 
 .dark .article-tag {
-  color: #fecdd3;
+  color: var(--article-tag-color);
 }
 
 .dark .learn-more .button-text {
-  color: #fff4ef;
+  color: var(--text-primary);
 }
 
 .dark .article-image-placeholder {

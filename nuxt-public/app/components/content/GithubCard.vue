@@ -1,9 +1,9 @@
 <template>
   <div class="github-card-mdc my-6">
     <div v-if="loading" class="loading-skeleton p-4 rounded-md">
-      <div class="skeleton-line w-3/4 h-6 mb-3 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
-      <div class="skeleton-line w-full h-4 mb-2 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
-      <div class="skeleton-line w-5/6 h-4 bg-gray-200 dark:bg-gray-700 rounded-sm animate-pulse"></div>
+      <div class="skeleton-line w-3/4 h-6 mb-3 bg-sunken rounded-sm animate-pulse"></div>
+      <div class="skeleton-line w-full h-4 mb-2 bg-sunken rounded-sm animate-pulse"></div>
+      <div class="skeleton-line w-5/6 h-4 bg-sunken rounded-sm animate-pulse"></div>
     </div>
     
     <div v-else-if="repoData" class="github-card p-4 transition-colors duration-200 overflow-hidden">
@@ -55,7 +55,7 @@
       </div>
     </div>
     
-    <div v-else-if="error" class="error-message p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-md text-red-600 dark:text-red-400">
+    <div v-else-if="error" class="error-message alert-danger p-4 rounded-md">
       <Icon name="mdi:alert-circle" class="inline-block mr-2" />
       {{ error }}
     </div>
@@ -87,6 +87,7 @@ const loading = ref(true)
 const error = ref(null)
 
 // 语言颜色映射（GitHub 官方配色）
+/* design-allow-block: 语言品牌色，由 GitHub 官方定义，不参与站点主题 */
 const languageColors = {
   JavaScript: '#f1e05a',
   TypeScript: '#3178c6',
@@ -107,6 +108,7 @@ const languageColors = {
   CSS: '#563d7c',
   Shell: '#89e051',
 }
+/* end-design-allow-block */
 
 const getLanguageColor = (language) => {
   return languageColors[language] || '#8b949e'
@@ -175,6 +177,6 @@ watch(() => props.repo, () => {
 
 /* 暗色模式下语言点的外光晕 */
 .dark .language-dot {
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid var(--border-color);
 }
 </style>

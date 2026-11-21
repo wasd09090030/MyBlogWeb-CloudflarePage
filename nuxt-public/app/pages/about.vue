@@ -13,7 +13,7 @@
           
           <h1 class="hero-title">
             <span
-              class="block text-muted text-xl font-normal mb-2 fade-up"
+              class="block text-ink-faint text-xl font-normal mb-2 fade-up"
               :style="{ animationDelay: '0.2s' }"
             >
               Hi, I'm
@@ -27,13 +27,12 @@
             {{ ownerProfile.description }}
           </p>
 
-          <div class="hero-tags" style="margin-top: 1.5rem; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.6rem;">
+          <div class="hero-tags">
             <span
               v-for="(tag, index) in ownerProfile.tags"
               :key="tag"
               class="hero-tag fade-up"
               :style="{ animationDelay: `${0.5 + index * 0.05}s` }"
-              style="padding: 0.35rem 0.85rem; background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.1); border-radius: 20px; font-size: 0.85rem; color: #666; cursor: default;"
             >
               # {{ tag }}
             </span>
@@ -120,7 +119,7 @@
         class="highlight-card fade-up"
         :style="{ animationDelay: `${index * 0.08}s` }"
       >
-        <div class="card-icon" :style="{ background: card.accent }">
+        <div class="card-icon" :class="`card-icon--${card.tone}`">
           <Icon :name="card.icon" size="lg" />
         </div>
         <h3>{{ card.title }}</h3>
@@ -140,11 +139,10 @@
         <div
           v-for="(project, index) in projects"
           :key="project.title"
-          class="project-card fade-scale"
-          :class="project.accent"
+          class="project-card surface-card surface-hover fade-scale"
           :style="{ animationDelay: `${index * 0.08}s` }"
         >
-          <div class="project-status">{{ project.status }}</div>
+          <div class="project-status chip chip--pill" :class="`chip--${statusTone(project.status)}`">{{ project.status }}</div>
           <div class="project-content">
             <h3 class="project-title">{{ project.title }}</h3>
             <p class="project-desc">{{ project.description }}</p>
@@ -233,19 +231,19 @@ const highlightCards = [
     title: '前端开发',
     description: '基于Nuxt，注重交互体验与性能优化。',
     icon: 'heroicons:computer-desktop',
-    accent: 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+    tone: 'teal'
   },
   {
     title: '后端架构',
     description: '基于 .NET 8 构建稳健、高性能的 API 服务。',
     icon: 'heroicons:server-stack',
-    accent: 'linear-gradient(135deg, #3b82f6, #0ea5e9)'
+    tone: 'sky'
   },
   {
     title: 'Deployment & DevOps',
     description: 'BT panel+Cloudflare 自动化部署与服务器运维。',
     icon: 'heroicons:cloud',
-    accent: 'linear-gradient(135deg, #f59e0b, #ef4444)'
+    tone: 'amber'
   }
 ]
 
@@ -257,8 +255,7 @@ const projects = [
     update: 'Active',
     tags: ['Cloudflare Workers', 'D1', 'Nuxt 4'],
     cta: 'View Source',
-    external: 'https://github.com/wasd09090030/MyBlogWeb-CloudflarePage',
-    accent: 'theme-violet'
+    external: 'https://github.com/wasd09090030/MyBlogWeb-CloudflarePage'
   },
   {
     title: 'Nuxt Blog Client',
@@ -267,8 +264,7 @@ const projects = [
     update: 'Active',
     tags: ['Nuxt 3', 'Pinia', 'TypeScript', 'Motion','Bootstrap 5'],
     cta: 'Live Demo',
-    link: '/',
-    accent: 'theme-blue'
+    link: '/'
   },
   {
     title: 'Anime Gallery',
@@ -277,8 +273,7 @@ const projects = [
     update: 'v1.0 Released',
     tags: ['Vue 3', 'Swiper', 'LazyLoad'],
     cta: 'View Gallery',
-    link: '/gallery',
-    accent: 'theme-orange'
+    link: '/gallery'
   },
     {
     title: 'Unity2D Mario Game',
@@ -287,8 +282,7 @@ const projects = [
     update: 'Playable Demo',
     tags: ['Unity2D', 'WebGL', 'C#'],
     cta: 'Go Play',
-    external: 'https://yefei-gao.itch.io/the-homecoming-adventure-of-little-orange',
-    accent: 'theme-red'
+    external: 'https://yefei-gao.itch.io/the-homecoming-adventure-of-little-orange'
   },
      {
     title: 'RAG AI Chatbot',
@@ -297,8 +291,7 @@ const projects = [
     update: 'Beta',
     tags: ['Python', 'LangChain', 'Vue 3'],
     cta: 'Try Now',
-    external: 'http://115.190.164.243:5174/rag-story',
-    accent: 'theme-green'
+    external: 'http://115.190.164.243:5174/rag-story'
   },
     {
     title: 'Flutter MusicPlayer',
@@ -307,8 +300,7 @@ const projects = [
     update: 'V1.0',
     tags: ['Flutter', 'Dart', 'Android'],
     cta: 'Repo',
-    external: 'https://github.com/wasd09090030/Flutter_musicPlayer',
-    accent: 'theme-dark'
+    external: 'https://github.com/wasd09090030/Flutter_musicPlayer'
   },
   {
     title: 'Live2D Miku',
@@ -317,8 +309,7 @@ const projects = [
     update: 'V1.0',
     tags: ['Electron', 'JS', 'Live2D'],
     cta: 'Repo',
-    external: 'https://github.com/wasd09090030/live2Dpet_Miku',
-    accent: 'theme-LightGreen'
+    external: 'https://github.com/wasd09090030/live2Dpet_Miku'
   },
     {
     title: 'Bilibili大数据可视化面板',
@@ -327,8 +318,7 @@ const projects = [
     update: 'V1.0',
     tags: ['React', 'ECharts', 'Python'],
     cta: 'Repo',
-    external: 'https://github.com/wasd09090030/BigData_EChart',
-    accent: 'theme-LightPink'
+    external: 'https://github.com/wasd09090030/BigData_EChart'
   },
    {
     title: 'QT后台交易管理系统',
@@ -337,8 +327,7 @@ const projects = [
     update: 'Source Code',
     tags: ['QT', 'C++'],
     cta: 'Repo',
-    external: 'https://github.com/wasd09090030/Qwidget-Management_System',
-    accent: 'theme-LightOrange'
+    external: 'https://github.com/wasd09090030/Qwidget-Management_System'
   }
 ]
 
@@ -370,6 +359,22 @@ const techStacks = [
   }
 
 ]
+
+// 项目状态用状态色表达，不再给每个项目一条独立色带
+const statusTone = (status) => {
+  switch (String(status).toLowerCase()) {
+    case 'live':
+    case 'release':
+      return 'success'
+    case 'new':
+    case 'playable':
+      return 'warning'
+    case 'debug':
+      return 'danger'
+    default:
+      return 'muted'
+  }
+}
 
 const goToArticles = () => {
   router.push({ path: '/', query: { category: 'work' } })

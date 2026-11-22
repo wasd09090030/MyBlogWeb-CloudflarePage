@@ -92,7 +92,9 @@ const props = defineProps({
 // 暴露 TOC 供父组件使用
 const emit = defineEmits(['toc-ready'])
 
-const ast = ref(null)
+// 初始值必须来自 props.precomputedAst：服务端没有 onMounted，若在这里用 null，
+// SSG/SSR 阶段模板只会落到 StateEmpty，正文不进 HTML。
+const ast = ref(props.precomputedAst ?? null)
 const loading = ref(false)
 const error = ref(null)
 const containerRef = ref(null)

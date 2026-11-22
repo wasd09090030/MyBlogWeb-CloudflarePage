@@ -156,7 +156,10 @@ export default defineNuxtConfig({
         'cpp', 'c',
         // 运维 / 工具
         'dockerfile', 'nginx', 'xml', 'diff',
-        // 按需添加：'dart', 'rust', 'go', 'scss', 'markdown', 'vue-html'
+        // 文章里实际出现过、但此前遗漏的语言。
+        // 未列在这里的语言会被 Shiki 静默降级为纯文本（没有 token 颜色）。
+        'lua', 'dart', 'http', '1c',
+        // 按需添加：'rust', 'go', 'scss', 'kotlin', 'php'
         // 注意：移除了 'mermaid'（用独立渲染库替代语法高亮）
       ]
     },
